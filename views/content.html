@@ -19,14 +19,15 @@
                 <button type="button" id="extension-power-settings-restart" title="Restarts the controller software without completely reboot">Restart</button>
               </div>
               
-              <br/><br/>
-              <div id="extension-power-settings-secondary-buttons"><button type="button" id="extension-power-settings-show-time-settings-button">Set clock</button></div>
+              <br/>
+              <br/>
+              <div id="extension-power-settings-secondary-buttons"><button type="button" id="extension-power-settings-show-time-settings-button">Set clock</button> <button type="button" id="extension-power-settings-show-reset-settings-button">Reset</button></div>
               
           </div>
 
           
           
-          <div id="extension-power-settings-time-container">
+          <div id="extension-power-settings-container-time" class="extension-power-settings-container">
                 
                 <h2>Manually set the time</h2>
                 <p>Most smart home devices connect to the internet get the current time. This can share your IP address with third parties who provide that service. Since nothing is free, you might want to set the time manually instead. However, you will have to do this every time you reboot.</p>
@@ -44,10 +45,37 @@
                       <p class="field-description">If enabled, as soon as there is an internet connection, any manually provided time will be overridden by an internet NTP server.</p>
                       <br/>
                       <div style="text-align:right">
-                          <button type="button" id="extension-power-settings-form-submit">Set clock</button>
+                          <button type="button" id="extension-power-settings-form-submit-time">Set clock</button>
                       </div>
                 </div>
           </div>
+
+
+          <div id="extension-power-settings-container-reset" class="extension-power-settings-container">
+                
+                <h2>Factory reset</h2>
+                <p>This will (attempt to) remove settings as much as possible. It's not perfect because there are so many adons, and not all their settings and activites can be taken into account.</p>
+                <p>Doing a "factory reset" will:</p>
+                <p>
+                    <ul>
+                        <li>Remove the settings database and put the version from the factory in its place. This removes all user accounts and most addon settings.</li>
+                        <li>Remove persistent data files for most Candle addons. You can choose to make an exception for the Zigbee2MQTT addon.</li>
+                        <li>Remove all data logs</li>
+                    </ul>
+                </p>
+                <div id="extension-power-settings-form-content-reset">
+                    <div class="extension-power-settings-checkbox-container"><input type="checkbox" name="keep-z2m" id="extension-power-settings-keep-z2m" checked></div><label for="keep-z2m">Allow Zigbee devices to remain paired</label>
+                    <p class="field-description">If enabled, the currently paired Zigbee devices will not have to be re-paired.</p>
+                    <br/>
+                    <label for="understand">Type "I understand": </label><br/><input type="text" name="understand" id="extension-power-settings-form-understand" required>
+                    <br/>
+                    <br/> 
+                    <div style="text-align:right">
+                        <button type="button" id="extension-power-settings-form-reset-submit">Factory reset</button>
+                    </div>
+                </div>
+          </div>
+          
 
           <br>
           <br>

@@ -79,7 +79,7 @@
 	/*border:2px solid red;*/
 }
 
-#extension-power-settings-time-container{
+.extension-power-settings-container{
     display:none;
     background-color:rgba(0,0,0,.2);
     border-radius:.5rem;

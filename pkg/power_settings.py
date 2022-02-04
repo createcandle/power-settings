@@ -57,9 +57,7 @@ class PowerSettingsAPIHandler(APIHandler):
             if self.DEBUG:
                 print("self.manager_proxy = " + str(self.manager_proxy))
                 print("Created new API HANDLER: " + str(manifest['id']))
-                
-                
-            print(str(self.user_profile))
+                print("user_profile: " + str(self.user_profile))
                 
         except Exception as e:
             print("Failed to init UX extension API handler: " + str(e))
@@ -78,10 +76,41 @@ class PowerSettingsAPIHandler(APIHandler):
             if request.method != 'POST':
                 return APIResponse(status=404)
             
-            if request.path == '/init' or request.path == '/set-time' or request.path == '/set-ntp' or request.path == '/shutdown' or request.path == '/reboot'  or request.path == '/restart':
+            if request.path == '/init' or request.path == '/set-time' or request.path == '/set-ntp' or request.path == '/shutdown' or request.path == '/reboot' or request.path == '/restart' or request.path == '/ajax':
 
                 try:
-                    if request.path == '/init':
+                    if request.path == '/ajax':
+                        if 'action' in request.body:
+                            action = request.body['action']
+                        
+                            if action == 'reset':
+                                
+                                resetz2m = 0
+                                if 'keep_z2m' in request.body:
+                                     if request.body['keep_z2m'] == False:
+                                         resetz2m = 1
+                                         
+                                os.system('sudo chmod +x ~/.webthings/addons/power-settings/factory_reset.sh') 
+                                os.system('/home/pi/.webthings/addons/power-settings/factory_reset.sh ' + str(resetz2m))
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':'ok'}),
+                                )
+                            
+                            else:
+                                return APIResponse(
+                                  status=404
+                                )
+                                
+                        else:
+                            return APIResponse(
+                              status=400
+                            )
+                        
+                        
+                    elif request.path == '/init':
                         response = {}
                         
                         if self.DEBUG:
