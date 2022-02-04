@@ -1,5 +1,6 @@
 {
-  "author": "Flatsiedatsie",
+  "author": "CandleSmartHome.com",
+  "description": "Install and manage addons",
   "content_scripts": [
     {
       "css": [
@@ -10,7 +11,6 @@
       ]
     }
   ],
-  "description": "Adds a menu option to shutdown or reboot your device",
   "gateway_specific_settings": {
     "webthings": {
       "exec": "python3 {path}/main.py",
@@ -19,17 +19,42 @@
       "strict_min_version": "0.10.0"
     }
   },
-  "homepage_url": "https://github.com/flatsiedatsie/power-settings",
-  "id": "power-settings",
+  "homepage_url": "https://www.candlesmarthome.com/app_store",
+  "id": "candleappstore",
   "license": "MPL-2.0",
   "manifest_version": 1,
-  "name": "Power Settings",
-  "short_name": "Power",
-  "version": "2.0.0",
+  "name": "Candle App Store",
+  "options": {
+    "default": {
+      "App store server":"https://www.candlesmarthome.com/appstore",
+      "Debugging": false
+    },
+    "schema": {
+      "properties": {
+        "App store server": {
+            "description": "Advanced. The server that controls which apps you can install. The default is https://www.candlesmarthome.com/appstore",
+            "type": "string"
+        },
+        "Debugging": {
+          "description": "Advanced. Debugging allows you to diagnose any issues with the add-on. If enabled it will result in a lot more debug data in the internal log (which can be found under settings -> developer -> view internal logs).",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "App store server"
+      ],
+      "type": "object"
+    }
+  },
+  "short_name": "candleapps",
+  "version": "0.2.5",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
-	"images/*.gif",
+    "images/*.png",
+    "images/*.gif",
+    "images/*.jpg",
+    "images/*.jpeg",
     "js/*.js",
     "views/*.html"
   ]
