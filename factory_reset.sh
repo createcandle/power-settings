@@ -45,8 +45,15 @@ cd ~/.webthings/data && find -not -path "./candleappstore*" -not -path "./candle
 #cd ~/.webthings/addons && find -maxdepth 1 -type d -not -path "./candleappstore*" -not -path "./candle-theme*" -not -path "./power-settings*" -not -path "./webinterface*" -not -path "./zigbee2mqtt-adapter*" -not -path "./hotspot*" -not -path "./followers*" -not -path "./privacy-manager*" -not -path "./photo-frame" -not -path "./welcome*" -not -path "./network-presence-detection-adapter*" -not -path "./internet-radio*"  -delete
 #cd ~/.webthings/data && find -maxdepth 1 -type d -not -path "./candleappstore*" -not -path "./candle-theme*" -not -path "./power-settings*" -not -path "./webinterface*" -not -path "./zigbee2mqtt-adapter*" -not -path "./hotspot*" -not -path "./followers*" -not -path "./privacy-manager*" -not -path "./photo-frame" -not -path "./welcome*" -not -path "./network-presence-detection-adapter*" -not -path "./internet-radio*"  -delete
 
+# clear Bash history
 echo "Well hello there" > ~/.bash_history
 #cat /dev/null > ~/.bash_history
+
+# clear syslog
+sudo truncate -s 0 /var/log/syslog
+sudo rm /var/log/syslog.1
+sudo systemd-tmpfiles --clean
+sudo systemd-tmpfiles --remove
 
 RESETZ2M=$1
 
@@ -59,5 +66,7 @@ fi
 
 
 echo "DONE. Shutting down.."
+
+#sudo raspi-config nonint do_ssh %d
 
 sudo shutdown now

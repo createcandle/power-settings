@@ -60,14 +60,15 @@
                     <ul>
                         <li>Remove the settings database and put the version from the factory in its place. This removes all user accounts and most addon settings.</li>
                         <li>Remove persistent data files for most Candle addons. You can choose to make an exception for the Zigbee2MQTT addon.</li>
-                        <li>Remove all data logs</li>
+                        <li>Remove all data logs.</li>
+                        <li>Once complete, it will turn off the controller.</li>
                     </ul>
                 </p>
                 <div id="extension-power-settings-form-content-reset">
                     <div class="extension-power-settings-checkbox-container"><input type="checkbox" name="keep-z2m" id="extension-power-settings-keep-z2m" checked></div><label for="keep-z2m">Allow Zigbee devices to remain paired</label>
                     <p class="field-description">If enabled, the currently paired Zigbee devices will not have to be re-paired.</p>
                     <br/>
-                    <label for="understand">Type "I understand": </label><br/><input type="text" name="understand" id="extension-power-settings-form-understand" required>
+                    <label for="understand">Type "I understand": </label><br/><input type="text" name="understand" id="extension-power-settings-form-understand" required style="width:100%">
                     <br/>
                     <br/> 
                     <div style="text-align:right">
