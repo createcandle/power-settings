@@ -148,7 +148,7 @@
 
             // Show the time settings
             document.getElementById('extension-power-settings-show-time-settings-button').addEventListener('click', () => {
-                console.log("clock button clicked");
+                //console.log("clock button clicked");
                 this.hide_all_settings_containers();
                 document.getElementById('extension-power-settings-container-time').style.display = 'block';
                 //document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'none';
@@ -156,7 +156,7 @@
             
             // Show the factory reset settings
             document.getElementById('extension-power-settings-show-reset-settings-button').addEventListener('click', () => {
-                console.log("reset button clicked");
+                //console.log("reset button clicked");
                 this.hide_all_settings_containers();
                 document.getElementById('extension-power-settings-container-reset').style.display = 'block';
                // document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'none';
@@ -164,15 +164,15 @@
             
             
             document.getElementById('extension-power-settings-form-reset-submit').addEventListener('click', () => {
-                console.log("factory reset button clicked");
+                //console.log("factory reset button clicked");
                 
                 var keep_z2m = true;
                 try{
                     keep_z2m = document.getElementById('extension-power-settings-keep-z2m').checked;
-                    console.log("keep_z2m: ", keep_z2m);
+                    //console.log("keep_z2m: ", keep_z2m);
                 }
                 catch(e){
-                    console.log('Error getting keep_z2m value: ', e);
+                    //console.log('Error getting keep_z2m value: ', e);
                 }
                 
                 if( document.getElementById('extension-power-settings-form-understand').value != 'I understand'){
@@ -182,7 +182,7 @@
                     if(confirm("Are you absolutely sure?")){
                         document.getElementById('extension-power-settings-container-reset').innerHTML = "<h1>One moment</h1><p>When all data is erased the controller will shut down.</p><p>Do not unplug the controller until the red light has stopped blinking (if you do not see it, just wait one minute).</p>";
                         
-                        API.setSshStatus(value).then(() => {
+                        API.setSshStatus(false).then(() => {
                             
                             window.API.postJson(
                                 `/extensions/${this.id}/api/ajax`, {
@@ -190,7 +190,7 @@
                                     'keep_z2m': keep_z2m
                                 }
                             ).then((body) => {
-                                console.log(body);
+                                //console.log(body);
                             }).catch((e) => {
                                 alert("Error: could not connect");
                             });
@@ -240,7 +240,7 @@
         
         /*
         check_for_usb_stick(){
-            console.log("in check_for_usb_stick");
+            //console.log("in check_for_usb_stick");
             setTimeout(() => {
                 
                 window.API.postJson(
@@ -251,12 +251,12 @@
                     //hours.placeholder = body['hours'];
                     //minutes.placeholder = body['minutes'];
                     //ntp.checked = body['ntp'];
-                    console.log('The controller seems to be back');
+                    //console.log('The controller seems to be back');
 
                     //location.replace(baseUrl);
                     window.location.href = this.baseUrl;
                 }).catch((e) => {
-                    console.log("not back yet");
+                    //console.log("not back yet");
                     this.check_if_back(); // the cycle continues
                 });
                 
@@ -267,7 +267,7 @@
         */
         
         check_if_back(){
-            console.log("in check if back");
+            //console.log("in check if back");
             setTimeout(() => {
                 
                 window.API.postJson(
@@ -278,12 +278,12 @@
                     //hours.placeholder = body['hours'];
                     //minutes.placeholder = body['minutes'];
                     //ntp.checked = body['ntp'];
-                    console.log('The controller seems to be back');
+                    //console.log('The controller seems to be back');
 
                     //location.replace(baseUrl);
                     window.location.href = this.baseUrl;
                 }).catch((e) => {
-                    console.log("not back yet");
+                    //console.log("not back yet");
                     this.check_if_back(); // the cycle continues
                 });
                 

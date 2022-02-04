@@ -54,8 +54,7 @@
           <div id="extension-power-settings-container-reset" class="extension-power-settings-container">
                 
                 <h2>Factory reset</h2>
-                <p>This will (attempt to) remove settings as much as possible. It's not perfect because there are so many adons, and not all their settings and activites can be taken into account.</p>
-                <p>Doing a "factory reset" will:</p>
+                <p>This will:</p>
                 <p>
                     <ul>
                         <li>Remove the settings database and put the version from the factory in its place. This removes all user accounts and most addon settings.</li>
@@ -65,11 +64,15 @@
                     </ul>
                 </p>
                 <div id="extension-power-settings-form-content-reset">
+                    <br/>
+                    <br/>
+                    <label for="understand">Type "I understand" to confirm: </label><br/><input type="text" name="understand" id="extension-power-settings-form-understand" required style="width:calc(100% - 1rem)"/>
+                    <br/>
+                    <br/>
+                    
                     <div class="extension-power-settings-checkbox-container"><input type="checkbox" name="keep-z2m" id="extension-power-settings-keep-z2m" checked></div><label for="keep-z2m">Allow Zigbee devices to remain paired</label>
-                    <p class="field-description">If enabled, the currently paired Zigbee devices will not have to be re-paired.</p>
-                    <br/>
-                    <label for="understand">Type "I understand": </label><br/><input type="text" name="understand" id="extension-power-settings-form-understand" required style="width:100%">
-                    <br/>
+                    <p class="field-description" style="opacity:.6">If checked, the currently paired Zigbee devices will not have to be re-paired.</p>
+                    
                     <br/> 
                     <div style="text-align:right">
                         <button type="button" id="extension-power-settings-form-reset-submit">Factory reset</button>
