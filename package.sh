@@ -19,7 +19,7 @@ fi
 mkdir -p package
 
 # Put package together
-cp -r pkg LICENSE manifest.json *.py README.md css images js views package/
+cp -r pkg LICENSE manifest.json *.py db.sqlite3 factory_reset.sh README.md css images js views package/
 find package -type f -name '*.pyc' -delete
 find package -type f -name '._*' -delete
 find package -type d -empty -delete
