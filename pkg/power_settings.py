@@ -85,10 +85,10 @@ class PowerSettingsAPIHandler(APIHandler):
                         
                             if action == 'reset':
                                 
-                                resetz2m = 0
+                                resetz2m = "false"
                                 if 'keep_z2m' in request.body:
                                      if request.body['keep_z2m'] == False:
-                                         resetz2m = 1
+                                         resetz2m = "true"
                                          
                                 os.system('sudo chmod +x ~/.webthings/addons/power-settings/factory_reset.sh') 
                                 os.system('/home/pi/.webthings/addons/power-settings/factory_reset.sh ' + str(resetz2m))

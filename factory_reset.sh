@@ -27,7 +27,7 @@ then
     echo -n " init=/usr/lib/raspi-config/init_resize.sh" | sudo tee -a /boot/cmdline.txt
     echo "- Added resize command to /boot/cmdline.txt"
 else
-    echo "- WarningL the cmdline.txt file was already modified?"
+    echo "- Warning: the cmdline.txt file was already modified?"
 fi
 
 # Clear the wifi password
@@ -57,7 +57,7 @@ sudo systemd-tmpfiles --remove
 
 RESETZ2M=$1
 
-if [ $RESETZ2M -lt 0 ]; then
+if [ "$RESETZ2M" == "true" ]; then
     echo "Also resetting Z2M"
     rm ~/.webthings/data/zigbee2mqtt-adapter/*.db
     rm ~/.webthings/data/zigbee2mqtt-adapter/*.yaml
