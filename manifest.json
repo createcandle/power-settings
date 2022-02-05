@@ -25,11 +25,11 @@
   "manifest_version": 1,
   "name": "Power Settings",
   "short_name": "Power",
-  "version": "2.2.0",
+  "version": "2.1.12",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
-    "images/*.gif",
+	"images/*.gif",
     "js/*.js",
     "views/*.html"
   ]
