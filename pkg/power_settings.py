@@ -91,7 +91,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                          resetz2m = "true"
                                          
                                 os.system('sudo chmod +x ~/.webthings/addons/power-settings/factory_reset.sh') 
-                                os.system('/home/pi/.webthings/addons/power-settings/factory_reset.sh ' + str(resetz2m))
+                                os.system('/home/pi/.webthings/addons/power-settings/factory_reset.sh ' + str(resetz2m) + " &")
                                 
                                 return APIResponse(
                                   status=200,
