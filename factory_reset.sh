@@ -1,13 +1,14 @@
 #! /bin/bash
 
 # This script tries to do a factory reset
+sleep 1
 sudo systemctl stop webthings-gateway.service
 sleep 5
 
 #sudo apt-get update
 
-npm cache clean
-nvm cache clear
+#npm cache clean --force
+#nvm cache clear
 
 sudo apt-get clean
 sudo apt autoremove
@@ -15,23 +16,22 @@ sudo apt autoremove
 sudo find /tmp -type f -atime +10 -delete
 
 
-# clear  persistent data from Candle addons
-find ~/.webthings/data -type f -name ‘*persistence.json*’ -delete
+# clear persistent data from Candle addons
+find ~/.webthings/data -type f -name 'persistence.json'  -delete
 
 
 # Resize disk on next boot
 isInFile=$(cat /boot/cmdline.txt | grep -c "init=/usr/lib/raspi-config/init_resize.sh")
 if [ $isInFile -eq 0 ]
 then
+    echo -n " init=/usr/lib/raspi-config/init_resize.sh" | sudo tee -a /boot/cmdline.txt
     echo "- Added resize command to /boot/cmdline.txt"
-    sudo echo -n " init=/usr/lib/raspi-config/init_resize.sh" >> /boot/cmdline.txt
-
 else
-    echo "- The cmdline.txt file was already modified"
+    echo "- WarningL the cmdline.txt file was already modified?"
 fi
 
 # Clear the wifi password
-echo -e 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=NL\n' > /etc/wpa_supplicant/wpa_supplicant.conf
+echo -e 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=NL\n' | sudo tee /etc/wpa_supplicant/wpa_supplicant.conf
 
 rm ~/.webthings/config/db.sqlite3
 cp ~/.webthings/addons/power-settings/db.sqlite3 ~/.webthings/config/db.sqlite3
@@ -57,7 +57,7 @@ sudo systemd-tmpfiles --remove
 
 RESETZ2M=$1
 
-if [ $RESETZ2M = 1 ]; then
+if [ $RESETZ2M -lt 0 ]; then
     echo "Also resetting Z2M"
     rm ~/.webthings/data/zigbee2mqtt-adapter/*.db
     rm ~/.webthings/data/zigbee2mqtt-adapter/*.yaml
