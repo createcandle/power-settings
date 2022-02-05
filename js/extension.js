@@ -192,7 +192,7 @@
                             ).then((body) => {
                                 //console.log(body);
                             }).catch((e) => {
-                                alert("Error: could not connect");
+                                //alert("Error: could not connect");
                             });
                             
                         }).catch((e) => {
