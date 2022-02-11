@@ -62,11 +62,12 @@ if [ "$RESETZ2M" == "true" ]; then
     rm ~/.webthings/data/zigbee2mqtt-adapter/*.db
     rm ~/.webthings/data/zigbee2mqtt-adapter/*.yaml
     rm ~/.webthings/data/zigbee2mqtt-adapter/*.json
+    rm ~/.webthings/data/zigbee2mqtt-adapter/database.db.backup
 fi
 
 
 echo "DONE. Shutting down.."
 
-#sudo raspi-config nonint do_ssh %d
+sudo raspi-config nonint do_ssh 0
 
 sudo shutdown now
