@@ -30,6 +30,18 @@
 }
 
 
+.kiosk #extension-power-settings-fullscreen-button-container{
+    display:none;
+}
+
+
+#extension-power-settings-restart{
+    display:none;
+}
+
+.developer #extension-power-settings-restart{
+    display:inline-block;
+}
 
 #extension-power-settings-secondary-buttons{
     text-align:center;

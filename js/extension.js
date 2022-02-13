@@ -71,7 +71,7 @@
                     ).then((body) => {
                         pre.innerText = JSON.stringify(body, null, 2);
                         document.getElementById('extension-power-settings-container-time').style.display = 'none';
-                        document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'block';
+                        document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'inline-block';
                     }).catch((e) => {
                         pre.innerText = e.toString();
                         alert("Saving failed: could not connect to the controller")
