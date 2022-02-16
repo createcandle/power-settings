@@ -89,9 +89,20 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if 'keep_z2m' in request.body:
                                      if request.body['keep_z2m'] == False:
                                          resetz2m = "true"
-                                         
-                                os.system('sudo chmod +x ~/.webthings/addons/power-settings/factory_reset.sh') 
-                                os.system('/home/pi/.webthings/addons/power-settings/factory_reset.sh ' + str(resetz2m) + " &")
+                                 
+                                os.spawnve(os.P_NOWAIT, "/bin/bash", ["-c", "/home/pi/longrun.sh"])
+                                #os.spawnve(os.P_NOWAIT, "/bin/bash", ["-c", "/home/pi/longrun.sh"], os.environ)
+                                #os.spawnlpe(os.P_DETACH,"/bin/bash", "/bin/bash", '/home/pi/longrun.sh','&')        
+                                #subprocess.Popen(["nohup", "/bin/bash", "~/.webthings/addons/power-settings/factory_reset.sh"])
+                                
+                                #DETACHED_PROCESS = 0x00000008
+                                #CREATE_NEW_PROCESS_GROUP = 0x00000200
+                                #pid = Popen([script, param], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                                #            creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
+                                #subprocess.Popen(["nohup", "/bin/bash", "/home/pi/longrun.sh", resetz2m], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                                #            creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
+                                #os.system('sudo chmod +x ~/.webthings/addons/power-settings/factory_reset.sh') 
+                                #os.system('/home/pi/.webthings/addons/power-settings/factory_reset.sh ' + str(resetz2m) + " &")
                                 
                                 return APIResponse(
                                   status=200,
