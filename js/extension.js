@@ -181,22 +181,25 @@
                 else{
                     if(confirm("Are you absolutely sure?")){
                         document.getElementById('extension-power-settings-container-reset').innerHTML = "<h1>One moment</h1><p>When all data is erased the controller will shut down.</p><p>Do not unplug the controller until the red light has stopped blinking (if you do not see it, just wait one minute).</p>";
-                        
+                        /*
                         API.setSshStatus(false).then(() => {
                             
-                            window.API.postJson(
-                                `/extensions/${this.id}/api/ajax`, {
-                                    'action': 'reset',
-                                    'keep_z2m': keep_z2m
-                                }
-                            ).then((body) => {
-                                //console.log(body);
-                            }).catch((e) => {
-                                //alert("Error: could not connect");
-                            });
+                            
                             
                         }).catch((e) => {
                             console.error(`Failed to toggle SSH: ${e}`);
+                        });
+                        */
+                        
+                        window.API.postJson(
+                            `/extensions/${this.id}/api/ajax`, {
+                                'action': 'reset',
+                                'keep_z2m': keep_z2m
+                            }
+                        ).then((body) => {
+                            console.log("factory reset response: ", body);
+                        }).catch((e) => {
+                            alert("Error: factory reset: could not connect?: ", e);
                         });
                         
                         

@@ -12,13 +12,13 @@ import subprocess
 
 try:
     from gateway_addon import APIHandler, APIResponse
-    #print("succesfully loaded APIHandler and APIResponse from gateway_addon")
+    print("succesfully loaded APIHandler and APIResponse from gateway_addon")
 except:
     print("Import APIHandler and APIResponse from gateway_addon failed. Use at least WebThings Gateway version 0.10")
 
 print = functools.partial(print, flush=True)
 
-
+print("here we go")
 
 _TIMEOUT = 3
 
@@ -36,7 +36,11 @@ class PowerSettingsAPIHandler(APIHandler):
 
     def __init__(self, verbose=False):
         """Initialize the object."""
-        #print("INSIDE API HANDLER INIT")
+        print("INSIDE API HANDLER INIT")
+        
+        self.addon_name = "power-settings"
+        
+        
         try:
             manifest_fname = os.path.join(
                 os.path.dirname(__file__),
@@ -52,12 +56,22 @@ class PowerSettingsAPIHandler(APIHandler):
             APIHandler.__init__(self, manifest['id'])
             self.manager_proxy.add_api_handler(self)
             
-            self.DEBUG = False
+            print("self.user_profile: " + str(self.user_profile))
+            self.reset_file_path = os.path.join(self.user_profile['dataDir'], self.addon_name, "factory_reset.txt") 
+            
+            self.DEBUG = True
             
             if self.DEBUG:
                 print("self.manager_proxy = " + str(self.manager_proxy))
                 print("Created new API HANDLER: " + str(manifest['id']))
                 print("user_profile: " + str(self.user_profile))
+                print("reset_file_path: " + str(self.reset_file_path))
+            
+            
+            f = open(self.reset_file_path, mode = "w")
+            f.write("This text is written in python")
+            f.close
+            
                 
         except Exception as e:
             print("Failed to init UX extension API handler: " + str(e))
@@ -89,8 +103,15 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if 'keep_z2m' in request.body:
                                      if request.body['keep_z2m'] == False:
                                          resetz2m = "true"
-                                 
-                                os.spawnve(os.P_NOWAIT, "/bin/bash", ["-c", "/home/pi/longrun.sh"])
+                                
+                                print("creating reset file")
+                                
+                                
+                                textfile = open(self.reset_file_path, "w")
+                                a = textfile.write(resetz2m)
+                                textfile.close()
+                                
+                                #os.spawnve(os.P_NOWAIT, "/bin/bash", ["-c", "/home/pi/longrun.sh"])
                                 #os.spawnve(os.P_NOWAIT, "/bin/bash", ["-c", "/home/pi/longrun.sh"], os.environ)
                                 #os.spawnlpe(os.P_DETACH,"/bin/bash", "/bin/bash", '/home/pi/longrun.sh','&')        
                                 #subprocess.Popen(["nohup", "/bin/bash", "~/.webthings/addons/power-settings/factory_reset.sh"])
@@ -169,8 +190,6 @@ class PowerSettingsAPIHandler(APIHandler):
                               content_type='application/json',
                               content=json.dumps("Error while setting time: " + str(ex)),
                             )
-                            
-                        
 
                         
                     elif request.path == '/set-ntp':

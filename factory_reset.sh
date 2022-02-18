@@ -1,7 +1,6 @@
 #! /bin/bash
 
 # This script tries to do a factory reset
-sleep 1
 sudo systemctl stop webthings-gateway.service
 sleep 5
 
@@ -13,22 +12,22 @@ sleep 5
 sudo apt-get clean
 sudo apt autoremove
 
+# delete old files from temporary files folder
 sudo find /tmp -type f -atime +10 -delete
-
 
 # clear persistent data from Candle addons
 find ~/.webthings/data -type f -name 'persistence.json'  -delete
 
 
 # Resize disk on next boot
-isInFile=$(cat /boot/cmdline.txt | grep -c "init=/usr/lib/raspi-config/init_resize.sh")
-if [ $isInFile -eq 0 ]
-then
-    echo -n " init=/usr/lib/raspi-config/init_resize.sh" | sudo tee -a /boot/cmdline.txt
-    echo "- Added resize command to /boot/cmdline.txt"
-else
-    echo "- Warning: the cmdline.txt file was already modified?"
-fi
+#isInFile=$(cat /boot/cmdline.txt | grep -c "init=/usr/lib/raspi-config/init_resize.sh")
+#if [ $isInFile -eq 0 ]
+#then
+#    echo -n " init=/usr/lib/raspi-config/init_resize.sh" | sudo tee -a /boot/cmdline.txt
+#    echo "- Added resize command to /boot/cmdline.txt"
+#else
+#    echo "- Warning: the cmdline.txt file was already modified?"
+#fi
 
 # Clear the wifi password
 echo -e 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=NL\n' | sudo tee /etc/wpa_supplicant/wpa_supplicant.conf
