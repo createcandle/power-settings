@@ -198,6 +198,11 @@
                             }
                         ).then((body) => {
                             console.log("factory reset response: ", body);
+                            
+                            window.API.postJson('/settings/system/actions', {
+                                action: 'restartSystem'
+                            }).catch(console.error);
+                            
                         }).catch((e) => {
                             alert("Error: factory reset: could not connect?: ", e);
                         });
