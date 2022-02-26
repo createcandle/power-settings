@@ -1,0 +1,134 @@
+<div id="extension-power-settings-scroll-container">
+    <div id="extension-power-settings-container-time" class="extension-power-settings-container">
+        
+        <div class="section-title">
+              <div class="section-title-back-flex"></div>
+              <div class="section-title-container">
+                  <img class="section-title-icon" alt="Clock icon" src="/extensions/power-settings/images/clock.svg">
+                  <span class="section-title-name">Clock</span>
+              </div>
+              <div class="section-title-right-flex"></div>
+        </div>
+        
+        <div class="extension-power-settings-vlak">
+            <p class="extension-power-settings-header">Manually set the time</p>
+            <p>Most smart home devices connect to the internet get the current time. This can share your IP address with third parties who provide that service. Since nothing is free, you might want to set the time manually instead. However, you will have to do this every time you reboot.</p>
+            <br/>
+            <div class="extension-power-settings-form-content">
+                  <label for="hours" class="extension-power-settings-form-label-left">Hours: </label><input type="number" name="hours" onfocus="this.placeholder=''" id="extension-power-settings-form-hours" required>
+                  <br/>
+                  <label for="minutes" class="extension-power-settings-form-label-left">Minutes: </label><input type="number" name="minutes" onfocus="this.placeholder=''" id="extension-power-settings-form-minutes" required>
+                  <br/>
+                  <button type="button" id="extension-power-settings-form-browser-time-button" class="text-button">Get time from browser</button>
+                  <br/>
+                  <br/>
+                  <br/>
+                  <div style="text-align:right">
+                      <button type="button" id="extension-power-settings-form-submit-time" class="text-button extension-power-settings-form-big-button">Set clock</button>
+                  </div>
+            </div>
+        </div>
+        
+        <div class="extension-power-settings-vlak">
+            <p class="extension-power-settings-header">Internet time</p>
+            <p>If enabled, as soon as there is an internet connection, any manually provided time will be overridden by an internet NTP server.</p>
+            <div class="extension-power-settings-form-content">
+                <input type="checkbox" name="extension-power-settings-form-ntp" id="extension-power-settings-form-ntp" checked>
+                <label for="extension-power-settings-form-ntp">Allow internet time</label>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="extension-power-settings-container-reset" class="extension-power-settings-container">
+        
+        <div class="section-title">
+              <div class="section-title-back-flex"></div>
+              <div class="section-title-container">
+                  <img class="section-title-icon" alt="Factory reset icon" src="/extensions/power-settings/images/reset.svg">
+                  <span class="section-title-name">Factory reset</span>
+              </div>
+              <div class="section-title-right-flex"></div>
+        </div>
+        
+        <div class="extension-power-settings-vlak">
+            <p class="extension-power-settings-header">Factory reset</p>
+            
+            <p>This will:</p>
+            <p>
+                <ul>
+                    <li>Remove the settings database and put the version from the factory in its place. This removes all user accounts and most addon settings.</li>
+                    <li>Remove persistent data files for most Candle addons. You can choose to make an exception for the Zigbee2MQTT addon.</li>
+                    <li>Remove all data logs.</li>
+                    <li>Once complete, it will turn off the controller.</li>
+                </ul>
+            </p>
+            <div id="extension-power-settings-form-content-reset">
+                <br/>
+                <br/>
+                <label for="understand">Type "I understand" to confirm: </label><br/><input type="text" name="understand" id="extension-power-settings-form-understand" required style="width:calc(100% - 1rem)"/>
+                <br/>
+                <br/>
+        
+                <div class="extension-power-settings-checkbox-container"><input type="checkbox" name="keep-z2m" id="extension-power-settings-keep-z2m" checked></div><label for="keep-z2m">Allow Zigbee devices to remain paired</label>
+                <p class="field-description" style="opacity:.6">If checked, the currently paired Zigbee devices will not have to be re-paired.</p>
+        
+                <br/> 
+                <div style="text-align:right">
+                    <button type="button" id="extension-power-settings-form-reset-submit">Factory reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    
+    <div id="extension-power-settings-container-backup" class="extension-power-settings-container">
+        
+        
+        <div class="section-title">
+              <div class="section-title-back-flex"></div>
+              <div class="section-title-container">
+                  <img class="section-title-icon" alt="Backup icon" src="/extensions/power-settings/images/backup.svg">
+                  <span class="section-title-name">Backup & Restore</span>
+              </div>
+              <div class="section-title-right-flex"></div>
+        </div>
+        
+        
+        <div class="extension-power-settings-vlak">
+            <p class="extension-power-settings-header">Create backup</p>
+            <p>This will create a downloadable backup file. It contains:</p>
+            <p>
+                <ul>
+                    <li>Settings for Candle addons</li>
+                    <li>General settings for controller and your addons</li>
+                </ul>
+            </p>
+            <p>This does NOT contain photos or data logs.</p>
+            <div id="extension-power-settings-form-backup">
+                <button id="extension-power-settings-create-backup-button" class="text-button">Create backup</button> <button id="extension-power-settings-download-backup-button" class="text-button" style="display:none">Download backup</button>
+            </div>
+        </div>
+        
+        <div class="extension-power-settings-vlak">
+            <p class="extension-power-settings-header">Restore backup</p>
+            <p>This will replace your existing:</p>
+            <p>
+                <ul>
+                    <li>Settings for Candle addons</li>
+                    <li>General settings for controller and your addons</li>
+                </ul>
+            </p>
+            <p>This does NOT remove or replace photos or data logs.</p>
+            <div id="extension-power-settings-form-backup">
+                <input id="extension-power-settings-backup-file-selector"  accept=".tar" type="file" value="Upload backup"/>
+            </div>
+        </div>
+        
+        
+    </div>
+    
+    
+    <button id="extension-power-settings-back-button" class="back-button icon-button" data-l10n-id="back-button" aria-label="Back"></button>
+    
+</div>

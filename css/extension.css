@@ -96,14 +96,14 @@
 	/*border:2px solid red;*/
 }
 
+/*
 .extension-power-settings-container{
-    display:none;
     background-color:rgba(0,0,0,.2);
     border-radius:.5rem;
     padding:2rem;
     margin: 2rem;
 }
-
+*/
 
 /*  waiting  */
 
@@ -188,6 +188,11 @@
     width: 6rem;
 }
 
+
+
+/*  BUTTONS  */
+
+
 #extension-power-settings-main-buttons{
     text-align:center;
 }
@@ -198,6 +203,7 @@
     margin:0 auto;
     background-color:rgba(0,0,0,.2);
     padding:2rem;
+    margin: 0 2rem 2rem 2rem;
 }
 
 #extension-power-settings-content button{
@@ -229,10 +235,186 @@
     border-radius:.5rem;
 }
 
+.extension-power-settings-form-big-button{
+    font-size:1.8rem;
+}
+
+
+#extension-power-settings-form-browser-time-button{
+	margin-left:calc(30% + 2rem);
+}
+
 #extension-power-settings-content #extension-power-settings-form-submit{
     font-size: 2rem;
     padding: 1rem 2rem;
 }
+
+
+
+#extension-power-settings-back-button{
+    top: 2rem;
+    left: 2rem;
+    position: fixed;
+    top:2rem;
+    left:2rem;
+    width: 5.6rem;
+    height: 5.6rem;
+    border-radius: 2.8rem;
+    padding: 0;
+    background-color: #5d9bc7;
+    border: none;
+    background-size: cover;
+    background-repeat: no-repeat;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    outline: 0;
+    z-index: 1000;
+    overflow:hidden;
+    opacity:1;
+    cursor:pointer;
+    /*background: #5d9bc7 no-repeat center/100% url(/images/back.png);*/
+    background: transparent no-repeat center/100% url(/images/back.png);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 6%), 0 1px 2px rgb(0 0 0 / 12%);
+}
+#extension-power-settings-back-button:hover{
+    background-color: #6dabd7;
+}
+
+#extension-power-settings-pages.hidden{
+    opacity:0;
+}
+#extension-power-settings-pages:not(.hidden) #extension-power-settings-back-button{
+    animation: extension-power-settings-fadeIn .3s linear;
+}
+
+@keyframes extension-power-settings-fadeIn {
+   0% {opacity: 0;}
+   80% {opacity: 0;}
+   81% {opacity: 1;}
+   100% {opacity: 1;} 
+} 
+
+
+
+
+#extension-power-settings-menu-backup-button{
+    cursor:pointer;
+    background-image:url('../images/backup.svg');
+}
+
+#extension-power-settings-menu-time-button{
+    cursor:pointer;
+    background-image:url('../images/clock.svg');
+}
+
+#extension-power-settings-menu-reset-button{
+    cursor:pointer;
+    background-image:url('../images/reset.svg');
+}
+
+
+/*  CHECKBOX  */
+
+.extension-power-settings-form-content input[type=checkbox]{
+    position: absolute;
+    left: -1000em;
+}
+
+.extension-power-settings-form-content input[type=checkbox] + label::before{
+    float: none;
+    vertical-align: middle;
+    margin-right: 0.5rem;
+}
+
+.extension-power-settings-form-content input[type=checkbox]:checked + label::before,
+ :root .transition-checkbox:checked + label::before {
+    background-position: 0 -3rem;
+}
+
+.extension-power-settings-form-content input[type=checkbox] + label::before{
+    content: '';
+    display: inline-block;
+    width: 3rem;
+    height: 3rem;
+    float: right;
+    margin-top: -0.25rem;
+    background: url(/images/checkbox-sprite.png) no-repeat 0 0;
+    background-size: 3rem auto;
+}
+
+#extension-power-settings-form-ntp + label{
+    display:block;
+}
+
+
+/*  PAGES  */
+
+#extension-power-settings-pages{
+    z-index:99;
+    position:fixed;
+    left:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background-color: #0c3b5c;
+    font-size:1.6rem;
+    padding-bottom:0;
+}
+
+
+.extension-power-settings-hidden{
+    display:none!important;
+}
+
+#extension-power-settings-scroll-container{
+    height:100%;
+    overflow:auto;
+}
+
+#extension-power-settings-scroll-container > div{
+    max-width:60rem;
+    box-sizing:border-box;
+    margin:6rem auto;
+}
+
+
+.extension-power-settings-header{
+    font-size:1.8rem;
+    text-align:center;
+    margin-bottom:2rem;
+}
+
+
+.extension-power-settings-form-content label.extension-power-settings-form-label-left{
+    width: 30%;
+    min-width: 30%;
+    display: inline-block;
+    text-align: right;
+    padding-right: 2rem;
+}
+
+
+
+
+
+/*  BACKUP  */
+
+#extension-power-settings-form-backup button{
+    width:100%;
+    margin-bottom:1rem;
+    font-size:1.8rem;
+}
+
+
+#extension-power-settings-backup-file-selector{
+    font-size:1.8rem;
+    padding:1rem 2rem;
+    color:white;
+    background-color: rgba(0,0,0,.2);
+}
+
 
 
 @media screen and (min-width: 1024px) {
@@ -258,7 +440,7 @@
 
 
 
-
+/*
 .extension-power-settings-checkbox-container{
 	text-align:left;
 	width:100px;
@@ -268,22 +450,21 @@
     text-align:right;
     box-sizing:border-box;
 }
+*/
 
 
-#extension-power-settings-form-browser-time-button{
-	margin-left:100px;
-}
 
 
+/*
 #extension-power-settings-form-ntp{
 	-moz-transform: scale(1.50);
-  -webkit-transform: scale(1.50);
-  -o-transform: scale(1.50);
-  transform: scale(1.50);
+    -webkit-transform: scale(1.50);
+    -o-transform: scale(1.50);
+    transform: scale(1.50);
 	margin-right: .5rem;
 	margin-top: 1.5rem;
 }
-
+*/
 
 #extension-power-settings-content .control-label{
 	font-size: 1.5rem;

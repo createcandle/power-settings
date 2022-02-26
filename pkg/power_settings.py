@@ -6,6 +6,8 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
 import json
 from time import sleep
+import base64
+import shutil
 import datetime
 import functools
 import subprocess
@@ -18,7 +20,6 @@ except:
 
 print = functools.partial(print, flush=True)
 
-print("here we go")
 
 _TIMEOUT = 3
 
@@ -36,10 +37,10 @@ class PowerSettingsAPIHandler(APIHandler):
 
     def __init__(self, verbose=False):
         """Initialize the object."""
-        print("INSIDE API HANDLER INIT")
+        #print("INSIDE API HANDLER INIT")
         
-        self.addon_name = "power-settings"
-        
+        self.addon_name = "power-settings"  # overwritteb by data in manifest
+        self.DEBUG = True
         
         try:
             manifest_fname = os.path.join(
@@ -55,27 +56,64 @@ class PowerSettingsAPIHandler(APIHandler):
 
             APIHandler.__init__(self, manifest['id'])
             self.manager_proxy.add_api_handler(self)
+            self.addon_name = manifest['id']
             
-            print("self.user_profile: " + str(self.user_profile))
-            self.reset_file_path = os.path.join(self.user_profile['dataDir'], self.addon_name, "factory_reset.txt") 
             
-            self.DEBUG = True
+            
+            
+            self.addon_dir = os.path.join(self.user_profile['addonsDir'], self.addon_name)
+            self.data_dir = os.path.join(self.user_profile['dataDir'], self.addon_name)
+            
+            
+            # Actions shell script locations
+            self.actions_file_path = os.path.join(self.data_dir, "bootup_actions.sh") 
+            self.factory_reset_file_path = os.path.join(self.data_dir, "factory_reset.sh") 
+            
+            
+            # Backup local
+            self.backup_dir = os.path.join(self.data_dir, "backup") 
+            self.backup_file_path = os.path.join(self.backup_dir, "candle_backup.tar")
+            
+            # Backup download dir
+            self.backup_download_dir = os.path.join(self.addon_dir, "backup")
+            
+            # Restore
+            self.restore_file_path = os.path.join(self.data_dir, "candle_restore.tar")
+            
+            
+            
+            # Create local backups directory
+            if not os.path.isdir(self.backup_dir):
+                if self.DEBUG:
+                    print("creating backup directory in data path: " + str(self.backup_dir))
+                os.mkdir(self.backup_dir)
+            
+            # remove old download symlink if it somehow survived
+            if os.path.islink(self.backup_download_dir):
+                if self.DEBUG:
+                    print("unlinking download dir that survived somehow")
+                os.system('unlink ' + self.backup_download_dir) # remove symlink, so the backup files can not longer be downloaded
+            
+            self.update_backup_info()
+            
             
             if self.DEBUG:
+                print("power settings: self.user_profile: " + str(self.user_profile))
+                print("self.addon_dir: " + str(self.addon_dir))
+                print("self.actions_file_path: " + str(self.actions_file_path))
                 print("self.manager_proxy = " + str(self.manager_proxy))
                 print("Created new API HANDLER: " + str(manifest['id']))
                 print("user_profile: " + str(self.user_profile))
-                print("reset_file_path: " + str(self.reset_file_path))
-            
-            
-            f = open(self.reset_file_path, mode = "w")
-            f.write("This text is written in python")
-            f.close
-            
+                print("actions_file_path: " + str(self.actions_file_path))
+                
+                print("self.backup_file_path: " + str(self.backup_file_path))
+                print("self.backup_download_dir: " + str(self.backup_download_dir))
                 
         except Exception as e:
-            print("Failed to init UX extension API handler: " + str(e))
+            print("ERROR, Failed to init UX extension API handler: " + str(e))
         
+        #self.backup()
+        #self.update_backup_info()
         
 
     def handle_request(self, request):
@@ -90,13 +128,15 @@ class PowerSettingsAPIHandler(APIHandler):
             if request.method != 'POST':
                 return APIResponse(status=404)
             
-            if request.path == '/init' or request.path == '/set-time' or request.path == '/set-ntp' or request.path == '/shutdown' or request.path == '/reboot' or request.path == '/restart' or request.path == '/ajax':
+            if request.path == '/init' or request.path == '/set-time' or request.path == '/set-ntp' or request.path == '/shutdown' or request.path == '/reboot' or request.path == '/restart' or request.path == '/ajax' or request.path == '/save':
 
                 try:
                     if request.path == '/ajax':
                         if 'action' in request.body:
                             action = request.body['action']
                         
+                            
+                            # FACTORY RESET
                             if action == 'reset':
                                 
                                 resetz2m = "false"
@@ -106,10 +146,15 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 print("creating reset file")
                                 
+                                if resetz2m:
+                                    os.system('sudo rm /boot/keep_z2m.txt')
+                                else:
+                                    os.system('sudo touch /boot/keep_z2m.txt')
                                 
-                                textfile = open(self.reset_file_path, "w")
-                                a = textfile.write(resetz2m)
-                                textfile.close()
+                                os.system('cp ' + str(self.factory_reset_file_path) + ' ' + str(self.actions_file_path))
+                                #textfile = open(self.actions_file_path, "w")
+                                #a = textfile.write(resetz2m)
+                                #textfile.close()
                                 
                                 #os.spawnve(os.P_NOWAIT, "/bin/bash", ["-c", "/home/pi/longrun.sh"])
                                 #os.spawnve(os.P_NOWAIT, "/bin/bash", ["-c", "/home/pi/longrun.sh"], os.environ)
@@ -129,6 +174,92 @@ class PowerSettingsAPIHandler(APIHandler):
                                   status=200,
                                   content_type='application/json',
                                   content=json.dumps({'state':'ok'}),
+                                )
+                                
+                                
+                            elif action == 'backup_init':
+                                if self.DEBUG:
+                                    print("API: in backup_init")
+                                
+                                state = 'ok'
+                                
+                                self.update_backup_info()
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state,'backup_exists':self.backup_file_exists,'restore_exists':self.restore_file_exists, 'disk_usage':self.disk_usage}),
+                                )
+                                
+                                
+                            elif action == 'create_backup':
+                                if self.DEBUG:
+                                    print("API: in create_backup")
+                                state = 'error'
+                                try:
+                                    
+                                    backup_result = self.backup()
+                                    if self.DEBUG:
+                                        print("backup result: " + str(backup_result))
+                                    if backup_result:
+                                        state = 'ok'
+                                        
+                                except Exception as ex:
+                                    print("Error creating backup: " + str(ex))
+                                    state = 'error'
+                                    
+                                self.update_backup_info()
+                                    
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state,'backup_exists':self.backup_file_exists,'restore_exists':self.restore_file_exists, 'disk_usage':self.disk_usage}),
+                                )
+                                
+                                
+                            elif action == 'backup_restore':
+                                if self.DEBUG:
+                                    print("API: in backup_restore")
+                                    
+                                state = 'error'
+                                try:
+                                    
+                                    filename = request.body['filename']
+                                    
+                                    if filename.endswith('.tar'):
+                                        self.restore_file_path = os.path.join(self.data_dir,filename)
+                                        if os.path.isfile(self.restore_file_path):
+                                            os.system('tar -xf ' + str(self.restore_file_path) + ' ' + self.user_profile['baseDir'])
+                                            state = 'ok'
+                                        
+                                except Exception as ex:
+                                    print("Error during backup restore: " + str(ex))
+                                
+                                self.update_backup_info()
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state,'backup_exists':self.backup_file_exists,'restore_exists':self.restore_file_exists, 'disk_usage':self.disk_usage}),
+                                )
+                                
+                                # sudo nano /etc/systemd/system/candle_reset.service 
+                                
+                                
+                            
+                            elif action == 'unlink_backup_download_dir':
+                                
+                                state = 'error'
+                                if os.path.isdir(self.backup_download_dir):
+                                    os.system('unline ' + self.backup_download_dir) # remove symlink, so the backup files can not longer be downloaded
+                                    if self.DEBUG:
+                                        print("removed symlink")
+                                    state = 'ok'
+                            
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
                                 )
                             
                             else:
@@ -161,7 +292,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 print("Error getting NTP status: " + str(ex))
                             
                             
-                            response = {'hours':now.hour,'minutes':now.minute,'ntp':current_ntp_state}
+                            response = {'hours':now.hour,'minutes':now.minute,'ntp':current_ntp_state,'backup_exists':self.backup_file_exists,'restore_exists':self.restore_file_exists, 'disk_usage':self.disk_usage}
                             if self.DEBUG:
                                 print("Init response: " + str(response))
                         except Exception as ex:
@@ -225,6 +356,58 @@ class PowerSettingsAPIHandler(APIHandler):
                           content_type='application/json',
                           content=json.dumps("Restarting"),
                         )
+                        
+                        
+                    elif request.path == '/save':
+                        if self.DEBUG:
+                            print("SAVING uploaded file")
+                        try:
+                            data = []
+                            state = 'error'
+                            filename = ""
+                            filedata = ""
+                            
+                            
+                            # Save file
+                            try:
+                                filename = request.body['filename']
+                                if self.DEBUG:
+                                    print("upload provided filename: " + str(filename))
+                                if filename.endswith('.tar'):
+                                    filedata = str(request.body['filedata'])
+                                    #base64_data = re.sub('^data:file/.+;base64,', '', filedata)
+                                    #base64_data = base64_data.replace('^data:file/.+;base64,', '', filedata)
+                                    if ',' in filedata:
+                                        filedata = filedata.split(',')[1]
+                                    #sub
+                                    if self.DEBUG:
+                                        print("saving to file: " + str(self.restore_file_path))
+                                    with open(self.restore_file_path, "wb") as fh:
+                                        fh.write(base64.b64decode(filedata))
+                                        state = 'ok'
+                                        
+                            except Exception as ex:
+                                print("Error saving data to file: " + str(ex))
+                                state = 'error'
+                            #data = self.save_photo(str(request.body['filename']), str(request.body['filedata']), str(request.body['parts_total']), str(request.body['parts_current']) ) #new_value,date,property_id
+                            #if isinstance(data, str):
+                            #    state = 'error'
+                            #else:
+                            #    state = 'ok'
+                            print("save return state: " + str(state))
+                            
+                            return APIResponse(
+                              status=200,
+                              content_type='application/json',
+                              content=json.dumps({'state' : state, 'data' : data}),
+                            )
+                        except Exception as ex:
+                            print("Error saving uploaded file: " + str(ex))
+                            return APIResponse(
+                              status=500,
+                              content_type='application/json',
+                              content=json.dumps("Error while saving uploaded file: " + str(ex)),
+                            )
                         
                     else:
                         return APIResponse(
@@ -315,11 +498,58 @@ class PowerSettingsAPIHandler(APIHandler):
             print("Error rebooting: " + str(e))
 
 
+    def update_backup_info(self, directory=None):
+        if self.DEBUG:
+            print("in update_backup_info")
+        if directory == None:
+            directory = self.user_profile['baseDir']
+        self.backup_file_exists = os.path.isfile(self.backup_file_path)
+        self.restore_file_exists = os.path.isfile(self.restore_file_path)
+        self.disk_usage = shutil.disk_usage(directory)
+
+
+    def backup(self):
+        if self.DEBUG:
+            print("in backup")
+        try:
+            if not os.path.isdir(self.backup_dir):
+                if self.DEBUG:
+                    print("creating backup directory in data path: " + str(self.backup_dir))
+                os.mkdir(self.backup_dir)
+                
+            if os.path.isfile(self.backup_file_path):
+                if self.DEBUG:
+                    print("removing old backup file: " + str(self.backup_file_path))
+                os.system('rm ' + self.backup_file_path)
+                
+            if len(self.backup_file_path) > 10:
+                backup_command = 'cd ' + str(self.user_profile['baseDir']) + '; find ./config ./data -maxdepth 2 -name "*.json" -o -name "*.yaml" -o -name "*.sqlite3" | tar -cf ' + str(self.backup_file_path) + ' -T -'
+                if self.DEBUG:
+                    print("Running backup command: " + str(backup_command))
+                run_command(backup_command)
+            #soft_link = 'ln -s ' + str(self.backup_download_file_path) + " " + str(self.self.backup_download_dir)
+            #if self.DEBUG:
+            #    print("linking: " + soft_link)
+            #os.system(soft_link)
+            
+            if os.path.isdir(self.backup_dir) and not os.path.islink(self.backup_download_dir) and not os.path.isdir(self.backup_download_dir):
+                symlink_command = 'ln -s ' + self.backup_dir + ' ' + self.backup_download_dir
+                if self.DEBUG:
+                    print("creating symlink command: " + str(symlink_command))
+                os.system(symlink_command) # backup files can now be downloaded
+            
+            return True
+        except Exception as ex:
+            print("error while creating backup: " + str(ex))
+        return False
+
 
     def unload(self):
         if self.DEBUG:
             print("Shutting down adapter")
         os.system('sudo timedatectl set-ntp on') # If add-on is removed or disabled, re-enable network time protocol.
+        if os.path.islink(self.backup_download_dir):
+            os.system('unlink ' + self.backup_download_dir) # remove symlink, so the backup files can not longer be downloaded
 
 
 
@@ -328,12 +558,14 @@ def run_command(cmd, timeout_seconds=60):
         p = subprocess.run(cmd, timeout=timeout_seconds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, universal_newlines=True)
 
         if p.returncode == 0:
-            return p.stdout  + '\n' + "Command success" #.decode('utf-8')
+            print("command ran succesfully")
+            return p.stdout #.decode('utf-8')
             #yield("Command success")
         else:
             if p.stderr:
-                return "Error: " + str(p.stderr)  + '\n' + "Command failed"   #.decode('utf-8'))
+                return str(p.stderr) # + '\n' + "Command failed"   #.decode('utf-8'))
 
     except Exception as e:
-        print("Error running Arduino CLI command: "  + str(e))
+        print("Error running command: "  + str(e))
+        
         

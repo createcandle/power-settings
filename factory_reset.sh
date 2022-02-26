@@ -42,6 +42,8 @@ cp ~/.webthings/addons/power-settings/db.sqlite3 ~/.webthings/config/db.sqlite3
 rm -rf ~/.webthings/log/{*,.*}
 
 # remove uploaded images
+rm -f ~/.webthings/data/photo-frame/photos/*
+rm -f ~/.webthings/data/photo-frame/photos/*
 rm -f ~/.webthings/uploads/*
 cp ~/.webthings/floorplan.svg ~/.webthings/uploads/floorplan.svg
 
@@ -61,10 +63,14 @@ sudo rm /var/log/syslog.1
 sudo systemd-tmpfiles --clean
 sudo systemd-tmpfiles --remove
 
-RESETZ2M=$1
+#RESETZ2M=$1
 
-if [ "$RESETZ2M" == "true" ]; then
-    echo "Also resetting Z2M"
+#if [ "$RESETZ2M" == "true" ]; then
+
+if [ -f "/boot/keep_z2m.txt" ]; then
+    echo "Factory reset is allowing Zigbee2MQTT to remain"
+else
+    echo F"actory reset: also resetting Zigbee2MQTT"
     rm ~/.webthings/data/zigbee2mqtt-adapter/*.db
     rm ~/.webthings/data/zigbee2mqtt-adapter/*.yaml
     rm ~/.webthings/data/zigbee2mqtt-adapter/*.json

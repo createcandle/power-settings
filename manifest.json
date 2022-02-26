@@ -1,5 +1,5 @@
 {
-  "author": "Flatsiedatsie",
+  "author": "CandleSmartHome.com",
   "content_scripts": [
     {
       "css": [
@@ -19,18 +19,19 @@
       "strict_min_version": "0.10.0"
     }
   },
-  "homepage_url": "https://github.com/flatsiedatsie/power-settings",
+  "homepage_url": "https://github.com/createcandle/power-settings",
   "id": "power-settings",
   "license": "MPL-2.0",
   "manifest_version": 1,
   "name": "Power Settings",
   "short_name": "Power",
-  "version": "2.2.5",
+  "version": "3.0.0",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
     "images/*.gif",
     "js/*.js",
-    "views/*.html"
+    "views/*.html",
+    "backup/*.tar"
   ]
 }
