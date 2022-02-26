@@ -127,17 +127,8 @@
                             }
                             else{
                                 if(confirm("Are you absolutely sure?")){
-                                    document.getElementById('extension-power-settings-container-reset').innerHTML = "<h1>One moment</h1><p>When all data is erased the controller will shut down.</p><p>Do not unplug the controller until the red light has stopped blinking (if you do not see it, just wait one minute).</p>";
-                                    /*
-                                    API.setSshStatus(false).then(() => {
-                            
-                            
-                            
-                                    }).catch((e) => {
-                                        console.error(`Failed to toggle SSH: ${e}`);
-                                    });
-                                    */
-                        
+                                    document.getElementById('extension-power-settings-container-reset').innerHTML = "<h1>One moment</h1><p>The controller will now reboot. When all data is erased the controller will shut down.</p><p>Do not unplug the controller until the red light has stopped blinking (if you do not see it, just wait one minute).</p>";
+
                                     window.API.postJson(
                                         `/extensions/${this.id}/api/ajax`, {
                                             'action': 'reset',
@@ -146,12 +137,21 @@
                                     ).then((body) => {
                                         console.log("factory reset response: ", body);
                             
-                                        window.API.postJson('/settings/system/actions', {
-                                            action: 'restartSystem'
-                                        }).catch(console.error);
+                                        if(body.state == 'ok'){
+                                            if(confirm("The system will now reboot and do a facture reset")){
+                                                API.setSshStatus(false).then(() => {
+                                                    window.API.postJson('/settings/system/actions', {
+                                                        action: 'restartSystem'
+                                                    }).catch(console.error);
+                                                }).catch((e) => {
+                                                    console.error(`Failed to toggle SSH: ${e}`);
+                                                });
+                                            }
+                                            
+                                        }
                             
                                     }).catch((e) => {
-                                        alert("Error: factory reset: could not connect?: ", e);
+                                        alert("Error while attempting to start factory reset: could not connect?: ", e);
                                     });
                         
                         
@@ -260,7 +260,9 @@
                         
             			document.getElementById("extension-power-settings-backup-file-selector").addEventListener('change', () => {
             				var filesSelected = document.getElementById("extension-power-settings-backup-file-selector").files;
-            				this.upload_files(filesSelected);
+            				
+                            document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>';
+                            this.upload_files(filesSelected);
             			});
                         
                         
@@ -498,7 +500,7 @@
                 
     			var filename = files[0]['name'].replace(/[^a-zA-Z0-9\.]/gi, '_').toLowerCase(); //.replace(/\s/g , "_");
                 var filetype = files[0].type;
-                console.log("filename and type: ", filename, filetype);
+                //console.log("filename and type: ", filename, filetype);
                     
                 /*
                 var reader = new FileReader();
@@ -513,23 +515,37 @@
     		    var reader = new FileReader();
 
     		    reader.addEventListener("load", (e) => {
-                    console.log('reader loaded');
+                    //console.log('reader loaded');
 			        var finalFile = reader.result;
                     
                     finalFile = finalFile.substring(finalFile.indexOf(',') + 1);
-			        console.log(finalFile);
+			        //console.log(finalFile);
                     
                     window.API.postJson(
       		        	`/extensions/power-settings/api/save`,
                         {'action':'upload', 'filename':filename, 'filedata': finalFile, 'parts_total':1, 'parts_current':1} //e.target.result
 
       			      ).then((body) => {
-                            console.log("saved!", body);
+                            console.log("saving restore file result: ", body);
                             
+                            if(body.state == 'ok'){
+                                if(confirm("The system must now reboot to finish restoring the backup")){
+                                    window.API.postJson('/settings/system/actions', {
+                                        action: 'restartSystem'
+                                    }).catch(console.error);
+                                    document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<p>Rebooting...</p>';
+                                }
+                                else{
+                                    document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<p>Please reboot the controller to complete the restore process.</p>';
+                                }
+                            }
+                            else{
+                                document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML =  '<p>An error occured while handling the uploaded file.</p>';
+                            }
 
       			      }).catch((e) => {
       					    console.log("Error uploading file: ", e);
-                            alert("Error, could not upload the file. It could just be a connection issue. Or perhaps the file is too big (maximum size is 7Mb).");     
+                            document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<p>Error, could not upload the file. It could just be a connection issue. Or perhaps the file is too big (maximum size is 7Mb).</p>';    
       			      });
                     
     		    }); 

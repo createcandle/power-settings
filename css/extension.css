@@ -401,7 +401,7 @@
 
 /*  BACKUP  */
 
-#extension-power-settings-form-backup button{
+.extension-power-settings-form-backup button{
     width:100%;
     margin-bottom:1rem;
     font-size:1.8rem;
@@ -413,6 +413,11 @@
     padding:1rem 2rem;
     color:white;
     background-color: rgba(0,0,0,.2);
+}
+
+#extension-power-settings-backup-file-selector-container p{
+    color:red;
+    font-weight:bold;
 }
 
 

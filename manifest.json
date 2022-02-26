@@ -25,7 +25,7 @@
   "manifest_version": 1,
   "name": "Power Settings",
   "short_name": "Power",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",

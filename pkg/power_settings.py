@@ -67,7 +67,8 @@ class PowerSettingsAPIHandler(APIHandler):
             
             # Actions shell script locations
             self.actions_file_path = os.path.join(self.data_dir, "bootup_actions.sh") 
-            self.factory_reset_file_path = os.path.join(self.data_dir, "factory_reset.sh") 
+            self.factory_reset_script_path = os.path.join(self.addon_dir, "factory_reset.sh") 
+            self.restore_backup_script_path = os.path.join(self.addon_dir, "restore_backup.sh") 
             
             
             # Backup local
@@ -88,11 +89,24 @@ class PowerSettingsAPIHandler(APIHandler):
                     print("creating backup directory in data path: " + str(self.backup_dir))
                 os.mkdir(self.backup_dir)
             
+            
+            # Remove old actions script if it survived somehow
+            if os.path.isfile(self.actions_file_path):
+                print("ERROR: old actions script still exists! Removing it now.")
+                os.system('rm ' + str(self.actions_file_path))
+                
+            
             # remove old download symlink if it somehow survived
             if os.path.islink(self.backup_download_dir):
                 if self.DEBUG:
                     print("unlinking download dir that survived somehow")
                 os.system('unlink ' + self.backup_download_dir) # remove symlink, so the backup files can not longer be downloaded
+            
+            # Remove old restore file if it exists
+            if os.path.isfile(self.restore_file_path):
+                os.system('rm ' + str(self.restore_file_path))
+                if self.DEBUG:
+                    print("removed old restore file")
             
             self.update_backup_info()
             
@@ -144,14 +158,16 @@ class PowerSettingsAPIHandler(APIHandler):
                                      if request.body['keep_z2m'] == False:
                                          resetz2m = "true"
                                 
-                                print("creating reset file")
+                                print("creating reset files")
                                 
+                                # Set the preference about keeping Z2M files in the boot folder
                                 if resetz2m:
                                     os.system('sudo rm /boot/keep_z2m.txt')
                                 else:
                                     os.system('sudo touch /boot/keep_z2m.txt')
                                 
-                                os.system('cp ' + str(self.factory_reset_file_path) + ' ' + str(self.actions_file_path))
+                                # Place the factory reset file in the correct location so that it will be activated at boot.
+                                os.system('cp ' + str(self.factory_reset_script_path) + ' ' + str(self.actions_file_path))
                                 #textfile = open(self.actions_file_path, "w")
                                 #a = textfile.write(resetz2m)
                                 #textfile.close()
@@ -215,35 +231,6 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':state,'backup_exists':self.backup_file_exists,'restore_exists':self.restore_file_exists, 'disk_usage':self.disk_usage}),
                                 )
-                                
-                                
-                            elif action == 'backup_restore':
-                                if self.DEBUG:
-                                    print("API: in backup_restore")
-                                    
-                                state = 'error'
-                                try:
-                                    
-                                    filename = request.body['filename']
-                                    
-                                    if filename.endswith('.tar'):
-                                        self.restore_file_path = os.path.join(self.data_dir,filename)
-                                        if os.path.isfile(self.restore_file_path):
-                                            os.system('tar -xf ' + str(self.restore_file_path) + ' ' + self.user_profile['baseDir'])
-                                            state = 'ok'
-                                        
-                                except Exception as ex:
-                                    print("Error during backup restore: " + str(ex))
-                                
-                                self.update_backup_info()
-                                
-                                return APIResponse(
-                                  status=200,
-                                  content_type='application/json',
-                                  content=json.dumps({'state':state,'backup_exists':self.backup_file_exists,'restore_exists':self.restore_file_exists, 'disk_usage':self.disk_usage}),
-                                )
-                                
-                                # sudo nano /etc/systemd/system/candle_reset.service 
                                 
                                 
                             
@@ -374,6 +361,13 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if self.DEBUG:
                                     print("upload provided filename: " + str(filename))
                                 if filename.endswith('.tar'):
+                                    
+                                    
+                                    if os.path.isfile(self.restore_file_path):
+                                        os.system('rm ' + str(self.restore_file_path))
+                                        if self.DEBUG:
+                                            print("removed old restore file")
+                                    
                                     filedata = str(request.body['filedata'])
                                     #base64_data = re.sub('^data:file/.+;base64,', '', filedata)
                                     #base64_data = base64_data.replace('^data:file/.+;base64,', '', filedata)
@@ -384,7 +378,19 @@ class PowerSettingsAPIHandler(APIHandler):
                                         print("saving to file: " + str(self.restore_file_path))
                                     with open(self.restore_file_path, "wb") as fh:
                                         fh.write(base64.b64decode(filedata))
-                                        state = 'ok'
+                                        
+                                        if self.DEBUG:
+                                            print("save complete")
+                                        
+                                        if os.path.isfile(self.restore_backup_script_path):
+                                            restore_command = 'cp ' + str(self.restore_backup_script_path) + ' ' + str(self.actions_file_path)
+                                            if self.DEBUG:
+                                                print("restore backup copy command: " + str(restore_command))
+                                            os.system(restore_command)
+                                            
+                                            state = 'ok'
+                                        else:
+                                            print("Error: self.restore_backup_script_path did not exist?")
                                         
                             except Exception as ex:
                                 print("Error saving data to file: " + str(ex))
