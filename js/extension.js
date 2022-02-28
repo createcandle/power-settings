@@ -2,7 +2,7 @@
     class PowerSettings extends window.Extension {
         constructor() {
             super('power-settings');
-            this.addMenuEntry('Power settings');
+            this.addMenuEntry('Power');
 
 
             const getUrl = window.location;
@@ -194,9 +194,9 @@
                                         'minutes': minutes.value
                                     }
                                 ).then((body) => {
-                                    pre.innerText = JSON.stringify(body, null, 2);
+                                    //pre.innerText = JSON.stringify(body, null, 2);
                                     document.getElementById('extension-power-settings-container-time').style.display = 'none';
-                                    document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'inline-block';
+                                    //document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'inline-block';
                                 }).catch((e) => {
                                     console.log("time submit error: ", e);
                                     alert("Saving failed: could not connect to the controller")

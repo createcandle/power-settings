@@ -413,6 +413,8 @@
     padding:1rem 2rem;
     color:white;
     background-color: rgba(0,0,0,.2);
+    box-sizing:border-box;
+    max-width:100%;
 }
 
 #extension-power-settings-backup-file-selector-container p{

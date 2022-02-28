@@ -65,18 +65,20 @@ class PowerSettingsAPIHandler(APIHandler):
             self.data_dir = os.path.join(self.user_profile['dataDir'], self.addon_name)
             
             
-            # Actions shell script locations
-            self.actions_file_path = os.path.join(self.data_dir, "bootup_actions.sh") 
+            # Actions shell script location
+            self.actions_file_path = '/boot/bootup_actions.sh'
+            
+            # Factory reset
+            self.keep_z2m_file_path = '/boot/keep_z2m.txt'
             self.factory_reset_script_path = os.path.join(self.addon_dir, "factory_reset.sh") 
+            
+            # Backup addon dir paths
+            self.backup_download_dir = os.path.join(self.addon_dir, "backup")
             self.restore_backup_script_path = os.path.join(self.addon_dir, "restore_backup.sh") 
             
-            
-            # Backup local
+            # Backup data dir paths
             self.backup_dir = os.path.join(self.data_dir, "backup") 
             self.backup_file_path = os.path.join(self.backup_dir, "candle_backup.tar")
-            
-            # Backup download dir
-            self.backup_download_dir = os.path.join(self.addon_dir, "backup")
             
             # Restore
             self.restore_file_path = os.path.join(self.data_dir, "candle_restore.tar")
@@ -93,7 +95,7 @@ class PowerSettingsAPIHandler(APIHandler):
             # Remove old actions script if it survived somehow
             if os.path.isfile(self.actions_file_path):
                 print("ERROR: old actions script still exists! Removing it now.")
-                os.system('rm ' + str(self.actions_file_path))
+                os.system('sudo rm ' + str(self.actions_file_path))
                 
             
             # remove old download symlink if it somehow survived
@@ -162,12 +164,12 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 # Set the preference about keeping Z2M files in the boot folder
                                 if resetz2m:
-                                    os.system('sudo rm /boot/keep_z2m.txt')
+                                    os.system('sudo rm ' + self.keep_z2m_file_path)
                                 else:
-                                    os.system('sudo touch /boot/keep_z2m.txt')
+                                    os.system('sudo touch ' + self.keep_z2m_file_path)
                                 
                                 # Place the factory reset file in the correct location so that it will be activated at boot.
-                                os.system('cp ' + str(self.factory_reset_script_path) + ' ' + str(self.actions_file_path))
+                                os.system('sudo cp ' + str(self.factory_reset_script_path) + ' ' + str(self.actions_file_path))
                                 #textfile = open(self.actions_file_path, "w")
                                 #a = textfile.write(resetz2m)
                                 #textfile.close()
@@ -383,7 +385,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             print("save complete")
                                         
                                         if os.path.isfile(self.restore_backup_script_path):
-                                            restore_command = 'cp ' + str(self.restore_backup_script_path) + ' ' + str(self.actions_file_path)
+                                            restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.actions_file_path)
                                             if self.DEBUG:
                                                 print("restore backup copy command: " + str(restore_command))
                                             os.system(restore_command)

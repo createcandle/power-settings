@@ -1,4 +1,4 @@
-"""Power settings add-on for Mozilla WebThings Gateway."""
+"""Power settings add-on for WebThings Gateway."""
 
 from os import path
 import functools
@@ -6,12 +6,10 @@ import gateway_addon
 import signal
 import sys
 import time
-
 #sys.path.append(path.join(path.dirname(path.abspath(__file__)), 'lib'))
 
 #from pkg.power_settings import PowerSettingsAdapter  # noqa
 from pkg.power_settings import PowerSettingsAPIHandler  # noqa
-
 
 
 _HANDLER = None
@@ -32,7 +30,6 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM, cleanup)
     #_HANDLER = PowerSettingsAdapter(verbose=True)
     _HANDLER = PowerSettingsAPIHandler(verbose=True)
-    
 
     # Wait until the proxy stops running, indicating that the gateway shut us
     # down.
