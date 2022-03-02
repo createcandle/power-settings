@@ -44,6 +44,15 @@
     display:inline-block;
 }
 
+
+#allow-anonymous-mqtt-item{
+    display:none;
+    background-image:url('../images/mqtt-icon.svg');
+}
+.developer #allow-anonymous-mqtt-item{
+    display:block;
+}
+
 #extension-power-settings-secondary-buttons{
     text-align:center;
 }

@@ -4,6 +4,6 @@
 sudo systemctl stop webthings-gateway.service
 sleep 5
 
-tar -xf /home/pi/.webthings/data/power-settings/candle_restore.tar /home/pi/.webthings/test/
+tar -xf /home/pi/.webthings/data/power-settings/candle_restore.tar -C /home/pi/.webthings/
 
 sudo systemctl start webthings-gateway.service

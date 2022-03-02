@@ -58,11 +58,16 @@ class PowerSettingsAPIHandler(APIHandler):
             self.manager_proxy.add_api_handler(self)
             self.addon_name = manifest['id']
             
-            
-            
+            if self.DEBUG:
+                print("self.user_profile: " + str(self.user_profile))
             
             self.addon_dir = os.path.join(self.user_profile['addonsDir'], self.addon_name)
             self.data_dir = os.path.join(self.user_profile['dataDir'], self.addon_name)
+            
+            
+            # MQTT
+            self.allow_anonymous_mqtt = False
+            self.mosquitto_conf_file_path = '/home/pi/.webthings/etc/mosquitto/mosquitto.conf'
             
             
             # Actions shell script location
@@ -82,7 +87,6 @@ class PowerSettingsAPIHandler(APIHandler):
             
             # Restore
             self.restore_file_path = os.path.join(self.data_dir, "candle_restore.tar")
-            
             
             
             # Create local backups directory
@@ -125,11 +129,32 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("self.backup_file_path: " + str(self.backup_file_path))
                 print("self.backup_download_dir: " + str(self.backup_download_dir))
                 
+                print("self.mosquitto_conf_file_path: " + str(self.mosquitto_conf_file_path))
+                
         except Exception as e:
             print("ERROR, Failed to init UX extension API handler: " + str(e))
         
         #self.backup()
-        #self.update_backup_info()
+        self.update_backup_info()
+        
+        
+        # Check if anonymous MQTT access is currently allowed
+        try:
+            with open(self.mosquitto_conf_file_path) as file:
+
+               df = file.read()
+               if self.DEBUG:
+                   print(str(df))
+               
+               if 'allow_anonymous true' in df:
+                   self.allow_anonymous_mqtt = True
+                   
+        except Exception as ex:
+            print("Error reading MQTT config file: " + str(ex))
+           
+        if self.DEBUG:
+            print("self.allow_anonymous_mqtt: " + str(self.allow_anonymous_mqtt))
+        
         
 
     def handle_request(self, request):
@@ -251,6 +276,24 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':state}),
                                 )
                             
+                            
+                            elif action == 'anonymous_mqtt':
+                                
+                                allow_anonymous_mqtt = False
+                                if 'allow_anonymous_mqtt' in request.body:
+                                     if request.body['allow_anonymous_mqtt'] == True:
+                                         allow_anonymous_mqtt = "true"
+                                         
+                                if allow_anonymous_mqtt:
+                                    os.system("sed -i 's/allow_anonymous false/allow_anonymous true/' " + str(self.mosquitto_conf_file_path))
+                                else:
+                                    os.system("sed -i 's/allow_anonymous true/allow_anonymous false/' " + str(self.mosquitto_conf_file_path))
+                                    
+                                os.system('sudo systemctl restart mosquitto.service')
+                                    
+                                self.allow_anonymous_mqtt = allow_anonymous_mqtt
+                            
+                            
                             else:
                                 return APIResponse(
                                   status=404
@@ -281,7 +324,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 print("Error getting NTP status: " + str(ex))
                             
                             
-                            response = {'hours':now.hour,'minutes':now.minute,'ntp':current_ntp_state,'backup_exists':self.backup_file_exists,'restore_exists':self.restore_file_exists, 'disk_usage':self.disk_usage}
+                            response = {'hours':now.hour,'minutes':now.minute,'ntp':current_ntp_state,'backup_exists':self.backup_file_exists,'restore_exists':self.restore_file_exists, 'disk_usage':self.disk_usage, 'allow_anonymous_mqtt':self.allow_anonymous_mqtt}
                             if self.DEBUG:
                                 print("Init response: " + str(response))
                         except Exception as ex:

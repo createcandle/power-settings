@@ -64,6 +64,8 @@
                         document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-backup-button">Backup</a></li>';
                         document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-reset-button">Factory reset</a></li>';
                         
+                         
+                        
                         // Show time page button
                         document.getElementById('extension-power-settings-menu-time-button').addEventListener('click', () => {
                             console.log('show time menu button clicked');
@@ -102,6 +104,8 @@
                             document.getElementById('extension-power-settings-container-reset').classList.remove('extension-power-settings-hidden');
                             document.getElementById('extension-power-settings-pages').classList.remove('hidden');
                         });
+                        
+                        
                         
                         
             
@@ -215,15 +219,45 @@
                         });
 
 
+                        console.log("doing init");
                         // Get the server time
                         window.API.postJson(
                             `/extensions/${this.id}/api/init`, {
                                 'init': 1
                             }
                         ).then((body) => {
+                            console.log(body);
+                            
                             hours.placeholder = body['hours'];
                             minutes.placeholder = body['minutes'];
                             ntp.checked = body['ntp'];
+                            
+                            console.log("adding mqtt item");
+                            // Add MQTT checkbox
+                            var mqtt_element = document.createElement('li');
+                            mqtt_element.setAttribute('id','allow-anonymous-mqtt-item');
+                            mqtt_element.setAttribute('class','developer-checkbox-item');
+                            document.querySelector('#developer-settings > ul').prepend(mqtt_element);
+                            
+                            document.getElementById('allow-anonymous-mqtt-item').innerHTML = '<input id="allow-anonymous-mqtt-checkbox" class="developer-checkbox" type="checkbox"> <label for="allow-anonymous-mqtt-checkbox" >Enable anonymous MQTT</label>';
+                       
+                            document.getElementById('allow-anonymous-mqtt-checkbox').addEventListener('change', () => {
+                                console.log(document.getElementById('allow-anonymous-mqtt-checkbox').checked);
+                            
+                                const checkbox_state = document.getElementById('allow-anonymous-mqtt-checkbox').checked;
+                                window.API.postJson(
+                                    `/extensions/${this.id}/api/ajax`, {
+                                        'action': 'anonymous_mqtt','allow_anonymous_mqtt': checkbox_state
+                                    }
+                                ).then((body) => {
+                                    console.log("allow_anonymous MQTT response: ", body);
+                                
+                                }).catch((e) => {
+                                    alert("Error, allow_anonymous MQTT setting was not changed: could not connect to controller: ", e);
+                                });
+                            });
+                            
+                            
                         }).catch((e) => {
                             console.log("powersettings init error: ", e);
                         });
