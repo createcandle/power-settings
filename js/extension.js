@@ -4,6 +4,7 @@
             super('power-settings');
             this.addMenuEntry('Power');
 
+            this.debug = false;
 
             const getUrl = window.location;
             this.baseUrl = getUrl.protocol + "//" + getUrl.host + "/things";
@@ -142,7 +143,7 @@
                                         console.log("factory reset response: ", body);
                             
                                         if(body.state == 'ok'){
-                                            if(confirm("The system will now reboot and do a facture reset")){
+                                            if(confirm("The system will now reboot and then perform a factory reset")){
                                                 API.setSshStatus(false).then(() => {
                                                     window.API.postJson('/settings/system/actions', {
                                                         action: 'restartSystem'
@@ -219,14 +220,21 @@
                         });
 
 
-                        console.log("doing init");
+                        //console.log("doing init");
                         // Get the server time
                         window.API.postJson(
                             `/extensions/${this.id}/api/init`, {
                                 'init': 1
                             }
                         ).then((body) => {
-                            console.log(body);
+                            
+                            
+                            if(typeof body.debug != 'undefined'){
+                                this.debug = body.debug;
+                                if(body.debug == true){
+                                    console.log('power settings init response: ', body);
+                                }
+                            }
                             
                             hours.placeholder = body['hours'];
                             minutes.placeholder = body['minutes'];
@@ -242,7 +250,7 @@
                             document.getElementById('allow-anonymous-mqtt-item').innerHTML = '<input id="allow-anonymous-mqtt-checkbox" class="developer-checkbox" type="checkbox"> <label for="allow-anonymous-mqtt-checkbox" >Enable anonymous MQTT</label>';
                        
                             document.getElementById('allow-anonymous-mqtt-checkbox').addEventListener('change', () => {
-                                console.log(document.getElementById('allow-anonymous-mqtt-checkbox').checked);
+                                //console.log(document.getElementById('allow-anonymous-mqtt-checkbox').checked);
                             
                                 const checkbox_state = document.getElementById('allow-anonymous-mqtt-checkbox').checked;
                                 window.API.postJson(
@@ -250,7 +258,9 @@
                                         'action': 'anonymous_mqtt','allow_anonymous_mqtt': checkbox_state
                                     }
                                 ).then((body) => {
-                                    console.log("allow_anonymous MQTT response: ", body);
+                                    if(this.debug){
+                                        console.log("allow_anonymous MQTT response: ", body);
+                                    }                                    
                                 
                                 }).catch((e) => {
                                     alert("Error, allow_anonymous MQTT setting was not changed: could not connect to controller: ", e);
@@ -275,7 +285,9 @@
                                     'action': 'create_backup'
                                 }
                             ).then((body) => {
-                                console.log("create backup response: ", body);
+                                if(this.debug){
+                                    console.log("create backup response: ", body);
+                                }
                                 if(body.state == 'ok'){
                                     window.location.pathname = "/extensions/power-settings/backup/candle_backup.tar";
                                 }
@@ -579,7 +591,7 @@
 
       			      }).catch((e) => {
       					    console.log("Error uploading file: ", e);
-                            document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<p>Error, could not upload the file. It could just be a connection issue. Or perhaps the file is too big (maximum size is 7Mb).</p>';    
+                            document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<p>Error, could not upload the file. It could just be a connection issue. Or perhaps the file is too big (maximum size is 10Mb).</p>';    
       			      });
                     
     		    }); 

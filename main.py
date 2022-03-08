@@ -1,4 +1,4 @@
-"""Power settings add-on for WebThings Gateway."""
+"""Power settings add-on for Candle controller."""
 
 from os import path
 import functools
