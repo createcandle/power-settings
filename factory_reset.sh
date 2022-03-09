@@ -35,8 +35,12 @@ find /home/pi/.webthings/data -type f -name 'persistence.json'  -delete
 # Clear the wifi password
 echo -e 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=NL\n' | sudo tee /etc/wpa_supplicant/wpa_supplicant.conf
 
+echo "candle" > /etc/hostname
+
+# restore basic database
 rm /home/pi/.webthings/config/db.sqlite3
 cp /home/pi/.webthings/addons/power-settings/db.sqlite3 /home/pi/.webthings/config/db.sqlite3
+chown pi:pi /home/pi/.webthings/config/db.sqlite3
 
 # remove logs
 rm -rf /home/pi/.webthings/log/{*,.*}
@@ -45,6 +49,7 @@ rm -rf /home/pi/.webthings/log/{*,.*}
 rm -f /home/pi/.webthings/data/photo-frame/photos/*
 rm -f /home/pi/.webthings/uploads/*
 cp /home/pi/.webthings/floorplan.svg /home/pi/.webthings/uploads/floorplan.svg
+chown pi:pi /home/pi/.webthings/uploads/floorplan.svg
 
 # remove any addons that are not the originals
 cd /home/pi/.webthings/addons && find -not -path "./candleappstore*" -not -path "./candle-theme*" -not -path "./power-settings*" -not -path "./webinterface*" -not -path "./zigbee2mqtt-adapter*" -not -path "./hotspot*" -not -path "./followers*" -not -path "./privacy-manager*" -not -path "./photo-frame*" -not -path "./welcome*" -not -path "./network-presence-detection-adapter*" -not -path "./internet-radio*"  -not -path "./bluetoothpairing*" -not -path "./scenes*" -delete
