@@ -1,6 +1,10 @@
 #! /bin/bash
 
-# This script tries to do a factory reset
+# This script tries to do a factory reset.
+# Some of the commands can only work when the disk overlay is disabled, but are run anyway to keep this a universal solution.
+
+
+
 systemctl stop webthings-gateway.service
 sleep 5
 
@@ -10,10 +14,18 @@ sleep 5
 # Clear caches
 #npm cache clean --force
 #nvm cache clear
-
 apt-get clean
 apt autoremove
-rm -rf /home/pi/.cache/pip
+history -c
+#rm -rf /home/pi/.cache/pip
+#rm -rf /home/pi/.cache/chromium
+rm -rf /home/pi/.cache
+rm -rf /home/pi/.config/chromium
+rm -rf /home/pi/.local/share/nano/search_history
+rm /root/.cache/.bluetoothctl_history
+
+
+
 
 # delete old files from temporary files folder
 find /tmp -type f -atime +10 -delete
@@ -44,6 +56,10 @@ chown pi:pi /home/pi/.webthings/config/db.sqlite3
 
 # remove logs
 rm -rf /home/pi/.webthings/log/{*,.*}
+
+
+# remove Bluetooth data
+rm -rf /home/pi/webthings/var/lib/bluetooth/*
 
 # remove uploaded images
 rm -f /home/pi/.webthings/data/photo-frame/photos/*

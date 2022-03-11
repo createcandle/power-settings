@@ -69,7 +69,7 @@
                         
                         // Show time page button
                         document.getElementById('extension-power-settings-menu-time-button').addEventListener('click', () => {
-                            console.log('show time menu button clicked');
+                            //console.log('show time menu button clicked');
                     
                             this.hide_all_settings_containers();
                             document.getElementById('extension-power-settings-container-time').classList.remove('extension-power-settings-hidden');
@@ -78,7 +78,7 @@
                         
                         // Show backup page button
                         document.getElementById('extension-power-settings-menu-backup-button').addEventListener('click', () => {
-                            console.log('show backup menu button clicked');
+                            //console.log('show backup menu button clicked');
                     
                             this.hide_all_settings_containers();
                             document.getElementById('extension-power-settings-container-backup').classList.remove('extension-power-settings-hidden');
@@ -99,7 +99,7 @@
                         
                         // Show reset page button
                         document.getElementById('extension-power-settings-menu-reset-button').addEventListener('click', () => {
-                            console.log('show reset menu button clicked');
+                            //console.log('show reset menu button clicked');
                     
                             this.hide_all_settings_containers();
                             document.getElementById('extension-power-settings-container-reset').classList.remove('extension-power-settings-hidden');
@@ -240,7 +240,7 @@
                             minutes.placeholder = body['minutes'];
                             ntp.checked = body['ntp'];
                             
-                            console.log("adding mqtt item");
+                            //console.log("adding mqtt item");
                             // Add MQTT checkbox
                             var mqtt_element = document.createElement('li');
                             mqtt_element.setAttribute('id','allow-anonymous-mqtt-item');
@@ -278,7 +278,7 @@
                         // BACKUP
                         
                         document.getElementById('extension-power-settings-create-backup-button').addEventListener('click', () => {
-                            console.log("create backup button clicked");
+                            //console.log("create backup button clicked");
                             
                             window.API.postJson(
                                 `/extensions/${this.id}/api/ajax`, {
@@ -319,12 +319,11 @@
                     }
                     
                     
-
-                    
-                    
                     
                 })
-                .catch((e) => console.error('Failed to fetch settings pages content:', e));
+                .catch((e) => {
+                    console.error('Failed to fetch settings pages content:', e);
+                });
             
             /*
             var pages = document.createElement('div');
@@ -441,7 +440,7 @@
             
             
             document.getElementById('extension-power-settings-back-button').addEventListener('click', () => {
-                console.log("back button clicked");
+                //console.log("back button clicked");
                 this.hide_all_settings_containers();
                 //document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'none';
             });
