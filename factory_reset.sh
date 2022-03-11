@@ -21,6 +21,7 @@ history -c
 #rm -rf /home/pi/.cache/chromium
 rm -rf /home/pi/.cache
 rm -rf /home/pi/.config/chromium
+rm -rf /home/pi/.webthings/chromium/*
 rm -rf /home/pi/.local/share/nano/search_history
 rm /root/.cache/.bluetoothctl_history
 
