@@ -132,7 +132,8 @@
                             }
                             else{
                                 if(confirm("Are you absolutely sure?")){
-                                    document.getElementById('extension-power-settings-container-reset').innerHTML = "<h1>One moment</h1><p>The controller will now reboot. When all data is erased the controller will shut down.</p><p>Do not unplug the controller until the red light has stopped blinking (if you do not see it, just wait one minute).</p>";
+                                    document.getElementById('extension-power-settings-container-reset').innerHTML = "<h1>Factory reset in progress</h1><p>The controller will now reboot. When all data is erased the controller will shut down.</p><p>Do not unplug the controller until the red light has stopped blinking (if you do not see it, just wait one minute).</p>";
+                                    document.getElementById('extension-power-settings-back-button').style.display = 'none';
 
                                     window.API.postJson(
                                         `/extensions/${this.id}/api/ajax`, {
@@ -143,16 +144,16 @@
                                         console.log("factory reset response: ", body);
                             
                                         if(body.state == 'ok'){
-                                            if(confirm("The system will now reboot and then perform a factory reset")){
-                                                API.setSshStatus(false).then(() => {
-                                                    window.API.postJson('/settings/system/actions', {
-                                                        action: 'restartSystem'
-                                                    }).catch(console.error);
-                                                }).catch((e) => {
-                                                    console.error(`Failed to toggle SSH: ${e}`);
-                                                });
-                                            }
-                                            
+                                            API.setSshStatus(false).then(() => {
+                                                window.API.postJson('/settings/system/actions', {
+                                                    action: 'restartSystem'
+                                                }).catch(console.error);
+                                            }).catch((e) => {
+                                                console.error(`Failed to toggle SSH: ${e}`);
+                                            });
+                                        }
+                                        else{
+                                            alert("Something went wrong! Try rebooting manually and see what happens.");
                                         }
                             
                                     }).catch((e) => {

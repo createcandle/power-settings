@@ -99,7 +99,7 @@ fi
 
 echo "DONE. Shutting down.."
 
-raspi-config nonint do_ssh 0
+raspi-config nonint do_ssh 1 # 0 is enable? 1 is disable?y
 
 
 shutdown +1

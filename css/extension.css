@@ -215,6 +215,11 @@
     margin: 0 2rem 2rem 2rem;
 }
 
+.kiosk #extension-power-settings-scroll-container > div{
+    margin-bottom:30rem;
+}
+
+
 #extension-power-settings-content button{
     opacity:.9;
     border: none;
@@ -311,6 +316,9 @@
 #extension-power-settings-menu-backup-button{
     cursor:pointer;
     background-image:url('../images/backup.svg');
+}
+.kiosk .extension-power-settings-menu-backup-button{
+    display:none;
 }
 
 #extension-power-settings-menu-time-button{
@@ -495,4 +503,8 @@
 	font-size: 1.5rem;
 	margin-bottom: 0.5rem;
 	padding-left: 100px;
+}
+
+#extension-power-settings-form-reset-submit{
+    font-size:1.8rem;
 }
