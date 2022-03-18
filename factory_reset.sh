@@ -60,7 +60,7 @@ rm -rf /home/pi/.webthings/log/{*,.*}
 
 
 # remove Bluetooth data
-rm -rf /home/pi/webthings/var/lib/bluetooth/*
+rm -rf /home/pi/.webthings/var/lib/bluetooth/*
 
 # remove uploaded images
 rm -f /home/pi/.webthings/data/photo-frame/photos/*
