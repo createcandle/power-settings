@@ -104,4 +104,5 @@ echo "DONE. Shutting down.."
 raspi-config nonint do_ssh 1 # 0 is enable, 1 is disable
 
 
-shutdown +1
+#shutdown +1
+shutdown now
