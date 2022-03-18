@@ -317,7 +317,7 @@
     cursor:pointer;
     background-image:url('../images/backup.svg');
 }
-.kiosk .extension-power-settings-menu-backup-button{
+.kiosk #extension-power-settings-menu-backup-button{
     display:none;
 }
 
