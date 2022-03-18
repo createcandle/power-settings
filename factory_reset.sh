@@ -4,7 +4,7 @@
 # Some of the commands can only work when the disk overlay is disabled, but are run anyway to keep this a universal solution.
 
 
-
+pkill chromium-browse
 systemctl stop webthings-gateway.service
 sleep 5
 
@@ -20,11 +20,13 @@ history -c
 #rm -rf /home/pi/.cache/pip
 #rm -rf /home/pi/.cache/chromium
 rm -rf /home/pi/.cache
-rm -rf /home/pi/.config/chromium
+rm -rf /home/pi/.config/*
 rm -rf /home/pi/.webthings/chromium/*
+rm /home/pi/.webthings/chromium/'Local State'
+
 rm -rf /home/pi/.local/share/nano/search_history
 rm /root/.cache/.bluetoothctl_history
-
+rm /home/pi/.cache/.bluetoothctl_history
 
 
 
@@ -99,7 +101,7 @@ fi
 
 echo "DONE. Shutting down.."
 
-raspi-config nonint do_ssh 1 # 0 is enable? 1 is disable?y
+raspi-config nonint do_ssh 1 # 0 is enable, 1 is disable
 
 
 shutdown +1
