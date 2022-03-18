@@ -1,2 +1,2 @@
 # power-settings
-Extra settings, like shutdown and reboot, for the Mozilla WebThings Gateway
+Extra settings, like shutdown and reboot, for the Candle Controller
