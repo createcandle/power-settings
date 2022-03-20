@@ -103,6 +103,7 @@ echo "DONE. Shutting down.."
 
 raspi-config nonint do_ssh 1 # 0 is enable, 1 is disable
 
+rm /boot/bootup_actions.sh
 
 #shutdown +1
 shutdown now
