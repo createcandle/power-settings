@@ -106,8 +106,7 @@ raspi-config nonint do_ssh 1 # 0 is enable, 1 is disable
 #raspi-config --enable-overlayfs
 raspi-config nonint do_overlayfs 0 # 0 is enable
 
-rm /boot/bootup_actions.sh
-
 #shutdown +1
 sleep 15
+rm /boot/bootup_actions.sh
 shutdown -P now
