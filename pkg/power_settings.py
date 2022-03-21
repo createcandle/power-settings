@@ -174,7 +174,7 @@ class PowerSettingsAPIHandler(APIHandler):
             database = Database(self.addon_name)
             if not database.open():
                 print("Could not open settings database")
-                self.close_proxy()
+                #self.close_proxy()
                 return
             
             config = database.load_config()
@@ -182,7 +182,7 @@ class PowerSettingsAPIHandler(APIHandler):
             
         except:
             print("Error! Failed to open settings database.")
-            self.close_proxy()
+            #self.close_proxy()
         
         if not config:
             print("Error loading config from database")
