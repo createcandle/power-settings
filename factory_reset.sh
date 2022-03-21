@@ -3,6 +3,7 @@
 # This script tries to do a factory reset.
 # Some of the commands can only work when the disk overlay is disabled, but are run anyway to keep this a universal solution.
 
+mount -o remount,rw /boot
 
 pkill chromium-browse
 systemctl stop webthings-gateway.service
@@ -105,7 +106,7 @@ raspi-config nonint do_ssh 1 # 0 is enable, 1 is disable
 
 #raspi-config --enable-overlayfs
 raspi-config nonint do_overlayfs 0 # 0 is enable
-
+mount -o remount,rw /boot
 #shutdown +1
 sleep 15
 rm /boot/bootup_actions.sh
