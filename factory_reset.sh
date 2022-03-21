@@ -105,9 +105,13 @@ echo "DONE. Shutting down.."
 raspi-config nonint do_ssh 1 # 0 is enable, 1 is disable
 
 #raspi-config --enable-overlayfs
-raspi-config nonint do_overlayfs 0 # 0 is enable
-mount -o remount,rw /boot
+#raspi-config nonint do_overlayfs 0 # 0 is enable
+#mount -o remount,rw /boot
 #shutdown +1
+raspi-config nonint disable_bootro
+raspi-config nonint enable_overlayfs
+raspi-config nonint disable_bootro
+
 sleep 15
 rm /boot/bootup_actions.sh
 shutdown -P now

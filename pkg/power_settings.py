@@ -40,7 +40,7 @@ class PowerSettingsAPIHandler(APIHandler):
         #print("INSIDE API HANDLER INIT")
         
         self.addon_name = "power-settings"  # overwritteb by data in manifest
-        self.DEBUG = True
+        self.DEBUG = False
         
         try:
             manifest_fname = os.path.join(
@@ -88,6 +88,13 @@ class PowerSettingsAPIHandler(APIHandler):
             # Restore
             self.restore_file_path = os.path.join(self.data_dir, "candle_restore.tar")
             
+            
+            # LOAD CONFIG
+            try:
+                self.add_from_config()
+            except Exception as ex:
+                print("Error loading config: " + str(ex))
+                
             
             # Create local backups directory
             if not os.path.isdir(self.backup_dir):
@@ -155,6 +162,39 @@ class PowerSettingsAPIHandler(APIHandler):
            
         if self.DEBUG:
             print("self.allow_anonymous_mqtt: " + str(self.allow_anonymous_mqtt))
+        
+        
+        
+        
+        
+    # Read the settings from the add-on settings page
+    def add_from_config(self):
+        """Attempt to add all configured devices."""
+        try:
+            database = Database(self.addon_name)
+            if not database.open():
+                print("Could not open settings database")
+                self.close_proxy()
+                return
+            
+            config = database.load_config()
+            database.close()
+            
+        except:
+            print("Error! Failed to open settings database.")
+            self.close_proxy()
+        
+        if not config:
+            print("Error loading config from database")
+            return
+
+        if 'Debug' in config:
+            self.DEBUG = bool(config['Debug'])
+            if self.DEBUG:
+                print("-Debug preference was in config: " + str(self.DEBUG))
+
+    
+        
         
         
 
