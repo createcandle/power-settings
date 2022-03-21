@@ -109,4 +109,5 @@ raspi-config nonint do_overlayfs 0 # 0 is enable
 rm /boot/bootup_actions.sh
 
 #shutdown +1
-shutdown now
+sleep 15
+shutdown -P now

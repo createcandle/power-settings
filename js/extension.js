@@ -50,10 +50,11 @@
                                     'action': 'unlink_backup_download_dir'
                                 }
                             ).then((body) => {
-                                console.log("unlink response: ", body);
-                                
+                                if(this.debug){
+                                    console.log("power settings: back button: unlink response: ", body);
+                                }
                             }).catch((e) => {
-                               console.log("Error: unlinking download failed: ", e);
+                               console.log("Error: unlinking download: connection failed: ", e);
                             });
                             
                             
@@ -142,19 +143,37 @@
                                         }
                                     ).then((body) => {
                                         console.log("factory reset response: ", body);
-                            
-                                        if(body.state == 'ok'){
-                                            API.setSshStatus(false).then(() => {
-                                                window.API.postJson('/settings/system/actions', {
-                                                    action: 'restartSystem'
-                                                }).catch(console.error);
-                                            }).catch((e) => {
-                                                console.error(`Failed to toggle SSH: ${e}`);
-                                            });
+                                        if(this.debug){
+                                            if(confirm("The system will now reboot")){
+                                                if(body.state == 'ok'){
+                                                    API.setSshStatus(false).then(() => {
+                                                        window.API.postJson('/settings/system/actions', {
+                                                            action: 'restartSystem'
+                                                        }).catch(console.error);
+                                                    }).catch((e) => {
+                                                        console.error(`Failed to toggle SSH: ${e}`);
+                                                    });
+                                                }
+                                                else{
+                                                    alert("Something went wrong! Try rebooting manually and see what happens.");
+                                                }
+                                            }
                                         }
                                         else{
-                                            alert("Something went wrong! Try rebooting manually and see what happens.");
+                                            if(body.state == 'ok'){
+                                                API.setSshStatus(false).then(() => {
+                                                    window.API.postJson('/settings/system/actions', {
+                                                        action: 'restartSystem'
+                                                    }).catch(console.error);
+                                                }).catch((e) => {
+                                                    console.error(`Failed to toggle SSH: ${e}`);
+                                                });
+                                            }
+                                            else{
+                                                alert("Something went wrong! Try rebooting manually and see what happens.");
+                                            }
                                         }
+                                        
                             
                                     }).catch((e) => {
                                         alert("Error while attempting to start factory reset: could not connect?: ", e);
@@ -233,7 +252,7 @@
                             if(typeof body.debug != 'undefined'){
                                 this.debug = body.debug;
                                 if(body.debug == true){
-                                    console.log('power settings init response: ', body);
+                                    console.log('power settings: init response: ', body);
                                 }
                             }
                             
@@ -248,7 +267,12 @@
                             mqtt_element.setAttribute('class','developer-checkbox-item');
                             document.querySelector('#developer-settings > ul').prepend(mqtt_element);
                             
-                            document.getElementById('allow-anonymous-mqtt-item').innerHTML = '<input id="allow-anonymous-mqtt-checkbox" class="developer-checkbox" type="checkbox"> <label for="allow-anonymous-mqtt-checkbox" >Enable anonymous MQTT</label>';
+                            var mqtt_checked = "";
+                            if(body.allow_anonymous_mqtt){
+                                mqtt_checked = "checked";
+                            }
+                            
+                            document.getElementById('allow-anonymous-mqtt-item').innerHTML = '<input id="allow-anonymous-mqtt-checkbox" class="developer-checkbox" type="checkbox" '  + mqtt_checked + '> <label for="allow-anonymous-mqtt-checkbox" title="This can pose a security risk, so only enable this if you really need to.">Allow anonymous MQTT</label>';
                        
                             document.getElementById('allow-anonymous-mqtt-checkbox').addEventListener('change', () => {
                                 //console.log(document.getElementById('allow-anonymous-mqtt-checkbox').checked);

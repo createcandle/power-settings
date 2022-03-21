@@ -6,4 +6,5 @@
 
 tar -xf /home/pi/.webthings/data/power-settings/candle_restore.tar -C /home/pi/.webthings/
 
+rm /boot/bootup_actions.sh
 #sudo systemctl start webthings-gateway.service

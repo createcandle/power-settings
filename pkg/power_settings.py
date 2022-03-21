@@ -100,6 +100,7 @@ class PowerSettingsAPIHandler(APIHandler):
             if os.path.isfile(self.actions_file_path):
                 print("ERROR: old actions script still exists! Removing it now.")
                 os.system('sudo rm ' + str(self.actions_file_path))
+                os.system('sudo touch ')
                 
             
             # remove old download symlink if it somehow survived
@@ -283,12 +284,16 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if 'allow_anonymous_mqtt' in request.body:
                                      if request.body['allow_anonymous_mqtt'] == True:
                                          allow_anonymous_mqtt = "true"
+                                         if self.DEBUG:
+                                             print("set allow_anonymous_mqtt to true")
                                          
                                 if allow_anonymous_mqtt:
                                     os.system("sed -i 's/allow_anonymous false/allow_anonymous true/' " + str(self.mosquitto_conf_file_path))
                                 else:
                                     os.system("sed -i 's/allow_anonymous true/allow_anonymous false/' " + str(self.mosquitto_conf_file_path))
                                     
+                                if self.DEBUG:
+                                    print("restarting mosquitto")
                                 os.system('sudo systemctl restart mosquitto.service')
                                     
                                 self.allow_anonymous_mqtt = allow_anonymous_mqtt
