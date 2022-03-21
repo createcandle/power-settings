@@ -330,11 +330,12 @@ class PowerSettingsAPIHandler(APIHandler):
                                          allow_anonymous_mqtt = "true"
                                          if self.DEBUG:
                                              print("set allow_anonymous_mqtt to true")
-                                         
+                                
+                                # sed -i 's/allow_anonymous false/allow_anonymous true/' /home/pi/.webthings/etc/mosquitto/mosquitto.conf
                                 if allow_anonymous_mqtt:
-                                    os.system("sed -i 's/allow_anonymous false/allow_anonymous true/' " + str(self.mosquitto_conf_file_path))
+                                    os.system("sudo sed -i 's/allow_anonymous false/allow_anonymous true/' " + str(self.mosquitto_conf_file_path))
                                 else:
-                                    os.system("sed -i 's/allow_anonymous true/allow_anonymous false/' " + str(self.mosquitto_conf_file_path))
+                                    os.system("sudo sed -i 's/allow_anonymous true/allow_anonymous false/' " + str(self.mosquitto_conf_file_path))
                                     
                                 if self.DEBUG:
                                     print("restarting mosquitto")
