@@ -3,7 +3,7 @@
 # This script tries to do a factory reset.
 # Some of the commands can only work when the disk overlay is disabled, but are run anyway to keep this a universal solution.
 
-mount -o remount,rw /boot
+#raspi-config nonint disable_bootro
 
 pkill chromium-browse
 systemctl stop webthings-gateway.service
@@ -61,10 +61,6 @@ chown pi:pi /home/pi/.webthings/config/db.sqlite3
 # remove logs
 rm -rf /home/pi/.webthings/log/{*,.*}
 
-
-# remove Bluetooth data
-rm -rf /home/pi/.webthings/var/lib/bluetooth/*
-
 # remove uploaded images
 rm -f /home/pi/.webthings/data/photo-frame/photos/*
 rm -f /home/pi/.webthings/uploads/*
@@ -100,8 +96,15 @@ else
 fi
 
 
-echo "DONE. Shutting down.."
+if [ -f "/boot/keep_bluetooth.txt" ]; then
+    echo "Factory reset is allowing Bluetooth devices to remain paired"
+else
+    echo "Factory reset: also removing Bluetooth pairings"
+    rm -rf /home/pi/.webthings/var/lib/bluetooth/*
+fi
 
+
+# Disable SSH access
 raspi-config nonint do_ssh 1 # 0 is enable, 1 is disable
 
 #raspi-config --enable-overlayfs
@@ -112,6 +115,9 @@ raspi-config nonint disable_bootro
 raspi-config nonint enable_overlayfs
 raspi-config nonint disable_bootro
 
+echo "waiting 15 seconds"
 sleep 15
+
+echo "DONE. Shutting down.."
 rm /boot/bootup_actions.sh
 shutdown -P now
