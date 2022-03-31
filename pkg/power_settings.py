@@ -75,6 +75,7 @@ class PowerSettingsAPIHandler(APIHandler):
             
             # Factory reset
             self.keep_z2m_file_path = '/boot/keep_z2m.txt'
+            self.keep_bluetooth_file_path = '/boot/keep_bluetooth.txt'
             self.factory_reset_script_path = os.path.join(self.addon_dir, "factory_reset.sh") 
             
             # Backup addon dir paths
@@ -184,10 +185,6 @@ class PowerSettingsAPIHandler(APIHandler):
             print("Error! Failed to open settings database: " + str(ex))
             #self.close_proxy()
         
-        if not 'config' in locals():
-            print("Error loading config from database")
-            return
-        
         if not config:
             print("Error loading config from database")
             return
@@ -225,23 +222,32 @@ class PowerSettingsAPIHandler(APIHandler):
                             # FACTORY RESET
                             if action == 'reset':
                                 
-                                resetz2m = "false"
+                                reset_z2m = False
                                 if 'keep_z2m' in request.body:
-                                     if request.body['keep_z2m'] == False:
-                                         resetz2m = "true"
+                                    reset_z2m = bool(request.body['keep_z2m'])
+                                
+                                reset_bluetooth = False
+                                if 'keep_bluetooth' in request.body:
+                                     reset_bluetooth = bool(request.body['keep_bluetooth'])
                                 
                                 print("creating reset files")
                                 
-                                # Set the preference about keeping Z2M files in the boot folder
-                                if resetz2m:
+                                # Set the preference files about keeping Z2M and Bluetooth in the boot folder
+                                if reset_z2m:
                                     os.system('sudo rm ' + self.keep_z2m_file_path)
                                 else:
                                     os.system('sudo touch ' + self.keep_z2m_file_path)
+                                    
+                                if reset_bluetooth:
+                                    os.system('sudo rm ' + self.keep_bluetooth_file_path)
+                                else:
+                                    os.system('sudo touch ' + self.keep_bluetooth_file_path)
+                                    
                                 
                                 # Place the factory reset file in the correct location so that it will be activated at boot.
                                 os.system('sudo cp ' + str(self.factory_reset_script_path) + ' ' + str(self.actions_file_path))
                                 #textfile = open(self.actions_file_path, "w")
-                                #a = textfile.write(resetz2m)
+                                #a = textfile.write(reset_z2m)
                                 #textfile.close()
                                 
                                 #os.spawnve(os.P_NOWAIT, "/bin/bash", ["-c", "/home/pi/longrun.sh"])
@@ -253,10 +259,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                 #CREATE_NEW_PROCESS_GROUP = 0x00000200
                                 #pid = Popen([script, param], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE,
                                 #            creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
-                                #subprocess.Popen(["nohup", "/bin/bash", "/home/pi/longrun.sh", resetz2m], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                                #subprocess.Popen(["nohup", "/bin/bash", "/home/pi/longrun.sh", reset_z2m], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE,
                                 #            creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
                                 #os.system('sudo chmod +x ~/.webthings/addons/power-settings/factory_reset.sh') 
-                                #os.system('/home/pi/.webthings/addons/power-settings/factory_reset.sh ' + str(resetz2m) + " &")
+                                #os.system('/home/pi/.webthings/addons/power-settings/factory_reset.sh ' + str(reset_z2m) + " &")
                                 
                                 return APIResponse(
                                   status=200,

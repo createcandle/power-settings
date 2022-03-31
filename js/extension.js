@@ -41,6 +41,11 @@
                         const browser_time_button = document.getElementById('extension-power-settings-form-browser-time-button');
             
                         
+                        if(document.getElementById('extension-power-settings-back-button') == null){
+                            console.log("Error, missing power settings back button? Aborting");
+                            return;
+                        }
+                        
                         // Back button
                         document.getElementById('extension-power-settings-back-button').addEventListener('click', () => {
                             document.getElementById('extension-power-settings-pages').classList.add('hidden');
@@ -119,13 +124,21 @@
                         document.getElementById('extension-power-settings-form-reset-submit').addEventListener('click', () => {
                             //console.log("factory reset button clicked");
                 
-                            var keep_z2m = true;
+                            var keep_z2m = false;
                             try{
                                 keep_z2m = document.getElementById('extension-power-settings-keep-z2m').checked;
                                 //console.log("keep_z2m: ", keep_z2m);
                             }
                             catch(e){
                                 console.log('Error getting keep_z2m value: ', e);
+                            }
+                            
+                            var keep_bluetooth = false;
+                            try{
+                                keep_bluetooth = document.getElementById('extension-power-settings-keep-bluetooth').checked;
+                            }
+                            catch(e){
+                                console.log('Error getting keep_bluetooth value: ', e);
                             }
                 
                             if( document.getElementById('extension-power-settings-form-understand').value != 'I understand'){
@@ -139,7 +152,8 @@
                                     window.API.postJson(
                                         `/extensions/${this.id}/api/ajax`, {
                                             'action': 'reset',
-                                            'keep_z2m': keep_z2m
+                                            'keep_z2m': keep_z2m,
+                                            'keep_bluetooth': keep_bluetooth
                                         }
                                     ).then((body) => {
                                         console.log("factory reset response: ", body);
