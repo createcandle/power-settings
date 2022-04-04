@@ -81,6 +81,11 @@ rm /var/log/syslog.1
 systemd-tmpfiles --clean
 systemd-tmpfiles --remove
 
+rm /var/log/*
+rm /var/log/mosquitto/*
+rm -rf /var/log/samba
+#rm /var/log/*.gz
+
 #RESETZ2M=$1
 
 #if [ "$RESETZ2M" == "true" ]; then
