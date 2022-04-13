@@ -16,6 +16,7 @@ sleep 5
 #npm cache clean --force
 #nvm cache clear
 apt-get clean
+apt remove --purge
 apt autoremove
 history -c
 #rm -rf /home/pi/.cache/pip
@@ -75,16 +76,16 @@ cd /home/pi/.webthings/data && find -not -path "./candleappstore*" -not -path ".
 echo "Well hello there" > /home/pi/.bash_history
 #cat /dev/null > /home/pi/.bash_history
 
-# clear syslog
-truncate -s 0 /var/log/syslog
-rm /var/log/syslog.1
+# clear logs
 systemd-tmpfiles --clean
 systemd-tmpfiles --remove
+rm -rf /var/log/*
 
-rm /var/log/*
-rm /var/log/mosquitto/*
-rm -rf /var/log/samba
-#rm /var/log/*.gz
+# Clear other files
+rm -rf /boot/.Spotlight*
+rm -rf /boot/.Trashes*
+rm -rf /boot/.TemporaryItems*
+rm -rf /usr/share/doc
 
 #RESETZ2M=$1
 
@@ -117,6 +118,8 @@ rm /etc/hosts
 ln -s /home/pi/.webthings/etc/hostname /etc/hostname
 ln -s /home/pi/.webthings/etc/hosts /etc/hosts
 
+
+rf -rf /tmp/*
 
 # Disable SSH access
 raspi-config nonint do_ssh 1 # 0 is enable, 1 is disable
