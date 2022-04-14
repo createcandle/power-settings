@@ -137,5 +137,7 @@ echo "waiting 5 seconds"
 sleep 5
 
 echo "DONE. Shutting down.."
+rm /boot/keep_z2m.txt
+rm /boot/keep_bluetooth.txt
 rm /boot/bootup_actions.sh
 shutdown -P now
