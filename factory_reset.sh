@@ -25,6 +25,7 @@ rm -rf /home/pi/.cache
 rm -rf /home/pi/.config/*
 rm -rf /home/pi/.webthings/chromium/*
 rm /home/pi/.webthings/chromium/'Local State'
+rm /home/pi/candle/start.html
 
 rm -rf /home/pi/.local/share/nano/search_history
 rm /root/.cache/.bluetoothctl_history
@@ -113,13 +114,13 @@ fi
 # Try to create the hostname symbolic links
 echo "candle" > /home/pi/.webthings/etc/hostname
 echo "127.0.0.1	localhost\n::1		localhost ip6-localhost ip6-loopback\nff02::1		ip6-allnodes\nff02::2		ip6-allrouters\n\n127.0.1.1	candle" > /home/pi/.webthings/etc/hosts
-rm /etc/hostname
-rm /etc/hosts
-ln -s /home/pi/.webthings/etc/hostname /etc/hostname
-ln -s /home/pi/.webthings/etc/hosts /etc/hosts
+#rm /etc/hostname
+#rm /etc/hosts
+#ln -s /home/pi/.webthings/etc/hostname /etc/hostname
+#ln -s /home/pi/.webthings/etc/hosts /etc/hosts
 
 
-rf -rf /tmp/*
+rm -rf /tmp/*
 
 # Disable SSH access
 raspi-config nonint do_ssh 1 # 0 is enable, 1 is disable
@@ -132,8 +133,8 @@ raspi-config nonint disable_bootro
 raspi-config nonint enable_overlayfs
 raspi-config nonint disable_bootro
 
-echo "waiting 15 seconds"
-sleep 15
+echo "waiting 5 seconds"
+sleep 5
 
 echo "DONE. Shutting down.."
 rm /boot/bootup_actions.sh
