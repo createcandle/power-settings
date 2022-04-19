@@ -24,341 +24,8 @@
             fetch(`/extensions/${this.id}/views/settings_pages.html`)
                 .then((res) => res.text())
                 .then((text) => {
-                    this.settings_pages_content = text;
-                    var pages = document.createElement('div');
-                    pages.setAttribute('id','extension-power-settings-pages');
-                    pages.classList.add('settings-section');
-                    pages.classList.add('hidden');
-                    
-                    pages.innerHTML = this.settings_pages_content;
-                    document.body.appendChild(pages);
-                    
-                    if(document.querySelector('#settings-menu > ul') != null){
-                        
-                        const hours = document.getElementById('extension-power-settings-form-hours');
-                        const minutes = document.getElementById('extension-power-settings-form-minutes');
-                        const ntp = document.getElementById('extension-power-settings-form-ntp');
-                        const browser_time_button = document.getElementById('extension-power-settings-form-browser-time-button');
-            
-                        
-                        if(document.getElementById('extension-power-settings-back-button') == null){
-                            console.log("Error, missing power settings back button? Aborting");
-                            return;
-                        }
-                        
-                        // Back button
-                        document.getElementById('extension-power-settings-back-button').addEventListener('click', () => {
-                            document.getElementById('extension-power-settings-pages').classList.add('hidden');
-                            
-                            window.API.postJson(
-                                `/extensions/${this.id}/api/ajax`, {
-                                    'action': 'unlink_backup_download_dir'
-                                }
-                            ).then((body) => {
-                                if(this.debug){
-                                    console.log("power settings: back button: unlink response: ", body);
-                                }
-                            }).catch((e) => {
-                               console.log("Error: unlinking download: connection failed: ", e);
-                            });
-                            
-                            
-                        });
-                        
-                        
-                        // Add buttons to settings menu
-                        document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-time-button">Clock</a></li>';
-                        document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-backup-button">Backup</a></li>';
-                        document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-reset-button">Factory reset</a></li>';
-                        
-                         
-                        
-                        // Show time page button
-                        document.getElementById('extension-power-settings-menu-time-button').addEventListener('click', () => {
-                            //console.log('show time menu button clicked');
-                    
-                            this.hide_all_settings_containers();
-                            document.getElementById('extension-power-settings-container-time').classList.remove('extension-power-settings-hidden');
-                            document.getElementById('extension-power-settings-pages').classList.remove('hidden');
-                        });
-                        
-                        // Show backup page button
-                        document.getElementById('extension-power-settings-menu-backup-button').addEventListener('click', () => {
-                            //console.log('show backup menu button clicked');
-                    
-                            this.hide_all_settings_containers();
-                            document.getElementById('extension-power-settings-container-backup').classList.remove('extension-power-settings-hidden');
-                            document.getElementById('extension-power-settings-pages').classList.remove('hidden');
-                            
-                            window.API.postJson(
-                                `/extensions/${this.id}/api/ajax`, {
-                                    'action': 'backup_init'
-                                }
-                            ).then((body) => {
-                                console.log("backup init response: ", body);
-                                
-                            }).catch((e) => {
-                                alert("Error: backup could not connect to controller: ", e);
-                            });
-                            
-                        });
-                        
-                        // Show reset page button
-                        document.getElementById('extension-power-settings-menu-reset-button').addEventListener('click', () => {
-                            //console.log('show reset menu button clicked');
-                    
-                            this.hide_all_settings_containers();
-                            document.getElementById('extension-power-settings-container-reset').classList.remove('extension-power-settings-hidden');
-                            document.getElementById('extension-power-settings-pages').classList.remove('hidden');
-                        });
-                        
-                        
-                        
-                        
-            
-            
-                        
-                        
-                        // FACTORY RESET
-            
-                        document.getElementById('extension-power-settings-form-reset-submit').addEventListener('click', () => {
-                            //console.log("factory reset button clicked");
-                
-                            var keep_z2m = false;
-                            try{
-                                keep_z2m = document.getElementById('extension-power-settings-keep-z2m').checked;
-                                //console.log("keep_z2m: ", keep_z2m);
-                            }
-                            catch(e){
-                                console.log('Error getting keep_z2m value: ', e);
-                            }
-                            
-                            var keep_bluetooth = false;
-                            try{
-                                keep_bluetooth = document.getElementById('extension-power-settings-keep-bluetooth').checked;
-                            }
-                            catch(e){
-                                console.log('Error getting keep_bluetooth value: ', e);
-                            }
-                
-                            if( document.getElementById('extension-power-settings-form-understand').value != 'I understand'){
-                                alert("You must type 'I understand' before the factory reset process may start");
-                            }
-                            else{
-                                if(confirm("Are you absolutely sure?")){
-                                    document.getElementById('extension-power-settings-container-reset').innerHTML = "<h1>Factory reset in progress</h1><p>The controller will now reboot. When all data is erased the controller will shut down.</p><p>Do not unplug the controller until the red light has stopped blinking (if you do not see it, just wait one minute).</p>";
-                                    document.getElementById('extension-power-settings-back-button').style.display = 'none';
-
-                                    window.API.postJson(
-                                        `/extensions/${this.id}/api/ajax`, {
-                                            'action': 'reset',
-                                            'keep_z2m': keep_z2m,
-                                            'keep_bluetooth': keep_bluetooth
-                                        }
-                                    ).then((body) => {
-                                        console.log("factory reset response: ", body);
-                                        if(this.debug){
-                                            if(confirm("The system will now reboot")){
-                                                if(body.state == 'ok'){
-                                                    API.setSshStatus(false).then(() => {
-                                                        window.API.postJson('/settings/system/actions', {
-                                                            action: 'restartSystem'
-                                                        }).catch(console.error);
-                                                    }).catch((e) => {
-                                                        console.error(`Failed to toggle SSH: ${e}`);
-                                                    });
-                                                }
-                                                else{
-                                                    alert("Something went wrong! Try rebooting manually and see what happens.");
-                                                }
-                                            }
-                                        }
-                                        else{
-                                            if(body.state == 'ok'){
-                                                API.setSshStatus(false).then(() => {
-                                                    window.API.postJson('/settings/system/actions', {
-                                                        action: 'restartSystem'
-                                                    }).catch(console.error);
-                                                }).catch((e) => {
-                                                    console.error(`Failed to toggle SSH: ${e}`);
-                                                });
-                                            }
-                                            else{
-                                                alert("Something went wrong! Try rebooting manually and see what happens.");
-                                            }
-                                        }
-                                        
-                            
-                                    }).catch((e) => {
-                                        alert("Error while attempting to start factory reset: could not connect?: ", e);
-                                    });
-                        
-                        
-                                }
-                            }
-                
-                            document.getElementById('extension-power-settings-container-reset').style.display = 'block';
-                            // document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'none';
-                        });
-            
-            
-            
-            
-            
-                        // TIME CLOCK
-            
-                        
-                        ntp.addEventListener('click', () => {
-                            var ntp_current_state = 0;
-                            if (ntp.checked) {
-                                ntp_current_state = 1;
-                            }
-                            window.API.postJson(
-                                `/extensions/${this.id}/api/set-ntp`, {
-                                    'ntp': ntp_current_state
-                                }
-                            ).then((body) => {
-                                pre.innerText = JSON.stringify(body, null, 2);
-                            }).catch((e) => {
-                                console.log("set ntp error: ", e);
-                            });
-                        });
-
-                        // Submits the manual time
-                        document.getElementById('extension-power-settings-form-submit-time').addEventListener('click', () => {
-                            if (hours.value.trim() != '' && minutes.value.trim() != '') { // Make sure the user inputted something. Python will also sanitize.
-                                window.API.postJson(
-                                    `/extensions/${this.id}/api/set-time`, {
-                                        'hours': hours.value,
-                                        'minutes': minutes.value
-                                    }
-                                ).then((body) => {
-                                    //pre.innerText = JSON.stringify(body, null, 2);
-                                    document.getElementById('extension-power-settings-container-time').style.display = 'none';
-                                    //document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'inline-block';
-                                }).catch((e) => {
-                                    console.log("time submit error: ", e);
-                                    alert("Saving failed: could not connect to the controller")
-                                });
-                            }
-                        });
-                        
-                        // get current time from browser
-                        browser_time_button.addEventListener('click', () => {
-                            var powerSettingsCurrentTime = new Date();
-                            //var powerSettingsTime = powerSettingsCurrentTime.getTime();
-                            //powerSettingsCurrentTime.setTime( powerSettingsCurrentTime.getTime() + new Date().getTimezoneOffset()*60*1000 );
-                            //console.log(powerSettingsCurrentTime);
-                            hours.value = powerSettingsCurrentTime.getHours();
-                            minutes.value = powerSettingsCurrentTime.getMinutes();
-                        });
-
-
-                        //console.log("doing init");
-                        // Get the server time
-                        window.API.postJson(
-                            `/extensions/${this.id}/api/init`, {
-                                'init': 1
-                            }
-                        ).then((body) => {
-                            
-                            
-                            if(typeof body.debug != 'undefined'){
-                                this.debug = body.debug;
-                                if(body.debug == true){
-                                    console.log('power settings: init response: ', body);
-                                }
-                            }
-                            
-                            hours.placeholder = body['hours'];
-                            minutes.placeholder = body['minutes'];
-                            ntp.checked = body['ntp'];
-                            
-                            //console.log("adding mqtt item");
-                            // Add MQTT checkbox
-                            var mqtt_element = document.createElement('li');
-                            mqtt_element.setAttribute('id','allow-anonymous-mqtt-item');
-                            mqtt_element.setAttribute('class','developer-checkbox-item');
-                            document.querySelector('#developer-settings > ul').prepend(mqtt_element);
-                            
-                            var mqtt_checked = "";
-                            if(body.allow_anonymous_mqtt){
-                                mqtt_checked = "checked";
-                            }
-                            
-                            document.getElementById('allow-anonymous-mqtt-item').innerHTML = '<input id="allow-anonymous-mqtt-checkbox" class="developer-checkbox" type="checkbox" '  + mqtt_checked + '> <label for="allow-anonymous-mqtt-checkbox" title="This can pose a security risk, so only enable this if you really need to.">Allow anonymous MQTT</label>';
-                       
-                            document.getElementById('allow-anonymous-mqtt-checkbox').addEventListener('change', () => {
-                                //console.log(document.getElementById('allow-anonymous-mqtt-checkbox').checked);
-                            
-                                const checkbox_state = document.getElementById('allow-anonymous-mqtt-checkbox').checked;
-                                window.API.postJson(
-                                    `/extensions/${this.id}/api/ajax`, {
-                                        'action': 'anonymous_mqtt','allow_anonymous_mqtt': checkbox_state
-                                    }
-                                ).then((body) => {
-                                    if(this.debug){
-                                        console.log("allow_anonymous MQTT response: ", body);
-                                    }                                    
-                                
-                                }).catch((e) => {
-                                    alert("Error, allow_anonymous MQTT setting was not changed: could not connect to controller: ", e);
-                                });
-                            });
-                            
-                            
-                        }).catch((e) => {
-                            console.log("powersettings init error: ", e);
-                        });
-                        
-                        
-                        
-                        
-                        // BACKUP
-                        
-                        document.getElementById('extension-power-settings-create-backup-button').addEventListener('click', () => {
-                            //console.log("create backup button clicked");
-                            
-                            window.API.postJson(
-                                `/extensions/${this.id}/api/ajax`, {
-                                    'action': 'create_backup'
-                                }
-                            ).then((body) => {
-                                if(this.debug){
-                                    console.log("create backup response: ", body);
-                                }
-                                if(body.state == 'ok'){
-                                    window.location.pathname = "/extensions/power-settings/backup/candle_backup.tar";
-                                }
-                                else{
-                                     alert("Sorry, an error occured while creating the backup");
-                                }
-                                
-                            }).catch((e) => {
-                                alert("Error, could not create backup: could not connect?: ", e);
-                            });
-                            
-                        });
-                        
-                        
-                        // Upload
-                        
-            			document.getElementById("extension-power-settings-backup-file-selector").addEventListener('change', () => {
-            				var filesSelected = document.getElementById("extension-power-settings-backup-file-selector").files;
-            				
-                            document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>';
-                            this.upload_files(filesSelected);
-            			});
-                        
-                        
-                        
-                    }
-                    else{
-                        console.log("power settings error: settings menu didn't exist yet, so cannot append additional elements");
-                    }
-                    
-                    
-                    
+                    this.settings_pages_content = text;                    
+                    this.create_extra_settings();
                 })
                 .catch((e) => {
                     console.error('Failed to fetch settings pages content:', e);
@@ -384,6 +51,342 @@
 
             
                 
+        }
+
+
+        create_extra_settings(){
+            var pages = document.createElement('div');
+            pages.setAttribute('id','extension-power-settings-pages');
+            pages.classList.add('settings-section');
+            pages.classList.add('hidden');
+            
+            pages.innerHTML = this.settings_pages_content;
+            document.body.appendChild(pages);
+            
+            if(document.querySelector('#settings-menu > ul') != null){
+                
+                const hours = document.getElementById('extension-power-settings-form-hours');
+                const minutes = document.getElementById('extension-power-settings-form-minutes');
+                const ntp = document.getElementById('extension-power-settings-form-ntp');
+                const browser_time_button = document.getElementById('extension-power-settings-form-browser-time-button');
+    
+                
+                if(document.getElementById('extension-power-settings-back-button') == null){
+                    console.log("Error, missing power settings back button? Aborting");
+                    return;
+                }
+                
+                // Back button
+                document.getElementById('extension-power-settings-back-button').addEventListener('click', () => {
+                    document.getElementById('extension-power-settings-pages').classList.add('hidden');
+                    
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'unlink_backup_download_dir'
+                        }
+                    ).then((body) => {
+                        if(this.debug){
+                            console.log("power settings: back button: unlink response: ", body);
+                        }
+                    }).catch((e) => {
+                       console.log("Error: unlinking download: connection failed: ", e);
+                    });
+                    
+                    
+                });
+                
+                
+                // Add buttons to settings menu
+                document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-time-button">Clock</a></li>';
+                document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-backup-button">Backup</a></li>';
+                document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-reset-button">Factory reset</a></li>';
+                
+                 
+                
+                // Show time page button
+                document.getElementById('extension-power-settings-menu-time-button').addEventListener('click', () => {
+                    //console.log('show time menu button clicked');
+            
+                    this.hide_all_settings_containers();
+                    document.getElementById('extension-power-settings-container-time').classList.remove('extension-power-settings-hidden');
+                    document.getElementById('extension-power-settings-pages').classList.remove('hidden');
+                });
+                
+                // Show backup page button
+                document.getElementById('extension-power-settings-menu-backup-button').addEventListener('click', () => {
+                    //console.log('show backup menu button clicked');
+            
+                    this.hide_all_settings_containers();
+                    document.getElementById('extension-power-settings-container-backup').classList.remove('extension-power-settings-hidden');
+                    document.getElementById('extension-power-settings-pages').classList.remove('hidden');
+                    
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'backup_init'
+                        }
+                    ).then((body) => {
+                        console.log("backup init response: ", body);
+                        
+                    }).catch((e) => {
+                        alert("Error: backup could not connect to controller: ", e);
+                    });
+                    
+                });
+                
+                // Show reset page button
+                document.getElementById('extension-power-settings-menu-reset-button').addEventListener('click', () => {
+                    //console.log('show reset menu button clicked');
+            
+                    this.hide_all_settings_containers();
+                    document.getElementById('extension-power-settings-container-reset').classList.remove('extension-power-settings-hidden');
+                    document.getElementById('extension-power-settings-pages').classList.remove('hidden');
+                });
+                
+                
+                
+                
+    
+    
+                
+                
+                // FACTORY RESET
+    
+                document.getElementById('extension-power-settings-form-reset-submit').addEventListener('click', () => {
+                    //console.log("factory reset button clicked");
+        
+                    var keep_z2m = false;
+                    try{
+                        keep_z2m = document.getElementById('extension-power-settings-keep-z2m').checked;
+                        //console.log("keep_z2m: ", keep_z2m);
+                    }
+                    catch(e){
+                        console.log('Error getting keep_z2m value: ', e);
+                    }
+                    
+                    var keep_bluetooth = false;
+                    try{
+                        keep_bluetooth = document.getElementById('extension-power-settings-keep-bluetooth').checked;
+                    }
+                    catch(e){
+                        console.log('Error getting keep_bluetooth value: ', e);
+                    }
+        
+                    if( document.getElementById('extension-power-settings-form-understand').value != 'I understand'){
+                        alert("You must type 'I understand' before the factory reset process may start");
+                    }
+                    else{
+                        if(confirm("Are you absolutely sure?")){
+                            document.getElementById('extension-power-settings-container-reset').innerHTML = "<h1>Factory reset in progress</h1><p>The controller will now reboot. When all data is erased the controller will shut down.</p><p>Do not unplug the controller until the red light has stopped blinking (if you do not see it, just wait one minute).</p>";
+                            document.getElementById('extension-power-settings-back-button').style.display = 'none';
+
+                            window.API.postJson(
+                                `/extensions/${this.id}/api/ajax`, {
+                                    'action': 'reset',
+                                    'keep_z2m': keep_z2m,
+                                    'keep_bluetooth': keep_bluetooth
+                                }
+                            ).then((body) => {
+                                console.log("factory reset response: ", body);
+                                if(this.debug){
+                                    if(confirm("The system will now reboot")){
+                                        if(body.state == 'ok'){
+                                            API.setSshStatus(false).then(() => {
+                                                window.API.postJson('/settings/system/actions', {
+                                                    action: 'restartSystem'
+                                                }).catch(console.error);
+                                            }).catch((e) => {
+                                                console.error(`Failed to toggle SSH: ${e}`);
+                                            });
+                                        }
+                                        else{
+                                            alert("Something went wrong! Try rebooting manually and see what happens.");
+                                        }
+                                    }
+                                }
+                                else{
+                                    if(body.state == 'ok'){
+                                        API.setSshStatus(false).then(() => {
+                                            window.API.postJson('/settings/system/actions', {
+                                                action: 'restartSystem'
+                                            }).catch(console.error);
+                                        }).catch((e) => {
+                                            console.error(`Failed to toggle SSH: ${e}`);
+                                        });
+                                    }
+                                    else{
+                                        alert("Something went wrong! Try rebooting manually and see what happens.");
+                                    }
+                                }
+                                
+                    
+                            }).catch((e) => {
+                                alert("Error while attempting to start factory reset: could not connect?: ", e);
+                            });
+                
+                
+                        }
+                    }
+        
+                    document.getElementById('extension-power-settings-container-reset').style.display = 'block';
+                    // document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'none';
+                });
+    
+    
+    
+    
+    
+                // TIME CLOCK
+    
+                
+                ntp.addEventListener('click', () => {
+                    var ntp_current_state = 0;
+                    if (ntp.checked) {
+                        ntp_current_state = 1;
+                    }
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/set-ntp`, {
+                            'ntp': ntp_current_state
+                        }
+                    ).then((body) => {
+                        pre.innerText = JSON.stringify(body, null, 2);
+                    }).catch((e) => {
+                        console.log("set ntp error: ", e);
+                    });
+                });
+
+                // Submits the manual time
+                document.getElementById('extension-power-settings-form-submit-time').addEventListener('click', () => {
+                    if (hours.value.trim() != '' && minutes.value.trim() != '') { // Make sure the user inputted something. Python will also sanitize.
+                        window.API.postJson(
+                            `/extensions/${this.id}/api/set-time`, {
+                                'hours': hours.value,
+                                'minutes': minutes.value
+                            }
+                        ).then((body) => {
+                            //pre.innerText = JSON.stringify(body, null, 2);
+                            document.getElementById('extension-power-settings-container-time').style.display = 'none';
+                            //document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'inline-block';
+                        }).catch((e) => {
+                            console.log("time submit error: ", e);
+                            alert("Saving failed: could not connect to the controller")
+                        });
+                    }
+                });
+                
+                // get current time from browser
+                browser_time_button.addEventListener('click', () => {
+                    var powerSettingsCurrentTime = new Date();
+                    //var powerSettingsTime = powerSettingsCurrentTime.getTime();
+                    //powerSettingsCurrentTime.setTime( powerSettingsCurrentTime.getTime() + new Date().getTimezoneOffset()*60*1000 );
+                    //console.log(powerSettingsCurrentTime);
+                    hours.value = powerSettingsCurrentTime.getHours();
+                    minutes.value = powerSettingsCurrentTime.getMinutes();
+                });
+
+
+                //console.log("doing init");
+                // Get the server time
+                window.API.postJson(
+                    `/extensions/${this.id}/api/init`, {
+                        'init': 1
+                    }
+                ).then((body) => {
+                    
+                    if(typeof body.debug != 'undefined'){
+                        this.debug = body.debug;
+                        if(body.debug == true){
+                            console.log('power settings: init response: ', body);
+                        }
+                    }
+                    
+                    hours.placeholder = body['hours'];
+                    minutes.placeholder = body['minutes'];
+                    ntp.checked = body['ntp'];
+                    
+                    //console.log("adding mqtt item");
+                    // Add MQTT checkbox
+                    var mqtt_element = document.createElement('li');
+                    mqtt_element.setAttribute('id','allow-anonymous-mqtt-item');
+                    mqtt_element.setAttribute('class','developer-checkbox-item');
+                    document.querySelector('#developer-settings > ul').prepend(mqtt_element);
+                    
+                    var mqtt_checked = "";
+                    if(body.allow_anonymous_mqtt){
+                        mqtt_checked = "checked";
+                    }
+                    
+                    document.getElementById('allow-anonymous-mqtt-item').innerHTML = '<input id="allow-anonymous-mqtt-checkbox" class="developer-checkbox" type="checkbox" '  + mqtt_checked + '> <label for="allow-anonymous-mqtt-checkbox" title="This can pose a security risk, so only enable this if you really need to.">Allow anonymous MQTT</label>';
+               
+                    document.getElementById('allow-anonymous-mqtt-checkbox').addEventListener('change', () => {
+                        console.log('allow anonymous MQTT checkbox value changed');
+                    
+                        const checkbox_state = document.getElementById('allow-anonymous-mqtt-checkbox').checked;
+                        window.API.postJson(
+                            `/extensions/${this.id}/api/ajax`, {
+                                'action': 'anonymous_mqtt','allow_anonymous_mqtt': checkbox_state
+                            }
+                        ).then((body) => {
+                            if(this.debug){
+                                console.log("allow_anonymous MQTT response: ", body);
+                            }                                    
+                        
+                        }).catch((e) => {
+                            alert("Error, allow_anonymous MQTT setting was not changed: could not connect to controller: ", e);
+                        });
+                    });
+                    
+                    
+                    
+                    
+                }).catch((e) => {
+                    console.log("powersettings init error: ", e);
+                });
+                
+                
+                
+                
+                // BACKUP
+                
+                document.getElementById('extension-power-settings-create-backup-button').addEventListener('click', () => {
+                    //console.log("create backup button clicked");
+                    
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'create_backup'
+                        }
+                    ).then((body) => {
+                        if(this.debug){
+                            console.log("create backup response: ", body);
+                        }
+                        if(body.state == 'ok'){
+                            window.location.pathname = "/extensions/power-settings/backup/candle_backup.tar";
+                        }
+                        else{
+                             alert("Sorry, an error occured while creating the backup");
+                        }
+                        
+                    }).catch((e) => {
+                        alert("Error, could not create backup: could not connect?: ", e);
+                    });
+                    
+                });
+                
+                
+                // Upload
+                
+    			document.getElementById("extension-power-settings-backup-file-selector").addEventListener('change', () => {
+    				var filesSelected = document.getElementById("extension-power-settings-backup-file-selector").files;
+    				
+                    document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>';
+                    this.upload_files(filesSelected);
+    			});
+                
+                
+                
+            }
+            else{
+                console.log("power settings error: settings menu didn't exist yet, so cannot append additional elements");
+            }
         }
 
         show() {
@@ -483,6 +486,25 @@
                 this.hide_all_settings_containers();
                 //document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'none';
             });
+            
+            
+            window.API.postJson(
+                `/extensions/${this.id}/api/ajax`, {
+                    'action': 'get_stats'
+                }
+            ).then((body) => {
+                if(this.debug){
+                    console.log("get stats response: ", body);
+                }                      
+                // Show the available free memory
+                if(typeof body['free_memory'] != 'undefined'){
+                    document.getElementById('extension-power-settings-available-memory').innerText = body['free_memory'];
+                }              
+            
+            }).catch((e) => {
+                alert("Error, allow_anonymous MQTT setting was not changed: could not connect to controller: ", e);
+            });
+            
             
             /*
             // Show the time settings

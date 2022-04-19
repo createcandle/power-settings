@@ -194,6 +194,7 @@ class PowerSettingsAPIHandler(APIHandler):
             if self.DEBUG:
                 print("-Debug preference was in config: " + str(self.DEBUG))
 
+        #self.DEBUG = True # TODO: DEBUG, REMOVE
     
         
         
@@ -213,6 +214,9 @@ class PowerSettingsAPIHandler(APIHandler):
             
             if request.path == '/init' or request.path == '/set-time' or request.path == '/set-ntp' or request.path == '/shutdown' or request.path == '/reboot' or request.path == '/restart' or request.path == '/ajax' or request.path == '/save':
 
+                if self.DEBUG:
+                    print("-API request at: " + str(request.path))
+
                 try:
                     if request.path == '/ajax':
                         if 'action' in request.body:
@@ -230,7 +234,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if 'keep_bluetooth' in request.body:
                                      reset_bluetooth = bool(request.body['keep_bluetooth'])
                                 
-                                print("creating reset files")
+                                if self.DEBUG:
+                                    print("creating reset files")
                                 
                                 # Set the preference files about keeping Z2M and Bluetooth in the boot folder
                                 if reset_z2m:
@@ -349,6 +354,33 @@ class PowerSettingsAPIHandler(APIHandler):
                                     
                                 self.allow_anonymous_mqtt = allow_anonymous_mqtt
                             
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':True}),
+                                )
+                            
+                            elif action == 'get_stats':
+                                
+                                free_memory = '?'
+                                try:
+                                    # check free memory
+                                    free_memory = subprocess.check_output(['grep','^MemFree','/proc/meminfo'])
+                                    free_memory = free_memory.decode('utf-8')
+                                    free_memory = int( int(''.join(filter(str.isdigit, free_memory))) / 1000)
+            
+                                    if self.DEBUG:
+                                        print("free_memory: " + str(free_memory))
+                                    
+                                except Exception as ex:
+                                    print("Error checking free memory: " + str(ex))
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':True, 'free_memory':free_memory}),
+                                )
+                                
                             
                             else:
                                 return APIResponse(
@@ -378,7 +410,6 @@ class PowerSettingsAPIHandler(APIHandler):
                                         current_ntp_state = False
                             except Exception as ex:
                                 print("Error getting NTP status: " + str(ex))
-                            
                             
                             response = {'hours':now.hour,'minutes':now.minute,'ntp':current_ntp_state,'backup_exists':self.backup_file_exists,'restore_exists':self.restore_file_exists, 'disk_usage':self.disk_usage, 'allow_anonymous_mqtt':self.allow_anonymous_mqtt, 'debug':self.DEBUG}
                             if self.DEBUG:

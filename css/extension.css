@@ -44,6 +44,13 @@
     display:inline-block;
 }
 
+#extension-power-settings-available-memory-container{
+    display:none;
+    text-align:center;
+}
+.developer #extension-power-settings-available-memory-container{
+    display:block;
+}
 
 #allow-anonymous-mqtt-item{
     display:none;
