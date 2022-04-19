@@ -13,8 +13,8 @@ sleep 5
 
 
 # Clear caches
-#npm cache clean --force
-#nvm cache clear
+npm cache clean --force
+nvm cache clear
 apt-get clean
 apt remove --purge
 apt autoremove
@@ -31,7 +31,7 @@ rm -rf /home/pi/.local/share/nano/search_history
 rm /root/.cache/.bluetoothctl_history
 rm /home/pi/.cache/.bluetoothctl_history
 
-
+rm -rf /home/pi/.npm/_logs/*
 
 # delete old files from temporary files folder
 find /tmp -type f -atime +10 -delete
@@ -121,6 +121,10 @@ echo "127.0.0.1	localhost\n::1		localhost ip6-localhost ip6-loopback\nff02::1		i
 
 
 rm -rf /tmp/*
+rm -rf /boot.bak
+rm -rf /usr/lib/modules.bak
+rm -rf /var/lib/apt/lists/*
+rm -rf /var/cache/apt
 
 # Disable SSH access
 raspi-config nonint do_ssh 1 # 0 is enable, 1 is disable
@@ -139,5 +143,9 @@ sleep 5
 echo "DONE. Shutting down.."
 rm /boot/keep_z2m.txt
 rm /boot/keep_bluetooth.txt
+touch /boot/hide_mouse_pointer.txt
 rm /boot/bootup_actions.sh
+
+
+
 shutdown -P now
