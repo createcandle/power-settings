@@ -4,14 +4,14 @@
 # Some of the commands can only work when the disk overlay is disabled, but are run anyway to keep this a universal solution.
 
 #raspi-config nonint disable_bootro
-
+echo "stopping browser and Webthings Gateway"
 pkill chromium-browse
 systemctl stop webthings-gateway.service
 sleep 5
 
 #sudo apt-get update
 
-
+echo "cleaning up files"
 # Clear caches
 npm cache clean --force
 nvm cache clear
@@ -126,13 +126,28 @@ rm -rf /usr/lib/modules.bak
 rm -rf /var/lib/apt/lists/*
 rm -rf /var/cache/apt
 
+if [ -f "/boot/developer.txt" ]; then
+  echo "filling unused space on user partition with zeros"
+  cat /dev/zero > /home/pi/.webthings/zero.fill
+  sync
+  sleep 5
+  sync
+  rm -f /home/pi/.webthings/zero.fill
+  echo "filling unused space on system partition with zeros"
+  cat /dev/zero > /zero.fill
+  sync
+  sleep 5
+  sync
+  rm -f /zero.fill
+  echo "filling with zeros done"
+fi
+
+
+
 # Disable SSH access
 raspi-config nonint do_ssh 1 # 0 is enable, 1 is disable
 
-#raspi-config --enable-overlayfs
-#raspi-config nonint do_overlayfs 0 # 0 is enable
-#mount -o remount,rw /boot
-#shutdown +1
+# Enable read-only mode of system partition
 raspi-config nonint disable_bootro
 raspi-config nonint enable_overlayfs
 raspi-config nonint disable_bootro
@@ -140,12 +155,17 @@ raspi-config nonint disable_bootro
 echo "waiting 5 seconds"
 sleep 5
 
-echo "DONE. Shutting down.."
 rm /boot/keep_z2m.txt
 rm /boot/keep_bluetooth.txt
 touch /boot/hide_mouse_pointer.txt
 rm /boot/bootup_actions.sh
 
+if [ -f "/home/pi/.webthings/swap" ]; then
+  echo "Warning! Detected a swap file! Disabling swap and removing it."
+  sudo dphys-swapfile swapoff
+  rm /home/pi/.webthings/swap
+fi
 
+echo "DONE. Shutting down.."
 
 shutdown -P now
