@@ -14,7 +14,7 @@ import subprocess
 
 try:
     from gateway_addon import APIHandler, APIResponse, Database
-    print("succesfully loaded APIHandler and APIResponse from gateway_addon")
+    #print("succesfully loaded APIHandler and APIResponse from gateway_addon")
 except:
     print("Import APIHandler and APIResponse from gateway_addon failed. Use at least WebThings Gateway version 0.10")
 
@@ -362,15 +362,32 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                             elif action == 'get_stats':
                                 
+                                total_memory = '?'
                                 free_memory = '?'
                                 try:
+                                    
                                     # check free memory
                                     free_memory = subprocess.check_output(['grep','^MemFree','/proc/meminfo'])
                                     free_memory = free_memory.decode('utf-8')
                                     free_memory = int( int(''.join(filter(str.isdigit, free_memory))) / 1000)
-            
                                     if self.DEBUG:
                                         print("free_memory: " + str(free_memory))
+                                    
+                                    # Check avaialable memory
+                                    available_memory = subprocess.check_output(['free'])
+                                    available_memory = available_memory.decode('utf-8')
+                                    available_memory_parts = available_memory.split()
+                                    available_memory = available_memory_parts[-1]
+                                    available_memory = int( int(''.join(filter(str.isdigit, available_memory))) / 1000)
+                                    if self.DEBUG:
+                                        print("available_memory: " + str(available_memory))
+                                    
+                                    # Check total memory in system
+                                    total_memory = subprocess.check_output(["awk","'/^MemTotal:/{print $2}'","/proc/meminfo"])
+                                    total_memory = total_memory.decode('utf-8')
+                                    total_memory = int( int(''.join(filter(str.isdigit, total_memory))) / 1000)
+                                    if self.DEBUG:
+                                        print("total_memory: " + str(total_memory))
                                     
                                 except Exception as ex:
                                     print("Error checking free memory: " + str(ex))
@@ -378,7 +395,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
-                                  content=json.dumps({'state':True, 'free_memory':free_memory}),
+                                  content=json.dumps({'state':True, 'total_memory':total_memory, 'available_memory':available_memory, 'free_memory':free_memory}),
                                 )
                                 
                             
@@ -696,7 +713,7 @@ def run_command(cmd, timeout_seconds=60):
         p = subprocess.run(cmd, timeout=timeout_seconds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, universal_newlines=True)
 
         if p.returncode == 0:
-            print("command ran succesfully")
+            #print("command ran succesfully")
             return p.stdout #.decode('utf-8')
             #yield("Command success")
         else:

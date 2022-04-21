@@ -496,10 +496,14 @@
                 if(this.debug){
                     console.log("get stats response: ", body);
                 }                      
-                // Show the available free memory
-                if(typeof body['free_memory'] != 'undefined'){
-                    document.getElementById('extension-power-settings-available-memory').innerText = body['free_memory'];
-                }              
+                // Show the available memory. This is different from "free" memory
+                if(typeof body['available_memory'] != 'undefined'){
+                    document.getElementById('extension-power-settings-available-memory').innerText = body['available_memory'];
+                }
+                // Show the total memory
+                if(typeof body['total_memory'] != 'undefined'){
+                    document.getElementById('extension-power-settings-total-memory').innerText = body['total_memory'];
+                }  
             
             }).catch((e) => {
                 alert("Error, allow_anonymous MQTT setting was not changed: could not connect to controller: ", e);
