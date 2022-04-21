@@ -42,6 +42,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.addon_name = "power-settings"  # overwritteb by data in manifest
         self.DEBUG = False
         
+        
         try:
             manifest_fname = os.path.join(
                 os.path.dirname(__file__),
@@ -383,7 +384,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         print("available_memory: " + str(available_memory))
                                     
                                     # Check total memory in system
-                                    total_memory = subprocess.check_output(["awk","'/^MemTotal:/{print $2}'","/proc/meminfo"])
+                                    total_memory = subprocess.check_output("awk '/^MemTotal:/{print $2}' /proc/meminfo", shell=True)
                                     total_memory = total_memory.decode('utf-8')
                                     total_memory = int( int(''.join(filter(str.isdigit, total_memory))) / 1000)
                                     if self.DEBUG:

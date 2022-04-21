@@ -24,8 +24,22 @@
             fetch(`/extensions/${this.id}/views/settings_pages.html`)
                 .then((res) => res.text())
                 .then((text) => {
-                    this.settings_pages_content = text;                    
+                    this.settings_pages_content = text;
+                    
+                    var pages = document.createElement('div');
+                    pages.setAttribute('id','extension-power-settings-pages');
+                    pages.classList.add('settings-section');
+                    pages.classList.add('hidden');
+            
+                    pages.innerHTML = text;
+                    document.body.appendChild(pages);
+                    
                     this.create_extra_settings();
+                    
+                    //setTimeout(() => {
+                        
+                    //}, 100);
+                    
                 })
                 .catch((e) => {
                     console.error('Failed to fetch settings pages content:', e);
@@ -55,13 +69,7 @@
 
 
         create_extra_settings(){
-            var pages = document.createElement('div');
-            pages.setAttribute('id','extension-power-settings-pages');
-            pages.classList.add('settings-section');
-            pages.classList.add('hidden');
             
-            pages.innerHTML = this.settings_pages_content;
-            document.body.appendChild(pages);
             
             if(document.querySelector('#settings-menu > ul') != null){
                 
@@ -70,8 +78,9 @@
                 const ntp = document.getElementById('extension-power-settings-form-ntp');
                 const browser_time_button = document.getElementById('extension-power-settings-form-browser-time-button');
     
-                
-                if(document.getElementById('extension-power-settings-back-button') == null){
+                const back_button = document.getElementById('extension-power-settings-back-button');
+                console.log("back_button: ", back_button);
+                if(back_button == null){
                     console.log("Error, missing power settings back button? Aborting");
                     return;
                 }
@@ -79,6 +88,8 @@
                 // Back button
                 document.getElementById('extension-power-settings-back-button').addEventListener('click', () => {
                     document.getElementById('extension-power-settings-pages').classList.add('hidden');
+                    
+                    this.hide_all_settings_containers();
                     
                     window.API.postJson(
                         `/extensions/${this.id}/api/ajax`, {
@@ -478,21 +489,12 @@
             });
             
             
-            
-            
-            
-            document.getElementById('extension-power-settings-back-button').addEventListener('click', () => {
-                //console.log("back button clicked");
-                this.hide_all_settings_containers();
-                //document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'none';
-            });
-            
-            
             window.API.postJson(
                 `/extensions/${this.id}/api/ajax`, {
                     'action': 'get_stats'
                 }
             ).then((body) => {
+                console.log("get stats response: ", body);
                 if(this.debug){
                     console.log("get stats response: ", body);
                 }                      
