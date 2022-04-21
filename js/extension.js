@@ -79,7 +79,7 @@
                 const browser_time_button = document.getElementById('extension-power-settings-form-browser-time-button');
     
                 const back_button = document.getElementById('extension-power-settings-back-button');
-                console.log("back_button: ", back_button);
+                
                 if(back_button == null){
                     console.log("Error, missing power settings back button? Aborting");
                     return;
@@ -497,18 +497,31 @@
                 console.log("get stats response: ", body);
                 if(this.debug){
                     console.log("get stats response: ", body);
-                }                      
+                }            
+
+                // Show the total memory
+                if(typeof body['total_memory'] != 'undefined'){
+                    document.getElementById('extension-power-settings-total-memory').innerText = body['total_memory'];
+                }            
                 // Show the available memory. This is different from "free" memory
                 if(typeof body['available_memory'] != 'undefined'){
                     document.getElementById('extension-power-settings-available-memory').innerText = body['available_memory'];
                 }
-                // Show the total memory
-                if(typeof body['total_memory'] != 'undefined'){
-                    document.getElementById('extension-power-settings-total-memory').innerText = body['total_memory'];
+                // Show the free memory.
+                if(typeof body['free_memory'] != 'undefined'){
+                    document.getElementById('extension-power-settings-free-memory').innerText = body['free_memory'];
+                }
+                
+                // Show the total and available disk space
+                if(typeof body['disk_usage'] != 'undefined'){
+                    document.getElementById('extension-power-settings-total-disk').innerText = Math.floor(body['disk_usage'][0] / 1024000);
+                    document.getElementById('extension-power-settings-free-disk').innerText = Math.floor(body['disk_usage'][2] / 1024000);
+                    
                 }  
+                
             
             }).catch((e) => {
-                alert("Error, allow_anonymous MQTT setting was not changed: could not connect to controller: ", e);
+                console.log("Error, getting memory and disk stats failed: could not connect to controller: ", e);
             });
             
             

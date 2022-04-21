@@ -42,7 +42,6 @@ class PowerSettingsAPIHandler(APIHandler):
         self.addon_name = "power-settings"  # overwritteb by data in manifest
         self.DEBUG = False
         
-        
         try:
             manifest_fname = os.path.join(
                 os.path.dirname(__file__),
@@ -64,7 +63,6 @@ class PowerSettingsAPIHandler(APIHandler):
             
             self.addon_dir = os.path.join(self.user_profile['addonsDir'], self.addon_name)
             self.data_dir = os.path.join(self.user_profile['dataDir'], self.addon_name)
-            
             
             # MQTT
             self.allow_anonymous_mqtt = False
@@ -374,8 +372,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                     if self.DEBUG:
                                         print("free_memory: " + str(free_memory))
                                     
-                                    # Check avaialable memory
-                                    available_memory = subprocess.check_output(['free'])
+                                    # Check available memory
+                                    available_memory = subprocess.check_output("free | grep Mem:", shell=True)
                                     available_memory = available_memory.decode('utf-8')
                                     available_memory_parts = available_memory.split()
                                     available_memory = available_memory_parts[-1]
@@ -390,13 +388,15 @@ class PowerSettingsAPIHandler(APIHandler):
                                     if self.DEBUG:
                                         print("total_memory: " + str(total_memory))
                                     
+                                    self.update_backup_info()
+                                    
                                 except Exception as ex:
                                     print("Error checking free memory: " + str(ex))
                                 
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
-                                  content=json.dumps({'state':True, 'total_memory':total_memory, 'available_memory':available_memory, 'free_memory':free_memory}),
+                                  content=json.dumps({'state':True, 'total_memory':total_memory, 'available_memory':available_memory, 'free_memory':free_memory, 'disk_usage':self.disk_usage}),
                                 )
                                 
                             
