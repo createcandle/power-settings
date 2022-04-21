@@ -494,7 +494,7 @@
                     'action': 'get_stats'
                 }
             ).then((body) => {
-                console.log("get stats response: ", body);
+                //console.log("get stats response: ", body);
                 if(this.debug){
                     console.log("get stats response: ", body);
                 }            
