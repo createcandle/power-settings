@@ -126,6 +126,12 @@ rm -rf /usr/lib/modules.bak
 rm -rf /var/lib/apt/lists/*
 rm -rf /var/cache/apt
 
+if [ -f "/home/pi/.webthings/swap" ]; then
+  echo "Warning! Detected a swap file! Disabling swap and removing it."
+  sudo dphys-swapfile swapoff
+  rm /home/pi/.webthings/swap
+fi
+
 if [ -f "/boot/developer.txt" ]; then
   echo "filling unused space on user partition with zeros"
   cat /dev/zero > /home/pi/.webthings/zero.fill
@@ -142,8 +148,6 @@ if [ -f "/boot/developer.txt" ]; then
   echo "filling with zeros done"
 fi
 
-
-
 # Disable SSH access
 raspi-config nonint do_ssh 1 # 0 is enable, 1 is disable
 
@@ -159,12 +163,6 @@ rm /boot/keep_z2m.txt
 rm /boot/keep_bluetooth.txt
 touch /boot/hide_mouse_pointer.txt
 rm /boot/bootup_actions.sh
-
-if [ -f "/home/pi/.webthings/swap" ]; then
-  echo "Warning! Detected a swap file! Disabling swap and removing it."
-  sudo dphys-swapfile swapoff
-  rm /home/pi/.webthings/swap
-fi
 
 echo "DONE. Shutting down.."
 
