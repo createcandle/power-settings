@@ -448,6 +448,17 @@
 
 
 
+/*  Memory and Disk use  */
+
+.extension-power-settings-low-warning{
+    background-color:#c57f00!important;
+    text-align:center;
+    font-weight:bold;
+    border-radius:.5rem;
+}
+
+
+
 @media screen and (min-width: 1024px) {
 	
     /*

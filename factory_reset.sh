@@ -146,6 +146,7 @@ if [ -f "/boot/developer.txt" ]; then
   sync
   rm -f /zero.fill
   echo "filling with zeros done"
+  rm /boot/developer.txt
 fi
 
 # Disable SSH access
@@ -159,6 +160,7 @@ raspi-config nonint disable_bootro
 echo "waiting 5 seconds"
 sleep 5
 
+rm /boot/rotate180.txt
 rm /boot/keep_z2m.txt
 rm /boot/keep_bluetooth.txt
 touch /boot/hide_mouse_pointer.txt

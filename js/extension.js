@@ -506,6 +506,12 @@
                 // Show the available memory. This is different from "free" memory
                 if(typeof body['available_memory'] != 'undefined'){
                     document.getElementById('extension-power-settings-available-memory').innerText = body['available_memory'];
+                    if(body['available_memory'] < 80){
+                        document.getElementById('extension-power-settings-low-memory-warning').style.display = 'block';
+                    }
+                    if(body['available_memory'] < 40){
+                        document.getElementById('extension-power-settings-available-memory-container').style.display = 'block';
+                    }
                 }
                 // Show the free memory.
                 if(typeof body['free_memory'] != 'undefined'){
@@ -514,8 +520,19 @@
                 
                 // Show the total and available disk space
                 if(typeof body['disk_usage'] != 'undefined'){
+                    const free_disk_space = Math.floor(body['disk_usage'][2] / 1024000);
                     document.getElementById('extension-power-settings-total-disk').innerText = Math.floor(body['disk_usage'][0] / 1024000);
-                    document.getElementById('extension-power-settings-free-disk').innerText = Math.floor(body['disk_usage'][2] / 1024000);
+                    document.getElementById('extension-power-settings-free-disk').innerText = free_disk_space;
+                    
+                    if(free_disk_space < 1000){
+                        document.getElementById('extension-power-settings-low-storage-warning').style.display = 'block';
+                    }
+                    
+                    if(free_disk_space < 500){
+                        document.getElementById('extension-power-settings-available-memory-container').style.display = 'block';
+                    }
+                    
+                    
                     
                 }  
                 
