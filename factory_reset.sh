@@ -149,6 +149,10 @@ if [ -f "/boot/developer.txt" ]; then
   rm /boot/developer.txt
 fi
 
+# Make the next run a first run
+rm /etc/machine-id
+rm /boot/candle_first_run_complete.txt
+
 # Disable SSH access
 raspi-config nonint do_ssh 1 # 0 is enable, 1 is disable
 
