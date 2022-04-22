@@ -150,7 +150,7 @@ if [ -f "/boot/developer.txt" ]; then
 fi
 
 # Make the next run a first run
-rm /etc/machine-id
+echo "" > /etc/machine-id
 rm /boot/candle_first_run_complete.txt
 
 # Disable SSH access
