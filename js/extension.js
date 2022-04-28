@@ -5,6 +5,7 @@
             this.addMenuEntry('Power');
 
             this.debug = false;
+            this.kiosk = false;
 
             const getUrl = window.location;
             this.baseUrl = getUrl.protocol + "//" + getUrl.host + "/things";
@@ -84,6 +85,15 @@
                     console.log("Error, missing power settings back button? Aborting");
                     return;
                 }
+                
+                
+                // Kiosk?
+                
+                if(document.getElementById('virtualKeyboardChromeExtension') != null){
+                    document.body.classList.add('kiosk');
+                    this.kiosk = true;
+                }
+                
                 
                 // Back button
                 document.getElementById('extension-power-settings-back-button').addEventListener('click', () => {
@@ -394,11 +404,55 @@
                 
                 
                 
+                //  Change hostname
+                
+    			document.getElementById("domain-settings-local-update").addEventListener('click', () => {
+    				console.log("change hostname button clicked");
+                    
+                    const domain_update_button = document.getElementById("domain-settings-local-update");
+                    document.getElementById("domain-settings-local-update").style.display = 'none';
+                    
+                    const new_domain = document.getElementById('domain-settings-local-name').value;
+                    const suffix = document.getElementById('domain-settings-local-suffix').innerText;
+                    console.log(new_domain,suffix);
+                    
+                    var after_html = "";
+                    const explanation_el = document.getElementById('extension-power-settings-domain-explanation');
+                    if(explanation_el != null){
+                        explanation_el.parentNode.removeChild(explanation_el);
+                    }
+                    if(this.kiosk){
+                        after_html = '<p id="extension-power-settings-domain-explanation">If all went well you can now use Candle from on other devices on your local network by visiting:<br/><br/> <strong>http://' + new_domain + suffix + '</strong></p>';
+                    }
+                    else{
+                        after_html = '<p>If all went well you should switch to <a href="http://' + new_domain + suffix + '" style="color:white;font-weight:bold">' + new_domain + suffix + '</a> to continue using Candle.</p>';
+                    }
+                    
+                    
+                    domain_update_button.insertAdjacentHTML('afterend', after_html);
+                    
+                    setTimeout(() => {
+                        domain_update_button.style.display = 'block';
+                    }, 8000);
+                    
+                    //document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>';
+                    //this.upload_files(filesSelected);
+    			});
+                
+                
             }
             else{
                 console.log("power settings error: settings menu didn't exist yet, so cannot append additional elements");
             }
-        }
+            
+            
+            
+            
+            
+        } // end of create extra settings
+
+
+
 
         show() {
             if (this.content == '') {
