@@ -113,7 +113,9 @@ fi
 
 # Try to create the hostname symbolic links
 echo "candle" > /home/pi/.webthings/etc/hostname
-echo "127.0.0.1	localhost\n::1		localhost ip6-localhost ip6-loopback\nff02::1		ip6-allnodes\nff02::2		ip6-allrouters\n\n127.0.1.1	candle" > /home/pi/.webthings/etc/hosts
+cp /home/pi/.webthings/etc/hosts-bak /home/pi/.webthings/etc/hosts
+
+#echo "127.0.0.1	localhost\n::1		localhost ip6-localhost ip6-loopback\nff02::1		ip6-allnodes\nff02::2		ip6-allrouters\n\n127.0.1.1	candle" > /home/pi/.webthings/etc/hosts
 #rm /etc/hostname
 #rm /etc/hosts
 #ln -s /home/pi/.webthings/etc/hostname /etc/hostname
