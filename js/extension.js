@@ -418,16 +418,17 @@
                     
                     var after_html = "";
                     const explanation_el = document.getElementById('extension-power-settings-domain-explanation');
+                    
                     if(explanation_el != null){
                         explanation_el.parentNode.removeChild(explanation_el);
                     }
+                    
                     if(this.kiosk){
                         after_html = '<p id="extension-power-settings-domain-explanation">If all went well you can now use Candle from on other devices on your local network by visiting:<br/><br/> <strong>http://' + new_domain + suffix + '</strong></p>';
                     }
                     else{
-                        after_html = '<p>If all went well you should switch to <a href="http://' + new_domain + suffix + '" style="color:white;font-weight:bold">' + new_domain + suffix + '</a> to continue using Candle.</p>';
+                        after_html = '<p id="extension-power-settings-domain-explanation">If all went well you should switch to <a href="http://' + new_domain + suffix + '" style="color:white;font-weight:bold">' + new_domain + suffix + '</a> to continue using Candle.</p>';
                     }
-                    
                     
                     domain_update_button.insertAdjacentHTML('afterend', after_html);
                     
