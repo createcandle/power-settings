@@ -88,6 +88,9 @@ rm -rf /boot/.Trashes*
 rm -rf /boot/.TemporaryItems*
 rm -rf /usr/share/doc
 
+# remove ReSpeaker symlink
+rm /etc/asound.conf
+
 #RESETZ2M=$1
 
 #if [ "$RESETZ2M" == "true" ]; then
