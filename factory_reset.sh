@@ -9,7 +9,6 @@ pkill chromium-browse
 systemctl stop webthings-gateway.service
 sleep 5
 
-#sudo apt-get update
 
 echo "cleaning up files"
 # Clear caches
@@ -44,14 +43,14 @@ find /home/pi/.webthings/data -type f -name 'persistence.json'  -delete
 #isInFile=$(cat /boot/cmdline.txt | grep -c "init=/usr/lib/raspi-config/init_resize.sh")
 #if [ $isInFile -eq 0 ]
 #then
-#    echo -n " init=/usr/lib/raspi-config/init_resize.sh" | sudo tee -a /boot/cmdline.txt
+#    echo -n " init=/usr/lib/raspi-config/init_resize.sh" | tee -a /boot/cmdline.txt
 #    echo "- Added resize command to /boot/cmdline.txt"
 #else
 #    echo "- Warning: the cmdline.txt file was already modified?"
 #fi
 
 # Clear the wifi password
-echo -e 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=NL\n' | sudo tee /etc/wpa_supplicant/wpa_supplicant.conf
+echo -e 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=NL\n' | tee /etc/wpa_supplicant/wpa_supplicant.conf
 
 echo "candle" > /etc/hostname
 
@@ -133,7 +132,7 @@ rm -rf /var/cache/apt
 
 if [ -f "/home/pi/.webthings/swap" ]; then
   echo "Warning! Detected a swap file! Disabling swap and removing it."
-  sudo dphys-swapfile swapoff
+  dphys-swapfile swapoff
   rm /home/pi/.webthings/swap
 fi
 
@@ -155,7 +154,12 @@ if [ -f "/boot/developer.txt" ]; then
 fi
 
 # Make the next run a first run
+echo "machine ID before: "
+cat /etc/machine-id
 echo "" > /etc/machine-id
+echo "machine ID after: "
+cat /etc/machine-id
+
 rm /boot/candle_first_run_complete.txt
 rm /boot/candle_swap_enabled.txt
 
