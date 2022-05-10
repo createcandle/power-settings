@@ -163,6 +163,14 @@ cat /etc/machine-id
 rm /boot/candle_first_run_complete.txt
 rm /boot/candle_swap_enabled.txt
 
+# If a respeaker hat is plugged in, the ReSpeaker code will recreate this file each boot
+rm /etc/asound.conf
+
+# Disable the tunnel functionality
+rm /boot/tunnel.txt
+cp /home/pi/.webthings/etc/webthings_settings_backup.json /home/pi/.webthings/etc/webthings_settings.json
+
+
 # Disable SSH access
 raspi-config nonint do_ssh 1 # 0 is enable, 1 is disable
 
