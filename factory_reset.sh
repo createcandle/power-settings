@@ -168,7 +168,7 @@ rm /etc/asound.conf
 
 # Disable the tunnel functionality
 rm /boot/tunnel.txt
-cp /home/pi/.webthings/etc/webthings_settings_backup.json /home/pi/.webthings/etc/webthings_settings.json
+cp /home/pi/.webthings/etc/webthings_settings_backup.js /home/pi/.webthings/etc/webthings_settings.js
 
 
 # Disable SSH access
