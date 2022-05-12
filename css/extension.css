@@ -28,6 +28,7 @@
     background-size: 80%;
     cursor: pointer;
     border-radius:50%;
+    box-shadow:none;
 }
 
 
@@ -90,7 +91,7 @@
 	font-size: 1.6rem;
 	color: #fff;
 	margin: 0 auto;
-	min-height:100%; 
+	min-height:calc(100% - 10rem); 
 }
 
 #extension-power-settings-content > *{

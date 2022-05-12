@@ -11,9 +11,23 @@
         </div>
         
         <div class="extension-power-settings-vlak">
+            <p class="extension-power-settings-header">Internet time</p>
+            <p>If enabled, as soon as there is an internet connection, any manually provided time will be overridden by an internet NTP server.</p>
+            <br/>
+            <div class="extension-power-settings-form-content">
+                <input type="checkbox" name="extension-power-settings-form-ntp" id="extension-power-settings-form-ntp" checked>
+                <label for="extension-power-settings-form-ntp">Allow internet time</label>
+            </div>
+            <br/>
+        </div>
+        
+        <div id="extension-power-settings-manually-set-time-container" class="extension-power-settings-vlak" style="display:none">
             <p class="extension-power-settings-header">Manually set the time</p>
             <p>Most smart home devices connect to the internet get the current time. This can share your IP address with third parties who provide that service. Since nothing is free, you might want to set the time manually instead. However, you will have to do this every time you reboot.</p>
+            
+            <p>If you're trying to change the time to match your timezone, then please first make sure your timezone is set correctly under <a href="/settings/localization" style="color:white">localisation</a>.</p>
             <br/>
+            
             <div class="extension-power-settings-form-content">
                   <label for="hours" class="extension-power-settings-form-label-left">Hours: </label><input type="number" name="hours" onfocus="this.placeholder=''" id="extension-power-settings-form-hours" required>
                   <br/>
@@ -26,17 +40,11 @@
                   <div style="text-align:right">
                       <button type="button" id="extension-power-settings-form-submit-time" class="text-button extension-power-settings-form-big-button">Set clock</button>
                   </div>
+                  <p id="extension-power-settings-container-time-manual-done" style="display:none">The time has been saved</p>
             </div>
         </div>
         
-        <div class="extension-power-settings-vlak">
-            <p class="extension-power-settings-header">Internet time</p>
-            <p>If enabled, as soon as there is an internet connection, any manually provided time will be overridden by an internet NTP server.</p>
-            <div class="extension-power-settings-form-content">
-                <input type="checkbox" name="extension-power-settings-form-ntp" id="extension-power-settings-form-ntp" checked>
-                <label for="extension-power-settings-form-ntp">Allow internet time</label>
-            </div>
-        </div>
+        
     </div>
 
 

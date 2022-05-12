@@ -269,7 +269,15 @@
                             'ntp': ntp_current_state
                         }
                     ).then((body) => {
-                        pre.innerText = JSON.stringify(body, null, 2);
+                        console.log(body);
+                        
+                        if(ntp_current_state == 0){
+                            document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'block';
+                        }
+                        else{
+                            document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'none';
+                        }
+                        
                     }).catch((e) => {
                         console.log("set ntp error: ", e);
                     });
@@ -285,8 +293,13 @@
                             }
                         ).then((body) => {
                             //pre.innerText = JSON.stringify(body, null, 2);
-                            document.getElementById('extension-power-settings-container-time').style.display = 'none';
+                            document.getElementById('extension-power-settings-container-time-manual-done').style.display = 'block';
                             //document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'inline-block';
+                            
+                            setTimeout(function(){
+                                document.getElementById('extension-power-settings-container-time-manual-done').style.display = 'none';
+                            }, 2000);
+                            
                         }).catch((e) => {
                             console.log("time submit error: ", e);
                             alert("Saving failed: could not connect to the controller")
@@ -323,6 +336,10 @@
                     hours.placeholder = body['hours'];
                     minutes.placeholder = body['minutes'];
                     ntp.checked = body['ntp'];
+                    
+                    if(body['ntp'] == false){
+                        document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'block';
+                    }
                     
                     //console.log("adding mqtt item");
                     // Add MQTT checkbox
