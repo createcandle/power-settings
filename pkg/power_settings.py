@@ -445,10 +445,13 @@ class PowerSettingsAPIHandler(APIHandler):
                     elif request.path == '/set-time':
                         try:
                             self.set_time(str(request.body['hours']),request.body['minutes'])
+                            
+                            now = datetime.datetime.now()
+                            
                             return APIResponse(
                               status=200,
                               content_type='application/json',
-                              content=json.dumps("Time set"),
+                              content=json.dumps({'state':True, 'hours':now.hour,'minutes':now.minute}),
                             )
                         except Exception as ex:
                             if self.DEBUG:
@@ -456,7 +459,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             return APIResponse(
                               status=500,
                               content_type='application/json',
-                              content=json.dumps("Error while setting time: " + str(ex)),
+                              content=json.dumps({"state":False}),
                             )
 
                         

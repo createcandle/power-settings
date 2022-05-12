@@ -285,6 +285,7 @@
 
                 // Submits the manual time
                 document.getElementById('extension-power-settings-form-submit-time').addEventListener('click', () => {
+                    console.log("save time button clicked");
                     if (hours.value.trim() != '' && minutes.value.trim() != '') { // Make sure the user inputted something. Python will also sanitize.
                         window.API.postJson(
                             `/extensions/${this.id}/api/set-time`, {
@@ -292,9 +293,15 @@
                                 'minutes': minutes.value
                             }
                         ).then((body) => {
+                            console.log("time set response: ", body);
                             //pre.innerText = JSON.stringify(body, null, 2);
                             document.getElementById('extension-power-settings-container-time-manual-done').style.display = 'block';
                             //document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'inline-block';
+                            
+                            document.getElementById('extension-power-settings-form-hours').value = "";
+                            document.getElementById('extension-power-settings-form-hours').placeholder = body.hours;
+                            document.getElementById('extension-power-settings-form-minutes').value = "";
+                            document.getElementById('extension-power-settings-form-minutes').placeholder = body.minutes;
                             
                             setTimeout(function(){
                                 document.getElementById('extension-power-settings-container-time-manual-done').style.display = 'none';
