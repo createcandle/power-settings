@@ -282,10 +282,12 @@
                         console.log("set ntp error: ", e);
                     });
                 });
+                
+                
 
                 // Submits the manual time
                 document.getElementById('extension-power-settings-form-submit-time').addEventListener('click', () => {
-                    console.log("save time button clicked");
+                    //console.log("save time button clicked");
                     if (hours.value.trim() != '' && minutes.value.trim() != '') { // Make sure the user inputted something. Python will also sanitize.
                         window.API.postJson(
                             `/extensions/${this.id}/api/set-time`, {
@@ -293,19 +295,26 @@
                                 'minutes': minutes.value
                             }
                         ).then((body) => {
-                            console.log("time set response: ", body);
-                            //pre.innerText = JSON.stringify(body, null, 2);
-                            document.getElementById('extension-power-settings-container-time-manual-done').style.display = 'block';
-                            //document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'inline-block';
+                            if(this.debug){
+                                console.log("set-time response: ", body);
+                            }
+                            if(body.state == true){
+                                //pre.innerText = JSON.stringify(body, null, 2);
+                                document.getElementById('extension-power-settings-container-time-manual-done').style.display = 'block';
+                                //document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'inline-block';
                             
-                            document.getElementById('extension-power-settings-form-hours').value = "";
-                            document.getElementById('extension-power-settings-form-hours').placeholder = body.hours;
-                            document.getElementById('extension-power-settings-form-minutes').value = "";
-                            document.getElementById('extension-power-settings-form-minutes').placeholder = body.minutes;
+                                document.getElementById('extension-power-settings-form-hours').value = "";
+                                document.getElementById('extension-power-settings-form-hours').placeholder = body.hours;
+                                document.getElementById('extension-power-settings-form-minutes').value = "";
+                                document.getElementById('extension-power-settings-form-minutes').placeholder = body.minutes;
                             
-                            setTimeout(function(){
-                                document.getElementById('extension-power-settings-container-time-manual-done').style.display = 'none';
-                            }, 2000);
+                                setTimeout(function(){
+                                    document.getElementById('extension-power-settings-container-time-manual-done').style.display = 'none';
+                                }, 2000);
+                            }
+                            else{
+                                alert("Sorry, something went wrong while setting the time");
+                            }
                             
                         }).catch((e) => {
                             console.log("time submit error: ", e);
@@ -313,6 +322,7 @@
                         });
                     }
                 });
+                
                 
                 // get current time from browser
                 browser_time_button.addEventListener('click', () => {
