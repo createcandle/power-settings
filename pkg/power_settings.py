@@ -76,6 +76,7 @@ class PowerSettingsAPIHandler(APIHandler):
             self.keep_z2m_file_path = '/boot/keep_z2m.txt'
             self.keep_bluetooth_file_path = '/boot/keep_bluetooth.txt'
             self.factory_reset_script_path = os.path.join(self.addon_dir, "factory_reset.sh") 
+            self.manual_update_script_path = os.path.join(self.addon_dir, "manual_update.sh") 
             
             # Backup addon dir paths
             self.backup_download_dir = os.path.join(self.addon_dir, "backup")
@@ -274,6 +275,21 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':'ok'}),
                                 )
                                 
+                                
+                            # MANUAL UPDATE
+                            elif action == 'manual_update':
+                                
+                                if self.DEBUG:
+                                    print("copying manual update script into position")
+                                
+                                # Place the factory reset file in the correct location so that it will be activated at boot.
+                                os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':'ok'}),
+                                )
                                 
                             elif action == 'backup_init':
                                 if self.DEBUG:

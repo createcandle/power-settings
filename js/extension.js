@@ -120,6 +120,7 @@
                 // Add buttons to settings menu
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-time-button">Clock</a></li>';
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-backup-button">Backup</a></li>';
+                document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-update-button">Update</a></li>';
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-reset-button">Factory reset</a></li>';
                 
                  
@@ -165,6 +166,14 @@
                 
                 
                 
+                // Show update page button
+                document.getElementById('extension-power-settings-menu-update-button').addEventListener('click', () => {
+                    //console.log('show reset menu button clicked');
+            
+                    this.hide_all_settings_containers();
+                    document.getElementById('extension-power-settings-container-update').classList.remove('extension-power-settings-hidden');
+                    document.getElementById('extension-power-settings-pages').classList.remove('hidden');
+                });
                 
     
     
@@ -192,8 +201,8 @@
                         console.log('Error getting keep_bluetooth value: ', e);
                     }
         
-                    if( document.getElementById('extension-power-settings-form-understand').value != 'I understand'){
-                        alert("You must type 'I understand' before the factory reset process may start");
+                    if( document.getElementById('extension-power-settings-factory-reset-understand').value != 'I understand'){
+                        alert("You must type 'I understand' before the factory reset process can start.");
                     }
                     else{
                         if(confirm("Are you absolutely sure?")){
@@ -241,7 +250,7 @@
                                 
                     
                             }).catch((e) => {
-                                alert("Error while attempting to start factory reset: could not connect?: ", e);
+                                alert("Error while attempting to start factory reset: could not connect?");
                             });
                 
                 
@@ -256,9 +265,57 @@
     
     
     
-                // TIME CLOCK
+                // MANUAL UPDATE
+    
+                document.getElementById('extension-power-settings-manual-update-button').addEventListener('click', () => {
+                    console.log("manual update button clicked");
+        
+                    
+         
+                    if( document.getElementById('extension-power-settings-manual-update-understand').value != 'I understand'){
+                        alert("You must type 'I understand' before the manual update process can start.");
+                    }
+                    else{
+                        
+                        document.getElementById('connectivity-scrim').classList.remove('hidden');
+                        document.getElementById('extension-power-settings-back-button').style.display = 'none';
+                                       
+                        window.API.postJson(
+                            `/extensions/${this.id}/api/ajax`, {
+                                'action': 'manual_update'
+                            }
+                        ).then((body) => {
+                            console.log("manual update response: ", body);
+                            
+                            if(body.state == 'ok'){
+                                window.API.postJson('/settings/system/actions', {
+                                    action: 'restartSystem'
+                                }).catch(console.error);
+                            }
+                            else{
+                                alert("Error, could not prepare sytem for manual update! Try rebooting and see what happens.");
+                                document.getElementById('extension-power-settings-back-button').style.display = 'block';
+                                document.getElementById('connectivity-scrim').classList.add('hidden');
+                            }
+                
+                        }).catch((e) => {
+                            alert("Error while attempting to start manual update: could not connect?");
+                            document.getElementById('extension-power-settings-back-button').style.display = 'block';
+                            document.getElementById('connectivity-scrim').classList.add('hidden');
+                        });
+                        
+                        
+                    }
+                });
+    
     
                 
+    
+    
+    
+    
+                // TIME CLOCK
+    
                 ntp.addEventListener('click', () => {
                     var ntp_current_state = 0;
                     if (ntp.checked) {
@@ -421,7 +478,7 @@
                         }
                         
                     }).catch((e) => {
-                        alert("Error, could not create backup: could not connect?: ", e);
+                        alert("Error, could not create backup: could not connect?");
                     });
                     
                 });
@@ -479,9 +536,6 @@
             else{
                 console.log("power settings error: settings menu didn't exist yet, so cannot append additional elements");
             }
-            
-            
-            
             
             
         } // end of create extra settings

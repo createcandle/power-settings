@@ -334,6 +334,11 @@
     background-image:url('../images/clock.svg');
 }
 
+#extension-power-settings-menu-update-button{
+    cursor:pointer;
+    background-image:url('../images/update.svg');
+}
+
 #extension-power-settings-menu-reset-button{
     cursor:pointer;
     background-image:url('../images/reset.svg');
@@ -456,6 +461,19 @@
     text-align:center;
     font-weight:bold;
     border-radius:.5rem;
+}
+
+
+
+
+/*  UPDATE  */
+
+
+#extension-power-settings-manual-update-container{
+    display:none;
+}
+.developer #extension-power-settings-manual-update-container{
+    display:block;
 }
 
 

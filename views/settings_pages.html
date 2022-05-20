@@ -76,7 +76,7 @@
             <div id="extension-power-settings-form-content-reset">
                 <br/>
                 <br/>
-                <label for="understand">Type "I understand" to confirm: </label><br/><input type="text" name="understand" id="extension-power-settings-form-understand" required style="width:calc(100% - 1rem)"/>
+                <label for="extension-power-settings-factory-reset-understand">Type "I understand" to confirm: </label><br/><input type="text" name="extension-power-settings-factory-reset-understand" id="extension-power-settings-factory-reset-understand" required style="width:calc(100% - 1rem)"/>
                 <br/>
                 <br/>
         
@@ -141,6 +141,39 @@
         
     </div>
     
+    
+    <div id="extension-power-settings-container-update" class="extension-power-settings-container">
+        
+        
+        <div class="section-title">
+              <div class="section-title-back-flex"></div>
+              <div class="section-title-container">
+                  <img class="section-title-icon" alt="Backup icon" src="/extensions/power-settings/images/update.svg">
+                  <span class="section-title-name">Update</span>
+              </div>
+              <div class="section-title-right-flex"></div>
+        </div>
+        
+        <div id="extension-power-settings-manual-update-container" class="extension-power-settings-vlak">
+            <p class="extension-power-settings-header">System update</p>
+            <p>There are currently no system updates available.</p><p>Please keep the Power Settings addon updated, it could gain this ability later.</p>
+            <div class="extension-power-settings-form-system-update">
+                <button id="extension-power-settings-system-update-button" class="text-button" disabled>System update</button>
+            </div>
+        </div>
+        
+        <div id="extension-power-settings-manual-update-container" class="extension-power-settings-vlak">
+            <p class="extension-power-settings-header">Manual update</p>
+            <p>This is for advanced users only. It will update all installed programs to the latest version, which may help alleviate security worries. However, it may also cause unexpected issues, since these updates are not tested. It also means your system is no longer "standard", so you can no longer get accurate advice or help, and future updates may fail. Any warranty will be void. Update at your own risk!</p>
+            <p>
+                <label for="extension-power-settings-manual-update-understand">Type "I understand" to confirm: </label><br/><input type="text" name="extension-power-settings-manual-update-understand" id="extension-power-settings-manual-update-understand" required style="width:calc(100% - 1rem)"/>
+            </p>
+            <div class="extension-power-settings-form-manual-update">
+                <button id="extension-power-settings-manual-update-button" class="text-button">Manual update</button>
+            </div>
+        </div>
+        
+    </div>
     
     <button id="extension-power-settings-back-button" class="back-button icon-button" data-l10n-id="back-button" aria-label="Back"></button>
     
