@@ -122,6 +122,10 @@
 }
 */
 
+.extension-power-settings-container p{
+    line-height:2.5rem;
+}
+
 /*  waiting  */
 
 #extension-power-settings-waiting{
@@ -347,23 +351,23 @@
 
 /*  CHECKBOX  */
 
-.extension-power-settings-form-content input[type=checkbox]{
+.extension-power-settings-container input[type=checkbox]{
     position: absolute;
     left: -1000em;
 }
 
-.extension-power-settings-form-content input[type=checkbox] + label::before{
+.extension-power-settings-container input[type=checkbox] + label::before{
     float: none;
     vertical-align: middle;
     margin-right: 0.5rem;
 }
 
-.extension-power-settings-form-content input[type=checkbox]:checked + label::before,
+.extension-power-settings-container input[type=checkbox]:checked + label::before,
  :root .transition-checkbox:checked + label::before {
     background-position: 0 -3rem;
 }
 
-.extension-power-settings-form-content input[type=checkbox] + label::before{
+.extension-power-settings-container input[type=checkbox] + label::before{
     content: '';
     display: inline-block;
     width: 3rem;
@@ -417,7 +421,7 @@
 }
 
 
-.extension-power-settings-form-content label.extension-power-settings-form-label-left{
+.extension-power-settings-container label.extension-power-settings-form-label-left{
     width: 30%;
     min-width: 30%;
     display: inline-block;
@@ -444,6 +448,7 @@
     color:white;
     background-color: rgba(0,0,0,.2);
     box-sizing:border-box;
+    width:100%;
     max-width:100%;
 }
 
@@ -468,7 +473,6 @@
 
 /*  UPDATE  */
 
-
 #extension-power-settings-manual-update-container{
     display:none;
 }
@@ -476,56 +480,21 @@
     display:block;
 }
 
+.extension-power-settings-form-system-update,
+.extension-power-settings-form-manual-update{
+    text-align:right;
+}
+
+
+.extension-power-settings-container button{
+    font-size: 1.8rem;
+}
 
 
 @media screen and (min-width: 1024px) {
 	
-    /*
-    #extension-power-settings-view{
-		left:6rem;
-		top: 0;
-		height:100vh; 
-		position:absolute;
-	}
-	
-	#extension-power-settings-content{
-		
-	}
-	
-	#extension-power-settings-content-container{
-		height:auto;
-		max-width:60rem;
-	}
-    */
 }
 
-
-
-/*
-.extension-power-settings-checkbox-container{
-	text-align:left;
-	width:100px;
-	display: inline-block;
-	margin-top:1rem;
-    padding-right:2rem;
-    text-align:right;
-    box-sizing:border-box;
-}
-*/
-
-
-
-
-/*
-#extension-power-settings-form-ntp{
-	-moz-transform: scale(1.50);
-    -webkit-transform: scale(1.50);
-    -o-transform: scale(1.50);
-    transform: scale(1.50);
-	margin-right: .5rem;
-	margin-top: 1.5rem;
-}
-*/
 
 #extension-power-settings-content .control-label{
 	font-size: 1.5rem;
@@ -540,8 +509,4 @@
 	font-size: 1.5rem;
 	margin-bottom: 0.5rem;
 	padding-left: 100px;
-}
-
-#extension-power-settings-form-reset-submit{
-    font-size:1.8rem;
 }
