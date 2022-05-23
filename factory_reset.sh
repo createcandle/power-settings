@@ -77,7 +77,6 @@ rm -rf /home/pi/.webthings/data/candleappstore/*
 rm -rf /home/pi/.webthings/data/candle-theme/*
 rm -rf /home/pi/.webthings/data/power-settings/*
 rm -rf /home/pi/.webthings/data/webinterface/*
-rm -rf /home/pi/.webthings/data/zigbee2mqtt-adapter/*
 rm -rf /home/pi/.webthings/data/hotspot/*
 rm -rf /home/pi/.webthings/data/followers/*
 rm -rf /home/pi/.webthings/data/privacy-manager/*
@@ -85,7 +84,6 @@ rm -rf /home/pi/.webthings/data/photo-frame/*
 rm -rf /home/pi/.webthings/data/welcome/*
 rm -rf /home/pi/.webthings/data/network-presence-detection-adapter/*
 rm -rf /home/pi/.webthings/data/internet-radio/*
-rm -rf /home/pi/.webthings/data/bluetoothpairing/*
 rm -rf /home/pi/.webthings/data/scenes/*
 
 
@@ -127,6 +125,7 @@ if [ -f "/boot/keep_bluetooth.txt" ]; then
     echo "Factory reset is allowing Bluetooth devices to remain paired"
 else
     echo "Factory reset: also removing Bluetooth pairings"
+    rm -rf /home/pi/.webthings/data/bluetoothpairing/*
     rm -rf /home/pi/.webthings/var/lib/bluetooth/*
 fi
 
