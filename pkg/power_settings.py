@@ -105,7 +105,9 @@ class PowerSettingsAPIHandler(APIHandler):
             
             if self.do_not_use_hardware_clock:
                 if os.path.isfile(self.hardware_clock_file_path):
-                    os.remove(self.hardware_clock_file_path)
+                    if self.DEBUG:
+                        print("removing " + str(self.hardware_clock_file_path))
+                    run_command('sudo rm ' + str(self.hardware_clock_file_path))
             else:
                 self.hardware_clock_check()
             
@@ -261,7 +263,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     
             
         except Exception as ex:
-            print("Error getting NTP status: " + str(ex))
+            print("Error in hardware_clock_check: " + str(ex))
         
         
 
