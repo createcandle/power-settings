@@ -89,6 +89,11 @@ class PowerSettingsAPIHandler(APIHandler):
             # Restore
             self.restore_file_path = os.path.join(self.data_dir, "candle_restore.tar")
             
+            # Hardware clock
+            self.hardware_clock_detected = False
+            self.do_not_use_hardware_clock = False
+            self.hardware_clock_file_path = '/boot/candle_hardware_clock.txt'
+            
             
             # LOAD CONFIG
             try:
@@ -96,6 +101,13 @@ class PowerSettingsAPIHandler(APIHandler):
             except Exception as ex:
                 print("Error loading config: " + str(ex))
                 
+            
+            
+            if self.do_not_use_hardware_clock:
+                if os.path.isfile(self.hardware_clock_file_path):
+                    os.remove(self.hardware_clock_file_path)
+            else:
+                self.hardware_clock_check()
             
             # Create local backups directory
             if not os.path.isdir(self.backup_dir):
@@ -194,11 +206,65 @@ class PowerSettingsAPIHandler(APIHandler):
             if self.DEBUG:
                 print("-Debug preference was in config: " + str(self.DEBUG))
 
+        if 'Do not use hardware clock' in config:
+            self.do_not_use_hardware_clock = bool(config['Do not use hardware clock'])
+            if self.DEBUG:
+                print("-Do not use hardware clock preference was in config: " + str(self.do_not_use_hardware_clock))
+
         #self.DEBUG = True # TODO: DEBUG, REMOVE
     
         
         
         
+    def hardware_clock_check(self):
+        try:
+            for line in run_command("sudo i2cdetect -y 1").splitlines():
+                if self.DEBUG:
+                    print(line)
+                if line.startswith( '60:' ):
+                    if '-- 68 --' in line:
+                        self.hardware_clock_detected = True
+            
+            
+            if self.hardware_clock_detected:
+                if self.DEBUG:
+                    print("Hardware clock detected")
+                os.system('sudo modprobe rtc-ds1307')
+                os.system('echo "ds1307 0x68" | sudo tee /sys/class/i2c-adapter/i2c-1/new_device')
+
+                if os.path.isfile(self.hardware_clock_file_path):
+                    # The hardware clock has already been set
+                    
+                    # Check if the hardware clock date is newer?
+                    hardware_clock_time = run_command("sudo hwclock -r")
+                    if self.DEBUG:
+                        print("hardware_clock_time: " + str(hardware_clock_time))
+                        
+                    #hardware_clock_date = datetime.strptime(hardware_clock_time, '%Y-%m-%d')
+                    hardware_clock_date = datetime.fromisoformat(hardware_clock_time)
+                    if hardware_clock_date > (datetime.now() - datetime.timedelta(days=1)):
+                        if self.DEBUG:
+                            print("SETTING LOCAL CLOCK FROM HARDWARE CLOCK")
+                        # Set the system clock based on the hardware clock
+                        os.system('sudo hwclock -s')
+                    
+                else:
+                    # The hardware clock should be set
+                    if self.DEBUG:
+                        print("Setting initial hardware clock, creating " + str(self.hardware_clock_file_path))
+                    os.system('sudo hwclock -w')
+                    os.system('sudo touch ' + self.hardware_clock_file_path)
+                
+            else:
+                if self.DEBUG:
+                    print("No hardware clock module detected")
+                    
+            
+        except Exception as ex:
+            print("Error getting NTP status: " + str(ex))
+        
+        
+
 
     def handle_request(self, request):
         """
@@ -625,14 +691,23 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("new set date command: " + str(time_command))
         
             try:
-                os.system(time_command) 
+                os.system(time_command)
+                
+                # If hardware clock module exists, set its time too.
+                if self.hardware_clock_detected:
+                    print('also setting hardware clock time')
+                    os.system('sudo hwclock -w')
+                    
             except Exception as e:
                 print("Error setting new time: " + str(e))
+
+                
+           
 
 
     def set_ntp_state(self,new_state):
         if self.DEBUG:
-            print("Setting NTP state")
+            print("Setting NTP state to: " + str(new_state))
         try:
             if new_state:
                 os.system('sudo timedatectl set-ntp on') 

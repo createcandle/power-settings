@@ -5,6 +5,7 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
+
 if [ -f /boot/write_enabled.txt ] 
 then
 

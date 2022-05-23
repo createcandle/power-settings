@@ -3,8 +3,9 @@
 # This script tries to do a factory reset.
 # Some of the commands can only work when the disk overlay is disabled, but are run anyway to keep this a universal solution.
 
+
 #raspi-config nonint disable_bootro
-echo "stopping browser and Webthings Gateway"
+echo "stopping browser and Candle Controller"
 pkill chromium-browse
 systemctl stop webthings-gateway.service
 sleep 5

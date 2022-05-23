@@ -26,10 +26,15 @@
   "name": "Power Settings",
   "options": {
     "default": {
+      "Do not use hardware clock": false,
       "Debug": false
     },
     "schema": {
       "properties": {
+        "Do not use hardware clock": {
+          "description": "If you have plugged in a ds1307 hardware clock module, then it will normally automatically be used. You can disable use of the hardware clock here.",
+          "type": "boolean"
+        },
         "Debug": {
           "description": "Advanced. Enable this to see much more detail in the internal log about what this add-on is doing.",
           "type": "boolean"
@@ -40,7 +45,7 @@
     }
   },
   "short_name": "Power",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
