@@ -242,8 +242,14 @@ class PowerSettingsAPIHandler(APIHandler):
                     if self.DEBUG:
                         print("hardware_clock_time: " + str(hardware_clock_time))
                         
+                    hardware_clock_time = hardware_clock_time.rstrip()
                     #hardware_clock_date = datetime.strptime(hardware_clock_time, '%Y-%m-%d')
-                    hardware_clock_date = datetime.datetime.fromisoformat(hardware_clock_time)
+                    #hardware_clock_date = datetime.datetime.fromisoformat(hardware_clock_time)
+                    
+                    # "2021-08-08"
+                    # 2022-05-24 00:06:26.623920+02:00
+                    
+                    hardware_clock_date = datetime.datetime.strptime(hardware_clock_time, "%Y-%m-%d %H:%M:%S.%f%z") 
                     if hardware_clock_date > (datetime.datetime.now() - datetime.datetime.timedelta(days=1)):
                         if self.DEBUG:
                             print("SETTING LOCAL CLOCK FROM HARDWARE CLOCK")
