@@ -243,8 +243,8 @@ class PowerSettingsAPIHandler(APIHandler):
                         print("hardware_clock_time: " + str(hardware_clock_time))
                         
                     #hardware_clock_date = datetime.strptime(hardware_clock_time, '%Y-%m-%d')
-                    hardware_clock_date = datetime.fromisoformat(hardware_clock_time)
-                    if hardware_clock_date > (datetime.now() - datetime.timedelta(days=1)):
+                    hardware_clock_date = datetime.datetime.fromisoformat(hardware_clock_time)
+                    if hardware_clock_date > (datetime.datetime.now() - datetime.datetime.timedelta(days=1)):
                         if self.DEBUG:
                             print("SETTING LOCAL CLOCK FROM HARDWARE CLOCK")
                         # Set the system clock based on the hardware clock
