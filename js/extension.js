@@ -187,7 +187,7 @@
                     var keep_z2m = false;
                     try{
                         keep_z2m = document.getElementById('extension-power-settings-keep-z2m').checked;
-                        //console.log("keep_z2m: ", keep_z2m);
+                        console.log("keep_z2m: ", keep_z2m);
                     }
                     catch(e){
                         console.log('Error getting keep_z2m value: ', e);
@@ -196,6 +196,7 @@
                     var keep_bluetooth = false;
                     try{
                         keep_bluetooth = document.getElementById('extension-power-settings-keep-bluetooth').checked;
+                        console.log("keep_bluetooth: ", keep_bluetooth);
                     }
                     catch(e){
                         console.log('Error getting keep_bluetooth value: ', e);
