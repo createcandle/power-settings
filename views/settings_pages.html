@@ -10,8 +10,17 @@
               <div class="section-title-right-flex"></div>
         </div>
         
-        <div class="extension-power-settings-vlak">
+        
+        <div class="extension-power-settings-vlak extension-power-settings-show-if-hardware-clock-detected">
+            <p class="extension-power-settings-header">Hardware clock module detected</p>
+            <p>A hardware clock module is providing the time to the system instead of an internet time server. If you unplug the module, or if you disable it in the settings of the Power Settings addon, then the system will fall back to your internet time preference instead.</p>
+            <p>The hardware clock's time was initially set with data from an internet time server. If the clock is out of sync, you could disable it in settings, reboot, and then re-enable it. Or you could provide the time manually.</p>
+        </div>
+        
+        
+        <div class="extension-power-settings-vlak extension-power-settings-hide-if-hardware-clock-detected">
             <p class="extension-power-settings-header">Internet time</p>
+            <p>If your system does not have a hardware clock module installed, every time the system starts it will try to get the current date and time from an internet server.</p>
             <p>If enabled, as soon as there is an internet connection, any manually provided time will be overridden by an internet NTP server.</p>
             <br/>
             <div class="extension-power-settings-form-content">
@@ -21,10 +30,11 @@
             <br/>
         </div>
         
+        
         <div id="extension-power-settings-manually-set-time-container" class="extension-power-settings-vlak" style="display:none">
             <p class="extension-power-settings-header">Manually set the time</p>
-            <p>Most smart home devices connect to the internet get the current time. This can share your IP address with third parties who provide that service. Since nothing is free, you might want to set the time manually instead. However, you will have to do this every time you reboot.</p>
-            
+            <p class="extension-power-settings-hide-if-hardware-clock-detected">Most smart home devices connect to the internet get the current time. This can share your IP address with third parties who provide that service. Since nothing is free, you might want to set the time manually instead. However, you will have to do this every time you reboot.</p>
+            <p class="extension-power-settings-show-if-hardware-clock-detected">You can manually set the time of the hardware clock.</p>
             <p>If you're trying to change the time to match your timezone, then please first make sure your timezone is set correctly under <a href="/settings/localization" style="color:white">localisation</a>.</p>
             <br/>
             

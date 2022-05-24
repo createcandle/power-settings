@@ -407,6 +407,7 @@
                         }
                     }
                     
+                    // show server time in input fields
                     hours.placeholder = body['hours'];
                     minutes.placeholder = body['minutes'];
                     ntp.checked = body['ntp'];
@@ -415,7 +416,8 @@
                         document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'block';
                     }
                     
-                    //console.log("adding mqtt item");
+                    
+                    
                     // Add MQTT checkbox
                     var mqtt_element = document.createElement('li');
                     mqtt_element.setAttribute('id','allow-anonymous-mqtt-item');
@@ -448,7 +450,11 @@
                     });
                     
                     
-                    
+                    // Hardware clock detected
+                    if(body.hardware_clock_detected){
+                        document.body.classList.add('hardware-clock');
+                        document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'block';
+                    }
                     
                 }).catch((e) => {
                     console.log("powersettings init error: ", e);

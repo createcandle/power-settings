@@ -89,9 +89,6 @@ rm -rf /home/pi/.webthings/data/scenes/*
 
 
 
-# clear Bash history
-echo "Well hello there" > /home/pi/.bash_history
-#cat /dev/null > /home/pi/.bash_history
 
 # clear logs
 systemd-tmpfiles --clean
@@ -187,6 +184,10 @@ rm /etc/asound.conf
 # Disable the tunnel functionality
 rm /boot/tunnel.txt
 cp /home/pi/.webthings/etc/webthings_settings_backup.js /home/pi/.webthings/etc/webthings_settings.js
+
+# clear Bash history
+echo "Well hello there" > /home/pi/.bash_history
+#cat /dev/null > /home/pi/.bash_history
 
 
 # Disable SSH access

@@ -431,6 +431,21 @@
 
 
 
+/*  TIME  */
+
+
+.extension-power-settings-show-if-hardware-clock-detected{
+    display:none;
+}
+
+.hardware-clock .extension-power-settings-show-if-hardware-clock-detected{
+    display:block;
+}
+
+.hardware-clock .extension-power-settings-hide-if-hardware-clock-detected{
+    display:none;
+}
+
 
 
 /*  BACKUP  */

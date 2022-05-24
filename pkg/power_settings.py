@@ -519,7 +519,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             except Exception as ex:
                                 print("Error getting NTP status: " + str(ex))
                             
-                            response = {'hours':now.hour,'minutes':now.minute,'ntp':current_ntp_state,'backup_exists':self.backup_file_exists,'restore_exists':self.restore_file_exists, 'disk_usage':self.disk_usage, 'allow_anonymous_mqtt':self.allow_anonymous_mqtt, 'debug':self.DEBUG}
+                            response = {'hours':now.hour,'minutes':now.minute,'ntp':current_ntp_state,'backup_exists':self.backup_file_exists,'restore_exists':self.restore_file_exists, 'disk_usage':self.disk_usage, 'allow_anonymous_mqtt':self.allow_anonymous_mqtt, 'hardware_clock_detected':self.hardware_clock_detected,'debug':self.DEBUG}
                             if self.DEBUG:
                                 print("Init response: " + str(response))
                         except Exception as ex:
