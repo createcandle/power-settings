@@ -220,17 +220,22 @@ class PowerSettingsAPIHandler(APIHandler):
         
     def hardware_clock_check(self):
         try:
+            init_hardware_clock = False
             for line in run_command("sudo i2cdetect -y 1").splitlines():
                 if self.DEBUG:
                     print(line)
                 if line.startswith( '60:' ):
-                    if '-- 68 --' in line:
+                    if '-- 68 --' in line or '-- UU --' in line:
                         self.hardware_clock_detected = True
+                        if self.DEBUG:
+                            print("Hardware clock detected")
+                            
+                    if '-- 68 --' in line:
+                        init_hardware_clock = True
             
-            
-            if self.hardware_clock_detected:
+            if init_hardware_clock:
                 if self.DEBUG:
-                    print("Hardware clock detected")
+                    print("Initializing hardware clock")
                 os.system('sudo modprobe rtc-ds1307')
                 os.system('echo "ds1307 0x68" | sudo tee /sys/class/i2c-adapter/i2c-1/new_device')
 
@@ -250,11 +255,15 @@ class PowerSettingsAPIHandler(APIHandler):
                     # 2022-05-24 00:06:26.623920+02:00
                     
                     hardware_clock_date = datetime.datetime.strptime(hardware_clock_time, "%Y-%m-%d %H:%M:%S.%f%z") 
-                    if hardware_clock_date > (datetime.datetime.now() - datetime.timedelta(days=1)):
+                    if hardware_clock_date.timestamp() > (datetime.datetime.now().timestamp() - 86400):
                         if self.DEBUG:
                             print("SETTING LOCAL CLOCK FROM HARDWARE CLOCK")
                         # Set the system clock based on the hardware clock
                         os.system('sudo hwclock -s')
+                    else:
+                        # The hardware clock time is more out of date than the software clock. 
+                        # Removing the the hardware clock file will cause the clock to be updated from the internet on next reboot.
+                        os.system('sudo rm ' + self.hardware_clock_file_path)
                     
                 else:
                     # The hardware clock should be set
@@ -265,7 +274,7 @@ class PowerSettingsAPIHandler(APIHandler):
                 
             else:
                 if self.DEBUG:
-                    print("No hardware clock module detected")
+                    print("No need to init hardware clock module (does not exist, or has already been initialised). hardware_clock_detected: " + str(self.hardware_clock_detected))
                     
             
         except Exception as ex:
