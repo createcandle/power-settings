@@ -309,26 +309,34 @@ class PowerSettingsAPIHandler(APIHandler):
                             # FACTORY RESET
                             if action == 'reset':
                                 
-                                reset_z2m = False
+                                reset_z2m = True
                                 if 'keep_z2m' in request.body:
-                                    reset_z2m = bool(request.body['keep_z2m'])
+                                    reset_z2m = not bool(request.body['keep_z2m'])
                                 
-                                reset_bluetooth = False
+                                reset_bluetooth = True
                                 if 'keep_bluetooth' in request.body:
-                                     reset_bluetooth = bool(request.body['keep_bluetooth'])
+                                     reset_bluetooth = not bool(request.body['keep_bluetooth'])
                                 
                                 if self.DEBUG:
-                                    print("creating reset files")
+                                    print("creating/removing keep files")
                                 
                                 # Set the preference files about keeping Z2M and Bluetooth in the boot folder
                                 if reset_z2m:
+                                    if self.DEBUG:
+                                        print("removing keep_z2m.txt")
                                     os.system('sudo rm ' + self.keep_z2m_file_path)
                                 else:
+                                    if self.DEBUG:
+                                        print("creating keep_z2m.txt")
                                     os.system('sudo touch ' + self.keep_z2m_file_path)
                                     
                                 if reset_bluetooth:
+                                    if self.DEBUG:
+                                        print("removing keep_bluetooth.txt")
                                     os.system('sudo rm ' + self.keep_bluetooth_file_path)
                                 else:
+                                    if self.DEBUG:
+                                        print("creating keep_bluetooth.txt")
                                     os.system('sudo touch ' + self.keep_bluetooth_file_path)
                                     
                                 
