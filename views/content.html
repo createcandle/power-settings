@@ -12,11 +12,13 @@
               
               <div id="extension-power-settings-main-buttons">
                 <!--<h2>Shutdown or reboot the system</h2>-->
+                <button type="button" id="extension-power-settings-logout"  title="Log out">Log out</button>
                 <button type="button" id="extension-power-settings-reboot"  title="Shuts down and then powers up the controller again">Reboot</button>
                 <button type="button" id="extension-power-settings-shutdown" title="Shuts down the controller">Shut down</button>
                 <button type="button" id="extension-power-settings-restart" title="Restarts the controller software without completely reboot">Restart</button>
               </div>
               <br/><br/>
+              <div id="extension-power-settings-low-voltage-warning"  class="extension-power-settings-low-warning extension-power-settings-vlak" style="display:none"><p>Warning, a low voltage was detected.<br/><br/>Your power supply might not be powerful or stable enough.</p></div>
               <div id="extension-power-settings-low-memory-warning"  class="extension-power-settings-low-warning extension-power-settings-vlak" style="display:none"><p>Warning, the system is low on memory</p></div>
               <div id="extension-power-settings-low-storage-warning" class="extension-power-settings-low-warning extension-power-settings-vlak" style="display:none"><p>Warning, the disk is getting very full</p></div>
               <div id="extension-power-settings-available-memory-container">

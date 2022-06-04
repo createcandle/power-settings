@@ -61,9 +61,6 @@ class PowerSettingsAPIHandler(APIHandler):
             if self.DEBUG:
                 print("self.user_profile: " + str(self.user_profile))
             
-            
-            # PATHS
-            
             self.addon_dir = os.path.join(self.user_profile['addonsDir'], self.addon_name)
             self.data_dir = os.path.join(self.user_profile['dataDir'], self.addon_name)
             
@@ -71,8 +68,6 @@ class PowerSettingsAPIHandler(APIHandler):
             self.allow_anonymous_mqtt = False
             self.mosquitto_conf_file_path = '/home/pi/.webthings/etc/mosquitto/mosquitto.conf'
             
-            # Candle version
-            self.version_file_path = '/boot/candle_version.txt'
             
             # Actions shell script location
             self.actions_file_path = '/boot/bootup_actions.sh'
@@ -99,6 +94,8 @@ class PowerSettingsAPIHandler(APIHandler):
             self.do_not_use_hardware_clock = False
             self.hardware_clock_file_path = '/boot/candle_hardware_clock.txt'
             
+            # Low voltage
+            self.low_voltage = False
             
             # LOAD CONFIG
             try:
@@ -153,7 +150,6 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("Created new API HANDLER: " + str(manifest['id']))
                 print("user_profile: " + str(self.user_profile))
                 print("actions_file_path: " + str(self.actions_file_path))
-                print("version_file_path: " + str(self.version_file_path))
                 
                 print("self.backup_file_path: " + str(self.backup_file_path))
                 print("self.backup_download_dir: " + str(self.backup_download_dir))
@@ -162,21 +158,6 @@ class PowerSettingsAPIHandler(APIHandler):
                 
         except Exception as e:
             print("ERROR, Failed to init UX extension API handler: " + str(e))
-        
-        
-        # Get Candle version
-        self.candle_version = "unknown"
-        try:
-            if os.path.isfile(self.version_file_path):
-                with open(self.version_file_path) as f:
-                    #self.candle_version = f.readlines()
-                    self.candle_version = f.read()
-                    self.candle_version = self.candle_version.strip()
-                    if self.DEBUG:
-                        print("\ncandle_version: " + str(self.candle_version))
-                    
-        except Exception as ex:
-            print("Error getting Candle version: " + str(ex))
         
         #self.backup()
         self.update_backup_info()
@@ -188,7 +169,7 @@ class PowerSettingsAPIHandler(APIHandler):
 
                df = file.read()
                if self.DEBUG:
-                   print("mosquitto_conf: " + str(df))
+                   print(str(df))
                
                if 'allow_anonymous true' in df:
                    self.allow_anonymous_mqtt = True
@@ -221,7 +202,7 @@ class PowerSettingsAPIHandler(APIHandler):
             #self.close_proxy()
         
         if not config:
-            print("Error loading config from database")
+            print("Error loading config from database. Using defaults.")
             return
 
         if 'Debug' in config:
@@ -521,10 +502,40 @@ class PowerSettingsAPIHandler(APIHandler):
                                 except Exception as ex:
                                     print("Error checking free memory: " + str(ex))
                                 
+                                
+                                # check if power supply is strong enough (lwo voltage)
+                                try:
+                                    
+                                    voltage_output = subprocess.check_output(['/opt/vc/bin/vcgencmd', 'get_throttled'])
+                                    voltage_output = voltage_output.decode('utf-8').split("=")[1]
+                                    voltage_output = voltage_output.rstrip("\n")
+                                    if self.DEBUG:
+                                        print("Voltage check result: " + str(voltage_output))
+                                    voltage_output
+                                    if voltage_output != '0x0':
+                                        
+                                        if self.DEBUG:
+                                            print("\nWARNING, POSSIBLE LOW VOLTAGE ISSUE DETECTED!")
+                                            
+                                        if (int(voltage_output,0) & 0x01) == 0x01:
+                                            if self.DEBUG:
+                                                print("- CURRENTLY LOW VOLTAGE")
+                                            self.low_voltage = True
+                                        elif (int(low_voltage,0) & 0x50000) == 0x50000:
+                                            if self.DEBUG:
+                                                print("- PREVIOUSLY LOW VOLTAGE")
+                                            self.low_voltage = True
+                                        
+                                
+                                except Exception as ex:
+                                    print("Error checking low voltage: " + str(ex))
+                                
+                                
+                                
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
-                                  content=json.dumps({'state':True, 'total_memory':total_memory, 'available_memory':available_memory, 'free_memory':free_memory, 'disk_usage':self.disk_usage}),
+                                  content=json.dumps({'state':True, 'total_memory':total_memory, 'available_memory':available_memory, 'free_memory':free_memory, 'disk_usage':self.disk_usage, 'low_voltage':self.low_voltage}),
                                 )
                                 
                             
@@ -557,7 +568,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             except Exception as ex:
                                 print("Error getting NTP status: " + str(ex))
                             
-                            response = {'hours':now.hour,'minutes':now.minute,'ntp':current_ntp_state,'backup_exists':self.backup_file_exists,'restore_exists':self.restore_file_exists, 'disk_usage':self.disk_usage, 'allow_anonymous_mqtt':self.allow_anonymous_mqtt, 'hardware_clock_detected':self.hardware_clock_detected,'candle_version':self.candle_version, 'debug':self.DEBUG}
+                            response = {'hours':now.hour,'minutes':now.minute,'ntp':current_ntp_state,'backup_exists':self.backup_file_exists,'restore_exists':self.restore_file_exists, 'disk_usage':self.disk_usage, 'allow_anonymous_mqtt':self.allow_anonymous_mqtt, 'hardware_clock_detected':self.hardware_clock_detected,'debug':self.DEBUG}
                             if self.DEBUG:
                                 print("Init response: " + str(response))
                         except Exception as ex:

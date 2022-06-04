@@ -10,7 +10,7 @@
       ]
     }
   ],
-  "description": "Adds options to shutdown or reboot your system, go fullscreen, manually set the time, create and restore backups, do a factory reset, or enable anonymous MQTT access",
+  "description": "Adds options to shutdown or reboot your system, go fullscreen, manually set the time, create and restore backups, do a factory reset, and more.",
   "gateway_specific_settings": {
     "webthings": {
       "exec": "python3 {path}/main.py",

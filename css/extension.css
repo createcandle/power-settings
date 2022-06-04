@@ -74,7 +74,6 @@
 	/* left: 0; */
 	/* margin-top: 6em; */
 	padding: 2rem;
-	margin-top: 6rem;
 	overflow: auto;
 }
 
@@ -91,7 +90,9 @@
 	font-size: 1.6rem;
 	color: #fff;
 	margin: 0 auto;
-	min-height:calc(100% - 10rem); 
+    margin-top:6rem;
+	min-height:calc(100% - 6rem); 
+    
 }
 
 #extension-power-settings-content > *{
@@ -125,6 +126,20 @@
 .extension-power-settings-container p{
     line-height:2.5rem;
 }
+
+#extension-candleappstore-view p{
+    word-wrap:break-word;
+}
+
+
+
+/*  LOGOUT */
+
+#logout{
+    display:none;
+}
+
+
 
 /*  waiting  */
 

@@ -2,7 +2,14 @@
     class PowerSettings extends window.Extension {
         constructor() {
             super('power-settings');
-            this.addMenuEntry('Power');
+            
+            //this.addMenuEntry('Power');
+            
+            
+            
+            document.querySelector('#main-menu> ul').insertAdjacentHTML('beforeend', '<li id="extension-power-settings-menu-item-li"><a id="extension-power-settings-menu-item" href="/extensions/power-settings">Power</a></li>');
+            
+            //console.log(window.API);
 
             this.debug = false;
             this.kiosk = false;
@@ -457,12 +464,6 @@
                         document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'block';
                     }
                     
-                    if(typeof body.candle_version != 'undefined'){
-                        document.getElementById('extension-power-settings-candle-version').innerText = body.candle_version;
-                    }
-                    
-                    
-                    
                 }).catch((e) => {
                     console.log("powersettings init error: ", e);
                 });
@@ -575,8 +576,31 @@
             const waiting = document.getElementById('extension-power-settings-waiting');
             const waiting_message = document.getElementById('extension-power-settings-waiting-message');
 
-            pre.innerText = "";
+            //pre.innerText = "";
 
+            
+            
+            
+            // Hide fullscreen button on iOS devices
+            var isIOS = (function () {
+                var iosQuirkPresent = function () {
+                    var audio = new Audio();
+
+                    audio.volume = 0.5;
+                    return audio.volume === 1;   // volume cannot be changed from "1" on iOS 12 and below
+                };
+
+                var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                var isAppleDevice = navigator.userAgent.includes('Macintosh');
+                var isTouchScreen = navigator.maxTouchPoints >= 1;   // true for iOS 13 (and hopefully beyond)
+
+                return isIOS || (isAppleDevice && (isTouchScreen || iosQuirkPresent()));
+            })();
+            
+            if(isIOS){
+                document.getElementById('extension-power-settings-fullscreen-button-container').style.display = 'none';
+            }
+            
             
             // Switch full screen
             document.getElementById('extension-power-settings-fullscreen-button').addEventListener('click', () => {
@@ -605,6 +629,23 @@
                     }
                 }
 
+            });
+
+
+            document.getElementById('extension-power-settings-logout').addEventListener('click', () => {
+                /*
+                content_container.style.display = 'none';
+                waiting.style.display = 'block';
+                waiting_message.innerHTML = '<h2>Shutting down...</h2><p>Please wait at least 15 seconds before unplugging the controller.</p>';
+                */
+                window.API.logout()
+                .then((body) => {
+                    console.log("log out done");
+                    window.location.reload(true);
+                }).catch((e) => {
+          			console.log("Error saving token: ", e);
+                });
+                
             });
 
             shutdown.addEventListener('click', () => {
@@ -687,10 +728,14 @@
                     if(free_disk_space < 500){
                         document.getElementById('extension-power-settings-available-memory-container').style.display = 'block';
                     }
-                    
-                    
-                    
-                }  
+                }
+                
+                // Show low voltage warning
+                if(typeof body['low_voltage'] != 'undefined'){
+                    if(body['low_voltage'] == true){
+                        document.getElementById('extension-power-settings-low-voltage-warning').style.display = 'block';
+                    }
+                }
                 
             
             }).catch((e) => {
