@@ -89,6 +89,9 @@ class PowerSettingsAPIHandler(APIHandler):
             # Restore
             self.restore_file_path = os.path.join(self.data_dir, "candle_restore.tar")
             
+            # Candle version fie path
+            self.version_file_path = '/boot/candle_version.txt'
+            
             # Hardware clock
             self.hardware_clock_detected = False
             self.do_not_use_hardware_clock = False
@@ -150,7 +153,7 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("Created new API HANDLER: " + str(manifest['id']))
                 print("user_profile: " + str(self.user_profile))
                 print("actions_file_path: " + str(self.actions_file_path))
-                
+                print("version_file_path: " + str(self.version_file_path))
                 print("self.backup_file_path: " + str(self.backup_file_path))
                 print("self.backup_download_dir: " + str(self.backup_download_dir))
                 
@@ -158,6 +161,20 @@ class PowerSettingsAPIHandler(APIHandler):
                 
         except Exception as e:
             print("ERROR, Failed to init UX extension API handler: " + str(e))
+        
+        # Get Candle version
+        self.candle_version = "unknown"
+        try:
+            if os.path.isfile(self.version_file_path):
+                with open(self.version_file_path) as f:
+                    #self.candle_version = f.readlines()
+                    self.candle_version = f.read()
+                    self.candle_version = self.candle_version.strip()
+                    if self.DEBUG:
+                        print("\ncandle_version: " + str(self.candle_version))
+
+        except Exception as ex:
+            print("Error getting Candle version: " + str(ex))
         
         #self.backup()
         self.update_backup_info()
@@ -169,7 +186,7 @@ class PowerSettingsAPIHandler(APIHandler):
 
                df = file.read()
                if self.DEBUG:
-                   print(str(df))
+                   print("mosquitto_conf: " + str(df))
                
                if 'allow_anonymous true' in df:
                    self.allow_anonymous_mqtt = True
@@ -535,7 +552,12 @@ class PowerSettingsAPIHandler(APIHandler):
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
-                                  content=json.dumps({'state':True, 'total_memory':total_memory, 'available_memory':available_memory, 'free_memory':free_memory, 'disk_usage':self.disk_usage, 'low_voltage':self.low_voltage}),
+                                  content=json.dumps({'state':True, 
+                                                      'total_memory':total_memory, 
+                                                      'available_memory':available_memory, 
+                                                      'free_memory':free_memory, 
+                                                      'disk_usage':self.disk_usage, 
+                                                      'low_voltage':self.low_voltage}),
                                 )
                                 
                             
@@ -568,7 +590,17 @@ class PowerSettingsAPIHandler(APIHandler):
                             except Exception as ex:
                                 print("Error getting NTP status: " + str(ex))
                             
-                            response = {'hours':now.hour,'minutes':now.minute,'ntp':current_ntp_state,'backup_exists':self.backup_file_exists,'restore_exists':self.restore_file_exists, 'disk_usage':self.disk_usage, 'allow_anonymous_mqtt':self.allow_anonymous_mqtt, 'hardware_clock_detected':self.hardware_clock_detected,'debug':self.DEBUG}
+                            response = {'hours':now.hour,
+                                        'minutes':now.minute,
+                                        'ntp':current_ntp_state,
+                                        'backup_exists':self.backup_file_exists,
+                                        'restore_exists':self.restore_file_exists,
+                                        'disk_usage':self.disk_usage,
+                                        'allow_anonymous_mqtt':self.allow_anonymous_mqtt, 
+                                        'hardware_clock_detected':self.hardware_clock_detected,
+                                        'candle_version':self.candle_version,
+                                        'debug':self.DEBUG
+                                    }
                             if self.DEBUG:
                                 print("Init response: " + str(response))
                         except Exception as ex:
