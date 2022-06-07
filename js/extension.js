@@ -464,6 +464,11 @@
                         document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'block';
                     }
                     
+                    // Show Candle version
+                    if(typeof body.candle_version != 'undefined'){
+                        document.getElementById('extension-power-settings-candle-version').innerText = body.candle_version;
+                    }
+                    
                 }).catch((e) => {
                     console.log("powersettings init error: ", e);
                 });
