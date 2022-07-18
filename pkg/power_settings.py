@@ -446,7 +446,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 state = 'error'
                                 if os.path.isdir(self.backup_download_dir):
-                                    os.system('unline ' + self.backup_download_dir) # remove symlink, so the backup files can not longer be downloaded
+                                    os.system('unlink ' + self.backup_download_dir) # remove symlink, so the backup files can not longer be downloaded
                                     if self.DEBUG:
                                         print("removed symlink")
                                     state = 'ok'
