@@ -214,7 +214,7 @@
                     }
                     else{
                         if(confirm("Are you absolutely sure?")){
-                            document.getElementById('extension-power-settings-container-reset').innerHTML = "<h1>Factory reset in progress</h1><p>The controller will now reboot. When all data is erased the controller will shut down.</p><p>Do not unplug the controller until the red light has stopped blinking (if you do not see it, just wait one minute).</p>";
+                            document.getElementById('extension-power-settings-container-reset').innerHTML = "<h1>Factory reset in progress</h1><p>The controller will now reboot. When all data is erased the controller will shut down.</p><p>Do not unplug the controller until the red light has stopped blinking (if you do not see it, just wait 5 minutes).</p>";
                             document.getElementById('extension-power-settings-back-button').style.display = 'none';
 
                             window.API.postJson(
