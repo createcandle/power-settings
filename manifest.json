@@ -45,7 +45,7 @@
     }
   },
   "short_name": "Power",
-  "version": "3.2.17",
+  "version": "3.2.18",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
