@@ -5,6 +5,7 @@
             
             //this.addMenuEntry('Power');
             
+            //TODO separet this in multiple .js and import in the base one
             
             
             document.querySelector('#main-menu> ul').insertAdjacentHTML('beforeend', '<li id="extension-power-settings-menu-item-li"><a id="extension-power-settings-menu-item" href="/extensions/power-settings">Power</a></li>');
@@ -326,6 +327,7 @@
     
                 ntp.addEventListener('click', () => {
                     var ntp_current_state = 0;
+                    //TODO: var value sould be load from a configuration
                     if (ntp.checked) {
                         ntp_current_state = 1;
                     }
@@ -352,6 +354,7 @@
 
                 // Submits the manual time
                 document.getElementById('extension-power-settings-form-submit-time').addEventListener('click', () => {
+                    //TODO: Is data loaded from saved configuration&
                     //console.log("save time button clicked");
                     if (hours.value.trim() != '' && minutes.value.trim() != '') { // Make sure the user inputted something. Python will also sanitize.
                         window.API.postJson(

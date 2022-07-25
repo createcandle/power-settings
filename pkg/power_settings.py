@@ -93,6 +93,8 @@ class PowerSettingsAPIHandler(APIHandler):
             self.version_file_path = '/boot/candle_version.txt'
             
             # Hardware clock
+            ##### TODO Work with clock module ####
+            
             self.hardware_clock_detected = False
             self.do_not_use_hardware_clock = False
             self.hardware_clock_file_path = '/boot/candle_hardware_clock.txt'
@@ -115,6 +117,8 @@ class PowerSettingsAPIHandler(APIHandler):
                     run_command('sudo rm ' + str(self.hardware_clock_file_path))
             else:
                 self.hardware_clock_check()
+            
+            #### End of part to rework ####
             
             # Create local backups directory
             if not os.path.isdir(self.backup_dir):
@@ -236,7 +240,8 @@ class PowerSettingsAPIHandler(APIHandler):
     
         
         
-        
+    ##### TODO move this to clock module ####
+
     def hardware_clock_check(self):
         try:
             init_hardware_clock = False
@@ -298,7 +303,8 @@ class PowerSettingsAPIHandler(APIHandler):
             
         except Exception as ex:
             print("Error in hardware_clock_check: " + str(ex))
-        
+
+    #### end of the part to rework in clock module #### 
         
 
 
@@ -575,6 +581,8 @@ class PowerSettingsAPIHandler(APIHandler):
                     elif request.path == '/init':
                         response = {}
                         
+                        #TODO clock initialization rework
+
                         if self.DEBUG:
                             print("Initialising")
                         try:
@@ -614,6 +622,9 @@ class PowerSettingsAPIHandler(APIHandler):
                         
                     
                     elif request.path == '/set-time':
+
+                        # TODO set time function to rework
+
                         try:
                             self.set_time(str(request.body['hours']),request.body['minutes'])
                             
@@ -635,6 +646,9 @@ class PowerSettingsAPIHandler(APIHandler):
 
                         
                     elif request.path == '/set-ntp':
+
+                        # TODO set ntp fun to rework 
+
                         if self.DEBUG:
                             print("New NTP state = " + str(request.body['ntp']))
                         self.set_ntp_state(request.body['ntp'])
@@ -768,6 +782,9 @@ class PowerSettingsAPIHandler(APIHandler):
             )
         
     def set_time(self, hours, minutes, seconds=0):
+
+        #TODO move this to clock module
+
         if self.DEBUG:
             print("Setting the new time")
         
@@ -781,11 +798,13 @@ class PowerSettingsAPIHandler(APIHandler):
         
             try:
                 os.system(time_command)
+                #TODO use subprocess to get return of the command
                 
                 # If hardware clock module exists, set its time too.
                 if self.hardware_clock_detected:
                     print('also setting hardware clock time')
                     os.system('sudo hwclock -w')
+                    #TODO use subprocess to get command return
                     
             except Exception as e:
                 print("Error setting new time: " + str(e))
@@ -795,15 +814,20 @@ class PowerSettingsAPIHandler(APIHandler):
 
 
     def set_ntp_state(self,new_state):
+
+        # TODO move this to clock module
+
         if self.DEBUG:
             print("Setting NTP state to: " + str(new_state))
         try:
             if new_state:
                 os.system('sudo timedatectl set-ntp on') 
+                # TODO use subprocess to get command return
                 if self.DEBUG:
                     print("Network time turned on")
             else:
                 os.system('sudo timedatectl set-ntp off') 
+                # TODO use subprocess to get command return
                 if self.DEBUG:
                     print("Network time turned off")
         except Exception as e:
