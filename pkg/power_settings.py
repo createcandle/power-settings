@@ -12,6 +12,8 @@ import datetime
 import functools
 import subprocess
 
+from pkg import clock
+
 try:
     from gateway_addon import APIHandler, APIResponse, Database
     #print("succesfully loaded APIHandler and APIResponse from gateway_addon")
@@ -41,6 +43,8 @@ class PowerSettingsAPIHandler(APIHandler):
         
         self.addon_name = "power-settings"  # overwritteb by data in manifest
         self.DEBUG = False
+
+        self.clock = Clock(self.DEBUG)#set a clock object
         
         try:
             manifest_fname = os.path.join(
@@ -94,29 +98,32 @@ class PowerSettingsAPIHandler(APIHandler):
             
             # Hardware clock
             ##### TODO Work with clock module ####
-            
+            #MOVED TO MODULE
+            """
             self.hardware_clock_detected = False
             self.do_not_use_hardware_clock = False
             self.hardware_clock_file_path = '/boot/candle_hardware_clock.txt'
-            
+            """
             # Low voltage
             self.low_voltage = False
+            #TODO Why is this here???
             
             # LOAD CONFIG
+            #TODO Why is this here???
             try:
                 self.add_from_config()
             except Exception as ex:
                 print("Error loading config: " + str(ex))
                 
             
-            
-            if self.do_not_use_hardware_clock:
-                if os.path.isfile(self.hardware_clock_file_path):
+            #TODO:this check Could be move into a method
+            if self.clock.do_not_use_hardware_clock:
+                if os.path.isfile(self.clock.hardware_clock_file_path):
                     if self.DEBUG:
-                        print("removing " + str(self.hardware_clock_file_path))
-                    run_command('sudo rm ' + str(self.hardware_clock_file_path))
+                        print("removing " + str(self.clock.hardware_clock_file_path))
+                    run_command('sudo rm ' + str(self.clock.hardware_clock_file_path))
             else:
-                self.hardware_clock_check()
+                self.clock.hardware_clock_check()
             
             #### End of part to rework ####
             
@@ -241,7 +248,8 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
     ##### TODO move this to clock module ####
-
+    #MOVED AS A METHOD OF Clock object
+    """
     def hardware_clock_check(self):
         try:
             init_hardware_clock = False
@@ -305,7 +313,7 @@ class PowerSettingsAPIHandler(APIHandler):
             print("Error in hardware_clock_check: " + str(ex))
 
     #### end of the part to rework in clock module #### 
-        
+    """   
 
 
     def handle_request(self, request):
@@ -583,6 +591,7 @@ class PowerSettingsAPIHandler(APIHandler):
                         
                         #TODO clock initialization rework
 
+                        #### TODO must create a clock method for this
                         if self.DEBUG:
                             print("Initialising")
                         try:
@@ -624,6 +633,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     elif request.path == '/set-time':
 
                         # TODO set time function to rework
+                        #TODO create clock method for this
 
                         try:
                             self.set_time(str(request.body['hours']),request.body['minutes'])
@@ -648,6 +658,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     elif request.path == '/set-ntp':
 
                         # TODO set ntp fun to rework 
+                        #TODO create clock method for this
 
                         if self.DEBUG:
                             print("New NTP state = " + str(request.body['ntp']))
