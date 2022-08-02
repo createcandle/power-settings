@@ -523,7 +523,11 @@ class PowerSettingsAPIHandler(APIHandler):
                                 # check if power supply is strong enough (lwo voltage)
                                 try:
                                     
-                                    voltage_output = subprocess.check_output(['/opt/vc/bin/vcgencmd', 'get_throttled'])
+                                    if os.path.isfile('/usr/bin/vcgencmd'):
+                                        voltage_output = subprocess.check_output(['/usr/bin/vcgencmd', 'get_throttled'])
+                                    else:
+                                        voltage_output = subprocess.check_output(['/opt/vc/bin/vcgencmd', 'get_throttled'])
+                                    
                                     voltage_output = voltage_output.decode('utf-8').split("=")[1]
                                     voltage_output = voltage_output.rstrip("\n")
                                     if self.DEBUG:
@@ -538,7 +542,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             if self.DEBUG:
                                                 print("- CURRENTLY LOW VOLTAGE")
                                             self.low_voltage = True
-                                        elif (int(low_voltage,0) & 0x50000) == 0x50000:
+                                        elif (int(voltage_output,0) & 0x50000) == 0x50000:
                                             if self.DEBUG:
                                                 print("- PREVIOUSLY LOW VOLTAGE")
                                             self.low_voltage = True
