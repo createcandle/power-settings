@@ -12,7 +12,8 @@ import datetime
 import functools
 import subprocess
 
-from pkg import clock
+from pkg.clock_settings import Clock
+from pkg.utils.command import run_command
 
 try:
     from gateway_addon import APIHandler, APIResponse, Database
@@ -42,7 +43,7 @@ class PowerSettingsAPIHandler(APIHandler):
         #print("INSIDE API HANDLER INIT")
         
         self.addon_name = "power-settings"  # overwritteb by data in manifest
-        self.DEBUG = False
+        self.DEBUG = True
 
         self.clock = Clock(self.DEBUG)#set a clock object
         
@@ -96,14 +97,6 @@ class PowerSettingsAPIHandler(APIHandler):
             # Candle version fie path
             self.version_file_path = '/boot/candle_version.txt'
             
-            # Hardware clock
-            ##### TODO Work with clock module ####
-            #MOVED TO MODULE
-            """
-            self.hardware_clock_detected = False
-            self.do_not_use_hardware_clock = False
-            self.hardware_clock_file_path = '/boot/candle_hardware_clock.txt'
-            """
             # Low voltage
             self.low_voltage = False
             #TODO Why is this here???
@@ -114,18 +107,6 @@ class PowerSettingsAPIHandler(APIHandler):
                 self.add_from_config()
             except Exception as ex:
                 print("Error loading config: " + str(ex))
-                
-            
-            #TODO:this check Could be move into a method
-            if self.clock.do_not_use_hardware_clock:
-                if os.path.isfile(self.clock.hardware_clock_file_path):
-                    if self.DEBUG:
-                        print("removing " + str(self.clock.hardware_clock_file_path))
-                    run_command('sudo rm ' + str(self.clock.hardware_clock_file_path))
-            else:
-                self.clock.hardware_clock_check()
-            
-            #### End of part to rework ####
             
             # Create local backups directory
             if not os.path.isdir(self.backup_dir):
@@ -239,82 +220,11 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("-Debug preference was in config: " + str(self.DEBUG))
 
         if 'Do not use hardware clock' in config:
-            self.do_not_use_hardware_clock = bool(config['Do not use hardware clock'])
+            self.clock.do_not_use_hardware_clock = bool(config['Do not use hardware clock'])
             if self.DEBUG:
-                print("-Do not use hardware clock preference was in config: " + str(self.do_not_use_hardware_clock))
+                print("-Do not use hardware clock preference was in config: " + str(self.clock.do_not_use_hardware_clock))
 
         #self.DEBUG = True # TODO: DEBUG, REMOVE
-    
-        
-        
-    ##### TODO move this to clock module ####
-    #MOVED AS A METHOD OF Clock object
-    """
-    def hardware_clock_check(self):
-        try:
-            init_hardware_clock = False
-            for line in run_command("sudo i2cdetect -y 1").splitlines():
-                if self.DEBUG:
-                    print(line)
-                if line.startswith( '60:' ):
-                    if '-- 68 --' in line or '-- UU --' in line:
-                        self.hardware_clock_detected = True
-                        if self.DEBUG:
-                            print("Hardware clock detected")
-                            
-                    if '-- 68 --' in line:
-                        init_hardware_clock = True
-            
-            if init_hardware_clock:
-                if self.DEBUG:
-                    print("Initializing hardware clock")
-                os.system('sudo modprobe rtc-ds1307')
-                os.system('echo "ds1307 0x68" | sudo tee /sys/class/i2c-adapter/i2c-1/new_device')
-
-                if os.path.isfile(self.hardware_clock_file_path):
-                    # The hardware clock has already been set
-                    
-                    # Check if the hardware clock date is newer?
-                    hardware_clock_time = run_command("sudo hwclock -r")
-                    if self.DEBUG:
-                        print("hardware_clock_time: " + str(hardware_clock_time))
-                        
-                    hardware_clock_time = hardware_clock_time.rstrip()
-                    #hardware_clock_date = datetime.strptime(hardware_clock_time, '%Y-%m-%d')
-                    #hardware_clock_date = datetime.datetime.fromisoformat(hardware_clock_time)
-                    
-                    # "2021-08-08"
-                    # 2022-05-24 00:06:26.623920+02:00
-                    
-                    hardware_clock_date = datetime.datetime.strptime(hardware_clock_time, "%Y-%m-%d %H:%M:%S.%f%z") 
-                    if hardware_clock_date.timestamp() > (datetime.datetime.now().timestamp() - 86400):
-                        if self.DEBUG:
-                            print("SETTING LOCAL CLOCK FROM HARDWARE CLOCK")
-                        # Set the system clock based on the hardware clock
-                        os.system('sudo hwclock -s')
-                    else:
-                        # The hardware clock time is more out of date than the software clock. 
-                        # Removing the the hardware clock file will cause the clock to be updated from the internet on next reboot.
-                        os.system('sudo rm ' + self.hardware_clock_file_path)
-                    
-                else:
-                    # The hardware clock should be set
-                    if self.DEBUG:
-                        print("Setting initial hardware clock, creating " + str(self.hardware_clock_file_path))
-                    os.system('sudo hwclock -w')
-                    os.system('sudo touch ' + self.hardware_clock_file_path)
-                
-            else:
-                if self.DEBUG:
-                    print("No need to init hardware clock module (does not exist, or has already been initialised). hardware_clock_detected: " + str(self.hardware_clock_detected))
-                    
-            
-        except Exception as ex:
-            print("Error in hardware_clock_check: " + str(ex))
-
-    #### end of the part to rework in clock module #### 
-    """   
-
 
     def handle_request(self, request):
         """
@@ -329,6 +239,7 @@ class PowerSettingsAPIHandler(APIHandler):
                 return APIResponse(status=404)
             
             if request.path == '/init' or request.path == '/set-time' or request.path == '/set-ntp' or request.path == '/shutdown' or request.path == '/reboot' or request.path == '/restart' or request.path == '/ajax' or request.path == '/save':
+                #TODO use maybe if request.path in list of path
 
                 if self.DEBUG:
                     print("-API request at: " + str(request.path))
@@ -552,7 +463,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             if self.DEBUG:
                                                 print("- CURRENTLY LOW VOLTAGE")
                                             self.low_voltage = True
-                                        elif (int(low_voltage,0) & 0x50000) == 0x50000:
+                                        elif (int(self.low_voltage,0) & 0x50000) == 0x50000:
                                             if self.DEBUG:
                                                 print("- PREVIOUSLY LOW VOLTAGE")
                                             self.low_voltage = True
@@ -587,88 +498,40 @@ class PowerSettingsAPIHandler(APIHandler):
                         
                         
                     elif request.path == '/init':
-                        response = {}
-                        
-                        #TODO clock initialization rework
+                        """
+                        init method look like to be a multiple settings init so moved only the clock settings out
 
-                        #### TODO must create a clock method for this
-                        if self.DEBUG:
-                            print("Initialising")
-                        try:
-                            now = datetime.datetime.now()
-                            current_ntp_state = True
+                        maybe to rework a more clean way
+                        """
+                        response = {}
+                        response = self.clock.initialize_clock()
                         
-                            try:
-                                for line in run_command("timedatectl show").splitlines():
-                                    if self.DEBUG:
-                                        print(line)
-                                    if line.startswith( 'NTP=no' ):
-                                        current_ntp_state = False
-                            except Exception as ex:
-                                print("Error getting NTP status: " + str(ex))
-                            
-                            response = {'hours':now.hour,
-                                        'minutes':now.minute,
-                                        'ntp':current_ntp_state,
-                                        'backup_exists':self.backup_file_exists,
-                                        'restore_exists':self.restore_file_exists,
-                                        'disk_usage':self.disk_usage,
-                                        'allow_anonymous_mqtt':self.allow_anonymous_mqtt, 
-                                        'hardware_clock_detected':self.hardware_clock_detected,
-                                        'candle_version':self.candle_version,
-                                        'debug':self.DEBUG
-                                    }
-                            if self.DEBUG:
-                                print("Init response: " + str(response))
-                        except Exception as ex:
-                            print("Init error: " + str(ex))
+                        if (not response):
+                            print("Clock Initialization Error")
+                            return APIResponse(
+                                status=400
+                            )
+                        response.replace('self.backup_file_exists', self.backup_file_exists)\
+                            .replace('self.restore_file_exists', self.restore_file_exists)\
+                            .replace('self.disk_usage', self.disk_usage)\
+                            .replace('self.allow_anonymous_mqtt',self.allow_anonymous_mqtt)\
+                            .replace('self.candle_version', self.candle_version)
+                        
+                        if self.DEBUG:
+                            print("Init response: " + str(response))
                         
                         return APIResponse(
                           status=200,
                           content_type='application/json',
                           content=json.dumps(response),
-                        )
-                        
+                        )                        
                     
                     elif request.path == '/set-time':
-
-                        # TODO set time function to rework
-                        #TODO create clock method for this
-
-                        try:
-                            self.set_time(str(request.body['hours']),request.body['minutes'])
-                            
-                            now = datetime.datetime.now()
-                            
-                            return APIResponse(
-                              status=200,
-                              content_type='application/json',
-                              content=json.dumps({'state':True, 'hours':now.hour,'minutes':now.minute}),
-                            )
-                        except Exception as ex:
-                            if self.DEBUG:
-                                print("Error setting time: " + str(ex))
-                            return APIResponse(
-                              status=500,
-                              content_type='application/json',
-                              content=json.dumps({"state":False}),
-                            )
-
+                        return self.clock.set_time(request)
                         
                     elif request.path == '/set-ntp':
-
-                        # TODO set ntp fun to rework 
-                        #TODO create clock method for this
-
-                        if self.DEBUG:
-                            print("New NTP state = " + str(request.body['ntp']))
-                        self.set_ntp_state(request.body['ntp'])
-                        return APIResponse(
-                          status=200,
-                          content_type='application/json',
-                          content=json.dumps("Changed Network Time state to " + str(request.body['ntp'])),
-                        )
-                
+                        return self.clock.set_ntp(request)
+                                        
                     elif request.path == '/shutdown':
                         self.shutdown()
                         return APIResponse(
@@ -791,7 +654,7 @@ class PowerSettingsAPIHandler(APIHandler):
               content_type='application/json',
               content=json.dumps("API Error"),
             )
-        
+    """    
     def set_time(self, hours, minutes, seconds=0):
 
         #TODO move this to clock module
@@ -812,18 +675,15 @@ class PowerSettingsAPIHandler(APIHandler):
                 #TODO use subprocess to get return of the command
                 
                 # If hardware clock module exists, set its time too.
-                if self.hardware_clock_detected:
+                if self.clock.hardware_clock_detected:
                     print('also setting hardware clock time')
                     os.system('sudo hwclock -w')
                     #TODO use subprocess to get command return
                     
             except Exception as e:
                 print("Error setting new time: " + str(e))
-
-                
-           
-
-
+    """
+    """
     def set_ntp_state(self,new_state):
 
         # TODO move this to clock module
@@ -843,6 +703,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     print("Network time turned off")
         except Exception as e:
             print("Error changing NTP state: " + str(e))
+    """
 
 
     def shutdown(self):
@@ -926,20 +787,5 @@ class PowerSettingsAPIHandler(APIHandler):
             os.system('unlink ' + self.backup_download_dir) # remove symlink, so the backup files can not longer be downloaded
 
 
-
-def run_command(cmd, timeout_seconds=60):
-    try:
-        p = subprocess.run(cmd, timeout=timeout_seconds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, universal_newlines=True)
-
-        if p.returncode == 0:
-            #print("command ran succesfully")
-            return p.stdout #.decode('utf-8')
-            #yield("Command success")
-        else:
-            if p.stderr:
-                return str(p.stderr) # + '\n' + "Command failed"   #.decode('utf-8'))
-
-    except Exception as e:
-        print("Error running command: "  + str(e))
         
         

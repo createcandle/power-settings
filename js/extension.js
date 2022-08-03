@@ -315,16 +315,10 @@
                         
                         
                     }
-                });
-    
-    
-                
-    
-    
-    
+                });    
     
                 // TIME CLOCK
-    
+                //TODO show current system time on clock settings page
                 ntp.addEventListener('click', () => {
                     var ntp_current_state = 0;
                     //TODO: var value sould be load from a configuration
