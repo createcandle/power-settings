@@ -195,9 +195,9 @@ echo "Well hello there" > /home/pi/.bash_history
 raspi-config nonint do_ssh 1 # 0 is enable, 1 is disable
 
 # Enable read-only mode of system partition
-raspi-config nonint disable_bootro
-raspi-config nonint enable_overlayfs
-raspi-config nonint disable_bootro
+#raspi-config nonint disable_bootro
+#raspi-config nonint enable_overlayfs
+#raspi-config nonint disable_bootro
 
 echo "waiting 5 seconds"
 sleep 5
@@ -208,6 +208,15 @@ rm /boot/keep_bluetooth.txt
 touch /boot/hide_mouse_pointer.txt
 rm /boot/bootup_actions.sh
 
-echo "DONE. Shutting down.."
+echo " "
+echo " "
+echo "DONE!"
+echo " "
+echo " "
+echo "Shutting down Raspberry Pi..."
+echo "Wait a few seconds before you take the SD card from the Raspberry Pi"
+echo " "
+echo " "
+
 
 shutdown -P now
