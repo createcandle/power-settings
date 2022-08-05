@@ -127,8 +127,19 @@ class PowerSettingsAPIHandler(APIHandler):
             if os.path.isfile(self.actions_file_path):
                 print("ERROR: old actions script still exists! Removing it now.")
                 os.system('sudo rm ' + str(self.actions_file_path))
-                os.system('sudo touch ')
                 
+                
+            if not os.path.isfile('/boot/candle_stay_rw.txt'):
+                if os.path.isfile('/boot/candle_rw.txt'):
+                    os.system('sudo rm /boot/candle_rw.txt')
+                    if self.DEBUG:
+                        print("On next reboot the controller will be read-only again")
+                else:
+                    if self.DEBUG:
+                        print("no candle_rw.txt file spotted")
+            else:
+                if self.DEBUG:
+                    print("Candle is in permanent RW mode.")
             
             # remove old download symlink if it somehow survived
             if os.path.islink(self.backup_download_dir):
