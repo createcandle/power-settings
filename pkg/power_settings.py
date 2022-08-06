@@ -1,5 +1,10 @@
 """Power Settings API handler."""
 
+# list read-only mounts
+# grep "[[:space:]]ro[[:space:],]" /proc/mounts 
+
+# This returns 'ro' or 'rw' depending on the overlay state
+# cat /proc/mounts | grep /ro | awk '{print substr($4,1,2)}'
 
 import os
 import sys

@@ -7,6 +7,7 @@
 #raspi-config nonint disable_bootro
 echo "stopping browser and Candle Controller"
 pkill chromium-browse
+pkill chromium-browser
 systemctl stop webthings-gateway.service
 sleep 5
 
@@ -205,6 +206,9 @@ sleep 5
 rm /boot/rotate180.txt
 rm /boot/keep_z2m.txt
 rm /boot/keep_bluetooth.txt
+rm /boot/write_enabled.txt
+rm /boot/candle_rw.txt
+rm /boot/candle_rw_keep.txt
 touch /boot/hide_mouse_pointer.txt
 rm /boot/bootup_actions.sh
 
