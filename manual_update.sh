@@ -6,19 +6,24 @@ if [ "$EUID" -ne 0 ]
 fi
 
 
-if [ -f /boot/write_enabled.txt ] 
+if [ -f /boot/candle_rw_once.txt ] 
 then
 
-  rm /boot/write_enabled.txt
   touch /home/pi/.webthings/candle.log
   echo "$(date) - starting manual update" >> /home/pi/.webthings/candle.log
 
   apt-get update
-  apt-get upgrade &
+  apt-get upgrade -y &
   wait
   
+  apt-get update --fix-missing -y
+  apt --fix-broken install -y
+  apt autoremove -y
+  
   echo "$(date) - manual update complete" >> /home/pi/.webthings/candle.log
-
+  
+  rm /boot/candle_rw_once.txt
+  
 fi
 
 # delete this script
