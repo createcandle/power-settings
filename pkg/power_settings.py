@@ -3,7 +3,7 @@
 # list read-only mounts
 # grep "[[:space:]]ro[[:space:],]" /proc/mounts 
 
-# This returns 'ro' or 'rw' depending on the overlay state
+# Even simpler, this returns 'ro' or 'rw' depending on the overlay state
 # cat /proc/mounts | grep /ro | awk '{print substr($4,1,2)}'
 
 import os
@@ -132,19 +132,21 @@ class PowerSettingsAPIHandler(APIHandler):
             if os.path.isfile(self.actions_file_path):
                 print("ERROR: old actions script still exists! Removing it now.")
                 os.system('sudo rm ' + str(self.actions_file_path))
-                
-                
-            if not os.path.isfile('/boot/candle_stay_rw.txt'):
-                if os.path.isfile('/boot/candle_rw.txt'):
-                    os.system('sudo rm /boot/candle_rw.txt')
-                    if self.DEBUG:
-                        print("On next reboot the controller will be read-only again")
-                else:
-                    if self.DEBUG:
-                        print("no candle_rw.txt file spotted")
+            
+            
+            # Remove rw-once file
+            if os.path.isfile('/boot/candle_rw_once.txt'):
+                os.system('sudo rm /boot/candle_rw_once.txt')
+                if self.DEBUG:
+                    print("On next reboot the controller will be read-only again")
             else:
                 if self.DEBUG:
+                    print("no candle_rw.txt file spotted")
+            
+            if os.path.isfile('/boot/candle_stay_rw.txt'):
+                if self.DEBUG:
                     print("Candle is in permanent RW mode.")
+            
             
             # remove old download symlink if it somehow survived
             if os.path.islink(self.backup_download_dir):
@@ -152,14 +154,15 @@ class PowerSettingsAPIHandler(APIHandler):
                     print("unlinking download dir that survived somehow")
                 os.system('unlink ' + self.backup_download_dir) # remove symlink, so the backup files can not longer be downloaded
             
+            
             # Remove old restore file if it exists
             if os.path.isfile(self.restore_file_path):
                 os.system('rm ' + str(self.restore_file_path))
                 if self.DEBUG:
                     print("removed old restore file")
             
-            self.update_backup_info()
             
+            self.update_backup_info()
             
             if self.DEBUG:
                 print("power settings: self.user_profile: " + str(self.user_profile))
