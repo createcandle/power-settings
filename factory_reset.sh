@@ -41,6 +41,16 @@ find /tmp -type f -atime +10 -delete
 find /home/pi/.webthings/data -type f -name 'persistence.json'  -delete
 
 
+# Resize disk on next boot
+#isInFile=$(cat /boot/cmdline.txt | grep -c "init=/usr/lib/raspi-config/init_resize.sh")
+#if [ $isInFile -eq 0 ]
+#then
+#    echo -n " init=/usr/lib/raspi-config/init_resize.sh" | tee -a /boot/cmdline.txt
+#    echo "- Added resize command to /boot/cmdline.txt"
+#else
+#    echo "- Warning: the cmdline.txt file was already modified?"
+#fi
+
 # Clear the wifi password
 echo -e 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=NL\n' | tee /etc/wpa_supplicant/wpa_supplicant.conf
 
@@ -197,7 +207,7 @@ rm /boot/rotate180.txt
 rm /boot/keep_z2m.txt
 rm /boot/keep_bluetooth.txt
 rm /boot/write_enabled.txt
-rm /boot/candle_rw.txt
+rm /boot/candle_rw_once.txt
 rm /boot/candle_rw_keep.txt
 touch /boot/hide_mouse_pointer.txt
 rm /boot/bootup_actions.sh
