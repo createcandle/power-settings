@@ -121,7 +121,7 @@ class PowerSettingsAPIHandler(APIHandler):
             # Remove old actions script if it survived somehow
             if os.path.isfile(self.actions_file_path):
                 print("ERROR: old actions script still exists! Removing it now.")
-                os.system('sudo rm ' + str(self.actions_file_path))            
+                os.system('sudo rm ' + str(self.actions_file_path))  
             
             # Remove rw-once file
             if os.path.isfile('/boot/candle_rw_once.txt'):
@@ -134,14 +134,14 @@ class PowerSettingsAPIHandler(APIHandler):
             
             if os.path.isfile('/boot/candle_stay_rw.txt'):
                 if self.DEBUG:
-                    print("Candle is in permanent RW mode.")            
-            
+                    print("Candle is in permanent RW mode.")
+
             # remove old download symlink if it somehow survived
             if os.path.islink(self.backup_download_dir):
                 if self.DEBUG:
                     print("unlinking download dir that survived somehow")
-                os.system('unlink ' + self.backup_download_dir) # remove symlink, so the backup files can not longer be downloaded            
-            
+                os.system('unlink ' + self.backup_download_dir) # remove symlink, so the backup files can not longer be downloaded 
+
             # Remove old restore file if it exists
             if os.path.isfile(self.restore_file_path):
                 os.system('rm ' + str(self.restore_file_path))
