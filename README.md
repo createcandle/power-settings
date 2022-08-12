@@ -1,4 +1,5 @@
 # power-settings
+
 A core component of the Candle smart home.
 
 - Adds buttons for shutdown and reboot
