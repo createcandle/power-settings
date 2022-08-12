@@ -20,6 +20,7 @@ import subprocess
 from pkg.clock_settings import Clock
 from pkg.utils.command import run_command
 
+
 try:
     from gateway_addon import APIHandler, APIResponse, Database
     #print("succesfully loaded APIHandler and APIResponse from gateway_addon")
@@ -48,7 +49,8 @@ class PowerSettingsAPIHandler(APIHandler):
         #print("INSIDE API HANDLER INIT")
         
         self.addon_name = "power-settings"  # overwritteb by data in manifest
-        self.DEBUG = True
+
+        self.DEBUG = verbose
 
         self.clock = Clock(self.DEBUG)#set a clock object
         
@@ -546,6 +548,7 @@ class PowerSettingsAPIHandler(APIHandler):
                         
                         #TODO clock initialization rework
 
+                        #### TODO must create a clock method for this
                         if self.DEBUG:
                             print("Init response: " + str(response))
                         
@@ -562,6 +565,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     elif request.path == '/set-ntp':
                         return self.clock.set_ntp(request)
                                         
+
                     elif request.path == '/shutdown':
                         self.shutdown()
                         return APIResponse(

@@ -24,7 +24,6 @@ _CONFIG_PATHS = [
 
 if 'WEBTHINGS_HOME' in os.environ:
     _CONFIG_PATHS.insert(0, os.path.join(os.environ['WEBTHINGS_HOME'], 'config'))
-
 class Clock:
     """
     Class that represent a system clock
@@ -33,6 +32,7 @@ class Clock:
     def __init__(self, DEBUG):
         self.DEBUG = DEBUG
         print(f"clock debug: {DEBUG}")
+
         self.hardware_clock_detected = False
         self.do_not_use_hardware_clock = False
         self.hardware_clock_file_path = '/boot/candle_hardware_clock.txt'
@@ -166,6 +166,7 @@ class Clock:
                     run_command('sudo rm ' + str(self.hardware_clock_file_path))
             else:
                 self.hardware_clock_check()
+
                     
             
         except Exception as ex:
@@ -215,3 +216,4 @@ class Clock:
                     print("Network time turned off")
         except Exception as e:
             print("Error changing NTP state: " + str(e))
+
