@@ -113,6 +113,8 @@ class PowerSettingsAPIHandler(APIHandler):
             except Exception as ex:
                 print("Error loading config: " + str(ex))
             
+            #### End of part to rework ####
+            
             # Create local backups directory
             if not os.path.isdir(self.backup_dir):
                 if self.DEBUG:
@@ -542,6 +544,8 @@ class PowerSettingsAPIHandler(APIHandler):
                             .replace('self.allow_anonymous_mqtt',self.allow_anonymous_mqtt)\
                             .replace('self.candle_version', self.candle_version)
                         
+                        #TODO clock initialization rework
+
                         if self.DEBUG:
                             print("Init response: " + str(response))
                         
@@ -552,6 +556,7 @@ class PowerSettingsAPIHandler(APIHandler):
                         )                        
                     
                     elif request.path == '/set-time':
+
                         return self.clock.set_time(request)
                         
                     elif request.path == '/set-ntp':
