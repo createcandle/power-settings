@@ -32,7 +32,6 @@ class Clock:
     def __init__(self, DEBUG):
         self.DEBUG = DEBUG
         print(f"clock debug: {DEBUG}")
-
         self.hardware_clock_detected = False
         self.do_not_use_hardware_clock = False
         self.hardware_clock_file_path = '/boot/candle_hardware_clock.txt'
@@ -165,9 +164,7 @@ class Clock:
                         print("removing " + str(self.hardware_clock_file_path))
                     run_command('sudo rm ' + str(self.hardware_clock_file_path))
             else:
-                self.hardware_clock_check()
-
-                    
+                self.hardware_clock_check()                    
             
         except Exception as ex:
             print("Error in hardware_clock_check: " + str(ex))
@@ -216,4 +213,5 @@ class Clock:
                     print("Network time turned off")
         except Exception as e:
             print("Error changing NTP state: " + str(e))
+
 

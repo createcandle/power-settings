@@ -20,7 +20,6 @@ import subprocess
 from pkg.clock_settings import Clock
 from pkg.utils.command import run_command
 
-
 try:
     from gateway_addon import APIHandler, APIResponse, Database
     #print("succesfully loaded APIHandler and APIResponse from gateway_addon")
@@ -49,9 +48,7 @@ class PowerSettingsAPIHandler(APIHandler):
         #print("INSIDE API HANDLER INIT")
         
         self.addon_name = "power-settings"  # overwritteb by data in manifest
-
         self.DEBUG = verbose
-
         self.clock = Clock(self.DEBUG)#set a clock object
         
         try:
@@ -115,20 +112,16 @@ class PowerSettingsAPIHandler(APIHandler):
             except Exception as ex:
                 print("Error loading config: " + str(ex))
             
-            #### End of part to rework ####
-            
             # Create local backups directory
             if not os.path.isdir(self.backup_dir):
                 if self.DEBUG:
                     print("creating backup directory in data path: " + str(self.backup_dir))
-                os.mkdir(self.backup_dir)
-            
+                os.mkdir(self.backup_dir)            
             
             # Remove old actions script if it survived somehow
             if os.path.isfile(self.actions_file_path):
                 print("ERROR: old actions script still exists! Removing it now.")
-                os.system('sudo rm ' + str(self.actions_file_path))
-            
+                os.system('sudo rm ' + str(self.actions_file_path))            
             
             # Remove rw-once file
             if os.path.isfile('/boot/candle_rw_once.txt'):
@@ -141,22 +134,19 @@ class PowerSettingsAPIHandler(APIHandler):
             
             if os.path.isfile('/boot/candle_stay_rw.txt'):
                 if self.DEBUG:
-                    print("Candle is in permanent RW mode.")
-            
+                    print("Candle is in permanent RW mode.")            
             
             # remove old download symlink if it somehow survived
             if os.path.islink(self.backup_download_dir):
                 if self.DEBUG:
                     print("unlinking download dir that survived somehow")
-                os.system('unlink ' + self.backup_download_dir) # remove symlink, so the backup files can not longer be downloaded
-            
+                os.system('unlink ' + self.backup_download_dir) # remove symlink, so the backup files can not longer be downloaded            
             
             # Remove old restore file if it exists
             if os.path.isfile(self.restore_file_path):
                 os.system('rm ' + str(self.restore_file_path))
                 if self.DEBUG:
-                    print("removed old restore file")
-            
+                    print("removed old restore file")            
             
             self.update_backup_info()
             
@@ -192,8 +182,7 @@ class PowerSettingsAPIHandler(APIHandler):
             print("Error getting Candle version: " + str(ex))
         
         #self.backup()
-        self.update_backup_info()
-        
+        self.update_backup_info()        
         
         # Check if anonymous MQTT access is currently allowed
         try:
@@ -210,11 +199,7 @@ class PowerSettingsAPIHandler(APIHandler):
             print("Error reading MQTT config file: " + str(ex))
            
         if self.DEBUG:
-            print("self.allow_anonymous_mqtt: " + str(self.allow_anonymous_mqtt))
-        
-        
-        
-        
+            print("self.allow_anonymous_mqtt: " + str(self.allow_anonymous_mqtt))        
         
     # Read the settings from the add-on settings page
     def add_from_config(self):
@@ -490,19 +475,15 @@ class PowerSettingsAPIHandler(APIHandler):
                                             if self.DEBUG:
                                                 print("- CURRENTLY LOW VOLTAGE")
                                             self.low_voltage = True
-
                                         elif (int(self.low_voltage,0) & 0x50000) == 0x50000:
 
                                             if self.DEBUG:
                                                 print("- PREVIOUSLY LOW VOLTAGE")
-                                            self.low_voltage = True
-                                        
+                                            self.low_voltage = True                                        
                                 
                                 except Exception as ex:
                                     print("Error checking low voltage: " + str(ex))
-                                
-                                
-                                
+
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
@@ -512,14 +493,12 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'free_memory':free_memory, 
                                                       'disk_usage':self.disk_usage, 
                                                       'low_voltage':self.low_voltage}),
-                                )
-                                
+                                )                                
                             
                             else:
                                 return APIResponse(
                                   status=404
-                                )
-                                
+                                )                                
                         else:
                             return APIResponse(
                               status=400
@@ -529,7 +508,6 @@ class PowerSettingsAPIHandler(APIHandler):
                     elif request.path == '/init':
                         """
                         init method look like to be a multiple settings init so moved only the clock settings out
-
                         maybe to rework a more clean way
                         """
                         response = {}
@@ -544,11 +522,8 @@ class PowerSettingsAPIHandler(APIHandler):
                             .replace('self.restore_file_exists', self.restore_file_exists)\
                             .replace('self.disk_usage', self.disk_usage)\
                             .replace('self.allow_anonymous_mqtt',self.allow_anonymous_mqtt)\
-                            .replace('self.candle_version', self.candle_version)
-                        
-                        #TODO clock initialization rework
+                            .replace('self.candle_version', self.candle_version)                       
 
-                        #### TODO must create a clock method for this
                         if self.DEBUG:
                             print("Init response: " + str(response))
                         
@@ -559,13 +534,11 @@ class PowerSettingsAPIHandler(APIHandler):
                         )                        
                     
                     elif request.path == '/set-time':
-
                         return self.clock.set_time(request)
                         
                     elif request.path == '/set-ntp':
                         return self.clock.set_ntp(request)
                                         
-
                     elif request.path == '/shutdown':
                         self.shutdown()
                         return APIResponse(
