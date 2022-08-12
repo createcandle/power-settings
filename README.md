@@ -1,4 +1,10 @@
 # power-settings
 
-Extra settings, like shutdown and reboot, for the Candle Controller
+Extra settings for the Candle Controller
+
+- Adds buttons for shutdown and reboot
+- Enables backup and restore functionality
+- Manage system clock
+- Manages system updates
+
 
