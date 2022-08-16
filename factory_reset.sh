@@ -209,6 +209,8 @@ rm /boot/keep_bluetooth.txt
 rm /boot/write_enabled.txt
 rm /boot/candle_rw_once.txt
 rm /boot/candle_rw_keep.txt
+rm /boot/candle_log.txt
+rm /boot/candle_cutting_edge.txt
 touch /boot/hide_mouse_pointer.txt
 rm /boot/bootup_actions.sh
 
