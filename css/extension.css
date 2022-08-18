@@ -161,6 +161,7 @@
 
 #extension-power-settings-update-progress-container{
     text-align:center;
+    margin-top:6rem;
 }
 
 
@@ -176,7 +177,7 @@
 #extension-power-settings-update-process-progress-bar{
     width:0%;
     height:2rem;
-    background-color:red;
+    background-color:white;
 }
 
 
