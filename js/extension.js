@@ -763,11 +763,10 @@
                                 if(typeof body.dmesg != 'undefined' && document.getElementById('extension-power-settings-update-process-output') != null){
                                     document.getElementById('extension-power-settings-update-process-output').innerHTML = body.dmesg;
                                 
-                                
                                     const dmesg_lines = body.dmesg.split("\n");
-                                    
+                                    console.log("dmesg_lines: ", dmesg_lines);
+                                    console.log("dmesg_lines.length: ", dmesg_lines.length);
                                     document.getElementById('extension-power-settings-update-process-progress-bar').width = dmesg_lines.length + "%";
-                                    
                                     
                                     if(document.getElementById('connectivity-scrim').classList.contains('hidden')){
                                         // UI still connected to controller
