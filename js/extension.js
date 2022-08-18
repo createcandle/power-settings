@@ -280,7 +280,7 @@
                 document.getElementById('extension-power-settings-manual-update-button').addEventListener('click', () => {
                     console.log("manual update button clicked");
         
-                    
+                    document.getElementById('extension-power-settings-system-update-container').style.display = 'none';
          
                     if( document.getElementById('extension-power-settings-manual-update-understand').value != 'I understand'){
                         alert("You must type 'I understand' before the manual update process can start.");
@@ -475,6 +475,9 @@
                         }
                     }
                     
+                    
+                    
+                    
                     // Show Candle original version
                     if(typeof body.candle_original_version != 'undefined'){
                         if(this.debug){
@@ -497,9 +500,22 @@
                             document.getElementById('extension-power-settings-live-update-option').style.display = "block";
                         }
                         
+                        if(typeof body.system_update_in_progress != 'undefined'){
+                            if(body.system_update_in_progress == true){
+                                console.log("A SYSTEM UPDATE IS ALREADY IN PROGRESS (bootup_actions.sh on an older release candidate)");
+                                this.update_available_text = "in progress...";
+                                this.start_poll();
+                            }
+                        }
+                        
                         setTimeout( () => {
                             this.show_update_available();
                         }, 5000);
+            
+                        if(body.files_check_exists){
+                            document.getElementById('extension-power-settings-update-files-check-button').style.display = 'inline-block';
+                        }
+                            
             
                     }
                     else{
@@ -564,6 +580,31 @@
                     this.start_update();
                 });
                 
+                
+                document.getElementById('extension-power-settings-update-files-check-button').addEventListener('click', () => {
+                    console.log("files check button clicked");
+                    document.getElementById('extension-power-settings-update-files-check-button').style.display = 'none';
+                    
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'files_check'
+                        }
+                    ).then((body) => {
+                        if(this.debug){
+                            console.log("files_check response: ", body);
+                        }
+                        if(body.files_check_output == ""){
+                            document.getElementById('extension-power-settings-update-files-check-output').innerText = "No missing files";
+                        }
+                        else{
+                            document.getElementById('extension-power-settings-update-files-check-output').innerHTML = body.files_check_output;
+                        }
+                        
+                    }).catch((e) => {
+                        alert("Error, could not run files check, connection issue");
+                    });
+                    
+                });
                 
                 
                 
@@ -640,13 +681,6 @@
             
             if(confirm("Are you sure?")){
                 
-                document.getElementById('extension-power-settings-system-update-button').style.display = 'none';
-                document.getElementById('extension-power-settings-manual-update-container').style.display = 'none';
-                document.getElementById('extension-power-settings-update-available-container').style.display = 'none';
-                document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
-                document.getElementById('extension-power-settings-update-process-output').innerHTML = "";
-                
-                
                 const cutting_edge_state = document.getElementById('extension-power-settings-cutting-edge-checkbox').checked;
                 console.log("cutting_edge_state: ", cutting_edge_state);
                 
@@ -666,74 +700,98 @@
                     alert("Error, could not start system update: could not connect to controller: ", e);
                 });
                 
-                
-    			try{
-    				clearInterval(this.interval);
-                    this.interval = null;
-    			}
-    			catch(e){
-    				//console.log("no interval to clear?: " + e);
-    			}
-                
-            
-            
-                if(this.interval == null){
-        			this.interval = setInterval(() => {
-	
-                        const now_playing_element = document.getElementById('extension-internet-radio-now-playing');
-                        try{
-                            // /poll
-            		        window.API.postJson(
-            		          `/extensions/${this.id}/api/ajax`,
-                                {'action':'poll'}
-
-            		        ).then((body) => {
-                                
-                                try{
-                                    if(this.debug){
-                                        console.log("system update poll response: ", body);
-                                    }
-                        
-                                    if(typeof body.dmesg != 'undefined' && document.getElementById('extension-power-settings-update-process-output') != null){
-                                        document.getElementById('extension-power-settings-update-process-output').innerHTML = body.dmesg;
-                                    }
-                                }
-                                catch(e){
-                                    console.log("Error in try/catch inside /poll request: ", e);
-                                }
-                            
-        
-            		        }).catch((e) => {
-            		  			console.log("Error calling /poll: ", e);
-            		        });
-        
-                        }
-                        catch(e){
-                            console.log("Error doing poll: ", e);
-                        }
-                    
-                        /*
-                        if(this.volume_indicator_countdown > 0){
-                            this.volume_indicator_countdown--;
-                            if(document.getElementById('extension-internet-radio-volume-indicator-container') != null){
-                                if(this.volume_indicator_countdown == 0){
-                                    document.getElementById('extension-internet-radio-volume-indicator-container').classList.add('extension-internet-radio-hidden');
-                                }
-                            }
-                        }
-                        */
-	
-        			}, 10000);
-                }
-                
-                
-                
+                this.start_poll();
+    			
             }
             
             
         }
         
         
+        start_poll(){
+            
+            // reset process output, just in case
+            document.getElementById('extension-power-settings-update-process-output').innerHTML = "";
+            document.getElementById('extension-power-settings-system-update').style.display = 'none';
+            document.getElementById('extension-power-settings-manual-update-container').style.display = 'none';
+            document.getElementById('extension-power-settings-update-available-container').style.display = 'none';
+            document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
+
+            // Indicate update in progress on power buttons page
+            document.getElementById('extension-power-settings-main-buttons').style.display = 'none';
+            document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'block';
+            
+            
+			try{
+				clearInterval(this.interval);
+                this.interval = null;
+			}
+			catch(e){
+				//console.log("no interval to clear?: " + e);
+			}
+            
+            if(this.interval == null){
+    			this.interval = setInterval(() => {
+
+                    try{
+                        // /poll
+        		        window.API.postJson(
+        		          `/extensions/${this.id}/api/ajax`,
+                            {'action':'poll'}
+
+        		        ).then((body) => {
+                            
+                            try{
+                                if(this.debug){
+                                    console.log("system update poll response: ", body);
+                                }
+                    
+                                if(typeof body.dmesg != 'undefined' && document.getElementById('extension-power-settings-update-process-output') != null){
+                                    document.getElementById('extension-power-settings-update-process-output').innerHTML = body.dmesg;
+                                
+                                
+                                    const dmesg_lines = body.dmesg.split("\n");
+                                    
+                                    document.getElementById('extension-power-settings-update-process-progress-bar').width = dmesg_lines.length + "%";
+                                    
+                                }
+                                
+                                
+                                
+                                
+                                
+                                
+                            }
+                            catch(e){
+                                console.log("Error in try/catch inside /poll request: ", e);
+                            }
+                        
+    
+        		        }).catch((e) => {
+        		  			console.log("Error calling /poll: ", e);
+        		        });
+    
+                    }
+                    catch(e){
+                        console.log("Error doing poll: ", e);
+                    }
+                
+                    /*
+                    if(this.volume_indicator_countdown > 0){
+                        this.volume_indicator_countdown--;
+                        if(document.getElementById('extension-internet-radio-volume-indicator-container') != null){
+                            if(this.volume_indicator_countdown == 0){
+                                document.getElementById('extension-internet-radio-volume-indicator-container').classList.add('extension-internet-radio-hidden');
+                            }
+                        }
+                    }
+                    */
+
+    			}, 10000);
+            }
+            
+        }
+
 
 
         show() {

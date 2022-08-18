@@ -112,10 +112,15 @@ class PowerSettingsAPIHandler(APIHandler):
             
             # System updates
             self.bootup_actions_failed = False
-
+            self.system_update_in_progress = False
+            
             self.ro_exists = False
             if os.path.isdir('/ro'):
                 self.ro_exists = True
+                
+            self.files_check_exists = False
+            if os.path.isfile('/home/pi/candle/files_check.sh'):
+                self.files_check_exists = True
                 
             # LOAD CONFIG
             try:
@@ -123,6 +128,13 @@ class PowerSettingsAPIHandler(APIHandler):
             except Exception as ex:
                 print("Error loading config: " + str(ex))
                 
+            
+            
+            check_bootup_actions_running = run_command("sudo ps aux | grep bootup_actions")
+            if "/boot/bootup_actions.sh" in check_bootup_actions_running:
+                print("BOOTUP ACTIONS SEEMS TO BE RUNNING!")
+                self.system_update_in_progress = True
+            
             
             
             if self.do_not_use_hardware_clock:
@@ -545,6 +557,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             #raspi-config nonint disable_bootro
                                             
                                             os.system('sudo touch /boot/candle_rw_once.txt')
+                                            os.system('sudo touch /boot/ssh.txt')
                                             os.system('sudo reboot')
                                         else:
                                             if self.DEBUG:
@@ -584,6 +597,26 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                                 
+                                
+                            elif action == 'files_check':
+                                if self.DEBUG:
+                                    print("handling files check")
+                                
+                                files_check_output = "An error occured"
+                                try:
+                                    if os.path.isfile('/home/pi/candle/files_check.sh'):
+                                        files_check_output = run_command("/home/pi/candle/files_check.sh")
+                                    else:
+                                        files_check_output = "Not supported by this older Candle version."
+                                        
+                                except Exception as ex:
+                                    print("Error getting files check output: " + str(ex))
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':'ok','files_check_output':files_check_output}),
+                                )
                                 
                                 
                             elif action == 'backup_init':
@@ -791,6 +824,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                         'candle_original_version':self.candle_original_version,
                                         'bootup_actions_failed':self.bootup_actions_failed,
                                         'ro_exists':self.ro_exists,
+                                        'system_update_in_progress':self.system_update_in_progress,
+                                        'files_check_exists':self.files_check_exists,
                                         'debug':self.DEBUG
                                     }
                             if self.DEBUG:

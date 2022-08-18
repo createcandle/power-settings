@@ -165,6 +165,21 @@
 }
 
 
+#extension-power-settings-update-process-progress-bar-container{
+    border:2px solid white;
+    border-radius:1rem;
+    height:2rem;
+    width:100%;
+    box-sizing:border-box;
+    overflow:hidden;
+}
+#extension-power-settings-update-process-progress-bar{
+    width:0%;
+    height:2rem;
+    background-color:red;
+}
+
+
 
 /*  LOGOUT */
 
@@ -481,7 +496,7 @@
 
 .extension-power-settings-container ul{
     line-height:2.6rem;
-    margin-bottom:1rem;
+    margin-bottom:3rem;
 }
 
 

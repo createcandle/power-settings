@@ -187,6 +187,7 @@
                 <p>
                     <ul>
                         <li>Always make a backup first!</li>
+                        <li>Do not change settings while the update is in progress.</li>
                         <li>It is strongly recommended to plug in a network cable.</li>
                         <li>The update can take up to two hours.</li>
                         <li>Visit candlesmarthome.com/troubleshooting in case something goes wrong.</li>
@@ -208,12 +209,18 @@
                 
                 
                 <div class="extension-power-settings-form-system-update">
-                    <button id="extension-power-settings-system-update-button" class="text-button">System update</button>
+                    <button id="extension-power-settings-update-files-check-button" class="text-button extension-power-settings-dev-only">Test</button>  <button id="extension-power-settings-system-update-button" class="text-button">System update</button>
                 </div>
                 
-                <div id="extension-power-settings-update-progress-container" style="display:none">
-                    <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
-                </div>
+                <div id="extension-power-settings-update-files-check-output"></div>
+                
+            </div>
+            
+            <div id="extension-power-settings-update-progress-container" style="display:none">
+                <p>System update in progress...</p>
+                <div id="extension-power-settings-update-process-progress-bar-container"><div id="extension-power-settings-update-process-progress-bar"></div></div>
+                
+                <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
                 
                 <div class="extension-power-settings-dev-only">
                     <pre id="extension-power-settings-update-process-output"></pre>
