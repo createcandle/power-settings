@@ -641,14 +641,17 @@
                 
                 const cutting_edge_state = document.getElementById('extension-power-settings-cutting-edge-checkbox').checked;
                 console.log("cutting_edge_state: ", cutting_edge_state);
+                
+                const live_update_state = document.getElementById('extension-power-settings-live-update-checkbox').checked;
+                
                 window.API.postJson(
                     `/extensions/${this.id}/api/ajax`, {
-                        'action': 'start_system_update','cutting_edge': cutting_edge_state
+                        'action': 'start_system_update','cutting_edge': cutting_edge_state,'live_update': live_update
                     }
                 ).then((body) => {
                     if(this.debug){
-                        console.log("allow_anonymous MQTT response: ", body);
-                    }                                    
+                        console.log("start system update response: ", body);
+                    }
             
                 }).catch((e) => {
                     alert("Error, could not start system update: could not connect to controller: ", e);
@@ -711,7 +714,7 @@
                         }
                         */
 	
-        			}, 2000);
+        			}, 10000);
                 }
                 
                 

@@ -451,7 +451,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 
                             # SYSTEM UPDATE UPDATE
-                            elif action == 'system_update':
+                            elif action == 'start_system_update':
                                 
                                 # TODO: check if there is enough disk space. This could actually be done client side
                                 
