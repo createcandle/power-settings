@@ -712,7 +712,7 @@
             
             // reset process output, just in case
             document.getElementById('extension-power-settings-update-process-output').innerHTML = "";
-            document.getElementById('extension-power-settings-system-update').style.display = 'none';
+            //document.getElementById('extension-power-settings-system-update').style.display = 'none';
             document.getElementById('extension-power-settings-manual-update-container').style.display = 'none';
             document.getElementById('extension-power-settings-update-available-container').style.display = 'none';
             document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
