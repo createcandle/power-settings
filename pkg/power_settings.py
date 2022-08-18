@@ -485,6 +485,8 @@ class PowerSettingsAPIHandler(APIHandler):
                             # SYSTEM UPDATE UPDATE
                             elif action == 'start_system_update':
                                 
+                                state = False
+                                
                                 # TODO: check if there is enough disk space. This could actually be done client side
                                 
                                 if 'cutting_edge' in request.body:
@@ -526,6 +528,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             if self.live_update_attempted == False:
                                                 if self.DEBUG:
                                                     print("Attempting a live update")
+                                                state = True
                                                 os.system('cat ' + str(self.live_system_update_script_path) + ' | sudo REBOOT_WHEN_DONE=yes bash &')
                                             else:
                                                 if self.DEBUG:
@@ -574,8 +577,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                             #raspi-config nonint disable_bootro
                                             
                                             os.system('sudo touch /boot/candle_rw_once.txt')
-                                            os.system('sudo touch /boot/ssh.txt')
-                                            os.system('sudo reboot')
+                                            state = True
+                                            os.system('( sleep 5 ; sudo reboot ) & ')
                                         else:
                                             if self.DEBUG:
                                                 print("Error, move command failed")
@@ -586,7 +589,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
-                                  content=json.dumps({'state':'ok','live_update':live_update}),
+                                  content=json.dumps({'state':state,'live_update':live_update}),
                                 )
                                 
                                 

@@ -703,6 +703,10 @@
                     if(this.debug){
                         console.log("start system update response: ", body);
                     }
+                    
+                    if (body.state == false){
+                        alert("Starting the update seems to have failed");
+                    }
             
                 }).catch((e) => {
                     console.log("Error, could not start system update: could not connect to controller: ", e);
