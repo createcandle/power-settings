@@ -509,27 +509,36 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 if live_update:
                                     
-                                    if os.path.isfile( str(self.live_system_update_script_path) ):
-                                        if self.DEBUG:
-                                            print("removing old live update script first")
-                                        os.system('rm ' + str(self.live_system_update_script_path))    
                                     
-                                    os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/live_system_update.sh -O ' + str(self.live_system_update_script_path))
+                                    # Check if script isn't already running
+                                    already_running_check = run_command('ps aux | grep -q live_system_update')
+                                    if not "live_system_update.sh" in already_running_check:
                                     
-                                    if os.path.isfile( str(self.live_system_update_script_path) ):
-                                        if self.live_update_attempted == False:
+                                    
+                                        if os.path.isfile( str(self.live_system_update_script_path) ):
                                             if self.DEBUG:
-                                                print("Attempting a live update")
-                                            os.system('cat ' + str(self.live_system_update_script_path) + ' | sudo REBOOT_WHEN_DONE=yes bash &')
+                                                print("removing old live update script first")
+                                            os.system('rm ' + str(self.live_system_update_script_path))    
+                                    
+                                        os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/live_system_update.sh -O ' + str(self.live_system_update_script_path))
+                                    
+                                        if os.path.isfile( str(self.live_system_update_script_path) ):
+                                            if self.live_update_attempted == False:
+                                                if self.DEBUG:
+                                                    print("Attempting a live update")
+                                                os.system('cat ' + str(self.live_system_update_script_path) + ' | sudo REBOOT_WHEN_DONE=yes bash &')
+                                            else:
+                                                if self.DEBUG:
+                                                    print("Error. cannot run two live updates in a row.")
+                                        
+                                            self.live_update_attempted = True
+                                        
                                         else:
                                             if self.DEBUG:
-                                                print("Error. cannot run two live updates in a row.")
-                                        
-                                        self.live_update_attempted = True
-                                        
+                                                print("ERROR, live update script failed to download")
                                     else:
                                         if self.DEBUG:
-                                            print("ERROR, live update script failed to download")
+                                            print("Scripts seems to be running already, aborting")
                                 
                                 else:
                                     if self.DEBUG:
