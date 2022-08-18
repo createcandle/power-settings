@@ -601,11 +601,12 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 dmesg_lines = ""
                                 try:
-                                    for line in run_command("dmesg --level=err,warn | grep candle").splitlines():
+                                    for line in run_command("dmesg --level=err,warn | grep Candle").splitlines():
                                         
                                         if "starting live update" in line:
-                                            dmesg_lines = ""
-                                        dmesg_lines += line 
+                                            dmesg_lines = "starting live update\n"
+                                        else:
+                                            dmesg_lines += line 
                                         
                                         if self.DEBUG:
                                             print(line)
