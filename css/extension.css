@@ -137,6 +137,31 @@
 
 
 
+
+
+
+
+/*  SYSTEM UPDATES  */
+
+.extension-power-settings-dev-only{
+    display:none;
+}
+
+.developer .extension-power-settings-dev-only{
+    display:block;
+}
+
+
+
+#extension-power-settings-update-failed{
+    background-color:red;
+    padding:2rem;
+    border-radius:.5rem;
+    margin:2rem 0;
+}
+
+
+
 /*  LOGOUT */
 
 #logout{
@@ -448,6 +473,12 @@
     padding-right: 2rem;
 }
 
+
+
+.extension-power-settings-container ul{
+    line-height:2.6rem;
+    margin-bottom:1rem;
+}
 
 
 /*  TIME  */

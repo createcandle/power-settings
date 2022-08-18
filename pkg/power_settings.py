@@ -100,10 +100,17 @@ class PowerSettingsAPIHandler(APIHandler):
             
             # Candle version fie path
             self.version_file_path = '/boot/candle_version.txt'
+            self.original_version_file_path = '/boot/candle_original_version.txt'
             
             # Low voltage
             self.low_voltage = False
             #TODO Why is this here???
+            
+            
+            # System updates
+            self.bootup_actions_failed = False
+            
+            
             
             # LOAD CONFIG
             #TODO Why is this here???
@@ -132,6 +139,13 @@ class PowerSettingsAPIHandler(APIHandler):
                 if self.DEBUG:
                     print("no candle_rw.txt file spotted")
             
+            if os.path.isfile('/boot/bootup_actions_failed.sh'):
+                self.bootup_actions_failed = True
+                os.system('sudo rm /boot/bootup_actions_failed.sh')
+                if self.DEBUG:
+                    print("/boot/bootup_actions_failed.sh detected")
+            
+            
             if os.path.isfile('/boot/candle_stay_rw.txt'):
                 if self.DEBUG:
                     print("Candle is in permanent RW mode.")
@@ -159,6 +173,7 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("user_profile: " + str(self.user_profile))
                 print("actions_file_path: " + str(self.actions_file_path))
                 print("version_file_path: " + str(self.version_file_path))
+                print("original_version_file_path: " + str(self.original_version_file_path))
                 print("self.backup_file_path: " + str(self.backup_file_path))
                 print("self.backup_download_dir: " + str(self.backup_download_dir))
                 
@@ -169,6 +184,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         # Get Candle version
         self.candle_version = "unknown"
+        self.candle_original_version="unknown"
         try:
             if os.path.isfile(self.version_file_path):
                 with open(self.version_file_path) as f:
@@ -176,10 +192,18 @@ class PowerSettingsAPIHandler(APIHandler):
                     self.candle_version = f.read()
                     self.candle_version = self.candle_version.strip()
                     if self.DEBUG:
-                        print("\ncandle_version: " + str(self.candle_version))
+                        print("\nself.candle_version: " + str(self.candle_version))
+                        
+            if os.path.isfile(self.original_version_file_path):
+                with open(self.original_version_file_path) as f:
+                    #self.candle_version = f.readlines()
+                    self.candle_original_version = f.read()
+                    self.candle_original_version = self.candle_original_version.strip()
+                    if self.DEBUG:
+                        print("\nself.candle_original_version: " + str(self.candle_original_version))
 
         except Exception as ex:
-            print("Error getting Candle version: " + str(ex))
+            print("Error getting Candle versions: " + str(ex))
         
         #self.backup()
         self.update_backup_info()        
@@ -326,13 +350,91 @@ class PowerSettingsAPIHandler(APIHandler):
                                     print("copying manual update script into position")
                                 
                                 # Place the factory reset file in the correct location so that it will be activated at boot.
+                                #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
+                                os.system('sudo touch /boot/candle_rw_once.txt')
                                 os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
+                                
                                 
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
                                   content=json.dumps({'state':'ok'}),
                                 )
+                                
+                                
+                                
+                            # SYSTEM UPDATE UPDATE
+                            elif action == 'system_update':
+                                
+                                # TODO: check if there is enough disk space. This could actually be done client side
+                                
+                                if 'cutting_edge' in request.body:
+                                    if request.body['cutting_edge'] == True:
+                                        os.system('sudo touch /boot/candle_cutting_edge.txt')
+                                        if self.DEBUG:
+                                            print("created /boot/candle_cutting_edge.txt file")
+                                    else:
+                                        if os.path.isfile('/boot/candle_cutting_edge.txt'):
+                                            os.system('sudo rm /boot/candle_cutting_edge.txt')
+                                            if self.DEBUG:
+                                                print("removed /boot/candle_cutting_edge.txt file")
+                                
+                                
+                                if self.DEBUG:
+                                    print("copying system update script into position")
+                                
+                                live_update = False
+                                if 'live_update' in request.body:
+                                    if request.body['live_update'] == True:
+                                        live_update = True
+                                
+                                if live_update:
+                                    os.system('cd /home/pi && curl -sSl https://raw.githubusercontent.com/createcandle/install-scripts/main/live_system_update.sh | sudo REBOOT_WHEN_DONE=yes bash &')
+                                    if self.DEBUG:
+                                        print("Attempting a live update")
+                                
+                                else:
+                                    # Place the factory reset file in the correct location so that it will be activated at boot.
+                                    #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
+                                    
+                                    os.system('sudo wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh -O /boot/bootup_actions.sh')
+                                    if os.path.isfile('/boot/bootup_actions.sh'):
+                                        os.system('sudo touch /boot/candle_rw_once.txt')
+                                        os.system('sudo reboot')
+                                
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':'ok','live_update':live_update}),
+                                )
+                                
+                                
+                                
+                                
+                            elif action == 'poll':
+                                if self.DEBUG:
+                                    print("handling poll action")
+                                
+                                dmesg_lines = ""
+                                try:
+                                    for line in run_command("dmesg | grep candle").splitlines():
+                                        dmesg_lines += line 
+                                        
+                                        if self.DEBUG:
+                                            print(line)
+                                        
+                                except Exception as ex:
+                                    print("Error getting dmsg output: " + str(ex))
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':'ok','dmesg':dmesg_lines}),
+                                )
+                                
+                                
+                                
                                 
                             elif action == 'backup_init':
                                 if self.DEBUG:
@@ -526,6 +628,7 @@ class PowerSettingsAPIHandler(APIHandler):
 
                         if self.DEBUG:
                             print("Init response: " + str(response))
+                            print("\nin /init")
                         
                         return APIResponse(
                           status=200,
