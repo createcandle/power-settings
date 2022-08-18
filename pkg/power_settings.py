@@ -201,6 +201,8 @@ class PowerSettingsAPIHandler(APIHandler):
         except Exception as e:
             print("ERROR, Failed to init UX extension API handler: " + str(e))
         
+        self.old_overlay_active = False
+        
         # Get Candle version
         self.candle_version = "unknown"
         self.candle_original_version="unknown"
@@ -220,6 +222,18 @@ class PowerSettingsAPIHandler(APIHandler):
                     self.candle_original_version = self.candle_original_version.strip()
                     if self.DEBUG:
                         print("\nself.candle_original_version: " + str(self.candle_original_version))
+
+
+            if os.path.isfile('/boot/cmdline.txt'):
+                with open('/boot/cmdline.txt') as f:
+                    #self.candle_version = f.readlines()
+                    cmdline = f.read()
+                    if "boot=overlay" in cmdline:
+                        if self.DEBUG:
+                            print("detected old raspi-config overlay")
+                        self.old_overlay_active = True
+                    
+            
 
         except Exception as ex:
             print("Error getting Candle versions: " + str(ex))
@@ -520,6 +534,16 @@ class PowerSettingsAPIHandler(APIHandler):
                                             
                                     
                                         if os.path.isfile('/boot/bootup_actions.sh'):
+                                            if self.old_overlay_active:
+                                                if self.DEBUG:
+                                                    print("disabling old raspi-config overlay system")
+                                                os.system('sudo raspi-config nonint disable_bootro')
+                                                os.system('sudo raspi-config nonint disable_overlayfs')
+                                            
+                                            #raspi-config nonint disable_bootro
+                                            #raspi-config nonint enable_overlayfs
+                                            #raspi-config nonint disable_bootro
+                                            
                                             os.system('sudo touch /boot/candle_rw_once.txt')
                                             os.system('sudo reboot')
                                         else:
