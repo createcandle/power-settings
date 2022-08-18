@@ -497,8 +497,14 @@
                         }
                         
                         if(body.ro_exists == true){
-                            console.log("/ro exists, so making live update available");
-                            document.getElementById('extension-power-settings-live-update-option').style.display = "block";
+                            console.log("/ro exists");
+                            if(body.live_update_attempted == false){
+                                document.getElementById('extension-power-settings-live-update-option').style.display = "block";
+                            }
+                            else{
+                                console.log("blocking possibility of second live update");
+                                document.getElementById('extension-power-settings-live-update-checkbox').checked = false;
+                            }
                         }
                         
                         if(typeof body.system_update_in_progress != 'undefined'){

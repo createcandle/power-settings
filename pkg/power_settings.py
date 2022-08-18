@@ -112,6 +112,7 @@ class PowerSettingsAPIHandler(APIHandler):
             
             # System updates
             self.bootup_actions_failed = False
+            self.live_update_attempted = False
             self.system_update_in_progress = False
             
             self.ro_exists = False
@@ -516,9 +517,16 @@ class PowerSettingsAPIHandler(APIHandler):
                                     os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/live_system_update.sh -O ' + str(self.live_system_update_script_path))
                                     
                                     if os.path.isfile( str(self.live_system_update_script_path) ):
-                                        os.system('cat ' + str(self.live_system_update_script_path) + ' | sudo REBOOT_WHEN_DONE=yes bash &')
-                                        if self.DEBUG:
-                                            print("Attempting a live update")
+                                        if self.live_update_attempted == False:
+                                            if self.DEBUG:
+                                                print("Attempting a live update")
+                                            os.system('cat ' + str(self.live_system_update_script_path) + ' | sudo REBOOT_WHEN_DONE=yes bash &')
+                                        else:
+                                            if self.DEBUG:
+                                                print("Error. cannot run two live updates in a row.")
+                                        
+                                        self.live_update_attempted = True
+                                        
                                     else:
                                         if self.DEBUG:
                                             print("ERROR, live update script failed to download")
@@ -829,6 +837,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         'ro_exists':self.ro_exists,
                                         'system_update_in_progress':self.system_update_in_progress,
                                         'files_check_exists':self.files_check_exists,
+                                        'live_update_attempted':self.live_update_attempted,
                                         'debug':self.DEBUG
                                     }
                             if self.DEBUG:
