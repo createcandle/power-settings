@@ -5,7 +5,7 @@
             
             //this.addMenuEntry('Power');
             
-            
+            this.interval = null;
             
             document.querySelector('#main-menu> ul').insertAdjacentHTML('beforeend', '<li id="extension-power-settings-menu-item-li"><a id="extension-power-settings-menu-item" href="/extensions/power-settings">Power</a></li>');
             
@@ -13,6 +13,8 @@
 
             this.debug = false;
             this.kiosk = false;
+            
+            this.update_available_text = "";
 
             const getUrl = window.location;
             this.baseUrl = getUrl.protocol + "//" + getUrl.host + "/things";
@@ -127,7 +129,7 @@
                 // Add buttons to settings menu
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-time-button">Clock</a></li>';
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-backup-button">Backup</a></li>';
-                document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-update-button">Update</a></li>';
+                document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-update-button">Update <span id="extension-power-settings-menu-update-button-indicator">' + this.update_available_text + '</span></a></li>';
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-reset-button">Factory reset</a></li>';
                 
                  
@@ -424,8 +426,6 @@
                         document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'block';
                     }
                     
-                    
-                    
                     // Add MQTT checkbox
                     var mqtt_element = document.createElement('li');
                     mqtt_element.setAttribute('id','allow-anonymous-mqtt-item');
@@ -469,8 +469,46 @@
                         document.getElementById('extension-power-settings-candle-version').innerText = body.candle_version;
                     }
                     
+                    if(typeof body.bootup_actions_failed != 'undefined'){
+                        if(body.bootup_actions_failed == true){
+                            document.getElementById('extension-power-settings-update-failed').style.display = 'block';
+                        }
+                    }
+                    
+                    // Show Candle original version
+                    if(typeof body.candle_original_version != 'undefined'){
+                        if(this.debug){
+                            console.log("body.candle_original_version: ", body.candle_original_version);
+                        }
+                        if(document.getElementById('extension-power-settings-candle-original-version') != null){
+                            document.getElementById('extension-power-settings-candle-original-version').innerText = body.candle_original_version;
+                        }
+                        if(body.candle_original_version == 'unknown'){
+                            console.log("running on early release candidate");
+                            this.update_available_text = "AVAILABLE";
+                        }
+                        else if(body.candle_original_version == '2.0.0'){
+                            this.update_available_text = "AVAILABLE";
+                            console.log("running on RC4");
+                            
+                        }
+                        
+                        
+                        setTimeout(function(){
+                            this.show_update_available();
+                        }, 5000);
+            
+                    }
+                    else{
+                        console.log("power settings error, candle_original_version was not defined");
+                    }
+            
+                    
+                    
+                    
+                    
                 }).catch((e) => {
-                    console.log("powersettings init error: ", e);
+                    console.log("power-settings init error: ", e);
                 });
                 
                 
@@ -511,6 +549,20 @@
                     document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>';
                     this.upload_files(filesSelected);
     			});
+                
+                
+                
+                
+                
+                
+                // Start update button
+                document.getElementById('extension-power-settings-system-update-button').addEventListener('click', () => {
+                    console.log("system update button clicked");
+                    this.start_update();
+                });
+                
+                
+                
                 
                 
                 
@@ -559,7 +611,117 @@
             
         } // end of create extra settings
 
+        
+        
+        show_update_available(){
+            // Show that an update is available
+            console.log("in show_update_available");
+            
+            if(this.update_available_text != ""){
+                if(document.getElementById('extension-power-settings-menu-update-button-indicator') != null){
+                    document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = this.update_available_text;
+                }
+                
+                document.getElementById('extension-power-settings-no-updates').style.display = 'none';
+                document.getElementById('extension-power-settings-update-available-container').style.display = 'block';
+                
+                
+                
+            }
+        }
+        
+        
+        
+        start_update(){
+            
+            
+            if(confirm("Are you sure?")){
+                
+                document.getElementById('extension-power-settings-system-update-button').style.display = 'none';
+                
+                const cutting_edge_state = document.getElementById('extension-power-settings-cutting-edge-checkbox').checked;
+                console.log("cutting_edge_state: ", cutting_edge_state);
+                window.API.postJson(
+                    `/extensions/${this.id}/api/ajax`, {
+                        'action': 'start_system_update','cutting_edge': cutting_edge_state
+                    }
+                ).then((body) => {
+                    if(this.debug){
+                        console.log("allow_anonymous MQTT response: ", body);
+                    }                                    
+            
+                }).catch((e) => {
+                    alert("Error, could not start system update: could not connect to controller: ", e);
+                });
+                
+                
+    			try{
+    				clearInterval(this.interval);
+                    this.interval = null;
+    			}
+    			catch(e){
+    				//console.log("no interval to clear?: " + e);
+    			}
+                
+            
+            
+                if(this.interval == null){
+        			this.interval = setInterval(() => {
+	
+                        const now_playing_element = document.getElementById('extension-internet-radio-now-playing');
+                        try{
+                            // /poll
+            		        window.API.postJson(
+            		          `/extensions/${this.id}/api/ajax`,
+                                {'action':'poll'}
 
+            		        ).then((body) => {
+                                
+                                try{
+                                    if(this.debug){
+                                        console.log("system update poll response: ", body);
+                                    }
+                        
+                                    if(typeof body.dmesg != 'undefined' && document.getElementById('extension-power-settings-update-process-output') != null){
+                                        document.getElementById('extension-power-settings-update-process-output').innerHTML = body.dmesg;
+                                    }
+                                }
+                                catch(e){
+                                    console.log("Error in try/catch inside /poll request: ", e);
+                                }
+                            
+        
+            		        }).catch((e) => {
+            		  			console.log("Error calling /poll: ", e);
+            		        });
+        
+                        }
+                        catch(e){
+                            console.log("Error doing poll: ", e);
+                        }
+                    
+                        /*
+                        if(this.volume_indicator_countdown > 0){
+                            this.volume_indicator_countdown--;
+                            if(document.getElementById('extension-internet-radio-volume-indicator-container') != null){
+                                if(this.volume_indicator_countdown == 0){
+                                    document.getElementById('extension-internet-radio-volume-indicator-container').classList.add('extension-internet-radio-hidden');
+                                }
+                            }
+                        }
+                        */
+	
+        			}, 2000);
+                }
+                
+                
+                
+            }
+            
+            
+        }
+        
+        
 
 
         show() {
