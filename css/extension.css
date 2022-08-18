@@ -578,6 +578,10 @@
 }
 
 
+#extension-power-settings-update-files-check-button{
+    margin-right:1rem;
+}
+
 .extension-power-settings-container button{
     font-size: 1.8rem;
 }

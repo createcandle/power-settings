@@ -516,9 +516,17 @@
                             }
                         }
                         
-                        setTimeout( () => {
-                            this.show_update_available();
-                        }, 5000);
+                        if(this.update_in_progress == false){
+                            setTimeout( () => {
+                                this.show_update_available();
+                            }, 3000);
+                        }
+                        else{
+                            document.getElementById('extension-power-settings-no-updates').style.display = 'none';
+                            document.getElementById('extension-power-settings-menu-update-button').style.border = "2px solid white";
+                            document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
+                        }
+                        
             
                         if(body.files_check_exists){
                             document.getElementById('extension-power-settings-update-files-check-button').style.display = 'inline-block';

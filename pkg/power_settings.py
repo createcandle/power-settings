@@ -606,24 +606,25 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 
                                 
-                                
+                            # /poll
                             elif action == 'poll':
                                 if self.DEBUG:
                                     print("handling poll action")
                                 
                                 dmesg_lines = ""
                                 try:
-                                    for line in run_command("dmesg --level=err,warn | grep Candle").splitlines():
+                                    if self.system_update_in_progress:
+                                        for line in run_command("dmesg --level=err,warn | grep Candle").splitlines():
                                         
-                                        if "starting live update" in line:
-                                            dmesg_lines = "starting live update\n"
-                                        else:
-                                            line = line[line.find(']'):]
-                                            line = line.replace("Candle:","")
-                                            dmesg_lines += line + "\n"
+                                            if "starting live update" in line:
+                                                dmesg_lines = "starting live update\n"
+                                            else:
+                                                line = line[line.find(']'):]
+                                                line = line.replace("Candle:","")
+                                                dmesg_lines += line + "\n"
                                         
-                                        if self.DEBUG:
-                                            print(line)
+                                            if self.DEBUG:
+                                                print(line)
                                         
                                 except Exception as ex:
                                     print("Error getting dmsg output: " + str(ex))
