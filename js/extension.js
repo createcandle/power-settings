@@ -641,12 +641,15 @@
             if(confirm("Are you sure?")){
                 
                 document.getElementById('extension-power-settings-system-update-button').style.display = 'none';
+                document.getElementById('extension-power-settings-update-available-container').style.display = 'none';
                 document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
+                document.getElementById('extension-power-settings-update-process-output').innerHTML = "";
                 
                 const cutting_edge_state = document.getElementById('extension-power-settings-cutting-edge-checkbox').checked;
                 console.log("cutting_edge_state: ", cutting_edge_state);
                 
                 const live_update_state = document.getElementById('extension-power-settings-live-update-checkbox').checked;
+                console.log("live_update_state: ", live_update_state);
                 
                 window.API.postJson(
                     `/extensions/${this.id}/api/ajax`, {
