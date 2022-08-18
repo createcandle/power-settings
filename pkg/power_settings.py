@@ -539,6 +539,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 if self.DEBUG:
                                                     print("Attempting a live update")
                                                 state = True
+                                                self.system_update_in_progress = True
                                                 os.system('cat ' + str(self.live_system_update_script_path) + ' | sudo REBOOT_WHEN_DONE=yes bash &')
                                             else:
                                                 if self.DEBUG:
@@ -587,6 +588,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             #raspi-config nonint disable_bootro
                                             
                                             os.system('sudo touch /boot/candle_rw_once.txt')
+                                            self.system_update_in_progress = True
                                             state = True
                                             os.system('( sleep 5 ; sudo reboot ) & ')
                                         else:
