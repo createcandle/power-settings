@@ -83,6 +83,9 @@ class PowerSettingsAPIHandler(APIHandler):
             self.factory_reset_script_path = os.path.join(self.addon_dir, "factory_reset.sh") 
             self.manual_update_script_path = os.path.join(self.addon_dir, "manual_update.sh") 
             
+            self.system_update_script_path = os.path.join(self.data_dir, "create_latest_candle.sh") 
+            self.live_system_update_script_path = os.path.join(self.data_dir, "live_system_update.sh") 
+            
             # Backup addon dir paths
             self.backup_download_dir = os.path.join(self.addon_dir, "backup")
             self.restore_backup_script_path = os.path.join(self.addon_dir, "restore_backup.sh") 
@@ -478,18 +481,52 @@ class PowerSettingsAPIHandler(APIHandler):
                                         live_update = True
                                 
                                 if live_update:
-                                    os.system('cd /home/pi && curl -sSl https://raw.githubusercontent.com/createcandle/install-scripts/main/live_system_update.sh | sudo REBOOT_WHEN_DONE=yes bash &')
-                                    if self.DEBUG:
-                                        print("Attempting a live update")
+                                    
+                                    if os.path.isfile( str(self.live_system_update_script_path) ):
+                                        if self.DEBUG:
+                                            print("removing old live update script first")
+                                        os.system('rm ' + str(self.live_system_update_script_path))    
+                                    
+                                    os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/live_system_update.sh -O ' + str(self.live_system_update_script_path))
+                                    
+                                    if os.path.isfile( str(self.live_system_update_script_path) ):
+                                        os.system('cat ' + str(self.live_system_update_script_path) + ' | sudo REBOOT_WHEN_DONE=yes bash &')
+                                        if self.DEBUG:
+                                            print("Attempting a live update")
+                                    else:
+                                        if self.DEBUG:
+                                            print("ERROR, live update script failed to download")
                                 
                                 else:
+                                    if self.DEBUG:
+                                        print("Attempting a reboot-update")
                                     # Place the factory reset file in the correct location so that it will be activated at boot.
                                     #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
                                     
-                                    os.system('sudo wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh -O /boot/bootup_actions.sh')
-                                    if os.path.isfile('/boot/bootup_actions.sh'):
-                                        os.system('sudo touch /boot/candle_rw_once.txt')
-                                        os.system('sudo reboot')
+                                    os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh -O ' + str(self.system_update_script_path))
+                                    
+                                    if os.path.isfile(self.system_update_script_path):
+                                    
+                                        
+                                        if os.path.isfile(str(self.actions_file_path)):
+                                            if self.DEBUG:
+                                                print("warning, a bootup actions script was already in place. Deleting it first.")
+                                            os.system('sudo rm ' + str(self.actions_file_path) )
+                                        
+                                        move_command = 'sudo mv ' + str(self.system_update_script_path) + ' ' + str(self.actions_file_path)
+                                        if self.DEBUG:
+                                            print("move command: " + str(move_command))
+                                        os.system(move_command)
+                                            
+                                    
+                                        if os.path.isfile('/boot/bootup_actions.sh'):
+                                            os.system('sudo touch /boot/candle_rw_once.txt')
+                                            os.system('sudo reboot')
+                                        else:
+                                            if self.DEBUG:
+                                                print("Error, move command failed")
+                                    else:
+                                        print("ERROR, download of update script failed")
                                 
                                 
                                 return APIResponse(
