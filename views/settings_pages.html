@@ -183,7 +183,7 @@
             </div>
             
             <div id="extension-power-settings-update-available-container" style="display:none">
-                <p>A system update is available for your system. Because you are running a beta version of Candle 2.0 it's not guaranteed that the update will succeed, so apply it at your own risk.</p>
+                <p>A system update is available.</p>
                 <p>
                     <ul>
                         <li>Always make a backup first!</li>
@@ -191,19 +191,32 @@
                         <li>The update can take up to two hours.</li>
                         <li>Visit candlesmarthome.com/troubleshooting in case something goes wrong.</li>
                     </ul>
-                    <br/>
                 </p>
                 
-                <div class="extension-power-settings-dev-only"><input type="checkbox" name="extension-power-settings-cutting-edge-checkbox" id="extension-power-settings-cutting-edge-checkbox"><label for="extension-power-settings-cutting-edge-checkbox">Update to the cutting edge build (RISKY!)</label></div>
-                <p class="field-description" style="opacity:.6; margin-top:.3rem">This option is available because you have enabled developer mode.</p>
+                <div class="extension-power-settings-dev-only">
+                    <input type="checkbox" name="extension-power-settings-cutting-edge-checkbox" id="extension-power-settings-cutting-edge-checkbox">
+                    <label for="extension-power-settings-cutting-edge-checkbox">Update to the cutting edge build (RISKY!)</label>
+                    <p class="field-description" style="opacity:.6; margin-top:.3rem">This option is available because you have enabled developer mode.</p>
+                </div>
                 
-                <div class="extension-power-settings-dev-only"><input type="checkbox" name="extension-power-settings-live-update-checkbox" id="extension-power-settings-live-update-checkbox"><label for="extension-power-settings-live-update-checkbox">Update while the system is running</label></div>
-                <p class="field-description" style="opacity:.6; margin-top:.3rem">It is strongly recommended to reboot before starting the live update process.</p>
+                
+                <div id="extension-power-settings-live-update-option" class="extension-power-settings-dev-only" style="display:none">
+                    <input type="checkbox" name="extension-power-settings-live-update-checkbox" id="extension-power-settings-live-update-checkbox">
+                    <label for="extension-power-settings-live-update-checkbox">Update while the system is running</label>
+                    <p class="field-description" style="opacity:.6; margin-top:.3rem">The system will automatically reboot once the process is complete. It is strongly recommended to reboot before starting the live update process.</p>
+                </div>
+                
                 
                 <div class="extension-power-settings-form-system-update">
                     <button id="extension-power-settings-system-update-button" class="text-button">System update</button>
                 </div>
                 
+                <div class="extension-power-settings-form-system-update">
+                    <button id="extension-power-settings-system-update-button" class="text-button">System update</button>
+                </div>
+                <div id="extension-power-settings-update-progress-container" style="display:none">
+                    <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
+                </div>
                 <div class="extension-power-settings-dev-only">
                     <pre id="extension-power-settings-update-process-output"></pre>
                 </div>

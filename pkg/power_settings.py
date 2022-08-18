@@ -109,9 +109,11 @@ class PowerSettingsAPIHandler(APIHandler):
             
             # System updates
             self.bootup_actions_failed = False
-            
-            
-            
+
+            self.ro_exists = False
+            if os.path.isdir('/ro'):
+                self.ro_exists = True
+                
             # LOAD CONFIG
             try:
                 self.add_from_config()
@@ -727,6 +729,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         'candle_version':self.candle_version,
                                         'candle_original_version':self.candle_original_version,
                                         'bootup_actions_failed':self.bootup_actions_failed,
+                                        'ro_exists':self.ro_exists,
                                         'debug':self.DEBUG
                                     }
                             if self.DEBUG:

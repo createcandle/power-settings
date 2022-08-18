@@ -485,16 +485,19 @@
                         }
                         if(body.candle_original_version == 'unknown'){
                             console.log("running on early release candidate");
-                            this.update_available_text = "AVAILABLE";
+                            this.update_available_text = "available";
                         }
                         else if(body.candle_original_version == '2.0.0'){
-                            this.update_available_text = "AVAILABLE";
+                            this.update_available_text = "available";
                             console.log("running on RC4");
-                            
                         }
                         
+                        if(body.ro_exists == true){
+                            console.log("/ro exists, so making live update available");
+                            document.getElementById('extension-power-settings-live-update-option').style.display = "block";
+                        }
                         
-                        setTimeout(function(){
+                        setTimeout( () => {
                             this.show_update_available();
                         }, 5000);
             
@@ -624,8 +627,8 @@
                 
                 document.getElementById('extension-power-settings-no-updates').style.display = 'none';
                 document.getElementById('extension-power-settings-update-available-container').style.display = 'block';
-                
-                
+                document.getElementById('extension-power-settings-menu-update-button').style.border = "2px solid white";
+                document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
                 
             }
         }
@@ -638,6 +641,7 @@
             if(confirm("Are you sure?")){
                 
                 document.getElementById('extension-power-settings-system-update-button').style.display = 'none';
+                document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
                 
                 const cutting_edge_state = document.getElementById('extension-power-settings-cutting-edge-checkbox').checked;
                 console.log("cutting_edge_state: ", cutting_edge_state);
@@ -646,7 +650,7 @@
                 
                 window.API.postJson(
                     `/extensions/${this.id}/api/ajax`, {
-                        'action': 'start_system_update','cutting_edge': cutting_edge_state,'live_update': live_update
+                        'action': 'start_system_update', 'cutting_edge':cutting_edge_state, 'live_update':live_update_state
                     }
                 ).then((body) => {
                     if(this.debug){
