@@ -136,7 +136,17 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("BOOTUP ACTIONS SEEMS TO BE RUNNING!")
                 self.system_update_in_progress = True
             
+            check_bootup_actions_running = run_command("sudo ps aux | grep live_system_updat")
+            if "live_system_update" in check_bootup_actions_running:
+                print("LIVE UPDATE SEEMS TO BE RUNNING!")
+                self.system_update_in_progress = True
+                
+            check_bootup_actions_running = run_command("sudo ps aux | grep 'live update in chroo")
+            if "live update in chroot" in check_bootup_actions_running:
+                print("LIVE UPDATE SEEMS TO BE RUNNING!")
+                self.system_update_in_progress = True
             
+                
             
             if self.do_not_use_hardware_clock:
                 if os.path.isfile(self.hardware_clock_file_path):
