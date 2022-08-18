@@ -697,7 +697,7 @@
                     }
             
                 }).catch((e) => {
-                    alert("Error, could not start system update: could not connect to controller: ", e);
+                    console.log("Error, could not start system update: could not connect to controller: ", e);
                 });
                 
                 this.start_poll();
@@ -753,6 +753,13 @@
                                     const dmesg_lines = body.dmesg.split("\n");
                                     
                                     document.getElementById('extension-power-settings-update-process-progress-bar').width = dmesg_lines.length + "%";
+                                    
+                                    
+                                    if(document.getElementById('connectivity-scrim').classList.contains('hidden')){
+                                        // UI still connected to controller
+                                    }else{
+                                        document.getElementById('extension-power-settings-update-process-progress-bar-container').style.display = "none";
+                                    }
                                     
                                 }
                                 
