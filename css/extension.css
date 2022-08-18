@@ -152,7 +152,6 @@
 }
 
 
-
 #extension-power-settings-update-failed{
     background-color:red;
     padding:2rem;
@@ -173,10 +172,18 @@
     box-sizing:border-box;
     overflow:hidden;
 }
+
 #extension-power-settings-update-process-progress-bar{
     width:0%;
     height:2rem;
     background-color:red;
+}
+
+
+#extension-power-settings-update-process-output{
+    white-space: pre-line;
+    text-align: left;
+    line-height: 3rem;
 }
 
 

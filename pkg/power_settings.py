@@ -606,7 +606,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                         if "starting live update" in line:
                                             dmesg_lines = "starting live update\n"
                                         else:
-                                            dmesg_lines += line 
+                                            line = line[line.find(']'):]
+                                            line = line.replace("Candle:","")
+                                            dmesg_lines += line + "\n"
                                         
                                         if self.DEBUG:
                                             print(line)
