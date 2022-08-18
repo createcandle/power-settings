@@ -15,6 +15,7 @@
             this.kiosk = false;
             
             this.update_available_text = "";
+            this.update_in_progress = false;
 
             const getUrl = window.location;
             this.baseUrl = getUrl.protocol + "//" + getUrl.host + "/things";
@@ -504,6 +505,7 @@
                             if(body.system_update_in_progress == true){
                                 console.log("A SYSTEM UPDATE IS ALREADY IN PROGRESS (bootup_actions.sh on an older release candidate)");
                                 this.update_available_text = "in progress...";
+                                this.update_in_progress = true;
                                 this.start_poll();
                             }
                         }
@@ -718,8 +720,10 @@
             document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
 
             // Indicate update in progress on power buttons page
-            document.getElementById('extension-power-settings-main-buttons').style.display = 'none';
-            document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'block';
+            if(document.getElementById('extension-power-settings-main-buttons') != null){
+                document.getElementById('extension-power-settings-main-buttons').style.display = 'none';
+                document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'block';
+            }
             
             
 			try{
@@ -732,7 +736,7 @@
             
             if(this.interval == null){
     			this.interval = setInterval(() => {
-
+                    console.log("starting interval for /poll");
                     try{
                         // /poll
         		        window.API.postJson(
@@ -986,6 +990,14 @@
                 console.log("Error, getting memory and disk stats failed: could not connect to controller: ", e);
             });
             
+            
+            // Hide the shutdown and reboot buttons if a system update is in progress
+            if(this.update_in_progress == true){
+                if(document.getElementById('extension-power-settings-main-buttons') != null){
+                    document.getElementById('extension-power-settings-main-buttons').style.display = 'none';
+                    document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'block';
+                }
+            }
             
             /*
             // Show the time settings
