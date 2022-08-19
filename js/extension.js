@@ -183,6 +183,10 @@
                     this.hide_all_settings_containers();
                     document.getElementById('extension-power-settings-container-update').classList.remove('extension-power-settings-hidden');
                     document.getElementById('extension-power-settings-pages').classList.remove('hidden');
+                    
+                    if(document.body.classList.contains("developer")){
+                        
+                    }
                 });
                 
     
@@ -512,12 +516,15 @@
                             if(body.system_update_in_progress == true){
                                 console.log("A SYSTEM UPDATE IS ALREADY IN PROGRESS (bootup_actions.sh on an older release candidate)");
                                 this.update_available_text = "in progress...";
+								document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
+								document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
                                 this.start_poll();
                             }
                         }
                         
                         // Temporary protection while in development, making this only available to developer mode
                         if(document.body.classList.contains('developer')){
+							console.log("developer mode active");
                             if(this.update_in_progress == false){
                                 setTimeout( () => {
                                     this.show_update_available();
@@ -529,6 +536,9 @@
                                 document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
                             }
                         }
+                        else{
+                            console.log("temporarily blocked, enable developer mode to see updates");
+                        }
                         
                         
             
@@ -539,7 +549,7 @@
             
                     }
                     else{
-                        console.log("power settings error, candle_original_version was not defined");
+                        console.log("power settings error, candle_original_version was not defined. body: ", body);
                     }
             
                     
@@ -709,6 +719,10 @@
                 const live_update_state = document.getElementById('extension-power-settings-live-update-checkbox').checked;
                 console.log("live_update_state: ", live_update_state);
                 
+                if(live_update_state == true){
+                    document.getElementById('extension-power-settings-update-process-progress-bar-container').style.display = "block";
+                }
+                
                 window.API.postJson(
                     `/extensions/${this.id}/api/ajax`, {
                         'action': 'start_system_update', 'cutting_edge':cutting_edge_state, 'live_update':live_update_state
@@ -726,7 +740,7 @@
                     console.log("Error, could not start system update: could not connect to controller: ", e);
                 });
                 
-                document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
+                //document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
                 
                 this.start_poll();
     			
@@ -783,13 +797,15 @@
                     
                                 if(typeof body.dmesg != 'undefined' && document.getElementById('extension-power-settings-update-process-output') != null){
                                     document.getElementById('extension-power-settings-update-process-output').innerHTML = body.dmesg;
-                                
+                                	
+									/*
                                     if(body.dmesg == ""){
                                         document.getElementById('extension-power-settings-update-progress-container').style.display = "none";
                                     }
                                     else{
                                         document.getElementById('extension-power-settings-update-progress-container').style.display = "block";
                                     }
+									*/
                                 
                                     const dmesg_lines = body.dmesg.split("\n");
                                     console.log("dmesg_lines: ", dmesg_lines);
@@ -802,6 +818,7 @@
                                     
                                     this.update_in_progress = body.system_update_in_progress;
                                     
+                                    // UPDATE IN PROGRESS
                                     if( body.update_in_progress ){
                                         if(document.getElementById('extension-power-settings-main-buttons') != null){
                                             document.getElementById('extension-power-settings-main-buttons').style.display = 'none';
@@ -811,8 +828,14 @@
                                         document.getElementById('extension-power-settings-menu-update-button').style.border = "2px solid white";
                                         document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
                                         document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
+                                        
+                                        document.body.classList.add("system-updating");
                                     }
+                                    
+                                    // UPDATE NOT IN PROGRESS
                                     else{
+                                        
+                                        document.body.classList.remove("system-updating");
                                         
                                         document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
                                         

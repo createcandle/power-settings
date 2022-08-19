@@ -577,6 +577,12 @@
     text-align:right;
 }
 
+.extension-power-settings-form-system-update{
+    display: flex;
+    justify-content: space-between;
+}
+
+
 
 #extension-power-settings-update-files-check-button{
     margin-right:1rem;
