@@ -645,6 +645,22 @@
                 });
                 
                 
+                // Force update button
+                
+                document.getElementById('extension-power-settings-force-update-button').addEventListener('click', () => {
+                    console.log("force system update button clicked");
+                    
+                    if( document.getElementById('extension-power-settings-system-update-understand').value != 'I understand'){
+                        alert("You must type 'I understand' before the forced system update can start.");
+                    }
+                    else{
+                        this.start_update();
+                    }
+                });
+                
+                
+                
+                
                 document.getElementById('extension-power-settings-update-files-check-button').addEventListener('click', () => {
                     //console.log("files check button clicked");
                     document.getElementById('extension-power-settings-update-files-check-button').style.display = 'none';

@@ -178,11 +178,31 @@ class PowerSettingsAPIHandler(APIHandler):
                 if self.DEBUG:
                     print("no candle_rw.txt file spotted")
             
+            if os.path.isfile('/boot/bootup_actions.sh'):
+                print("bootup_actions.sh already exists. Maybe power-settings addon was restarted after preparing an update?")
+                os.system('sudo rm /boot/bootup_actions.sh')
+            
             if os.path.isfile('/boot/bootup_actions_failed.sh'):
-                self.bootup_actions_failed = True
+                
+                if os.path.isfile('/boot/bootup_actions_non_blocking.txt'):
+                    if self.DEBUG:
+                        print("detected bootup_actions_failed.sh but also bootup_actions_non_blocking.txt, so the system is probably still busy updating")
+                       
+                else:
+                    if self.DEBUG:
+                        print("bootup_actions_failed.sh existed, but bootup_actions_non_blocking.txt did not? A system update aborted prematurely?")
+                    self.bootup_actions_failed = True 
+                
+                # clean up the bootup_actions file regardless because it will keep running even if the file is deleted
                 os.system('sudo rm /boot/bootup_actions_failed.sh')
                 if self.DEBUG:
                     print("/boot/bootup_actions_failed.sh detected")
+            
+            # clean up the non-blocking file.
+            if os.path.isfile('/boot/bootup_actions_non_blocking.txt'):
+                if self.DEBUG:
+                    print("/boot/bootup_actions_non_blocking.txt still existed")
+                os.system('rm /boot/bootup_actions_non_blocking.txt') 
             
             
             if os.path.isfile('/boot/candle_stay_rw.txt'):
