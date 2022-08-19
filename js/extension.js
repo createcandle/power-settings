@@ -688,6 +688,9 @@
                 document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
                 
             }
+            else{
+                document.getElementById('extension-power-settings-no-updates').style.display = 'block';
+            }
         }
         
         
