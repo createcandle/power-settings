@@ -188,7 +188,8 @@ rm /boot/tunnel.txt
 cp /home/pi/.webthings/etc/webthings_settings_backup.js /home/pi/.webthings/etc/webthings_settings.js
 
 # clear Bash history
-echo "Well hello there" > /home/pi/.bash_history
+echo "sudo /home/pi/candle/debug.sh" > /home/pi/.bash_history
+echo "Well hello there" >> /home/pi/.bash_history
 #cat /dev/null > /home/pi/.bash_history
 
 
@@ -210,6 +211,9 @@ rm /boot/write_enabled.txt
 rm /boot/candle_rw_once.txt
 rm /boot/candle_rw_keep.txt
 rm /boot/candle_log.txt
+rm /boot/debug.txt
+rm /boot/raspinfo.txt
+rm /boot/candle_hardware_clock.txt
 rm /boot/candle_cutting_edge.txt
 touch /boot/hide_mouse_pointer.txt
 rm /boot/bootup_actions.sh
