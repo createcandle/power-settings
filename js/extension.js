@@ -653,7 +653,7 @@
                 
                 
                 document.getElementById('extension-power-settings-update-files-check-button').addEventListener('click', () => {
-                    console.log("files check button clicked");
+                    //console.log("files check button clicked");
                     document.getElementById('extension-power-settings-update-files-check-button').style.display = 'none';
                     
                     window.API.postJson(
@@ -684,14 +684,14 @@
                 //  Change hostname
                 
     			document.getElementById("domain-settings-local-update").addEventListener('click', () => {
-    				console.log("change hostname button clicked");
+    				//console.log("change hostname button clicked");
                     
                     const domain_update_button = document.getElementById("domain-settings-local-update");
                     document.getElementById("domain-settings-local-update").style.display = 'none';
                     
                     const new_domain = document.getElementById('domain-settings-local-name').value;
                     const suffix = document.getElementById('domain-settings-local-suffix').innerText;
-                    console.log(new_domain,suffix);
+                    //console.log(new_domain,suffix);
                     
                     var after_html = "";
                     const explanation_el = document.getElementById('extension-power-settings-domain-explanation');
@@ -732,7 +732,7 @@
         
         
         show_clock_page(){
-            console.log("in show_clock_page");
+            //console.log("in show_clock_page");
             window.API.postJson(
                 `/extensions/${this.id}/api/ajax`, {
                     'action': 'clock_page_init'
@@ -757,13 +757,7 @@
         
         show_update_available(){
             // Show that an update is available
-            console.log("in show_update_available");
-            
-            // test
-            var progress_bar = document.getElementById('extension-power-settings-update-process-progress-bar-container');
-            progress_bar.style.display = "block";
-            document.body.appendChild(progress_bar);
-            
+            //console.log("in show_update_available");
             
             if(this.update_available_text != ""){
                 if(document.getElementById('extension-power-settings-menu-update-button-indicator') != null){
