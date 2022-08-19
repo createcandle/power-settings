@@ -531,6 +531,7 @@
                                 }, 3000);
                             }
                             else{
+                                document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
                                 document.getElementById('extension-power-settings-no-updates').style.display = 'none';
                                 document.getElementById('extension-power-settings-menu-update-button').style.border = "2px solid white";
                                 document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
@@ -624,7 +625,7 @@
                             console.log("files_check response: ", body);
                         }
                         if(body.files_check_output == ""){
-                            document.getElementById('extension-power-settings-update-files-check-output').innerText = "No missing files";
+                            document.getElementById('extension-power-settings-update-files-check-output').innerText = "OK, no missing files";
                         }
                         else{
                             document.getElementById('extension-power-settings-update-files-check-output').innerHTML = body.files_check_output;
@@ -704,6 +705,8 @@
             }
             else{
                 document.getElementById('extension-power-settings-no-updates').style.display = 'block';
+                document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
+                
             }
         }
         
@@ -733,14 +736,17 @@
                     }
                     
                     if (body.state == false){
+                        document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
                         alert("Starting the update seems to have failed");
+                    }
+                    else{
+                        document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
                     }
             
                 }).catch((e) => {
                     console.log("Error, could not start system update: could not connect to controller: ", e);
                 });
                 
-                //document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
                 
                 this.start_poll();
     			
@@ -825,6 +831,7 @@
                                             document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'block';
                                         }
                                         
+                                        document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
                                         document.getElementById('extension-power-settings-menu-update-button').style.border = "2px solid white";
                                         document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
                                         document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
