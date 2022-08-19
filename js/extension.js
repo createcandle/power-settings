@@ -545,25 +545,18 @@
                             }
                         }
                         
-                        // Temporary protection while in development, making this only available to developer mode
-                        if(document.body.classList.contains('developer')){
-							console.log("developer mode active");
-                            if(this.update_in_progress == false){
-                                setTimeout( () => {
-                                    this.show_update_available();
-                                }, 3000);
-                            }
-                            else{
-                                document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
-                                document.getElementById('extension-power-settings-no-updates').style.display = 'none';
-                                document.getElementById('extension-power-settings-menu-update-button').style.border = "2px solid white";
-                                document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
-                            }
+
+                        if(this.update_in_progress == false){
+                            setTimeout( () => {
+                                this.show_update_available();
+                            }, 3000);
                         }
                         else{
-                            console.log("temporarily blocked, enable developer mode to see updates");
+                            document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
+                            document.getElementById('extension-power-settings-no-updates').style.display = 'none';
+                            document.getElementById('extension-power-settings-menu-update-button').style.border = "2px solid white";
+                            document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
                         }
-                        
                         
             
                         if(body.files_check_exists){
