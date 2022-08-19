@@ -513,7 +513,7 @@
                                 console.log("A SYSTEM UPDATE IS ALREADY IN PROGRESS (bootup_actions.sh on an older release candidate)");
                                 this.update_available_text = "in progress...";
                                 this.start_poll();
-                            }poll
+                            }
                         }
                         
                         if(this.update_in_progress == false){
@@ -731,7 +731,7 @@
         
         
         start_poll(){
-            
+            console.log("in start_poll");
             // reset process output, just in case
             document.getElementById('extension-power-settings-update-process-output').innerHTML = "";
             //document.getElementById('extension-power-settings-system-update').style.display = 'none';
