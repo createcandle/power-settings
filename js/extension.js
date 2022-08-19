@@ -223,35 +223,20 @@
                         alert("You must type 'I understand' before the factory reset process can start.");
                     }
                     else{
-                        if(confirm("Are you absolutely sure?")){
-                            document.getElementById('extension-power-settings-container-reset').innerHTML = "<h1>Factory reset in progress</h1><p>The controller will now reboot. When all data is erased the controller will shut down.</p><p>Do not unplug the controller until the red light has stopped blinking (if you do not see it, just wait 5 minutes).</p>";
-                            document.getElementById('extension-power-settings-back-button').style.display = 'none';
+                        
+                        document.getElementById('extension-power-settings-container-reset').innerHTML = "<h1>Factory reset in progress</h1><p>The controller will now reboot. When all data is erased the controller will shut down.</p><p>Do not unplug the controller until the red light has stopped blinking (if you do not see it, just wait 5 minutes).</p>";
+                        document.getElementById('extension-power-settings-back-button').style.display = 'none';
 
-                            window.API.postJson(
-                                `/extensions/${this.id}/api/ajax`, {
-                                    'action': 'reset',
-                                    'keep_z2m': keep_z2m,
-                                    'keep_bluetooth': keep_bluetooth
-                                }
-                            ).then((body) => {
-                                console.log("factory reset response: ", body);
-                                if(this.debug){
-                                    if(confirm("The system will now reboot")){
-                                        if(body.state == 'ok'){
-                                            API.setSshStatus(false).then(() => {
-                                                window.API.postJson('/settings/system/actions', {
-                                                    action: 'restartSystem'
-                                                }).catch(console.error);
-                                            }).catch((e) => {
-                                                console.error(`Failed to toggle SSH: ${e}`);
-                                            });
-                                        }
-                                        else{
-                                            alert("Something went wrong! Try rebooting manually and see what happens.");
-                                        }
-                                    }
-                                }
-                                else{
+                        window.API.postJson(
+                            `/extensions/${this.id}/api/ajax`, {
+                                'action': 'reset',
+                                'keep_z2m': keep_z2m,
+                                'keep_bluetooth': keep_bluetooth
+                            }
+                        ).then((body) => {
+                            console.log("factory reset response: ", body);
+                            if(this.debug){
+                                if(confirm("The system will now reboot")){
                                     if(body.state == 'ok'){
                                         API.setSshStatus(false).then(() => {
                                             window.API.postJson('/settings/system/actions', {
@@ -265,14 +250,27 @@
                                         alert("Something went wrong! Try rebooting manually and see what happens.");
                                     }
                                 }
-                                
-                    
-                            }).catch((e) => {
-                                alert("Error while attempting to start factory reset: could not connect?");
-                            });
+                            }
+                            else{
+                                if(body.state == 'ok'){
+                                    API.setSshStatus(false).then(() => {
+                                        window.API.postJson('/settings/system/actions', {
+                                            action: 'restartSystem'
+                                        }).catch(console.error);
+                                    }).catch((e) => {
+                                        console.error(`Failed to toggle SSH: ${e}`);
+                                    });
+                                }
+                                else{
+                                    alert("Something went wrong! Try rebooting manually and see what happens.");
+                                }
+                            }
+                            
                 
+                        }).catch((e) => {
+                            alert("Error while attempting to start factory reset: could not connect?");
+                        });
                 
-                        }
                     }
         
                     document.getElementById('extension-power-settings-container-reset').style.display = 'block';
@@ -644,7 +642,13 @@
                 // Start update button
                 document.getElementById('extension-power-settings-system-update-button').addEventListener('click', () => {
                     console.log("system update button clicked");
-                    this.start_update();
+                    
+                    if( document.getElementById('extension-power-settings-system-update-understand').value != 'I understand'){
+                        alert("You must type 'I understand' before the system update can start.");
+                    }
+                    else{
+                        this.start_update();
+                    }
                 });
                 
                 
