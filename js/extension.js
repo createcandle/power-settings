@@ -508,12 +508,12 @@
                         }
                         
                         if(typeof body.system_update_in_progress != 'undefined'){
+                            this.update_in_progress = body.system_update_in_progress;
                             if(body.system_update_in_progress == true){
                                 console.log("A SYSTEM UPDATE IS ALREADY IN PROGRESS (bootup_actions.sh on an older release candidate)");
                                 this.update_available_text = "in progress...";
-                                this.update_in_progress = true;
                                 this.start_poll();
-                            }
+                            }poll
                         }
                         
                         if(this.update_in_progress == false){
@@ -784,7 +784,16 @@
                                 }
                                 
                                 if(typeof body.update_in_progress != 'undefined'){
-                                    if( body.update_in_progress == false ){
+                                    
+                                    this.update_in_progress = body.system_update_in_progress;
+                                    
+                                    if( body.update_in_progress ){
+                                        if(document.getElementById('extension-power-settings-main-buttons') != null){
+                                            document.getElementById('extension-power-settings-main-buttons').style.display = 'none';
+                                            document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'block';
+                                        }
+                                    }
+                                    else{
                                         
                                         document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
                                         //document.getElementById('extension-power-settings-update-process-output').innerHTML = "";
@@ -798,6 +807,7 @@
                                             document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'none';
                                         }
                                         
+                                        /*
                             			try{
                             				clearInterval(this.interval);
                                             this.interval = null;
@@ -805,6 +815,7 @@
                             			catch(e){
                             				//console.log("no interval to clear?: " + e);
                             			}
+                                        */
                                     }
                                 }
                                 
@@ -1036,6 +1047,7 @@
                     document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'block';
                 }
             }
+            
             
             /*
             // Show the time settings

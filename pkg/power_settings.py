@@ -632,7 +632,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
-                                  content=json.dumps({'state':'ok','dmesg':dmesg_lines}),
+                                  content=json.dumps({'state':'ok','dmesg':dmesg_lines, 'system_update_in_progress':self.system_update_in_progress}),
                                 )
                                 
                                 
