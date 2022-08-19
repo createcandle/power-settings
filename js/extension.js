@@ -516,16 +516,20 @@
                             }
                         }
                         
-                        if(this.update_in_progress == false){
-                            setTimeout( () => {
-                                this.show_update_available();
-                            }, 3000);
+                        // Temporary protection while in development, making this only available to developer mode
+                        if(document.body.classList.contains('developer')){
+                            if(this.update_in_progress == false){
+                                setTimeout( () => {
+                                    this.show_update_available();
+                                }, 3000);
+                            }
+                            else{
+                                document.getElementById('extension-power-settings-no-updates').style.display = 'none';
+                                document.getElementById('extension-power-settings-menu-update-button').style.border = "2px solid white";
+                                document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
+                            }
                         }
-                        else{
-                            document.getElementById('extension-power-settings-no-updates').style.display = 'none';
-                            document.getElementById('extension-power-settings-menu-update-button').style.border = "2px solid white";
-                            document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
-                        }
+                        
                         
             
                         if(body.files_check_exists){
