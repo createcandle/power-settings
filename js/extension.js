@@ -697,7 +697,6 @@
         
         start_update(){
             
-            
             if(confirm("Are you sure?")){
                 
                 const cutting_edge_state = document.getElementById('extension-power-settings-cutting-edge-checkbox').checked;
@@ -723,6 +722,8 @@
                     console.log("Error, could not start system update: could not connect to controller: ", e);
                 });
                 
+                document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
+                
                 this.start_poll();
     			
             }
@@ -737,14 +738,13 @@
             //document.getElementById('extension-power-settings-system-update').style.display = 'none';
             document.getElementById('extension-power-settings-manual-update-container').style.display = 'none';
             document.getElementById('extension-power-settings-update-available-container').style.display = 'none';
-            document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
+            
 
             // Indicate update in progress on power buttons page
             if(document.getElementById('extension-power-settings-main-buttons') != null){
                 document.getElementById('extension-power-settings-main-buttons').style.display = 'none';
                 document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'block';
             }
-            
             
 			try{
 				clearInterval(this.interval);
@@ -756,7 +756,7 @@
             
             if(this.interval == null){
     			this.interval = setInterval(() => {
-                    console.log("starting interval for /poll");
+                    console.log("in interval for /poll");
                     
                     if(document.getElementById('connectivity-scrim').classList.contains('hidden')){
                         // UI still connected to controller
@@ -780,12 +780,17 @@
                                 if(typeof body.dmesg != 'undefined' && document.getElementById('extension-power-settings-update-process-output') != null){
                                     document.getElementById('extension-power-settings-update-process-output').innerHTML = body.dmesg;
                                 
+                                    if(body.dmesg == ""){
+                                        document.getElementById('extension-power-settings-update-progress-container').style.display = "none";
+                                    }
+                                    else{
+                                        document.getElementById('extension-power-settings-update-progress-container').style.display = "block";
+                                    }
+                                
                                     const dmesg_lines = body.dmesg.split("\n");
                                     console.log("dmesg_lines: ", dmesg_lines);
                                     console.log("dmesg_lines.length: ", dmesg_lines.length);
                                     document.getElementById('extension-power-settings-update-process-progress-bar').style.width = dmesg_lines.length + "%";
-                                    
-                                    
                                     
                                 }
                                 
@@ -798,16 +803,23 @@
                                             document.getElementById('extension-power-settings-main-buttons').style.display = 'none';
                                             document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'block';
                                         }
+                                        
+                                        document.getElementById('extension-power-settings-menu-update-button').style.border = "2px solid white";
+                                        document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
+                                        document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
                                     }
                                     else{
                                         
                                         document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
+                                        
+                                        document.getElementById('extension-power-settings-menu-update-button').style.border = "none";
+                                        document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "";
                                         //document.getElementById('extension-power-settings-update-process-output').innerHTML = "";
                                         //document.getElementById('extension-power-settings-system-update').style.display = 'none';
                                         //document.getElementById('extension-power-settings-manual-update-container').style.display = 'block';
                                         //document.getElementById('extension-power-settings-update-available-container').style.display = 'none';
 
-                                        // Indicate update in progress on power buttons page
+                                        // Remove update in progress indicator on power buttons page
                                         if(document.getElementById('extension-power-settings-main-buttons') != null){
                                             document.getElementById('extension-power-settings-main-buttons').style.display = 'block';
                                             document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'none';

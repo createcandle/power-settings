@@ -560,7 +560,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                     # Place the factory reset file in the correct location so that it will be activated at boot.
                                     #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
                                     
-                                    os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh -O ' + str(self.system_update_script_path))
+                                    if os.path.isfile('/boot/developer.txt'):
+                                        os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle_dev.sh -O ' + str(self.system_update_script_path))
+                                    else:
+                                        os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh -O ' + str(self.system_update_script_path))
                                     
                                     if os.path.isfile(self.system_update_script_path):
                                         if self.DEBUG:
@@ -577,7 +580,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         os.system(move_command)
                                             
                                     
-                                        if os.path.isfile('/boot/bootup_actions.sh'):
+                                        if os.path.isfile(str(self.actions_file_path)):
                                             if self.old_overlay_active:
                                                 if self.DEBUG:
                                                     print("disabling old raspi-config overlay system")
