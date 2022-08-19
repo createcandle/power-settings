@@ -563,7 +563,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                     os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh -O ' + str(self.system_update_script_path))
                                     
                                     if os.path.isfile(self.system_update_script_path):
-                                    
+                                        if self.DEBUG:
+                                            print("system update script succesfully downloaded to data dir")
                                         
                                         if os.path.isfile(str(self.actions_file_path)):
                                             if self.DEBUG:

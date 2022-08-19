@@ -757,6 +757,13 @@
             if(this.interval == null){
     			this.interval = setInterval(() => {
                     console.log("starting interval for /poll");
+                    
+                    if(document.getElementById('connectivity-scrim').classList.contains('hidden')){
+                        // UI still connected to controller
+                    }else{
+                        document.getElementById('extension-power-settings-update-process-progress-bar-container').style.display = "none";
+                    }
+                    
                     try{
                         // /poll
         		        window.API.postJson(
@@ -778,11 +785,7 @@
                                     console.log("dmesg_lines.length: ", dmesg_lines.length);
                                     document.getElementById('extension-power-settings-update-process-progress-bar').style.width = dmesg_lines.length + "%";
                                     
-                                    if(document.getElementById('connectivity-scrim').classList.contains('hidden')){
-                                        // UI still connected to controller
-                                    }else{
-                                        document.getElementById('extension-power-settings-update-process-progress-bar-container').style.display = "none";
-                                    }
+                                    
                                     
                                 }
                                 
