@@ -167,7 +167,7 @@
 
 #extension-power-settings-update-process-progress-bar-container{
     border:2px solid white;
-    border-radius:1rem;
+    border-radius:2rem;
     height:2rem;
     width:100%;
     box-sizing:border-box;
@@ -176,7 +176,7 @@
 
 #extension-power-settings-update-process-progress-bar{
     width:0%;
-    height:2rem;
+    height:100%;
     background-color:white;
 }
 
@@ -605,8 +605,36 @@
 }
 
 
+body > #extension-power-settings-update-process-progress-bar-container{
+    position:fixed;
+    bottom:2rem;
+    left:2rem;
+    right:2rem;
+    height:4rem;
+    /*background-color:rgba(255,255,255,.1);*/
+    width:auto;
+    z-index:10000;
+    background-color:#0b263b;
+}
+
+#extension-power-settings-update-process-progress-bar-text{
+    position:absolute;
+    color: white;
+    top: .5rem;
+    left: calc(50% - 10rem);
+    font-size:1.6rem;
+}
+
+
+
 @media screen and (min-width: 1024px) {
-	
+	/*
+    body > #extension-power-settings-update-process-progress-bar-container{
+	    left:10rem;
+        right:10rem;
+        top:2rem;
+	}
+    */
 }
 
 

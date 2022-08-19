@@ -759,6 +759,12 @@
             // Show that an update is available
             console.log("in show_update_available");
             
+            // test
+            var progress_bar = document.getElementById('extension-power-settings-update-process-progress-bar-container');
+            progress_bar.style.display = "block";
+            document.body.appendChild(progress_bar);
+            
+            
             if(this.update_available_text != ""){
                 if(document.getElementById('extension-power-settings-menu-update-button-indicator') != null){
                     document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = this.update_available_text;
@@ -781,44 +787,42 @@
         
         start_update(){
             
-            if(confirm("Are you sure?")){
-                
-                const cutting_edge_state = document.getElementById('extension-power-settings-cutting-edge-checkbox').checked;
-                console.log("cutting_edge_state: ", cutting_edge_state);
-                
-                const live_update_state = document.getElementById('extension-power-settings-live-update-checkbox').checked;
-                console.log("live_update_state: ", live_update_state);
-                
-                if(live_update_state == true){
-                    document.getElementById('extension-power-settings-update-process-progress-bar-container').style.display = "block";
-                }
-                
-                window.API.postJson(
-                    `/extensions/${this.id}/api/ajax`, {
-                        'action': 'start_system_update', 'cutting_edge':cutting_edge_state, 'live_update':live_update_state
-                    }
-                ).then((body) => {
-                    if(this.debug){
-                        console.log("start system update response: ", body);
-                    }
-                    
-                    if (body.state == false){
-                        document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
-                        alert("Starting the update seems to have failed");
-                    }
-                    else{
-                        document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
-                    }
+            const cutting_edge_state = document.getElementById('extension-power-settings-cutting-edge-checkbox').checked;
+            console.log("cutting_edge_state: ", cutting_edge_state);
             
-                }).catch((e) => {
-                    console.log("Error, could not start system update: could not connect to controller: ", e);
-                });
-                
-                
-                this.start_poll();
-    			
+            const live_update_state = document.getElementById('extension-power-settings-live-update-checkbox').checked;
+            console.log("live_update_state: ", live_update_state);
+            
+            if(live_update_state == true){
+                var progress_bar = document.getElementById('extension-power-settings-update-process-progress-bar-container');
+                progress_bar.style.display = "block";
+                document.body.appendChild(progress_bar);
             }
             
+            window.API.postJson(
+                `/extensions/${this.id}/api/ajax`, {
+                    'action': 'start_system_update', 'cutting_edge':cutting_edge_state, 'live_update':live_update_state
+                }
+            ).then((body) => {
+                if(this.debug){
+                    console.log("start system update response: ", body);
+                }
+                
+                if (body.state == false){
+                    document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
+                    alert("Starting the update seems to have failed");
+                }
+                else{
+                    document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
+                }
+        
+            }).catch((e) => {
+                console.log("Error, could not start system update: could not connect to controller: ", e);
+            });
+            
+            
+            this.start_poll();
+			
         }
         
         

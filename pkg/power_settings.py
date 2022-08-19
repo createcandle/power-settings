@@ -578,8 +578,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         if self.DEBUG:
                                             print("move command: " + str(move_command))
                                         os.system(move_command)
-                                            
-                                    
+                                        
                                         if os.path.isfile(str(self.actions_file_path)):
                                             if self.old_overlay_active:
                                                 if self.DEBUG:
@@ -591,6 +590,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             #raspi-config nonint enable_overlayfs
                                             #raspi-config nonint disable_bootro
                                             
+                                            os,system('sudo touch /boot/bootup_actions_non_blocking.txt')
                                             os.system('sudo touch /boot/candle_rw_once.txt')
                                             self.system_update_in_progress = True
                                             state = True
