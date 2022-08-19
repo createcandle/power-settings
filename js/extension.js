@@ -499,6 +499,9 @@
                             this.update_available_text = "available";
                             console.log("running on RC4");
                         }
+                        else if(body.candle_original_version == '2.0.0-beta'){
+                            console.log("running on updated release candidate, nice");
+                        }
                         
                         if(body.ro_exists == true){
                             console.log("/ro exists");
@@ -661,7 +664,7 @@
                     }
                     
                     if(this.kiosk){
-                        after_html = '<p id="extension-power-settings-domain-explanation">If all went well you can now use Candle from on other devices on your local network by visiting:<br/><br/> <strong>http://' + new_domain + suffix + '</strong></p>';
+                        after_html = '<p id="extension-power-settings-domain-explanation">If all went well you can now use Candle from other devices on your local network by visiting:<br/><br/> <strong>http://' + new_domain + suffix + '</strong></p>';
                     }
                     else{
                         after_html = '<p id="extension-power-settings-domain-explanation">If all went well you should switch to <a href="http://' + new_domain + suffix + '" style="color:white;font-weight:bold">' + new_domain + suffix + '</a> to continue using Candle.</p>';
