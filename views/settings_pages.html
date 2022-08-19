@@ -4,17 +4,19 @@
         <div class="section-title">
               <div class="section-title-back-flex"></div>
               <div class="section-title-container">
-                  <img class="section-title-icon" alt="Clock icon" src="/extensions/power-settings/images/clock.svg">
+                  <img id="extension-power-settings-clock-page-icon" class="section-title-icon" alt="Clock icon" src="/extensions/power-settings/images/clock.svg">
                   <span class="section-title-name">Clock</span>
               </div>
               <div class="section-title-right-flex"></div>
         </div>
         
+        <div id="extension-power-settings-shell-date" class="extension-power-settings-dev-only" style="text-align:center;"></div>
         
         <div class="extension-power-settings-vlak extension-power-settings-show-if-hardware-clock-detected">
             <p class="extension-power-settings-header">Hardware clock module detected</p>
             <p>A hardware clock module is providing the time to the system instead of an internet time server. If you unplug the module, or if you disable it in the settings of the Power Settings addon, then the system will fall back to your internet time preference instead.</p>
-            <p>The hardware clock's time was initially set with data from an internet time server. If the clock is out of sync, you could disable it in settings, reboot, and then re-enable it. Or you could provide the time manually.</p>
+            <p>The hardware clock's time was initially set with data from an internet time server. If the clock is out of sync you can re-sync it from the internet. Or you could provide the time manually.</p>
+            <button id="extension-power-settings-hardware-clock-sync-button" class="text-button">Synchronise with internet</button>
         </div>
         
         

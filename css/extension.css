@@ -524,6 +524,18 @@
 }
 
 
+#extension-power-settings-shell-date,
+#extension-power-settings-clock-page-icon{
+    cursor:pointer;
+}
+
+#extension-power-settings-shell-date:not(:empty){
+    padding-bottom:4rem;
+}
+
+
+
+
 
 /*  BACKUP  */
 

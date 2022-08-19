@@ -142,6 +142,9 @@
                     this.hide_all_settings_containers();
                     document.getElementById('extension-power-settings-container-time').classList.remove('extension-power-settings-hidden');
                     document.getElementById('extension-power-settings-pages').classList.remove('hidden');
+                    
+                    this.show_clock_page();
+                    
                 });
                 
                 // Show backup page button
@@ -356,6 +359,25 @@
                 });
                 
                 
+                // Sync time with internet when using hardware clock
+                document.getElementById('extension-power-settings-hardware-clock-sync-button').addEventListener('click', () => {
+                    document.getElementById('extension-power-settings-hardware-clock-sync-button').style.display = 'none';
+                    setTimeout(function(){
+                        document.getElementById('extension-power-settings-hardware-clock-sync-button').style.display = 'block';
+                    }, 5000);
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'sync_time'
+                        }
+                    ).then((body) => {
+                        if(this.debug){
+                            console.log("sync-time response: ", body);
+                        }
+                    }).catch((e) => {
+                        console.log("sync time error: ", e);
+                    });
+                
+                });
 
                 // Submits the manual time
                 document.getElementById('extension-power-settings-form-submit-time').addEventListener('click', () => {
@@ -390,7 +412,7 @@
                             
                         }).catch((e) => {
                             console.log("time submit error: ", e);
-                            alert("Saving failed: could not connect to the controller")
+                            alert("Saving failed: could not connect to the controller");
                         });
                     }
                 });
@@ -463,7 +485,7 @@
                     });
                     
                     
-                    // Hardware clock detected
+                    // Hardware click detected
                     if(body.hardware_clock_detected){
                         document.body.classList.add('hardware-clock');
                         document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'block';
@@ -606,6 +628,17 @@
                 
                 
                 
+                document.getElementById('extension-power-settings-clock-page-icon').addEventListener('click', () => {
+                    this.show_clock_page();
+                });
+                
+                document.getElementById('extension-power-settings-shell-date').addEventListener('click', () => {
+                    this.show_clock_page();
+                });
+                
+                
+                
+                
                 
                 
                 // Start update button
@@ -689,6 +722,33 @@
             
         } // end of create extra settings
 
+        
+        
+        
+        
+        
+        show_clock_page(){
+            console.log("in show_clock_page");
+            window.API.postJson(
+                `/extensions/${this.id}/api/ajax`, {
+                    'action': 'clock_page_init'
+                }
+            ).then((body) => {
+                if(this.debug){
+                    console.log("clock page init response: ", body);
+                }
+                if(typeof body.shell_date != 'undefined'){
+                    document.getElementById('extension-power-settings-shell-date').innerText = body.shell_date;
+                }
+                else{
+                    document.getElementById('extension-power-settings-shell-date').innerText = "";
+                }
+                
+            }).catch((e) => {
+               console.log("Error: clock page init: connection failed: ", e);
+            });
+        }
+        
         
         
         show_update_available(){

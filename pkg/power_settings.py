@@ -826,6 +826,51 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                             
+                            
+                            
+                            
+                            elif action == 'clock_page_init':
+                                
+                                if self.DEBUG:
+                                    print("clock page init requested")
+                                
+                                shell_date = ""
+                                try:
+                                    shell_date = run_command("date")
+                                except Exception as ex:
+                                    print("Error getting shell date: " + str(ex))
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':'ok', 'shell_date':shell_date}),
+                                )
+                            
+                            
+                            
+                            
+                            # /sync_time
+                            elif action == 'sync_time':
+                                
+                                if self.DEBUG:
+                                    print("sync_time requested")
+                                
+                                # Place the factory reset file in the correct location so that it will be activated at boot.
+                                #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
+                                os.system('sudo rm ' + str(self.hardware_clock_file_path))
+                                os.system('sudo systemctl start systemd-timesyncd.service && sudo hwclock -w')
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':'ok'}),
+                                )
+                                
+                                
+                                
+                                
+                                
+                            
                             else:
                                 return APIResponse(
                                   status=404
@@ -840,6 +885,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     elif request.path == '/init':
                         response = {}
                         
+                        shell_date = ""
                         if self.DEBUG:
                             print("\nin /init")
                         try:
@@ -852,11 +898,15 @@ class PowerSettingsAPIHandler(APIHandler):
                                         print(line)
                                     if line.startswith( 'NTP=no' ):
                                         current_ntp_state = False
+                                        
+                                shell_date = run_command("date")
+                                        
                             except Exception as ex:
                                 print("Error getting NTP status: " + str(ex))
                             
                             response = {'hours':now.hour,
                                         'minutes':now.minute,
+                                        'shell_date':shell_date,
                                         'ntp':current_ntp_state,
                                         'backup_exists':self.backup_file_exists,
                                         'restore_exists':self.restore_file_exists,
@@ -1070,11 +1120,11 @@ class PowerSettingsAPIHandler(APIHandler):
             print("Setting NTP state to: " + str(new_state))
         try:
             if new_state:
-                os.system('sudo timedatectl set-ntp on') 
+                os.system('sudo timedatectl set-ntp true') 
                 if self.DEBUG:
                     print("Network time turned on")
             else:
-                os.system('sudo timedatectl set-ntp off') 
+                os.system('sudo timedatectl set-ntp false') 
                 if self.DEBUG:
                     print("Network time turned off")
         except Exception as e:
