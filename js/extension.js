@@ -783,8 +783,30 @@
                                     
                                 }
                                 
-                                
-                                
+                                if(typeof body.update_in_progress != 'undefined'){
+                                    if( body.update_in_progress == false ){
+                                        
+                                        document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
+                                        //document.getElementById('extension-power-settings-update-process-output').innerHTML = "";
+                                        //document.getElementById('extension-power-settings-system-update').style.display = 'none';
+                                        //document.getElementById('extension-power-settings-manual-update-container').style.display = 'block';
+                                        //document.getElementById('extension-power-settings-update-available-container').style.display = 'none';
+
+                                        // Indicate update in progress on power buttons page
+                                        if(document.getElementById('extension-power-settings-main-buttons') != null){
+                                            document.getElementById('extension-power-settings-main-buttons').style.display = 'block';
+                                            document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'none';
+                                        }
+                                        
+                            			try{
+                            				clearInterval(this.interval);
+                                            this.interval = null;
+                            			}
+                            			catch(e){
+                            				//console.log("no interval to clear?: " + e);
+                            			}
+                                    }
+                                }
                                 
                                 
                                 
