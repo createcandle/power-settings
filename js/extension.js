@@ -800,11 +800,13 @@
             const live_update_state = document.getElementById('extension-power-settings-live-update-checkbox').checked;
             console.log("live_update_state: ", live_update_state);
             
+            /*
             if(live_update_state == true){
                 var progress_bar = document.getElementById('extension-power-settings-update-process-progress-bar-container');
                 progress_bar.style.display = "block";
                 document.body.appendChild(progress_bar);
             }
+            */
             
             window.API.postJson(
                 `/extensions/${this.id}/api/ajax`, {
@@ -841,6 +843,10 @@
             document.getElementById('extension-power-settings-manual-update-container').style.display = 'none';
             document.getElementById('extension-power-settings-update-available-container').style.display = 'none';
             
+
+            var progress_bar = document.getElementById('extension-power-settings-update-process-progress-bar-container');
+            progress_bar.style.display = "block";
+            document.body.appendChild(progress_bar);
 
             // Indicate update in progress on power buttons page
             if(document.getElementById('extension-power-settings-main-buttons') != null){
@@ -906,6 +912,7 @@
                                     
                                     // UPDATE IN PROGRESS
                                     if( body.update_in_progress ){
+                                        console.log("poll: system update in progress");
                                         if(document.getElementById('extension-power-settings-main-buttons') != null){
                                             document.getElementById('extension-power-settings-main-buttons').style.display = 'none';
                                             document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'block';
@@ -923,7 +930,7 @@
                                     
                                     // UPDATE NOT IN PROGRESS
                                     else{
-                                        
+                                        console.log("poll: system update NOT in progress");
                                         document.body.classList.remove("system-updating");
                                         
                                         document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
