@@ -515,112 +515,115 @@ class PowerSettingsAPIHandler(APIHandler):
                             # SYSTEM UPDATE UPDATE
                             elif action == 'start_system_update':
                                 
-                                state = False
+                                try:
+                                    state = False
                                 
-                                # TODO: check if there is enough disk space. This could actually be done client side
+                                    # TODO: check if there is enough disk space. This could actually be done client side
                                 
-                                if 'cutting_edge' in request.body:
-                                    if request.body['cutting_edge'] == True:
-                                        os.system('sudo touch /boot/candle_cutting_edge.txt')
-                                        if self.DEBUG:
-                                            print("created /boot/candle_cutting_edge.txt file")
-                                    else:
-                                        if os.path.isfile('/boot/candle_cutting_edge.txt'):
-                                            os.system('sudo rm /boot/candle_cutting_edge.txt')
+                                    if 'cutting_edge' in request.body:
+                                        if request.body['cutting_edge'] == True:
+                                            os.system('sudo touch /boot/candle_cutting_edge.txt')
                                             if self.DEBUG:
-                                                print("removed /boot/candle_cutting_edge.txt file")
-                                
-                                
-                                if self.DEBUG:
-                                    print("copying system update script into position")
-                                
-                                live_update = False
-                                if 'live_update' in request.body:
-                                    if request.body['live_update'] == True:
-                                        live_update = True
-                                
-                                if live_update:
-                                    
-                                    
-                                    # Check if script isn't already running
-                                    already_running_check = run_command('ps aux | grep -q live_system_update')
-                                    if not "live_system_update.sh" in already_running_check:
-                                    
-                                    
-                                        if os.path.isfile( str(self.live_system_update_script_path) ):
-                                            if self.DEBUG:
-                                                print("removing old live update script first")
-                                            os.system('rm ' + str(self.live_system_update_script_path))    
-                                    
-                                        os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/live_system_update.sh -O ' + str(self.live_system_update_script_path))
-                                    
-                                        if os.path.isfile( str(self.live_system_update_script_path) ):
-                                            if self.live_update_attempted == False:
+                                                print("created /boot/candle_cutting_edge.txt file")
+                                        else:
+                                            if os.path.isfile('/boot/candle_cutting_edge.txt'):
+                                                os.system('sudo rm /boot/candle_cutting_edge.txt')
                                                 if self.DEBUG:
-                                                    print("Attempting a live update")
-                                                state = True
-                                                self.system_update_in_progress = True
-                                                os.system('cat ' + str(self.live_system_update_script_path) + ' | sudo REBOOT_WHEN_DONE=yes bash &')
+                                                    print("removed /boot/candle_cutting_edge.txt file")
+                                
+                                
+                                    if self.DEBUG:
+                                        print("copying system update script into position")
+                                
+                                    live_update = False
+                                    if 'live_update' in request.body:
+                                        if request.body['live_update'] == True:
+                                            live_update = True
+                                
+                                    if live_update:
+                                    
+                                    
+                                        # Check if script isn't already running
+                                        already_running_check = run_command('ps aux | grep -q live_system_update')
+                                        if not "live_system_update.sh" in already_running_check:
+                                    
+                                    
+                                            if os.path.isfile( str(self.live_system_update_script_path) ):
+                                                if self.DEBUG:
+                                                    print("removing old live update script first")
+                                                os.system('rm ' + str(self.live_system_update_script_path))    
+                                    
+                                            os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/live_system_update.sh -O ' + str(self.live_system_update_script_path))
+                                    
+                                            if os.path.isfile( str(self.live_system_update_script_path) ):
+                                                if self.live_update_attempted == False:
+                                                    if self.DEBUG:
+                                                        print("Attempting a live update")
+                                                    state = True
+                                                    self.system_update_in_progress = True
+                                                    os.system('cat ' + str(self.live_system_update_script_path) + ' | sudo REBOOT_WHEN_DONE=yes bash &')
+                                                else:
+                                                    if self.DEBUG:
+                                                        print("Error. cannot run two live updates in a row.")
+                                        
+                                                self.live_update_attempted = True
+                                        
                                             else:
                                                 if self.DEBUG:
-                                                    print("Error. cannot run two live updates in a row.")
-                                        
-                                            self.live_update_attempted = True
-                                        
+                                                    print("ERROR, live update script failed to download")
                                         else:
                                             if self.DEBUG:
-                                                print("ERROR, live update script failed to download")
-                                    else:
-                                        if self.DEBUG:
-                                            print("Scripts seems to be running already, aborting")
+                                                print("Scripts seems to be running already, aborting")
                                 
-                                else:
-                                    if self.DEBUG:
-                                        print("Attempting a reboot-update")
-                                    # Place the factory reset file in the correct location so that it will be activated at boot.
-                                    #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
-                                    
-                                    if os.path.isfile('/boot/developer.txt'):
-                                        os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle_dev.sh -O ' + str(self.system_update_script_path))
                                     else:
-                                        os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh -O ' + str(self.system_update_script_path))
+                                        if self.DEBUG:
+                                            print("Attempting a reboot-update")
+                                        # Place the factory reset file in the correct location so that it will be activated at boot.
+                                        #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
                                     
-                                    if os.path.isfile(self.system_update_script_path):
-                                        if self.DEBUG:
-                                            print("system update script succesfully downloaded to data dir")
-                                        
-                                        if os.path.isfile(str(self.actions_file_path)):
+                                        if os.path.isfile('/boot/developer.txt'):
+                                            os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle_dev.sh -O ' + str(self.system_update_script_path))
+                                        else:
+                                            os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh -O ' + str(self.system_update_script_path))
+                                    
+                                        if os.path.isfile(self.system_update_script_path):
                                             if self.DEBUG:
-                                                print("warning, a bootup actions script was already in place. Deleting it first.")
-                                            os.system('sudo rm ' + str(self.actions_file_path) )
+                                                print("system update script succesfully downloaded to data dir")
                                         
-                                        move_command = 'sudo mv ' + str(self.system_update_script_path) + ' ' + str(self.actions_file_path)
-                                        if self.DEBUG:
-                                            print("move command: " + str(move_command))
-                                        os.system(move_command)
-                                        
-                                        if os.path.isfile(str(self.actions_file_path)):
-                                            if self.old_overlay_active:
+                                            if os.path.isfile(str(self.actions_file_path)):
                                                 if self.DEBUG:
-                                                    print("disabling old raspi-config overlay system")
-                                                os.system('sudo raspi-config nonint disable_bootro')
-                                                os.system('sudo raspi-config nonint disable_overlayfs')
-                                            
-                                            #raspi-config nonint disable_bootro
-                                            #raspi-config nonint enable_overlayfs
-                                            #raspi-config nonint disable_bootro
-                                            
-                                            os,system('sudo touch /boot/bootup_actions_non_blocking.txt')
-                                            os.system('sudo touch /boot/candle_rw_once.txt')
-                                            self.system_update_in_progress = True
-                                            state = True
-                                            os.system('( sleep 5 ; sudo reboot ) & ')
-                                        else:
+                                                    print("warning, a bootup actions script was already in place. Deleting it first.")
+                                                os.system('sudo rm ' + str(self.actions_file_path) )
+                                        
+                                            move_command = 'sudo mv ' + str(self.system_update_script_path) + ' ' + str(self.actions_file_path)
                                             if self.DEBUG:
-                                                print("Error, move command failed")
-                                    else:
-                                        print("ERROR, download of update script failed")
-                                
+                                                print("move command: " + str(move_command))
+                                            os.system(move_command)
+                                        
+                                            if os.path.isfile( str(self.actions_file_path)) :
+                                                if self.old_overlay_active:
+                                                    if self.DEBUG:
+                                                        print("disabling old raspi-config overlay system")
+                                                    os.system('sudo raspi-config nonint disable_bootro')
+                                                    os.system('sudo raspi-config nonint disable_overlayfs')
+                                            
+                                                #raspi-config nonint disable_bootro
+                                                #raspi-config nonint enable_overlayfs
+                                                #raspi-config nonint disable_bootro
+                                            
+                                                os.system('sudo touch /boot/bootup_actions_non_blocking.txt')
+                                                os.system('sudo touch /boot/candle_rw_once.txt')
+                                                self.system_update_in_progress = True
+                                                state = True
+                                                os.system('( sleep 5 ; sudo reboot ) & ')
+                                            else:
+                                                if self.DEBUG:
+                                                    print("Error, move command failed")
+                                        else:
+                                            print("ERROR, download of update script failed")
+                                            
+                                except Exception as ex:
+                                    print("Api: error in handling start_system_upate: " + str(ex))
                                 
                                 return APIResponse(
                                   status=200,
