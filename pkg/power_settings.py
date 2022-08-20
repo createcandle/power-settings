@@ -1010,6 +1010,8 @@ class PowerSettingsAPIHandler(APIHandler):
                         )
                         
                         
+                        
+                    # Restore backup
                     elif request.path == '/save':
                         if self.DEBUG:
                             print("SAVING uploaded file")
@@ -1052,6 +1054,12 @@ class PowerSettingsAPIHandler(APIHandler):
                                             if self.DEBUG:
                                                 print("restore backup copy command: " + str(restore_command))
                                             os.system(restore_command)
+                                            
+                                            # clean up the non-blocking file if it exists.
+                                            if os.path.isfile('/boot/bootup_actions_non_blocking.txt'):
+                                                if self.DEBUG:
+                                                    print("/boot/bootup_actions_non_blocking.txt still existed")
+                                                os.system('rm /boot/bootup_actions_non_blocking.txt')
                                             
                                             state = 'ok'
                                         else:

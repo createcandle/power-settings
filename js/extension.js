@@ -585,6 +585,8 @@
                 document.getElementById('extension-power-settings-create-backup-button').addEventListener('click', () => {
                     //console.log("create backup button clicked");
                     
+                    document.getElementById('extension-power-settings-create-backup-button').style.display = 'none';
+                    
                     window.API.postJson(
                         `/extensions/${this.id}/api/ajax`, {
                             'action': 'create_backup'
@@ -599,9 +601,11 @@
                         else{
                              alert("Sorry, an error occured while creating the backup");
                         }
+                        document.getElementById('extension-power-settings-create-backup-button').style.display = 'block';
                         
                     }).catch((e) => {
                         alert("Error, could not create backup: could not connect?");
+                        document.getElementById('extension-power-settings-create-backup-button').style.display = 'block';
                     });
                     
                 });
