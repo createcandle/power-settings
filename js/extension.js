@@ -860,11 +860,13 @@
     			this.interval = setInterval(() => {
                     console.log("in interval for /poll");
                     
+                    /*
                     if(document.getElementById('connectivity-scrim').classList.contains('hidden')){
                         // UI still connected to controller
                     }else{
                         document.getElementById('extension-power-settings-update-process-progress-bar-container').style.display = "none";
                     }
+                    */
                     
                     try{
                         // /poll
@@ -910,6 +912,8 @@
                                         }
                                         
                                         document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
+                                        document.getElementById('extension-power-settings-update-process-progress-bar-container').style.display = 'block';
+                                        
                                         document.getElementById('extension-power-settings-menu-update-button').style.border = "2px solid white";
                                         document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
                                         document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
@@ -923,6 +927,7 @@
                                         document.body.classList.remove("system-updating");
                                         
                                         document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
+                                        document.getElementById('extension-power-settings-update-process-progress-bar-container').style.display = 'none';
                                         
                                         document.getElementById('extension-power-settings-menu-update-button').style.border = "none";
                                         document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "";
