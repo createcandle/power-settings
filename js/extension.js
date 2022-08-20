@@ -664,6 +664,7 @@
                     */
                     
                     document.getElementById('extension-power-settings-update-available-container').style.display = 'block';
+                    document.getElementById('extension-power-settings-no-updates').style.display = 'none';
                     
                 });
                 
