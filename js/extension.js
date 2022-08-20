@@ -914,12 +914,12 @@
                                     
                                 }
                                 
-                                if(typeof body.update_in_progress != 'undefined'){
-                                    
+                                if(typeof body.system_update_in_progress != 'undefined'){
+                                    console.log("body.update_in_progress: ", body.system_update_in_progress);
                                     this.update_in_progress = body.system_update_in_progress;
                                     
                                     // UPDATE IN PROGRESS
-                                    if( body.update_in_progress ){
+                                    if( body.system_update_in_progress == true){
                                         console.log("poll: system update in progress");
                                         if(document.getElementById('extension-power-settings-main-buttons') != null){
                                             document.getElementById('extension-power-settings-main-buttons').style.display = 'none';
