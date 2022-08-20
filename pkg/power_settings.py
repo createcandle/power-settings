@@ -130,21 +130,7 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("Error loading config: " + str(ex))
                 
             
-            
-            check_bootup_actions_running = run_command("sudo ps aux | grep bootup_actions")
-            if "/boot/bootup_actions.sh" in check_bootup_actions_running:
-                print("BOOTUP ACTIONS SEEMS TO BE RUNNING!")
-                self.system_update_in_progress = True
-            
-            check_bootup_actions_running = run_command("sudo ps aux | grep live_system_updat")
-            if "live_system_update" in check_bootup_actions_running:
-                print("LIVE UPDATE SEEMS TO BE RUNNING!")
-                self.system_update_in_progress = True
-                
-            check_bootup_actions_running = run_command("sudo ps aux | grep 'live update in chroo")
-            if "live update in chroot" in check_bootup_actions_running:
-                print("LIVE UPDATE SEEMS TO BE RUNNING!")
-                self.system_update_in_progress = True
+            self.check_update_processes()
             
                 
             
@@ -339,6 +325,23 @@ class PowerSettingsAPIHandler(APIHandler):
 
         #self.DEBUG = True # TODO: DEBUG, REMOVE
     
+        
+        
+    def check_update_processes(self):
+        check_bootup_actions_running = run_command("sudo ps aux | grep bootup_action")
+        if "/boot/bootup_actions" in check_bootup_actions_running:
+            print("BOOTUP ACTIONS SEEMS TO BE RUNNING!")
+            self.system_update_in_progress = True
+        
+        check_bootup_actions_running = run_command("sudo ps aux | grep live_system_updat")
+        if "live_system_update" in check_bootup_actions_running:
+            print("LIVE UPDATE SEEMS TO BE RUNNING!")
+            self.system_update_in_progress = True
+            
+        check_bootup_actions_running = run_command("sudo ps aux | grep 'live update in chroo")
+        if "live update in chroot" in check_bootup_actions_running:
+            print("LIVE UPDATE SEEMS TO BE RUNNING!")
+            self.system_update_in_progress = True
         
         
         
@@ -916,6 +919,9 @@ class PowerSettingsAPIHandler(APIHandler):
                             current_ntp_state = True
                         
                             try:
+                                
+                                self.check_update_processes()
+                                
                                 for line in run_command("timedatectl show").splitlines():
                                     if self.DEBUG:
                                         print(line)
@@ -925,7 +931,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 shell_date = run_command("date")
                                         
                             except Exception as ex:
-                                print("Error getting NTP status: " + str(ex))
+                                print("Error in /init response preparation: " + str(ex))
                             
                             response = {'hours':now.hour,
                                         'minutes':now.minute,
