@@ -74,8 +74,10 @@ class PowerSettingsAPIHandler(APIHandler):
             self.mosquitto_conf_file_path = '/home/pi/.webthings/etc/mosquitto/mosquitto.conf'
             
             
-            # Actions shell script location
-            self.actions_file_path = '/boot/bootup_actions.sh'
+            # Bootup actions
+            self.actions_file_path = '/boot/bootup_actions.sh' # run before the gateway starts
+            self.post_actions_file_path = '/boot/post_bootup_actions.sh' # run 'after' the gateway starts
+            self.late_sh_path = '/home/pi/candle/late.sh'
             
             # Factory reset
             self.keep_z2m_file_path = '/boot/keep_z2m.txt'
@@ -123,13 +125,13 @@ class PowerSettingsAPIHandler(APIHandler):
             if os.path.isfile('/home/pi/candle/files_check.sh'):
                 self.files_check_exists = True
                 
+            
             # LOAD CONFIG
             try:
                 self.add_from_config()
             except Exception as ex:
                 print("Error loading config: " + str(ex))
                 
-            
             
            
             # Remove hardware clock file if it exists and it should not be enabled
@@ -218,6 +220,7 @@ class PowerSettingsAPIHandler(APIHandler):
             print("ERROR, Failed to init UX extension API handler: " + str(e))
         
         self.old_overlay_active = False
+        self.post_bootup_actions_supported = False
         
         # Get Candle version
         self.candle_version = "unknown"
@@ -249,6 +252,15 @@ class PowerSettingsAPIHandler(APIHandler):
                             print("detected old raspi-config overlay")
                         self.old_overlay_active = True
                     
+            
+            if os.path.isfile(str(self.late_sh_path)):
+                with open(str(self.late_sh_path)) as f:
+                    #self.candle_version = f.readlines()
+                    late_sh_contents = f.read()
+                    if "post_bootup_actions" in late_sh_contents:
+                        if self.DEBUG:
+                            print("post_bootup_actions are supported")
+                        self.post_bootup_actions_supported = True
             
 
         except Exception as ex:
@@ -318,6 +330,9 @@ class PowerSettingsAPIHandler(APIHandler):
         check_bootup_actions_running = run_command("sudo ps aux | grep bootup_action")
         if "/boot/bootup_actions" in check_bootup_actions_running:
             print("BOOTUP ACTIONS SEEMS TO BE RUNNING!")
+            self.system_update_in_progress = True
+        if "/boot/post_bootup_actions" in check_bootup_actions_running:
+            print("POST BOOTUP ACTIONS SEEMS TO BE RUNNING!")
             self.system_update_in_progress = True
         
         check_bootup_actions_running = run_command("sudo ps aux | grep live_system_updat")
@@ -498,7 +513,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 
                                 
-                            # /disable_overlay - Disable old RO overlay
+                            # /disable_overlay - Disable old RO overlay on older Candle systems.
                             elif action == 'disable_overlay':
                                 if self.DEBUG:
                                     print("APi request to disable_overlay")
@@ -619,47 +634,79 @@ class PowerSettingsAPIHandler(APIHandler):
                                         #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
                                         if not os.path.isdir('/ro'):
                                             
-                                            if os.path.isfile('/boot/developer.txt'):
+                                            if os.path.isfile('/boot/candle_cutting_edge.txt'):
                                                 os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle_dev.sh -O ' + str(self.system_update_script_path))
                                             else:
                                                 os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh -O ' + str(self.system_update_script_path))
-                                    
+                                            
                                             if os.path.isfile(self.system_update_script_path):
                                                 if self.DEBUG:
                                                     print("system update script succesfully downloaded to data dir")
-                                        
-                                                if os.path.isfile(str(self.actions_file_path)):
-                                                    if self.DEBUG:
-                                                        print("warning, a bootup actions script was already in place. Deleting it first.")
-                                                    os.system('sudo rm ' + str(self.actions_file_path) )
                                                 
-                                                move_command = 'sudo mv ' + str(self.system_update_script_path) + ' ' + str(self.actions_file_path)
-                                                if self.DEBUG:
-                                                    print("move command: " + str(move_command))
-                                                os.system(move_command)
-                                        
-                                                if os.path.isfile( str(self.actions_file_path)) :
-                                                    if self.old_overlay_active:
+                                                if self.post_bootup_actions_supported:
+                                                
+                                                    # After the reboot, start the script automatically by the system. This is preferable to python running the script.
+                                                    
+                                                    if os.path.isfile(str(self.post_actions_file_path)):
                                                         if self.DEBUG:
-                                                            print("disabling old raspi-config overlay system")
-                                                        os.system('sudo raspi-config nonint disable_bootro')
-                                                        os.system('sudo raspi-config nonint disable_overlayfs')
-                                                        os.system('sudo reboot')
+                                                            print("warning, a post bootup actions script was already in place. Deleting it first.")
+                                                        os.system('sudo rm ' + str(self.post_actions_file_path) )
+                                                
+                                                    move_command = 'sudo mv -f ' + str(self.system_update_script_path) + ' ' + str(self.post_actions_file_path)
+                                                    if self.DEBUG:
+                                                        print("post actions move command: " + str(move_command))
+                                                    os.system(move_command)
+                                        
+                                                    if os.path.isfile( str(self.post_actions_file_path)):
+                                                        
+                                                        os.system('sudo touch /boot/candle_rw_once.txt')
+                                                        
+                                                        if self.old_overlay_active:
+                                                            if self.DEBUG:
+                                                                print("disabling old raspi-config overlay system")
+                                                            os.system('sudo raspi-config nonint disable_bootro')
+                                                            os.system('sudo raspi-config nonint disable_overlayfs')
+                                                        
+                                                        #os.system('sudo reboot')
                                             
-                                                    #raspi-config nonint disable_bootro
-                                                    #raspi-config nonint enable_overlayfs
-                                                    #raspi-config nonint disable_bootro
+                                                        #raspi-config nonint disable_bootro
+                                                        #raspi-config nonint enable_overlayfs
+                                                        #raspi-config nonint disable_bootro
                                             
-                                                    #os.system('sudo touch /boot/bootup_actions_non_blocking.txt')
-                                                    os.system('sudo touch /boot/candle_rw_once.txt')
+                                                        #os.system('sudo touch /boot/bootup_actions_non_blocking.txt')
+                                                        
+                                                        
+                                                        state = True
+                                                        #os.system('( sleep 5 ; sudo reboot ) & ')
+                                                    else:
+                                                        if self.DEBUG:
+                                                            print("Error, move command failed")
+                                                
+                                                
+                                                # If the system does not support post-bootup actions, then we need to get creative.
+                                                # - user must disable read-only FS first
+                                                # - after a reboot Python will run the script. Not optimal, since if python/gateway stops, the update scripts stops too.
+                                                else:    
+                                                #os.system('sudo chmod +x ' + str(self.system_update_script_path))
+                                                
                                                     self.system_update_in_progress = True
                                                     state = True
-                                                    os.system('( sleep 5 ; sudo reboot ) & ')
-                                                else:
-                                                    if self.DEBUG:
-                                                        print("Error, move command failed")
+                                                
+                                                    env = {
+                                                        **os.environ,
+                                                        "SKIP_PARTITIONS": "yes",
+                                                        "STOP_EARLY":"yes",
+                                                        "REBOOT_WHEN_DONE":"yes"
+                                                    }
+                                                    subprocess.Popen(str(self.system_update_script_path),shell=True, env=env)
+                                                
+                                                #start_command = 'cat ' + str(self.system_update_script_path) + ' | sudo SKIP_PARTITIONS=yes STOP_EARLY=yes REBOOT_WHEN_DONE=yes bash &'
+                                                #curl -sSl https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh | sudo SKIP_PARTITIONS=yes STOP_EARLY=yes REBOOT_WHEN_DONE=yes bash
+                                                
+                                                    
                                             else:
-                                                print("ERROR, download of update script failed")
+                                                if self.DEBUG:
+                                                    print("ERROR, download of update script failed")
                                                 
                                             
                                 except Exception as ex:
@@ -942,10 +989,6 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':'ok'}),
                                 )
                                 
-                                
-                                
-                                
-                                
                             
                             else:
                                 return APIResponse(
@@ -1000,6 +1043,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         'live_update_attempted':self.live_update_attempted,
                                         'ro_exists':self.ro_exists,
                                         'old_overlay_active':self.old_overlay_active,
+                                        'post_bootup_actions_supported':self.post_bootup_actions_supported,
                                         'debug':self.DEBUG
                                     }
                             if self.DEBUG:

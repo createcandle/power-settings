@@ -32,7 +32,7 @@
     "schema": {
       "properties": {
         "Do not use hardware clock": {
-          "description": "If you have plugged in a ds1307 hardware clock module, then it will normally automatically be used. You can disable use of the hardware clock here.",
+          "description": "If you have plugged in a ds1307 hardware clock module, then it will normally automatically be used. You can disable use of the hardware clock here. Reboot the system to complete the change.",
           "type": "boolean"
         },
         "Debug": {
@@ -45,7 +45,7 @@
     }
   },
   "short_name": "Power",
-  "version": "3.3.8",
+  "version": "3.3.9",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",

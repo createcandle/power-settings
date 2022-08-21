@@ -170,7 +170,8 @@
                     
                 });
                 
-                // Show reset page button
+                
+                // Show factory reset page button
                 document.getElementById('extension-power-settings-menu-reset-button').addEventListener('click', () => {
                     //console.log('show reset menu button clicked');
             
@@ -570,7 +571,7 @@
                         if(body.files_check_exists){
                             document.getElementById('extension-power-settings-update-files-check-button').style.display = 'inline-block';
                         }
-                            
+                        
             
                     }
                     else{
@@ -578,22 +579,25 @@
                     }
             
                     
-                    if(typeof body.old_overlay_active != 'undefined' && typeof body.ro_exists != 'undefined'){
-                        if(body.ro_exists == false && body.old_overlay_active == false){
-                            this.overlay_exists = false;
-                            if(this.debug){
-                                console.log("no overlays detected, update is good to go");
+                    // Support for older versions of Candle
+                    if(typeof body.old_overlay_active != 'undefined' && typeof body.ro_exists != 'undefined' && typeof body.post_bootup_actions_supported != 'undefined'){
+                        if(post_bootup_actions_supported == false){
+                            if(body.ro_exists == false && body.old_overlay_active == false){
+                                this.overlay_exists = false;
+                                if(this.debug){
+                                    console.log("no overlays detected, update is good to go");
+                                }
+                                document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'none';
+                                document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'block';
                             }
-                            document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'none';
-                            document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'block';
-                        }
-                        else{
-                            this.overlay_exists = true;
-                            if(this.debug){
-                                console.log("overlays detected, must first be disabled");
+                            else{
+                                this.overlay_exists = true;
+                                if(this.debug){
+                                    console.log("overlays detected, must first be disabled");
+                                }
+                                document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'block';
+                                document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'none';
                             }
-                            document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'block';
-                            document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'none';
                         }
                     }
                     
@@ -707,20 +711,9 @@
                 });
                 
                 
-                // Force update button
-                
+                // Force update button. Reveals the system update div regardless of whether a system update is available.
                 document.getElementById('extension-power-settings-force-update-button').addEventListener('click', () => {
-                    console.log("force system update button clicked");
-                    
-                    /*
-                    if( document.getElementById('extension-power-settings-system-update-understand').value != 'I understand'){
-                        alert("You must type 'I understand' before the forced system update can start.");
-                    }
-                    else{
-                        this.start_update();
-                    }
-                    */
-                    
+                    //console.log("force system update button clicked");
                     document.getElementById('extension-power-settings-system-update-available-container').style.display = 'block';
                     document.getElementById('extension-power-settings-no-updates').style.display = 'none';
                     
@@ -866,6 +859,8 @@
             const live_update_state = document.getElementById('extension-power-settings-live-update-checkbox').checked;
             console.log("live_update_state: ", live_update_state);
             
+            
+            
             /*
             if(live_update_state == true){
                 var progress_bar = document.getElementById('extension-power-settings-update-process-progress-bar-container');
@@ -888,6 +883,8 @@
                     alert("Starting the update seems to have failed");
                 }
                 else{
+                    this.overlay_exists = false;
+                    document.getElementById('extension-power-settings-system-update-available-container').style.display = 'none';
                     document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
                 }
         
@@ -909,7 +906,9 @@
             
             
             if( this.overlay_exists == false ){
-                
+                if(this.debug){
+                    console.log("start_poll: overlay does not exist");
+                }
                 document.getElementById('extension-power-settings-update-process-output').innerHTML = "";
                 //document.getElementById('extension-power-settings-system-update').style.display = 'none';
                 document.getElementById('extension-power-settings-manual-update-container').style.display = 'none';
@@ -929,6 +928,11 @@
                 if(document.getElementById('extension-power-settings-main-buttons') != null){
                     document.getElementById('extension-power-settings-main-buttons').style.display = 'none';
                     document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'block';
+                }
+            }
+            else{
+                if(this.debug){
+                    console.log("start_poll: overlay still exist");
                 }
             }
 
