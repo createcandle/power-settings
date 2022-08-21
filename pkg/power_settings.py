@@ -78,6 +78,7 @@ class PowerSettingsAPIHandler(APIHandler):
             self.actions_file_path = '/boot/bootup_actions.sh' # run before the gateway starts
             self.post_actions_file_path = '/boot/post_bootup_actions.sh' # run 'after' the gateway starts
             self.late_sh_path = '/home/pi/candle/late.sh'
+            self.system_update_error_detected = False
             
             # Factory reset
             self.keep_z2m_file_path = '/boot/keep_z2m.txt'
@@ -571,6 +572,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                             # SYSTEM UPDATE UPDATE
                             elif action == 'start_system_update':
+                                self.system_update_in_progress = False
+                                if self.system_update_error_detected:
+                                    os.system('sudo pkill -f create_latest_candle')
+                                    self.system_update_error_detected = False
                                 
                                 try:
                                     state = False
@@ -743,15 +748,20 @@ class PowerSettingsAPIHandler(APIHandler):
                                         if dmesg_output != None:
                                             if dmesg_output != "":
                                                 for line in dmesg_output.splitlines():
-                                                    if "starting live update" in line:
+                                                    if "starting update" in line:
                                                         dmesg_lines = "starting live update\n"
                                                     else:
                                                         line = line[line.find(']'):]
                                                         line = line.replace("Candle:","")
                                                         dmesg_lines += line + "\n"
-                                        
+                                                        
                                                     if self.DEBUG:
                                                         print(line)
+                                                        
+                                                if "ERROR" in dmesg_lines:
+                                                    self.system_update_error_detected = True        
+                                                else:
+                                                    self.system_update_error_detected = False
                                         
                                 except Exception as ex:
                                     print("Error getting dmsg output: " + str(ex))

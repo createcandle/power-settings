@@ -718,7 +718,15 @@
                     //console.log("force system update button clicked");
                     document.getElementById('extension-power-settings-system-update-available-container').style.display = 'block';
                     document.getElementById('extension-power-settings-no-updates').style.display = 'none';
-                    
+                });
+                
+                
+                // Retry update button
+                document.getElementById('extension-power-settings-system-update-retry-button').addEventListener('click', () => {
+                    this.start_update();
+                    document.getElementById('extension-power-settings-system-update-error').style.display = 'none';
+                    document.getElementById('extension-power-settings-system-update-available-container').style.display = 'block';
+                    document.getElementById('extension-power-settings-no-updates').style.display = 'none';
                 });
                 
                 
@@ -1022,6 +1030,14 @@
                                         document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
                                         
                                         document.body.classList.add("system-updating");
+                                        
+                                        if(typeof body.dmesg != 'undefined'){
+                                            if( body.dmesg.indexOf('ERROR') != -1 ){
+                                                document.getElementById('extension-power-settings-system-update-error').style.display = 'block';
+                                            }
+                                        }
+                                        
+                                        
                                     }
                                     
                                     // UPDATE NOT IN PROGRESS

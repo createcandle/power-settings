@@ -202,7 +202,7 @@
                 <br/>
                 <br/>
                 
-                <div id="extension-power-settings-system-update-overlay-still-enabled-container" style="display:none">
+                <div id="extension-power-settings-system-update-overlay-still-enabled-container" class="extension-power-settings-vlak" style="display:none">
                     <p>Before you can install the update the system's disk protection must first be disabled. After the system update is complete this protection will automatically be re-enabled.</p>
                     <p>This step will reboot your sytem.</p>
                     <div class="extension-power-settings-form-system-update">
@@ -227,7 +227,7 @@
                     <div id="extension-power-settings-live-update-option" class="extension-power-settings-dev-only" style="display:none">
                         <input type="checkbox" name="extension-power-settings-live-update-checkbox" id="extension-power-settings-live-update-checkbox">
                         <label for="extension-power-settings-live-update-checkbox">Update while the system is running</label>
-                        <p class="field-description" style="opacity:.6; margin-top:.3rem">Experimental feature! The system will automatically reboot once the process is complete. It is strongly recommended to reboot before starting the live update process.</p>
+                        <p class="field-description" style="opacity:.6; margin-top:.3rem">Experimental feature! The system will automatically reboot once the process is complete. It is strongly advised to reboot before starting the live update process.</p>
                     </div>
                 
                     <br/>
@@ -250,6 +250,13 @@
                 <div id="extension-power-settings-update-process-progress-bar-container"><div id="extension-power-settings-update-process-progress-bar"></div><div  id="extension-power-settings-update-process-progress-bar-text">SYSTEM UPDATE IN PROGRESS</div></div>
                 
                 <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
+                
+                
+                <div id="extension-power-settings-system-update-error">
+                    <h3>An error seems to have occured</h3>
+                    <p>You can try running the update again. Make sure to plug in a network cable to avoid download issues.</p>
+                    <button id="extension-power-settings-system-update-retry-button">Retry</button>
+                </div>
             </div>
             
             <div id="extension-power-settings-update-files-check-output"></div>
