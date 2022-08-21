@@ -690,8 +690,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 # If the system does not support post-bootup actions, then we need to get creative.
                                                 # - user must disable read-only FS first
                                                 # - after a reboot Python will run the script. Not optimal, since if python/gateway stops, the update scripts stops too.
-                                                else:    
-                                                #os.system('sudo chmod +x ' + str(self.system_update_script_path))
+                                                else:
+                                                    
+                                                    os.system('sudo chmod +x ' + str(self.system_update_script_path))
                                                 
                                                     self.system_update_in_progress = True
                                                     state = True
