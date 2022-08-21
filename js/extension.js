@@ -16,6 +16,7 @@
             
             this.update_available_text = "";
             this.update_in_progress = false;
+            this.overlay_exists = true;
 
             const getUrl = window.location;
             this.baseUrl = getUrl.protocol + "//" + getUrl.host + "/things";
@@ -579,6 +580,7 @@
                     
                     if(typeof body.old_overlay_active != 'undefined' && typeof body.ro_exists != 'undefined'){
                         if(body.ro_exists == false && body.old_overlay_active == false){
+                            this.overlay_exists = false;
                             if(this.debug){
                                 console.log("no overlays detected, update is good to go");
                             }
@@ -586,6 +588,7 @@
                             document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'block';
                         }
                         else{
+                            this.overlay_exists = true;
                             if(this.debug){
                                 console.log("overlays detected, must first be disabled");
                             }
@@ -642,11 +645,10 @@
     			});
                 
                 
-                
+                // Get the latest time for the clock page
                 document.getElementById('extension-power-settings-clock-page-icon').addEventListener('click', () => {
                     this.show_clock_page();
                 });
-                
                 document.getElementById('extension-power-settings-shell-date').addEventListener('click', () => {
                     this.show_clock_page();
                 });
@@ -900,27 +902,43 @@
         
         
         start_poll(){
-            console.log("in start_poll");
-            // reset process output, just in case
-            document.getElementById('extension-power-settings-update-process-output').innerHTML = "";
-            //document.getElementById('extension-power-settings-system-update').style.display = 'none';
-            document.getElementById('extension-power-settings-manual-update-container').style.display = 'none';
-            document.getElementById('extension-power-settings-system-update-available-container').style.display = 'none';
-            
-
-            var progress_bar = document.getElementById('extension-power-settings-update-process-progress-bar-container');
-            progress_bar.style.display = "block";
-            document.body.appendChild(progress_bar);
-
-            // Indicate update in progress on power buttons page
-            if(document.getElementById('extension-power-settings-main-buttons') != null){
-                document.getElementById('extension-power-settings-main-buttons').style.display = 'none';
-                document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'block';
+            if(this.debug){
+                console.log("in start_poll");
             }
+            // reset process output, just in case
+            
+            
+            if( this.overlay_exists == false ){
+                
+                document.getElementById('extension-power-settings-update-process-output').innerHTML = "";
+                //document.getElementById('extension-power-settings-system-update').style.display = 'none';
+                document.getElementById('extension-power-settings-manual-update-container').style.display = 'none';
+                document.getElementById('extension-power-settings-system-update-available-container').style.display = 'none';
+                
+                if( document.querySelector("body > #extension-power-settings-update-process-progress-bar-container") == null ){
+                    if(this.debug){
+                        console.log("moving progress bar into position");
+                    }
+                    var progress_bar = document.getElementById('extension-power-settings-update-process-progress-bar-container');
+                    progress_bar.style.display = "block";
+                    document.body.appendChild(progress_bar);
+                }
+                
+                
+                // Indicate update in progress on power buttons page
+                if(document.getElementById('extension-power-settings-main-buttons') != null){
+                    document.getElementById('extension-power-settings-main-buttons').style.display = 'none';
+                    document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'block';
+                }
+            }
+
             
 			try{
 				clearInterval(this.interval);
                 this.interval = null;
+                if(this.debug){
+                    console.log("cleared old interval for /poll");
+                }
 			}
 			catch(e){
 				//console.log("no interval to clear?: " + e);

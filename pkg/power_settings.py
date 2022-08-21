@@ -498,7 +498,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 
                                 
-                            # Disable old RO overlay
+                            # /disable_overlay - Disable old RO overlay
                             elif action == 'disable_overlay':
                                 if self.DEBUG:
                                     print("APi request to disable_overlay")
@@ -525,9 +525,13 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 if self.DEBUG:
                                                     print("Error, old overlay still active")
                                                 state == False
+                                            else:
+                                                if self.DEBUG:
+                                                    print("Old overlay is gone from /boot/cmdline.txt")
                                         
                                 except Exception as ex:
-                                    print("Error in disable_overlay: " + str(ex))
+                                    if self.DEBUG:
+                                        print("Error in /disable_overlay: " + str(ex))
                                     
                                 # Place the factory reset file in the correct location so that it will be activated at boot.
                                 #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
