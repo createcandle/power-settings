@@ -702,7 +702,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                         "STOP_EARLY":"yes",
                                                         "REBOOT_WHEN_DONE":"yes"
                                                     }
-                                                    subprocess.Popen([ 'sudo', str(self.system_update_script_path) ],shell=True, env=env)
+                                                    subprocess.Popen('sudo ' + str(self.system_update_script_path), shell=True, env=env)
                                                 
                                                 #start_command = 'cat ' + str(self.system_update_script_path) + ' | sudo SKIP_PARTITIONS=yes STOP_EARLY=yes REBOOT_WHEN_DONE=yes bash &'
                                                 #curl -sSl https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh | sudo SKIP_PARTITIONS=yes STOP_EARLY=yes REBOOT_WHEN_DONE=yes bash
