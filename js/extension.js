@@ -147,6 +147,7 @@
                     
                 });
                 
+                
                 // Show backup page button
                 document.getElementById('extension-power-settings-menu-backup-button').addEventListener('click', () => {
                     //console.log('show backup menu button clicked');
@@ -524,12 +525,16 @@
                         }
                         
                         if(body.ro_exists == true){
-                            console.log("/ro exists");
+                            if(this.debug){
+                                console.log("/ro exists");
+                            }
                             if(body.live_update_attempted == false){
                                 document.getElementById('extension-power-settings-live-update-option').style.display = "block";
                             }
                             else{
-                                console.log("blocking possibility of second live update");
+                                if(this.debug){
+                                    console.log("blocking possibility of second live update");
+                                }
                                 document.getElementById('extension-power-settings-live-update-checkbox').checked = false;
                             }
                         }
@@ -537,7 +542,9 @@
                         if(typeof body.system_update_in_progress != 'undefined'){
                             this.update_in_progress = body.system_update_in_progress;
                             if(body.system_update_in_progress == true){
-                                console.log("A SYSTEM UPDATE IS ALREADY IN PROGRESS (bootup_actions.sh on an older release candidate)");
+                                if(this.debug){
+                                    console.log("A SYSTEM UPDATE IS ALREADY IN PROGRESS (bootup_actions.sh on an older release candidate)");
+                                }
                                 this.update_available_text = "in progress...";
 								document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
 								document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
@@ -570,8 +577,22 @@
                     }
             
                     
-                    
-                    
+                    if(typeof body.old_overlay_active != 'undefined' && typeof body.ro_exists != 'undefined'){
+                        if(body.ro_exists == false && body.old_overlay_active == false){
+                            if(this.debug){
+                                console.log("no overlays detected, update is good to go");
+                            }
+                            document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'none';
+                            document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'block';
+                        }
+                        else{
+                            if(this.debug){
+                                console.log("overlays detected, must first be disabled");
+                            }
+                            document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'block';
+                            document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'none';
+                        }
+                    }
                     
                 }).catch((e) => {
                     console.log("power-settings init error: ", e);
@@ -622,7 +643,6 @@
                 
                 
                 
-                
                 document.getElementById('extension-power-settings-clock-page-icon').addEventListener('click', () => {
                     this.show_clock_page();
                 });
@@ -633,13 +653,49 @@
                 
                 
                 
+                // Disable overlay button
+                document.getElementById('extension-power-settings-system-update-disable-overlay-button').addEventListener('click', () => {
+                    console.log("system update disable overlay button clicked");
+                    document.getElementById('extension-power-settings-system-update-disable-overlay-button').style.display = 'none';
+                    document.getElementById('extension-power-settings-system-update-disable-overlay-spinner').style.display = 'block';
+                    
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'disable_overlay'
+                        }
+                    ).then((body) => {
+                        if(this.debug){
+                            console.log("disable_overlay response: ", body);
+                        }
+                        if(body.state == true){
+                            if(this.debug){
+                                console.log("OK response, restarting system");
+                            }
+                            
+                            this.start_poll();
+                            
+                            window.API.postJson('/settings/system/actions', {
+                                action: 'restartSystem'
+                            }).catch(console.error);
+                        }
+                        else{
+                            document.getElementById('extension-power-settings-system-update-disable-overlay-button').style.display = 'block';
+                            document.getElementById('extension-power-settings-system-update-disable-overlay-spinner').style.display = 'none';
+                        }
+                        
+                    }).catch((e) => {
+                        document.getElementById('extension-power-settings-system-update-disable-overlay-button').style.display = 'block';
+                        document.getElementById('extension-power-settings-system-update-disable-overlay-spinner').style.display = 'none';
+                        alert("Error, connection issue");
+                    });
+                    
+                });
+                
                 
                 
                 
                 // Start update button
                 document.getElementById('extension-power-settings-system-update-button').addEventListener('click', () => {
-                    console.log("system update button clicked");
-                    
                     if( document.getElementById('extension-power-settings-system-update-understand').value != 'I understand'){
                         alert("You must type 'I understand' before the system update can start.");
                     }
@@ -663,7 +719,7 @@
                     }
                     */
                     
-                    document.getElementById('extension-power-settings-update-available-container').style.display = 'block';
+                    document.getElementById('extension-power-settings-system-update-available-container').style.display = 'block';
                     document.getElementById('extension-power-settings-no-updates').style.display = 'none';
                     
                 });
@@ -784,7 +840,7 @@
                 }
                 
                 document.getElementById('extension-power-settings-no-updates').style.display = 'none';
-                document.getElementById('extension-power-settings-update-available-container').style.display = 'block';
+                document.getElementById('extension-power-settings-system-update-available-container').style.display = 'block';
                 document.getElementById('extension-power-settings-menu-update-button').style.border = "2px solid white";
                 document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
                 
@@ -799,6 +855,8 @@
         
         
         start_update(){
+            
+            //document.getElementById('message-area').style.display = 'none'; // avoid showing error messages that might confuse
             
             const cutting_edge_state = document.getElementById('extension-power-settings-cutting-edge-checkbox').checked;
             console.log("cutting_edge_state: ", cutting_edge_state);
@@ -847,7 +905,7 @@
             document.getElementById('extension-power-settings-update-process-output').innerHTML = "";
             //document.getElementById('extension-power-settings-system-update').style.display = 'none';
             document.getElementById('extension-power-settings-manual-update-container').style.display = 'none';
-            document.getElementById('extension-power-settings-update-available-container').style.display = 'none';
+            document.getElementById('extension-power-settings-system-update-available-container').style.display = 'none';
             
 
             var progress_bar = document.getElementById('extension-power-settings-update-process-progress-bar-container');
@@ -915,12 +973,17 @@
                                 }
                                 
                                 if(typeof body.system_update_in_progress != 'undefined'){
-                                    console.log("body.update_in_progress: ", body.system_update_in_progress);
+                                    if(this.debug){
+                                        console.log("body.update_in_progress: ", body.system_update_in_progress);
+                                    }
+                                    
                                     this.update_in_progress = body.system_update_in_progress;
                                     
                                     // UPDATE IN PROGRESS
                                     if( body.system_update_in_progress == true){
-                                        console.log("poll: system update in progress");
+                                        if(this.debug){
+                                            console.log("poll: system update in progress");
+                                        }
                                         if(document.getElementById('extension-power-settings-main-buttons') != null){
                                             document.getElementById('extension-power-settings-main-buttons').style.display = 'none';
                                             document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'block';
@@ -938,7 +1001,9 @@
                                     
                                     // UPDATE NOT IN PROGRESS
                                     else{
-                                        console.log("poll: system update NOT in progress");
+                                        if(this.debug){
+                                            console.log("poll: system update NOT in progress");
+                                        }
                                         document.body.classList.remove("system-updating");
                                         
                                         document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
@@ -949,7 +1014,7 @@
                                         //document.getElementById('extension-power-settings-update-process-output').innerHTML = "";
                                         //document.getElementById('extension-power-settings-system-update').style.display = 'none';
                                         //document.getElementById('extension-power-settings-manual-update-container').style.display = 'block';
-                                        //document.getElementById('extension-power-settings-update-available-container').style.display = 'none';
+                                        //document.getElementById('extension-power-settings-system-update-available-container').style.display = 'none';
 
                                         // Remove update in progress indicator on power buttons page
                                         if(document.getElementById('extension-power-settings-main-buttons') != null){
@@ -966,6 +1031,23 @@
                             				//console.log("no interval to clear?: " + e);
                             			}
                                         */
+                                    }
+                                }
+                                
+                                if(typeof body.old_overlay_active != 'undefined' && typeof body.ro_exists != 'undefined'){
+                                    if(body.ro_exists == false && body.old_overlay_active == false){
+                                        if(this.debug){
+                                            console.log("no overlays detected, update is good to go");
+                                        }
+                                        document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'none';
+                                        document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'block';
+                                    }
+                                    else{
+                                        if(this.debug){
+                                            console.log("overlays detected, must first be disabled");
+                                        }
+                                        document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'block';
+                                        document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'none';
                                     }
                                 }
                                 

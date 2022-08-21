@@ -1,9 +1,20 @@
 #! /bin/bash
 
 # This script tries to restore a backup
-
+# It doesn't care about the RO system, since if only acts on the user data partition
 
 # Restore the data directories
+echo "" >> /boot/candle_log.txt
+echo "$(date) - restoring Candle backup" >> /boot/candle_log.txt
+echo "$(date) - restoring Candle backup" >> /home/pi/.webthings/candle.log
+echo "$(date) - restoring Candle backup" >> /dev/kmsg
+
+if [ ! -f /home/pi/.webthings/data/power-settings/candle_restore.tar ]; then
+    echo "Error, backup file to restore from is missing. Aborting." >> /boot/candle_log.txt
+    echo 1
+fi
+
+# unpack the backup file
 tar -xf /home/pi/.webthings/data/power-settings/candle_restore.tar -C /home/pi/.webthings/
 
 
@@ -62,7 +73,8 @@ if [ -f /tmp/addons.json ]; then
                 fi
                 rm missing.tar
             else
-                echo "Candle: Download of missing addon failed: $directory" >> /dev/kmsg
+                echo "Candle: restoring backup: download of missing addon failed: $directory" >> /dev/kmsg
+                echo "Candle: restoring backup: download of missing addon failed: $directory" >> /boot/candle_log.txt
             fi
 
         fi
@@ -70,10 +82,11 @@ if [ -f /tmp/addons.json ]; then
     done < <(ls /home/pi/.webthings/data)
 else
     echo "Candle: Backup restored, but downloading latest addons list failed. Did not restore addons." >> /dev/kmsg
-    echo "$(date) - Backup restored, but downloading latest addons list failed. Did not restore addons."
+    echo "$(date) - Backup restored, but downloading latest addons list failed. Did not restore addons." >> /boot/candle_log.txt
 fi
 
 
-
+# Clean up
 rm /boot/bootup_actions.sh
+rm /boot/bootup_actions_failed.sh
 #sudo systemctl start webthings-gateway.service

@@ -130,10 +130,9 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("Error loading config: " + str(ex))
                 
             
-            self.check_update_processes()
             
-                
-            
+           
+            # Remove hardware clock file if it exists and it should not be enabled
             if self.do_not_use_hardware_clock:
                 if os.path.isfile(self.hardware_clock_file_path):
                     if self.DEBUG:
@@ -169,31 +168,17 @@ class PowerSettingsAPIHandler(APIHandler):
                 os.system('sudo rm /boot/bootup_actions.sh')
             
             if os.path.isfile('/boot/bootup_actions_failed.sh'):
-                
-                if os.path.isfile('/boot/bootup_actions_non_blocking.txt'):
-                    if self.DEBUG:
-                        print("detected bootup_actions_failed.sh but also bootup_actions_non_blocking.txt, so the system is probably still busy updating")
-                       
-                else:
-                    if self.DEBUG:
-                        print("bootup_actions_failed.sh existed, but bootup_actions_non_blocking.txt did not? A system update aborted prematurely?")
-                    self.bootup_actions_failed = True 
+                self.bootup_actions_failed = True 
                 
                 # clean up the bootup_actions file regardless because it will keep running even if the file is deleted
                 os.system('sudo rm /boot/bootup_actions_failed.sh')
                 if self.DEBUG:
                     print("/boot/bootup_actions_failed.sh detected")
-            
-            # clean up the non-blocking file.
-            if os.path.isfile('/boot/bootup_actions_non_blocking.txt'):
-                if self.DEBUG:
-                    print("/boot/bootup_actions_non_blocking.txt still existed")
-                os.system('rm /boot/bootup_actions_non_blocking.txt') 
-            
+                    
             
             if os.path.isfile('/boot/candle_stay_rw.txt'):
                 if self.DEBUG:
-                    print("Candle is in permanent RW mode.")
+                    print("Note: Candle is in permanent RW mode.")
             
             
             # remove old download symlink if it somehow survived
@@ -209,6 +194,8 @@ class PowerSettingsAPIHandler(APIHandler):
                 if self.DEBUG:
                     print("removed old restore file")
             
+            
+            self.check_update_processes()
             
             self.update_backup_info()
             
@@ -387,10 +374,6 @@ class PowerSettingsAPIHandler(APIHandler):
                             print("SETTING LOCAL CLOCK FROM HARDWARE CLOCK")
                         # Set the system clock based on the hardware clock
                         os.system('sudo hwclock -s')
-                    else:
-                        # The hardware clock time is more out of date than the software clock. 
-                        # Removing the the hardware clock file will cause the clock to be updated from the internet on next reboot.
-                        os.system('sudo rm ' + self.hardware_clock_file_path)
                     
                 else:
                     # The hardware clock should be set
@@ -515,6 +498,54 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 
                                 
+                            # Disable old RO overlay
+                            elif action == 'disable_overlay':
+                                if self.DEBUG:
+                                    print("APi request to disable_overlay")
+                                state = True
+                                
+                                try:
+                                    if os.path.isdir('/ro') or os.path.isfile('/bin/ro-root.sh'):
+                                        #os.system('sudo touch /boot/bootup_actions_non_blocking.txt')
+                                        os.system('sudo touch /boot/candle_rw_once.txt')
+                                        if not os.path.isfile('/boot/candle_rw_once.txt'):
+                                            state = False
+                                            
+                                    if self.old_overlay_active:
+                                        if self.DEBUG:
+                                            print("disabling old raspi-config overlay system")
+                                        os.system('sudo raspi-config nonint disable_bootro')
+                                        os.system('sudo raspi-config nonint disable_overlayfs')
+                                
+                                    if os.path.isfile('/boot/cmdline.txt'):
+                                        with open('/boot/cmdline.txt') as f:
+                                            #self.candle_version = f.readlines()
+                                            cmdline = f.read()
+                                            if "boot=overlay" in cmdline:
+                                                if self.DEBUG:
+                                                    print("Error, old overlay still active")
+                                                state == False
+                                        
+                                except Exception as ex:
+                                    print("Error in disable_overlay: " + str(ex))
+                                    
+                                # Place the factory reset file in the correct location so that it will be activated at boot.
+                                #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
+                                #os.system('sudo touch /boot/candle_rw_once.txt')
+                                #os.system('sudo sed -i 's/boot=overlay/ /' /boot/cmdline.txt')
+                                #os.system('sudo reboot')
+                                
+                                if self.DEBUG:
+                                    print("disable_overlay final state: " + str(state))
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
+                                
+                                
+                                
                             # SYSTEM UPDATE UPDATE
                             elif action == 'start_system_update':
                                 
@@ -543,8 +574,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         if request.body['live_update'] == True:
                                             live_update = True
                                 
-                                    if live_update:
-                                    
+                                    if live_update and os.path.isdir('/ro'):
                                     
                                         # Check if script isn't already running
                                         already_running_check = run_command('ps aux | grep -q live_system_update')
@@ -583,47 +613,50 @@ class PowerSettingsAPIHandler(APIHandler):
                                             print("Attempting a reboot-update")
                                         # Place the factory reset file in the correct location so that it will be activated at boot.
                                         #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
-                                    
-                                        if os.path.isfile('/boot/developer.txt'):
-                                            os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle_dev.sh -O ' + str(self.system_update_script_path))
-                                        else:
-                                            os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh -O ' + str(self.system_update_script_path))
-                                    
-                                        if os.path.isfile(self.system_update_script_path):
-                                            if self.DEBUG:
-                                                print("system update script succesfully downloaded to data dir")
-                                        
-                                            if os.path.isfile(str(self.actions_file_path)):
-                                                if self.DEBUG:
-                                                    print("warning, a bootup actions script was already in place. Deleting it first.")
-                                                os.system('sudo rm ' + str(self.actions_file_path) )
-                                        
-                                            move_command = 'sudo mv ' + str(self.system_update_script_path) + ' ' + str(self.actions_file_path)
-                                            if self.DEBUG:
-                                                print("move command: " + str(move_command))
-                                            os.system(move_command)
-                                        
-                                            if os.path.isfile( str(self.actions_file_path)) :
-                                                if self.old_overlay_active:
-                                                    if self.DEBUG:
-                                                        print("disabling old raspi-config overlay system")
-                                                    os.system('sudo raspi-config nonint disable_bootro')
-                                                    os.system('sudo raspi-config nonint disable_overlayfs')
+                                        if not os.path.isdir('/ro'):
                                             
-                                                #raspi-config nonint disable_bootro
-                                                #raspi-config nonint enable_overlayfs
-                                                #raspi-config nonint disable_bootro
-                                            
-                                                os.system('sudo touch /boot/bootup_actions_non_blocking.txt')
-                                                os.system('sudo touch /boot/candle_rw_once.txt')
-                                                self.system_update_in_progress = True
-                                                state = True
-                                                os.system('( sleep 5 ; sudo reboot ) & ')
+                                            if os.path.isfile('/boot/developer.txt'):
+                                                os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle_dev.sh -O ' + str(self.system_update_script_path))
                                             else:
+                                                os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh -O ' + str(self.system_update_script_path))
+                                    
+                                            if os.path.isfile(self.system_update_script_path):
                                                 if self.DEBUG:
-                                                    print("Error, move command failed")
-                                        else:
-                                            print("ERROR, download of update script failed")
+                                                    print("system update script succesfully downloaded to data dir")
+                                        
+                                                if os.path.isfile(str(self.actions_file_path)):
+                                                    if self.DEBUG:
+                                                        print("warning, a bootup actions script was already in place. Deleting it first.")
+                                                    os.system('sudo rm ' + str(self.actions_file_path) )
+                                                
+                                                move_command = 'sudo mv ' + str(self.system_update_script_path) + ' ' + str(self.actions_file_path)
+                                                if self.DEBUG:
+                                                    print("move command: " + str(move_command))
+                                                os.system(move_command)
+                                        
+                                                if os.path.isfile( str(self.actions_file_path)) :
+                                                    if self.old_overlay_active:
+                                                        if self.DEBUG:
+                                                            print("disabling old raspi-config overlay system")
+                                                        os.system('sudo raspi-config nonint disable_bootro')
+                                                        os.system('sudo raspi-config nonint disable_overlayfs')
+                                                        os.system('sudo reboot')
+                                            
+                                                    #raspi-config nonint disable_bootro
+                                                    #raspi-config nonint enable_overlayfs
+                                                    #raspi-config nonint disable_bootro
+                                            
+                                                    #os.system('sudo touch /boot/bootup_actions_non_blocking.txt')
+                                                    os.system('sudo touch /boot/candle_rw_once.txt')
+                                                    self.system_update_in_progress = True
+                                                    state = True
+                                                    os.system('( sleep 5 ; sudo reboot ) & ')
+                                                else:
+                                                    if self.DEBUG:
+                                                        print("Error, move command failed")
+                                            else:
+                                                print("ERROR, download of update script failed")
+                                                
                                             
                                 except Exception as ex:
                                     print("Api: error in handling start_system_upate: " + str(ex))
@@ -662,7 +695,12 @@ class PowerSettingsAPIHandler(APIHandler):
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
-                                  content=json.dumps({'state':'ok','dmesg':dmesg_lines, 'system_update_in_progress':self.system_update_in_progress}),
+                                  content=json.dumps({'state':'ok',
+                                                      'dmesg':dmesg_lines, 
+                                                      'system_update_in_progress':self.system_update_in_progress,
+                                                      'ro_exists':self.ro_exists,
+                                                      'old_overlay_active':self.old_overlay_active
+                                                  }),
                                 )
                                 
                                 
@@ -699,7 +737,11 @@ class PowerSettingsAPIHandler(APIHandler):
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
-                                  content=json.dumps({'state':state,'backup_exists':self.backup_file_exists,'restore_exists':self.restore_file_exists, 'disk_usage':self.disk_usage}),
+                                  content=json.dumps({'state':state,
+                                                      'backup_exists':self.backup_file_exists,
+                                                      'restore_exists':self.restore_file_exists, 
+                                                      'disk_usage':self.disk_usage
+                                                  }),
                                 )
                                 
                                 
@@ -724,7 +766,11 @@ class PowerSettingsAPIHandler(APIHandler):
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
-                                  content=json.dumps({'state':state,'backup_exists':self.backup_file_exists,'restore_exists':self.restore_file_exists, 'disk_usage':self.disk_usage}),
+                                  content=json.dumps({'state':state,
+                                                      'backup_exists':self.backup_file_exists,
+                                                      'restore_exists':self.restore_file_exists,
+                                                      'disk_usage':self.disk_usage
+                                                  }),
                                 )
                                 
                                 
@@ -945,10 +991,11 @@ class PowerSettingsAPIHandler(APIHandler):
                                         'candle_version':self.candle_version,
                                         'candle_original_version':self.candle_original_version,
                                         'bootup_actions_failed':self.bootup_actions_failed,
-                                        'ro_exists':self.ro_exists,
                                         'system_update_in_progress':self.system_update_in_progress,
                                         'files_check_exists':self.files_check_exists,
                                         'live_update_attempted':self.live_update_attempted,
+                                        'ro_exists':self.ro_exists,
+                                        'old_overlay_active':self.old_overlay_active,
                                         'debug':self.DEBUG
                                     }
                             if self.DEBUG:

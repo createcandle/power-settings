@@ -1,4 +1,5 @@
 #! /bin/bash
+set +e
 
 # This script tries to do a factory reset.
 # Some of the commands can only work when the disk overlay is disabled, but are run anyway to keep this a universal solution.
@@ -217,6 +218,15 @@ rm /boot/candle_hardware_clock.txt
 rm /boot/candle_cutting_edge.txt
 touch /boot/hide_mouse_pointer.txt
 rm /boot/bootup_actions.sh
+rm /boot/bootup_actions_failed.sh
+
+# only a log of factory resets is kept internally.
+factory_resets="$(cat /home/pi/.webthings/candle.log | grep factory reset)"
+echo "Factory resets overview:"
+echo "$factory_resets"
+echo
+echo "$factory_resets" > /home/pi/.webthings/candle.log
+echo "$(date) - factory reset"
 
 echo " "
 echo " "
