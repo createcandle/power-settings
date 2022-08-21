@@ -636,7 +636,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             print("Attempting a reboot-update")
                                         # Place the factory reset file in the correct location so that it will be activated at boot.
                                         #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
-                                        if not os.path.isdir('/ro'):
+                                        if not os.path.isdir('/ro') and self.old_overlay_active == False:
                                             
                                             if os.path.isfile('/boot/candle_cutting_edge.txt'):
                                                 os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle_dev.sh -O ' + str(self.system_update_script_path))
@@ -702,7 +702,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                         "STOP_EARLY":"yes",
                                                         "REBOOT_WHEN_DONE":"yes"
                                                     }
-                                                    subprocess.Popen(str(self.system_update_script_path),shell=True, env=env)
+                                                    subprocess.Popen([ 'sudo', str(self.system_update_script_path) ],shell=True, env=env)
                                                 
                                                 #start_command = 'cat ' + str(self.system_update_script_path) + ' | sudo SKIP_PARTITIONS=yes STOP_EARLY=yes REBOOT_WHEN_DONE=yes bash &'
                                                 #curl -sSl https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh | sudo SKIP_PARTITIONS=yes STOP_EARLY=yes REBOOT_WHEN_DONE=yes bash
@@ -711,6 +711,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                             else:
                                                 if self.DEBUG:
                                                     print("ERROR, download of update script failed")
+                                                
+                                        else:
+                                            if self.DEBUG:
+                                                print("ERROR, overlay is still active?")
                                                 
                                             
                                 except Exception as ex:
