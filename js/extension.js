@@ -855,7 +855,7 @@
         
         start_update(){
             
-            //document.getElementById('message-area').style.display = 'none'; // avoid showing error messages that might confuse
+            document.getElementById('message-area').style.opacity = "0"; // avoid showing error messages that might confuse
             
             const cutting_edge_state = document.getElementById('extension-power-settings-cutting-edge-checkbox').checked;
             console.log("cutting_edge_state: ", cutting_edge_state);
@@ -1007,6 +1007,7 @@
                                     
                                     // UPDATE IN PROGRESS
                                     if( body.system_update_in_progress == true){
+                                        document.getElementById('message-area').style.opacity = "0"
                                         if(this.debug){
                                             console.log("poll: system update in progress");
                                         }
@@ -1027,6 +1028,7 @@
                                     
                                     // UPDATE NOT IN PROGRESS
                                     else{
+                                        document.getElementById('message-area').style.opacity = "1"
                                         if(this.debug){
                                             console.log("poll: system update NOT in progress");
                                         }
