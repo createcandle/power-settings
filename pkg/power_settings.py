@@ -21,7 +21,7 @@ try:
     from gateway_addon import APIHandler, APIResponse, Database
     #print("succesfully loaded APIHandler and APIResponse from gateway_addon")
 except:
-    print("Import APIHandler and APIResponse from gateway_addon failed. Use at least WebThings Gateway version 0.10")
+    print("Import APIHandler and APIResponse from gateway_addon failed. Your controller is much too old")
 
 print = functools.partial(print, flush=True)
 
@@ -195,6 +195,11 @@ class PowerSettingsAPIHandler(APIHandler):
                 os.system('rm ' + str(self.restore_file_path))
                 if self.DEBUG:
                     print("removed old restore file")
+            
+            
+            self.update_needs_two_reboots = False
+            if not os.path.isfile('/boot/candle_original_version.txt'):
+                self.update_needs_two_reboots = True
             
             
             self.check_update_processes()
@@ -510,7 +515,6 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':'ok'}),
                                 )
-                                
                                 
                                 
                             # /disable_overlay - Disable old RO overlay on older Candle systems.
@@ -1044,6 +1048,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         'ro_exists':self.ro_exists,
                                         'old_overlay_active':self.old_overlay_active,
                                         'post_bootup_actions_supported':self.post_bootup_actions_supported,
+                                        'update_needs_two_reboots':self.update_needs_two_reboots,
                                         'debug':self.DEBUG
                                     }
                             if self.DEBUG:

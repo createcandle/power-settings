@@ -572,6 +572,10 @@
                             document.getElementById('extension-power-settings-update-files-check-button').style.display = 'inline-block';
                         }
                         
+                        if(body.update_needs_two_reboots == true){
+                            document.getElementById('extension-power-settings-system-update-needs-two-reboots').style.display = 'block';
+                        }
+                        
             
                     }
                     else{
@@ -581,7 +585,7 @@
                     
                     // Support for older versions of Candle
                     if(typeof body.old_overlay_active != 'undefined' && typeof body.ro_exists != 'undefined' && typeof body.post_bootup_actions_supported != 'undefined'){
-                        if(post_bootup_actions_supported == false){
+                        if(body.post_bootup_actions_supported == false){
                             if(body.ro_exists == false && body.old_overlay_active == false){
                                 this.overlay_exists = false;
                                 if(this.debug){

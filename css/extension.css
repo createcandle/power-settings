@@ -625,8 +625,6 @@ body > #extension-power-settings-update-process-progress-bar-container{
     font-size:1.6rem;
 }
 
-
-
 #extension-power-settings-update-files-check-output:not(:empty){
     padding:2rem;
     margin-top:2rem;
