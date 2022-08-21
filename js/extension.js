@@ -519,7 +519,7 @@
                             this.update_available_text = "available";
                         }
                         else if(body.candle_original_version == '2.0.0'){
-                            //this.update_available_text = "available";
+                            this.update_available_text = "available";
                             console.log("running on RC4");
                         }
                         else if(body.candle_original_version == '2.0.0-beta'){
