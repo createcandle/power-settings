@@ -519,7 +519,7 @@
                             this.update_available_text = "available";
                         }
                         else if(body.candle_original_version == '2.0.0'){
-                            this.update_available_text = "available";
+                            //this.update_available_text = "available";
                             console.log("running on RC4");
                         }
                         else if(body.candle_original_version == '2.0.0-beta'){
@@ -566,7 +566,6 @@
                             document.getElementById('extension-power-settings-menu-update-button').style.border = "2px solid white";
                             document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
                         }
-                        
             
                         if(body.files_check_exists){
                             document.getElementById('extension-power-settings-update-files-check-button').style.display = 'inline-block';
@@ -575,7 +574,6 @@
                         if(body.update_needs_two_reboots == true){
                             document.getElementById('extension-power-settings-system-update-needs-two-reboots').style.display = 'block';
                         }
-                        
             
                     }
                     else{

@@ -647,7 +647,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 if self.DEBUG:
                                                     print("system update script succesfully downloaded to data dir")
                                                 
-                                                if self.post_bootup_actions_supported:
+                                                use_post_bootup = False # temporarily disabling this; how to get environment variables in there?
+                                                if self.post_bootup_actions_supported and use_post_bootup == True:
                                                 
                                                     # After the reboot, start the script automatically by the system. This is preferable to python running the script.
                                                     
@@ -703,7 +704,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                                         "STOP_EARLY":"yes",
                                                         "REBOOT_WHEN_DONE":"yes"
                                                     }
-                                                    subprocess.Popen('sudo ' + str(self.system_update_script_path), shell=True, env=env)
+                                                    
+                                                    subprocess.Popen('cat ' + str(self.system_update_script_path) + ' | sudo SKIP_PARTITIONS=yes STOP_EARLY=yes REBOOT_WHEN_DONE=yes bash', shell=True, env=env)
                                                 
                                                 #start_command = 'cat ' + str(self.system_update_script_path) + ' | sudo SKIP_PARTITIONS=yes STOP_EARLY=yes REBOOT_WHEN_DONE=yes bash &'
                                                 #curl -sSl https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh | sudo SKIP_PARTITIONS=yes STOP_EARLY=yes REBOOT_WHEN_DONE=yes bash
