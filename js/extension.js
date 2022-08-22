@@ -125,6 +125,10 @@
                     });
                     
                     
+                    if(this.system_update_in_progress){
+                        
+                    }
+                    
                 });
                 
                 
@@ -961,12 +965,12 @@
                     document.body.appendChild(progress_bar);
                 }
                 
-                
                 // Indicate update in progress on power buttons page
                 if(document.getElementById('extension-power-settings-main-buttons') != null){
                     document.getElementById('extension-power-settings-main-buttons').style.display = 'none';
                     document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'block';
                 }
+                
             }
             else{
                 if(this.debug){
@@ -1063,6 +1067,15 @@
                                             if( body.dmesg.indexOf('ERROR') != -1 ){
                                                 document.getElementById('extension-power-settings-system-update-error').style.display = 'block';
                                             }
+                                        }
+                                        
+                                        if( document.querySelector("body > #extension-power-settings-update-process-progress-bar-container") == null ){
+                                            if(this.debug){
+                                                console.log("moving progress bar into position");
+                                            }
+                                            var progress_bar = document.getElementById('extension-power-settings-update-process-progress-bar-container');
+                                            progress_bar.style.display = "block";
+                                            document.body.appendChild(progress_bar);
                                         }
                                         
                                         

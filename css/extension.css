@@ -172,6 +172,7 @@
     width:100%;
     box-sizing:border-box;
     overflow:hidden;
+    position:relative;
 }
 
 #extension-power-settings-update-process-progress-bar{
@@ -180,6 +181,11 @@
     background-color:white;
 }
 
+#extension-power-settings-update-progress-container > #extension-power-settings-update-process-progress-bar-container > #extension-power-settings-update-process-progress-bar-text{
+    display:none;
+}
+
+
 
 #extension-power-settings-update-process-output{
     white-space: pre-line;
@@ -187,6 +193,10 @@
     line-height: 3rem;
 }
 
+
+.system-updating #extension-power-settings-manual-update-container{
+    display:none!important;
+}
 
 
 /*  LOGOUT */
