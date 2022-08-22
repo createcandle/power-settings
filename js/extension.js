@@ -740,9 +740,15 @@
                     document.getElementById('extension-power-settings-no-updates').style.display = 'none';
                 });
                 
+                // Show log button
+                document.getElementById('extension-power-settings-system-update-show-log-button').addEventListener('click', () => {
+                    document.getElementById('extension-power-settings-update-process-output').classList.remove('extension-power-settings-dev-only');
+                });
                 
                 
                 
+                
+                // Files check button
                 document.getElementById('extension-power-settings-update-files-check-button').addEventListener('click', () => {
                     //console.log("files check button clicked");
                     document.getElementById('extension-power-settings-update-files-check-button').style.display = 'none';
