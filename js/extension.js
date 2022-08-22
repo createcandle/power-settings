@@ -15,7 +15,7 @@
             this.kiosk = false;
             
             this.update_available_text = "";
-            this.update_in_progress = false;
+            this.system_update_in_progress = false;
             this.overlay_exists = true;
 
             const getUrl = window.location;
@@ -542,7 +542,7 @@
                         }
                         
                         if(typeof body.system_update_in_progress != 'undefined'){
-                            this.update_in_progress = body.system_update_in_progress;
+                            this.system_update_in_progress = body.system_update_in_progress;
                             if(body.system_update_in_progress == true){
                                 if(this.debug){
                                     console.log("A SYSTEM UPDATE IS ALREADY IN PROGRESS (bootup_actions.sh on an older release candidate)");
@@ -552,10 +552,13 @@
 								document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
                                 this.start_poll();
                             }
+                            else{
+                                document.getElementById('extension-power-settings-update-progress-container').style.display = 'nonef';
+                            }
                         }
                         
 
-                        if(this.update_in_progress == false){
+                        if(this.system_update_in_progress == false){
                             setTimeout( () => {
                                 this.show_update_available();
                             }, 3000);
@@ -846,8 +849,19 @@
                 
                 document.getElementById('extension-power-settings-no-updates').style.display = 'none';
                 document.getElementById('extension-power-settings-system-update-available-container').style.display = 'block';
+                
                 document.getElementById('extension-power-settings-menu-update-button').style.border = "2px solid white";
                 document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
+                
+                if(this.overlay_exists){
+                    document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'block';
+                    document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'none';
+                }
+                else{
+                    document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'none';
+                    document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'block';
+                }
+                
                 
             }
             else{
@@ -1009,7 +1023,7 @@
                                         console.log("body.update_in_progress: ", body.system_update_in_progress);
                                     }
                                     
-                                    this.update_in_progress = body.system_update_in_progress;
+                                    this.system_update_in_progress = body.system_update_in_progress;
                                     
                                     // UPDATE IN PROGRESS
                                     if( body.system_update_in_progress == true){
@@ -1315,7 +1329,7 @@
             
             
             // Hide the shutdown and reboot buttons if a system update is in progress
-            if(this.update_in_progress == true){
+            if(this.system_update_in_progress == true){
                 if(document.getElementById('extension-power-settings-main-buttons') != null){
                     document.getElementById('extension-power-settings-main-buttons').style.display = 'none';
                     document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'block';
