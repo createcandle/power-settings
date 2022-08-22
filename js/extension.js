@@ -588,44 +588,25 @@
                     }
             
                     
-                    // Support for older versions of Candle
                     if(typeof body.old_overlay_active != 'undefined' && typeof body.ro_exists != 'undefined' && typeof body.post_bootup_actions_supported != 'undefined'){
-                        if(body.post_bootup_actions_supported == false){
-                            if(body.ro_exists == false && body.old_overlay_active == false){
-                                this.overlay_exists = false;
-                                if(this.debug){
-                                    console.log("no overlays detected, update is good to go");
-                                }
-                                document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'none';
-                                document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'block';
+                        
+                        if(body.ro_exists == false && body.old_overlay_active == false){
+                            this.overlay_exists = false;
+                            if(this.debug){
+                                console.log("no overlays detected, update is good to go");
                             }
-                            else{
-                                this.overlay_exists = true;
-                                if(this.debug){
-                                    console.log("overlays detected, must first be disabled");
-                                }
-                                document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'block';
-                                document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'none';
-                            }
-                            
-                            if(this.overlay_exists){
-                                document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'block';
-                                document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'none';
-                            }
-                            else{
-                                document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'none';
-                                document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'block';
-                            }
-                            
+                            document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'none';
+                            document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'block';
                         }
                         else{
-                            if(body.ro_exists == false && body.old_overlay_active == false){
-                                this.overlay_exists = false;
+                            this.overlay_exists = true;
+                            if(this.debug){
+                                console.log("overlays detected, must first be disabled");
                             }
-                            else{
-                                this.overlay_exists = true;
-                            }
+                            document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'block';
+                            document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'none';
                         }
+                        
                     }
                     
                 }).catch((e) => {

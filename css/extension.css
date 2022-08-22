@@ -306,6 +306,7 @@
     background-color:rgba(0,0,0,.2);
     padding:2rem;
     margin: 0 2rem 2rem 2rem;
+    border-radius:.5rem;
 }
 
 .kiosk #extension-power-settings-scroll-container > div{
@@ -434,7 +435,7 @@
 .extension-power-settings-container input[type=text]{
     margin-top:1rem;
     box-sizing: border-box;
-    padding: 2rem;
+    padding: 1.7rem 1rem;
     width: 100%;
 }
 
