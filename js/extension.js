@@ -604,6 +604,14 @@
                                 document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'none';
                             }
                         }
+                        else{
+                            if(body.ro_exists == false && body.old_overlay_active == false){
+                                this.overlay_exists = false;
+                            }
+                            else{
+                                this.overlay_exists = true;
+                            }
+                        }
                     }
                     
                 }).catch((e) => {
@@ -840,7 +848,7 @@
         
         show_update_available(){
             // Show that an update is available
-            //console.log("in show_update_available");
+            console.log("in show_update_available. this.overlay_exists: ", this.overlay_exists);
             
             if(this.update_available_text != ""){
                 if(document.getElementById('extension-power-settings-menu-update-button-indicator') != null){
