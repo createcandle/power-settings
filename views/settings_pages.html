@@ -1,292 +1,303 @@
 <div id="extension-power-settings-scroll-container">
     <div id="extension-power-settings-container-time" class="extension-power-settings-container">
-        
         <div class="section-title">
-              <div class="section-title-back-flex"></div>
-              <div class="section-title-container">
-                  <img id="extension-power-settings-clock-page-icon" class="section-title-icon" alt="Clock icon" src="/extensions/power-settings/images/clock.svg">
-                  <span class="section-title-name">Clock</span>
-              </div>
-              <div class="section-title-right-flex"></div>
+            <div class="section-title-back-flex"></div>
+            <div class="section-title-container">
+                <img id="extension-power-settings-clock-page-icon" class="section-title-icon" alt="Clock icon" src="/extensions/power-settings/images/clock.svg" />
+                <span class="section-title-name">Clock</span>
+            </div>
+            <div class="section-title-right-flex"></div>
         </div>
-        
-        <div id="extension-power-settings-shell-date" class="extension-power-settings-dev-only" style="text-align:center;"></div>
-        
+
+        <div id="extension-power-settings-shell-date" class="extension-power-settings-dev-only" style="text-align: center;"></div>
+
         <div class="extension-power-settings-vlak extension-power-settings-show-if-hardware-clock-detected">
             <p class="extension-power-settings-header">Hardware clock module detected</p>
-            <p>A hardware clock module is providing the time to the system instead of an internet time server. If you unplug the module, or if you disable it in the settings of the Power Settings addon, then the system will fall back to your internet time preference instead.</p>
+            <p>
+                A hardware clock module is providing the time to the system instead of an internet time server. If you unplug the module, or if you disable it in the settings of the Power Settings addon, then the system will fall back to
+                your internet time preference instead.
+            </p>
             <p>The hardware clock's time was initially set with data from an internet time server. If the clock is out of sync you can re-sync it from the internet. Or you could provide the time manually.</p>
             <button id="extension-power-settings-hardware-clock-sync-button" class="text-button">Synchronise with internet</button>
         </div>
-        
-        
+
         <div class="extension-power-settings-vlak extension-power-settings-hide-if-hardware-clock-detected">
             <p class="extension-power-settings-header">Internet time</p>
             <p>If your system does not have a hardware clock module installed, every time the system starts it will try to get the current date and time from an internet server.</p>
             <p>If enabled, as soon as there is an internet connection, any manually provided time will be overridden by an internet NTP server.</p>
-            <br/>
+            <br />
             <div class="extension-power-settings-form-content">
-                <input type="checkbox" name="extension-power-settings-form-ntp" id="extension-power-settings-form-ntp" checked>
+                <input type="checkbox" name="extension-power-settings-form-ntp" id="extension-power-settings-form-ntp" checked />
                 <label for="extension-power-settings-form-ntp">Allow internet time</label>
             </div>
-            <br/>
+            <br />
         </div>
-        
-        
-        <div id="extension-power-settings-manually-set-time-container" class="extension-power-settings-vlak" style="display:none">
+
+        <div id="extension-power-settings-manually-set-time-container" class="extension-power-settings-vlak" style="display: none;">
             <p class="extension-power-settings-header">Manually set the time</p>
-            <p class="extension-power-settings-hide-if-hardware-clock-detected">Most smart home devices connect to the internet get the current time. This can share your IP address with third parties who provide that service. Since nothing is free, you might want to set the time manually instead. However, you will have to do this every time you reboot.</p>
+            <p class="extension-power-settings-hide-if-hardware-clock-detected">
+                Most smart home devices connect to the internet get the current time. This can share your IP address with third parties who provide that service. Since nothing is free, you might want to set the time manually instead.
+                However, you will have to do this every time you reboot.
+            </p>
             <p class="extension-power-settings-show-if-hardware-clock-detected">You can manually set the time of the hardware clock.</p>
-            <p>If you're trying to change the time to match your timezone, then please first make sure your timezone is set correctly under <a href="/settings/localization" style="color:white">localisation</a>.</p>
-            <br/>
-            
+            <p>If you're trying to change the time to match your timezone, then please first make sure your timezone is set correctly under <a href="/settings/localization" style="color: white;">localisation</a>.</p>
+            <br />
+
             <div class="extension-power-settings-form-content">
-                  <label for="hours" class="extension-power-settings-form-label-left">Hours: </label><input type="number" name="hours" onfocus="this.placeholder=''" id="extension-power-settings-form-hours" required>
-                  <br/>
-                  <label for="minutes" class="extension-power-settings-form-label-left">Minutes: </label><input type="number" name="minutes" onfocus="this.placeholder=''" id="extension-power-settings-form-minutes" required>
-                  <br/>
-                  <button type="button" id="extension-power-settings-form-browser-time-button" class="text-button">Get time from browser</button>
-                  <br/>
-                  <br/>
-                  <br/>
-                  <div style="text-align:right">
-                      <button type="button" id="extension-power-settings-form-submit-time" class="text-button extension-power-settings-form-big-button">Set clock</button>
-                  </div>
-                  <p id="extension-power-settings-container-time-manual-done" style="display:none">The time has been saved</p>
+                <label for="hours" class="extension-power-settings-form-label-left">Hours: </label><input type="number" name="hours" onfocus="this.placeholder=''" id="extension-power-settings-form-hours" required />
+                <br />
+                <label for="minutes" class="extension-power-settings-form-label-left">Minutes: </label><input type="number" name="minutes" onfocus="this.placeholder=''" id="extension-power-settings-form-minutes" required />
+                <br />
+                <button type="button" id="extension-power-settings-form-browser-time-button" class="text-button">Get time from browser</button>
+                <br />
+                <br />
+                <br />
+                <div style="text-align: right;">
+                    <button type="button" id="extension-power-settings-form-submit-time" class="text-button extension-power-settings-form-big-button">Set clock</button>
+                </div>
+                <p id="extension-power-settings-container-time-manual-done" style="display: none;">The time has been saved</p>
             </div>
         </div>
-        
-        
     </div>
 
-
     <div id="extension-power-settings-container-reset" class="extension-power-settings-container">
-        
         <div class="section-title">
-              <div class="section-title-back-flex"></div>
-              <div class="section-title-container">
-                  <img class="section-title-icon" alt="Factory reset icon" src="/extensions/power-settings/images/reset.svg">
-                  <span class="section-title-name">Factory reset</span>
-              </div>
-              <div class="section-title-right-flex"></div>
+            <div class="section-title-back-flex"></div>
+            <div class="section-title-container">
+                <img class="section-title-icon" alt="Factory reset icon" src="/extensions/power-settings/images/reset.svg" />
+                <span class="section-title-name">Factory reset</span>
+            </div>
+            <div class="section-title-right-flex"></div>
         </div>
-        
+
         <div class="extension-power-settings-vlak">
             <!--<p class="extension-power-settings-header">Factory reset</p>-->
-            
+
             <p>This will:</p>
-            <p>
-                <ul>
-                    <li>Reboot the controller, and then...</li>
-                    <li>Remove all data logs.</li>
-                    <li>Remove addons that were not initially installed. Note: it will not re-install addons.</li>
-                    <li>Remove the settings database and put the original version back in its place. This removes all user accounts and most addon settings.</li>
-                    <li>Remove persistent data files for most Candle addons. You can choose to make an exception for the Zigbee2MQTT addon, so Zigbee devices will remain paired.</li>
-                    <li>Once complete, it will turn off the controller.</li>
-                </ul>
-            </p>
+            <ul>
+                <li>Reboot the controller, and then...</li>
+                <li>Remove all data logs.</li>
+                <li>Remove addons that were not initially installed. Note: it will not re-install addons.</li>
+                <li>Remove the settings database and put the original version back in its place. This removes all user accounts and most addon settings.</li>
+                <li>Remove persistent data files for most Candle addons. You can choose to make an exception for the Zigbee2MQTT addon, so Zigbee devices will remain paired.</li>
+                <li>Once complete, it will turn off the controller.</li>
+            </ul>
             <div id="extension-power-settings-form-content-reset">
-                <br/>
-                <br/>
-                <label for="extension-power-settings-factory-reset-understand">Type "I understand" to confirm: </label><br/><input type="text" name="extension-power-settings-factory-reset-understand" id="extension-power-settings-factory-reset-understand" required style="width:calc(100% - 1rem)"/>
-                <br/>
-                <br/>
-        
-                <div class="extension-power-settings-checkbox-container"><input type="checkbox" name="keep-z2m" id="extension-power-settings-keep-z2m"><label for="extension-power-settings-keep-z2m">Allow Zigbee devices to remain paired</label></div>
-                <p class="field-description" style="opacity:.6; margin-top:.3rem">If checked, the currently paired Zigbee devices will remain paired.</p>
-                
-                <div class="extension-power-settings-checkbox-container"><input type="checkbox" name="keep-bluetooth" id="extension-power-settings-keep-bluetooth"><label for="extension-power-settings-keep-bluetooth">Allow Bluetooth devices to remain paired</label></div>
-                <p class="field-description" style="opacity:.6; margin-top:.3rem">If checked, the currently paired Bluetooth devices will remain paired.</p>
-        
-                <br/> 
-                <div style="text-align:right">
+                <br />
+                <br />
+                <label for="extension-power-settings-factory-reset-understand">Type "I understand" to confirm: </label><br />
+                <input type="text" name="extension-power-settings-factory-reset-understand" id="extension-power-settings-factory-reset-understand" required  />
+                <br />
+                <br />
+
+                <div class="extension-power-settings-checkbox-container">
+                    <input type="checkbox" name="keep-z2m" id="extension-power-settings-keep-z2m" /><label for="extension-power-settings-keep-z2m">Allow Zigbee devices to remain paired</label>
+                </div>
+                <p class="field-description" style="opacity: 0.6; margin-top: 0.3rem;">If checked, the currently paired Zigbee devices will remain paired.</p>
+
+                <div class="extension-power-settings-checkbox-container">
+                    <input type="checkbox" name="keep-bluetooth" id="extension-power-settings-keep-bluetooth" /><label for="extension-power-settings-keep-bluetooth">Allow Bluetooth devices to remain paired</label>
+                </div>
+                <p class="field-description" style="opacity: 0.6; margin-top: 0.3rem;">If checked, the currently paired Bluetooth devices will remain paired.</p>
+
+                <br />
+                <div style="text-align: right;">
                     <button type="button" id="extension-power-settings-form-reset-submit" class="text-button">Factory reset</button>
                 </div>
             </div>
         </div>
     </div>
-    
-    
+
     <div id="extension-power-settings-container-backup" class="extension-power-settings-container">
-        
-        
         <div class="section-title">
-              <div class="section-title-back-flex"></div>
-              <div class="section-title-container">
-                  <img class="section-title-icon" alt="Backup icon" src="/extensions/power-settings/images/backup.svg">
-                  <span class="section-title-name">Backup & Restore</span>
-              </div>
-              <div class="section-title-right-flex"></div>
+            <div class="section-title-back-flex"></div>
+            <div class="section-title-container">
+                <img class="section-title-icon" alt="Backup icon" src="/extensions/power-settings/images/backup.svg" />
+                <span class="section-title-name">Backup & Restore</span>
+            </div>
+            <div class="section-title-right-flex"></div>
         </div>
-        
-        
+
         <div class="extension-power-settings-vlak">
             <p class="extension-power-settings-header">Create backup</p>
             <p>This will create a downloadable backup file. It contains:</p>
-            <p>
-                <ul>
-                    <li>Settings for Candle addons</li>
-                    <li>General settings for controller and your addons</li>
-                </ul>
-            </p>
+
+            <ul>
+                <li>Settings for Candle addons</li>
+                <li>General settings for controller and your addons</li>
+            </ul>
             <p>This does NOT contain photos or data logs.</p>
             <div class="extension-power-settings-form-backup">
-                <button id="extension-power-settings-create-backup-button" class="text-button">Create backup</button> <button id="extension-power-settings-download-backup-button" class="text-button" style="display:none">Download backup</button>
+                <button id="extension-power-settings-create-backup-button" class="text-button">Create backup</button>
+                <button id="extension-power-settings-download-backup-button" class="text-button" style="display: none;">Download backup</button>
             </div>
         </div>
-        
+
         <div class="extension-power-settings-vlak">
             <p class="extension-power-settings-header">Restore backup</p>
             <p>This will replace your existing:</p>
-            <p>
-                <ul>
-                    <li>Settings for Candle addons</li>
-                    <li>General settings for controller and your addons</li>
-                </ul>
-            </p>
+
+            <ul>
+                <li>Settings for Candle addons</li>
+                <li>General settings for controller and your addons</li>
+            </ul>
             <p>This does NOT remove or replace photos or data logs.</p>
             <div id="extension-power-settings-backup-file-selector-container" class="extension-power-settings-form-backup">
-                <input id="extension-power-settings-backup-file-selector"  accept=".tar" type="file" value="Upload backup"/>
+                <input id="extension-power-settings-backup-file-selector" accept=".tar" type="file" value="Upload backup" />
             </div>
         </div>
-        
-        
     </div>
-    
-    
+
     <div id="extension-power-settings-container-update" class="extension-power-settings-container">
-        
-        
         <div class="section-title">
-              <div class="section-title-back-flex"></div>
-              <div class="section-title-container">
-                  <img class="section-title-icon" alt="Backup icon" src="/extensions/power-settings/images/update.svg">
-                  <span class="section-title-name">Update</span>
-              </div>
-              <div class="section-title-right-flex"></div>
+            <div class="section-title-back-flex"></div>
+            <div class="section-title-container">
+                <img class="section-title-icon" alt="Backup icon" src="/extensions/power-settings/images/update.svg" />
+                <span class="section-title-name">Update</span>
+            </div>
+            <div class="section-title-right-flex"></div>
         </div>
-        
+
         <div id="extension-power-settings-system-update-container" class="extension-power-settings-vlak">
             <p class="extension-power-settings-header">System update</p>
             <p>You are running Candle Controller version <span id="extension-power-settings-candle-version">...</span></p>
             <p class="extension-power-settings-dev-only">You started with version <span id="extension-power-settings-candle-original-version">...</span></p>
-            
-            <div id="extension-power-settings-update-failed" style="display:none">
+
+            <div id="extension-power-settings-update-failed" style="display: none;">
                 <h2>Update failed</h2>
                 <p>The previous system update seems to have failed. Since you're reading this it can't be all that bad. You could attempt the update again.</p>
                 <p>Visit candlesmarthome.com/troubleshooting if you want to figure out what happened.</p>
             </div>
-            
-            <div id="extension-power-settings-no-updates" style="display:none">
+
+            <div id="extension-power-settings-no-updates" style="display: none;">
                 <p>There are currently no system updates available.</p>
                 <div class="extension-power-settings-form-system-update">
-                    <button id="extension-power-settings-update-files-check-button" class="text-button extension-power-settings-dev-only">Test</button> 
+                    <button id="extension-power-settings-update-files-check-button" class="text-button extension-power-settings-dev-only">Test</button>
                     <button id="extension-power-settings-force-update-button" class="text-button extension-power-settings-dev-only">Force update</button>
                     <span></span>
                     <button class="text-button" disabled>System update</button>
                 </div>
             </div>
-            
-            <div id="extension-power-settings-system-update-available-container" style="display:none">
+
+            <div id="extension-power-settings-update-files-check-output"></div>
+
+            <div id="extension-power-settings-system-update-available-container" style="display: none;">
                 <p>A system update is available.</p>
-                <p>
-                    <ul>
-                        <li>Always make a backup first!</li>
-                        <li>Do not change settings while the update is in progress.</li>
-                        <li>It is strongly recommended to plug in a network cable.</li>
-                        <li>The update can take up to two hours.</li>
-                        <li>Visit candlesmarthome.com/troubleshooting in case something goes wrong.</li>
-                    </ul>
+
+                <ul>
+                    <li>Always make a backup first!</li>
+                    <li>Do not change settings while the update is in progress.</li>
+                    <li>It is strongly recommended to plug in a network cable.</li>
+                    <li>The update can take up to two hours.</li>
+                    <li>Visit candlesmarthome.com/troubleshooting in case something goes wrong.</li>
+                </ul>
+                <p id="extension-power-settings-system-update-needs-two-reboots" class="extension-power-settings-vlak" style="display: none;">
+                    NOTE: because you're running an older version of Candle you will need to run the update process twice.
                 </p>
-                <p id="extension-power-settings-system-update-needs-two-reboots" class="extension-power-settings-vlak" style="display:none">NOTE: because you're running an older version of Candle you will need to run the update process twice.</p>
-                <br/>
-                <br/>
-                
-                <div id="extension-power-settings-system-update-overlay-still-enabled-container" class="extension-power-settings-vlak" style="display:none">
+                <br />
+                <br />
+
+                <div id="extension-power-settings-system-update-overlay-still-enabled-container" class="extension-power-settings-vlak" style="display: none;">
                     <p>Before you can install the update the system's disk protection must first be disabled. After the system update is complete this protection will automatically be re-enabled.</p>
                     <p>This step will reboot your sytem.</p>
                     <div class="extension-power-settings-form-system-update">
                         <span></span>
                         <button id="extension-power-settings-system-update-disable-overlay-button" class="text-button">Disable disk protection</button>
                     </div>
-                    
-                    <div id="extension-power-settings-system-update-disable-overlay-spinner" style="display:none; text-align:center">
-                        <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
+
+                    <div id="extension-power-settings-system-update-disable-overlay-spinner" style="display: none; text-align: center;">
+                        <div class="extension-power-settings-spinner">
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                        </div>
                     </div>
-                    
                 </div>
-                
-                <div id="extension-power-settings-system-update-overlay-disabled-container" style="display:none">
+
+                <div id="extension-power-settings-system-update-overlay-disabled-container" style="display: none;">
                     <div class="extension-power-settings-dev-only">
-                        <input type="checkbox" name="extension-power-settings-cutting-edge-checkbox" id="extension-power-settings-cutting-edge-checkbox">
+                        <input type="checkbox" name="extension-power-settings-cutting-edge-checkbox" id="extension-power-settings-cutting-edge-checkbox" />
                         <label for="extension-power-settings-cutting-edge-checkbox">Update to the cutting edge build (RISKY!)</label>
-                        <p class="field-description" style="opacity:.6; margin-top:.3rem">This option is available because you have enabled developer mode.</p>
+                        <p class="field-description" style="opacity: 0.6; margin-top: 0.3rem;">This option is available because you have enabled developer mode.</p>
                     </div>
-                
-                
-                    <div id="extension-power-settings-live-update-option" class="extension-power-settings-dev-only" style="display:none">
-                        <input type="checkbox" name="extension-power-settings-live-update-checkbox" id="extension-power-settings-live-update-checkbox">
+
+                    <div id="extension-power-settings-live-update-option" class="extension-power-settings-dev-only" style="display: none;">
+                        <input type="checkbox" name="extension-power-settings-live-update-checkbox" id="extension-power-settings-live-update-checkbox" />
                         <label for="extension-power-settings-live-update-checkbox">Update while the system is running</label>
-                        <p class="field-description" style="opacity:.6; margin-top:.3rem">Experimental feature! The system will automatically reboot once the process is complete. It is strongly advised to reboot before starting the live update process.</p>
+                        <p class="field-description" style="opacity: 0.6; margin-top: 0.3rem;">
+                            Experimental feature! The system will automatically reboot once the process is complete. It is strongly advised to reboot before starting the live update process.
+                        </p>
                     </div>
-                
-                    <br/>
-                    <label for="extension-power-settings-system-update-understand">Type "I understand" to confirm: </label><br/><input type="text" name="extension-power-settings-system-update-understand" id="extension-power-settings-system-update-understand" required style="width:calc(100% - 1rem)"/>
-                    <br/>
-                    <br/>
-                
+
+                    <br />
+                    <label for="extension-power-settings-system-update-understand">Type "I understand" to confirm: </label><br />
+                    <input type="text" name="extension-power-settings-system-update-understand" id="extension-power-settings-system-update-understand" required  />
+                    <br />
+                    <br />
+
                     <div class="extension-power-settings-form-system-update">
                         <span></span>
                         <button id="extension-power-settings-system-update-button" class="text-button">System update</button>
                     </div>
-                    
                 </div>
-                
             </div>
-            
-            <div id="extension-power-settings-update-progress-container" style="display:none">
+
+            <div id="extension-power-settings-update-progress-container" style="display: none;">
                 <p>SYSTEM UPDATE IN PROGRESS</p>
-                <p style="margin-top:0; font-style:italic">This can take 2 hours</p>
-                <div id="extension-power-settings-update-process-progress-bar-container"><div id="extension-power-settings-update-process-progress-bar"></div><div  id="extension-power-settings-update-process-progress-bar-text">SYSTEM UPDATE IN PROGRESS</div></div>
-                
-                <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
-                
-                
-                <div id="extension-power-settings-system-update-error" style="display:none">
+                <p style="margin-top: 0; font-style: italic;">This can take 2 hours</p>
+                <div id="extension-power-settings-update-process-progress-bar-container">
+                    <div id="extension-power-settings-update-process-progress-bar"></div>
+                    <div id="extension-power-settings-update-process-progress-bar-text">SYSTEM UPDATE IN PROGRESS</div>
+                </div>
+
+                <div class="extension-power-settings-spinner">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+
+                <div id="extension-power-settings-system-update-error" style="display: none;">
                     <h3>An error seems to have occured</h3>
                     <p>You can try running the update again. Make sure to plug in a network cable to avoid download issues.</p>
                     <button id="extension-power-settings-system-update-show-log-button" class="text-button">Show log</button>
                     <button id="extension-power-settings-system-update-retry-button" class="text-button">Retry</button>
                 </div>
             </div>
-        
+
             <pre id="extension-power-settings-update-process-output" class="extension-power-settings-dev-only"></pre>
-            
-            </div>
-            
         </div>
+        
         
         <div id="extension-power-settings-manual-update-container" class="extension-power-settings-vlak">
             <p class="extension-power-settings-header">Manual update</p>
-            <p>This will update all installed programs to the latest version, which may, for example, help alleviate urgent security worries. However, it may also cause unexpected issues, since these updates are not tested.<p>
-            <p>
-                <ul>
-                    <li>Although unlikely, your system could stop working.</li>
-                    <li>It means your system is no longer "standard", so you can no longer get accurate advice or help. Future "official" updates may fail.</li>
-                    <li>Any warranty will be void.</li>
-                </ul>
-            </p>
+            <p>This will update all installed programs to the latest version, which may, for example, help alleviate urgent security worries. However, it may also cause unexpected issues, since these updates are not tested.</p>
+            <p></p>
+
+            <ul>
+                <li>Although unlikely, your system could stop working.</li>
+                <li>It means your system is no longer "standard", so you can no longer get accurate advice or help. Future "official" updates may fail.</li>
+                <li>Any warranty will be void.</li>
+            </ul>
+
             <p>Manually update at your own risk!</p>
             <p>
-                <label for="extension-power-settings-manual-update-understand">Type "I understand" to confirm: </label><br/><input type="text" name="extension-power-settings-manual-update-understand" id="extension-power-settings-manual-update-understand" required style="width:calc(100% - 1rem)"/>
+                <label for="extension-power-settings-manual-update-understand">Type "I understand" to confirm: </label><br />
+                <input type="text" name="extension-power-settings-manual-update-understand" id="extension-power-settings-manual-update-understand" required  />
             </p>
             <div class="extension-power-settings-form-manual-update">
                 <button id="extension-power-settings-manual-update-button" class="text-button">Manual update</button>
             </div>
         </div>
         
+        
     </div>
+
+    
     
     <button id="extension-power-settings-back-button" class="back-button icon-button" data-l10n-id="back-button" aria-label="Back"></button>
     
 </div>
+
+

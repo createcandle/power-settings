@@ -607,6 +607,16 @@
                                 document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'block';
                                 document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'none';
                             }
+                            
+                            if(this.overlay_exists){
+                                document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'block';
+                                document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'none';
+                            }
+                            else{
+                                document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'none';
+                                document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'block';
+                            }
+                            
                         }
                         else{
                             if(body.ro_exists == false && body.old_overlay_active == false){
@@ -765,12 +775,18 @@
                         if(this.debug){
                             console.log("files_check response: ", body);
                         }
-                        if(body.files_check_output == ""){
-                            document.getElementById('extension-power-settings-update-files-check-output').innerText = "OK, no missing files";
+                        try{
+                            if(body.files_check_output == ""){
+                                document.getElementById('extension-power-settings-update-files-check-output').innerText = "OK, no missing files";
+                            }
+                            else{
+                                document.getElementById('extension-power-settings-update-files-check-output').innerHTML = body.files_check_output;
+                            }
                         }
-                        else{
-                            document.getElementById('extension-power-settings-update-files-check-output').innerHTML = body.files_check_output;
+                        catch(e){
+                            console.log("Error in files_check api: ", e);
                         }
+                        
                         
                     }).catch((e) => {
                         alert("Error, could not run files check, connection issue");

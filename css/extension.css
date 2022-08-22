@@ -430,6 +430,14 @@
 }
 
 
+
+.extension-power-settings-container input[type=text]{
+    margin-top:1rem;
+    box-sizing: border-box;
+    padding: 2rem;
+    width: 100%;
+}
+
 /*  CHECKBOX  */
 
 .extension-power-settings-container input[type=checkbox]{
@@ -587,6 +595,10 @@
 
 /*  UPDATE  */
 
+#extension-power-settings-container-update{
+    margin-bottom:30vh;
+}
+
 #extension-power-settings-manual-update-container{
     display:none;
 }
@@ -638,7 +650,7 @@ body > #extension-power-settings-update-process-progress-bar-container{
 #extension-power-settings-update-files-check-output:not(:empty){
     padding:2rem;
     margin-top:2rem;
-    background-color:red;
+    background-color: rgba(255,255,255,.2);
 }
 
 
@@ -652,13 +664,19 @@ body > #extension-power-settings-update-process-progress-bar-container{
 
 
 @media screen and (min-width: 1024px) {
-	/*
+
     body > #extension-power-settings-update-process-progress-bar-container{
 	    left:10rem;
         right:10rem;
-        top:2rem;
 	}
-    */
+    
+}
+
+@media screen and (min-width: 1600px) {
+    body > #extension-power-settings-update-process-progress-bar-container{
+	    left:20rem;
+        right:20rem;
+	}
 }
 
 
