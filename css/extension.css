@@ -619,8 +619,8 @@ body > #extension-power-settings-update-process-progress-bar-container{
 
 #extension-power-settings-update-process-progress-bar-text{
     position:absolute;
-    color: white;
-    top: .5rem;
+    color: #999;
+    top: .6rem;
     left: calc(50% - 10rem);
     font-size:1.6rem;
 }
@@ -629,6 +629,13 @@ body > #extension-power-settings-update-process-progress-bar-container{
     padding:2rem;
     margin-top:2rem;
     background-color:red;
+}
+
+
+#extension-power-settings-system-update-error{
+    background-color: rgba(255,255,255,.2);
+    padding: 2rem;
+    margin: 0 2rem 2rem 2rem;
 }
 
 

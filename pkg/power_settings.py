@@ -749,7 +749,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             if dmesg_output != "":
                                                 for line in dmesg_output.splitlines():
                                                     if "starting update" in line:
-                                                        dmesg_lines = "starting live update\n"
+                                                        dmesg_lines = "Starting update\n"
                                                     else:
                                                         line = line[line.find(']'):]
                                                         line = line.replace("Candle:","")
