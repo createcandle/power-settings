@@ -193,10 +193,12 @@
     line-height: 3rem;
 }
 
-
+.system-updating #extension-power-settings-menu-reset-button,
 .system-updating #extension-power-settings-manual-update-container{
     display:none!important;
 }
+
+
 
 
 /*  LOGOUT */
