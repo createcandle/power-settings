@@ -519,15 +519,21 @@
                             document.getElementById('extension-power-settings-candle-original-version').innerText = body.candle_original_version;
                         }
                         if(body.candle_original_version == 'unknown'){
-                            console.log("running on early release candidate");
+                            if(this.debug){
+                                console.log("running on early release candidate");
+                            }
                             this.update_available_text = "available";
                         }
                         else if(body.candle_original_version == '2.0.0'){
                             this.update_available_text = "available";
-                            console.log("running on RC4");
+                            if(this.debug){
+                                console.log("running on RC4");
+                            }
                         }
                         else if(body.candle_original_version == '2.0.0-beta'){
-                            console.log("running on updated release candidate, nice");
+                            if(this.debug){
+                                console.log("running on updated release candidate, nice");
+                            }
                         }
                         
                         if(body.ro_exists == true){
@@ -584,7 +590,9 @@
             
                     }
                     else{
-                        console.log("power settings error, candle_original_version was not defined. body: ", body);
+                        if(this.debug){
+                            console.log("power settings error, candle_original_version was not defined. body: ", body);
+                        }
                     }
             
                     
@@ -669,7 +677,7 @@
                 
                 // Disable overlay button
                 document.getElementById('extension-power-settings-system-update-disable-overlay-button').addEventListener('click', () => {
-                    console.log("system update disable overlay button clicked");
+                    //console.log("system update disable overlay button clicked");
                     document.getElementById('extension-power-settings-system-update-disable-overlay-button').style.display = 'none';
                     document.getElementById('extension-power-settings-system-update-disable-overlay-spinner').style.display = 'block';
                     
@@ -855,7 +863,9 @@
         
         show_update_available(){
             // Show that an update is available
-            console.log("in show_update_available. this.overlay_exists: ", this.overlay_exists);
+            if(this.debug){
+                console.log("in show_update_available. this.overlay_exists: ", this.overlay_exists);
+            }
             
             if(this.update_available_text != ""){
                 if(document.getElementById('extension-power-settings-menu-update-button-indicator') != null){
@@ -893,11 +903,13 @@
             document.getElementById('message-area').style.opacity = "0"; // avoid showing error messages that might confuse
             
             const cutting_edge_state = document.getElementById('extension-power-settings-cutting-edge-checkbox').checked;
-            console.log("cutting_edge_state: ", cutting_edge_state);
-            
+            if(this.debug){
+                console.log("cutting_edge_state: ", cutting_edge_state);
+            }
             const live_update_state = document.getElementById('extension-power-settings-live-update-checkbox').checked;
-            console.log("live_update_state: ", live_update_state);
-            
+            if(this.debug){
+                console.log("live_update_state: ", live_update_state);
+            }
             
             
             /*
@@ -989,8 +1001,9 @@
             
             if(this.interval == null){
     			this.interval = setInterval(() => {
-                    console.log("in interval for /poll");
-                    
+                    if(this.debug){
+                        console.log("in interval for /poll");
+                    }
                     /*
                     if(document.getElementById('connectivity-scrim').classList.contains('hidden')){
                         // UI still connected to controller
@@ -1025,8 +1038,10 @@
 									*/
                                     if(body.dmesg != ""){
                                         const dmesg_lines = body.dmesg.split("\n");
-                                        console.log("dmesg_lines: ", dmesg_lines);
-                                        console.log("dmesg_lines.length: ", dmesg_lines.length);
+                                        if(this.debug){
+                                            console.log("dmesg_lines: ", dmesg_lines);
+                                            console.log("dmesg_lines.length: ", dmesg_lines.length);
+                                        }
                                         document.getElementById('extension-power-settings-update-process-progress-bar').style.width = dmesg_lines.length + "%";
                                     }
                                     
