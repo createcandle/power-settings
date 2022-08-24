@@ -24,7 +24,6 @@ history -c
 #rm -rf /home/pi/.cache/pip
 #rm -rf /home/pi/.cache/chromium
 rm -rf /home/pi/.cache
-rm -rf /home/pi/.config/*
 rm -rf /home/pi/.webthings/chromium/*
 rm /home/pi/.webthings/chromium/'Local State'
 rm /home/pi/candle/start.html
