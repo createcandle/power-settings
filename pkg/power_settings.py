@@ -406,7 +406,8 @@ class PowerSettingsAPIHandler(APIHandler):
             else:
                 if self.DEBUG:
                     print("No need to init hardware clock module (does not exist, or has already been initialised). hardware_clock_detected: " + str(self.hardware_clock_detected))
-                os.system('sudo rm ' + str(self.hardware_clock_file_path))
+                if os.path.isfile(self.hardware_clock_file_path):
+                    os.system('sudo rm ' + str(self.hardware_clock_file_path))
             
         except Exception as ex:
             if self.DEBUG:

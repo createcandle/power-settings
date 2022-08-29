@@ -187,10 +187,6 @@ rm /etc/asound.conf
 rm /boot/tunnel.txt
 cp /home/pi/.webthings/etc/webthings_settings_backup.js /home/pi/.webthings/etc/webthings_settings.js
 
-# clear Bash history
-echo "sudo /home/pi/candle/debug.sh" > /home/pi/.bash_history
-echo "Well hello there" >> /home/pi/.bash_history
-#cat /dev/null > /home/pi/.bash_history
 
 
 # Disable SSH access
@@ -227,6 +223,7 @@ echo
 echo "$factory_resets" > /home/pi/.webthings/candle.log
 echo "$(date) - factory reset"
 
+
 echo " "
 echo " "
 echo "DONE!"
@@ -236,6 +233,11 @@ echo "Shutting down Raspberry Pi..."
 echo "Wait a few seconds before you take the SD card from the Raspberry Pi"
 echo " "
 echo " "
+
+# clear Bash history
+echo "sudo /home/pi/candle/debug.sh" > /home/pi/.bash_history
+echo "Well hello there" >> /home/pi/.bash_history
+#cat /dev/null > /home/pi/.bash_history
 
 
 shutdown -P now

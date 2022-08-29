@@ -541,7 +541,8 @@
                                 console.log("/ro exists");
                             }
                             if(body.live_update_attempted == false){
-                                document.getElementById('extension-power-settings-live-update-option').style.display = "block";
+                                // Doesn't really add anything but risk for a system update
+                                //document.getElementById('extension-power-settings-live-update-option').style.display = "block";
                             }
                             else{
                                 if(this.debug){
@@ -810,7 +811,7 @@
                         after_html = '<p id="extension-power-settings-domain-explanation">If all went well you can now use Candle from other devices on your local network by visiting:<br/><br/> <strong>http://' + new_domain + suffix + '</strong></p>';
                     }
                     else{
-                        after_html = '<p id="extension-power-settings-domain-explanation">If all went well you should switch to <a href="http://' + new_domain + suffix + '" style="color:white;font-weight:bold">' + new_domain + suffix + '</a> to continue using Candle.</p>';
+                        after_html = '<p id="extension-power-settings-domain-explanation">If all went well then in about 10 seconds you should switch to <a href="http://' + new_domain + suffix + '" style="color:white;font-weight:bold">' + new_domain + suffix + '</a> to continue using Candle.</p>';
                     }
                     
                     domain_update_button.insertAdjacentHTML('afterend', after_html);
