@@ -199,8 +199,8 @@ class PowerSettingsAPIHandler(APIHandler):
             
             
             self.update_needs_two_reboots = False
-            #if not os.path.isfile('/boot/candle_original_version.txt'):
-            #    self.update_needs_two_reboots = True
+            if not os.path.isfile('/boot/candle_original_version.txt'):
+                self.update_needs_two_reboots = True
             
             
             self.check_update_processes()

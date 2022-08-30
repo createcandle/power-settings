@@ -518,6 +518,7 @@
                         if(document.getElementById('extension-power-settings-candle-original-version') != null){
                             document.getElementById('extension-power-settings-candle-original-version').innerText = body.candle_original_version;
                         }
+                        
                         if(body.candle_original_version == 'unknown'){
                             if(this.debug){
                                 console.log("running on early release candidate");
@@ -531,8 +532,16 @@
                             }
                         }
                         else if(body.candle_original_version == '2.0.0-beta'){
+                            this.update_available_text = ""
                             if(this.debug){
                                 console.log("running on updated release candidate, nice");
+                            }
+                        }
+                        
+                        if(body.candle_version == '2.0.0-beta'){
+                            this.update_available_text = ""
+                            if(this.debug){
+                                console.log("running on latest available version");
                             }
                         }
                         
@@ -586,7 +595,7 @@
                         }
                         
                         if(body.update_needs_two_reboots == true){
-                            document.getElementById('extension-power-settings-system-update-needs-two-reboots').style.display = 'block';
+                            //document.getElementById('extension-power-settings-system-update-needs-two-reboots').style.display = 'block';
                         }
             
                     }
