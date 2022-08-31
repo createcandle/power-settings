@@ -538,8 +538,14 @@
                                 console.log("running on updated release candidate, nice");
                             }
                         }
+                        else if(body.candle_original_version == '2.0.1'){
+                            this.update_available_text = ""
+                            if(this.debug){
+                                console.log("running on 2.0.1, brilliant");
+                            }
+                        }
                         
-                        if(body.candle_version == '2.0.0-beta'){
+                        if(body.candle_version == '2.0.1'){
                             this.update_available_text = ""
                             if(this.debug){
                                 console.log("running on latest available version");
