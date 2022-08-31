@@ -414,6 +414,7 @@
                             else{
                                 alert("Sorry, something went wrong while setting the time");
                             }
+                            this.show_clock_page();
                             
                         }).catch((e) => {
                             console.log("time submit error: ", e);
