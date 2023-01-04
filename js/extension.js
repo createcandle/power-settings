@@ -118,7 +118,7 @@
                         }
                     ).then((body) => {
                         if(this.debug){
-                            console.log("power settings: back button: unlink response: ", body);
+                            console.log("power settings debug: back button: unlink response: ", body);
                         }
                     }).catch((e) => {
                        console.log("Error: unlinking download: connection failed: ", e);
@@ -445,8 +445,8 @@
                     
                     if(typeof body.debug != 'undefined'){
                         this.debug = body.debug;
-                        if(body.debug == true){
-                            console.log('power settings: init response: ', body);
+                        if(this.debug){
+                            console.log('power settings debug: init response: ', body);
                         }
                     }
                     
@@ -473,7 +473,9 @@
                     document.getElementById('allow-anonymous-mqtt-item').innerHTML = '<input id="allow-anonymous-mqtt-checkbox" class="developer-checkbox" type="checkbox" '  + mqtt_checked + '> <label for="allow-anonymous-mqtt-checkbox" title="This can pose a security risk, so only enable this if you really need to.">Allow anonymous MQTT</label>';
                
                     document.getElementById('allow-anonymous-mqtt-checkbox').addEventListener('change', () => {
-                        console.log('allow anonymous MQTT checkbox value changed');
+                        if(this.debug){
+                            console.log('allow anonymous MQTT checkbox value changed');
+                        }
                     
                         const checkbox_state = document.getElementById('allow-anonymous-mqtt-checkbox').checked;
                         window.API.postJson(
@@ -514,7 +516,7 @@
                     // Show Candle original version
                     if(typeof body.candle_original_version != 'undefined'){
                         if(this.debug){
-                            console.log("body.candle_original_version: ", body.candle_original_version);
+                            console.log("power settings debug: body.candle_original_version: ", body.candle_original_version);
                         }
                         if(document.getElementById('extension-power-settings-candle-original-version') != null){
                             document.getElementById('extension-power-settings-candle-original-version').innerText = body.candle_original_version;
@@ -522,33 +524,33 @@
                         
                         if(body.candle_original_version == 'unknown'){
                             if(this.debug){
-                                console.log("running on early release candidate");
+                                console.log("power settings: running on early release candidate");
                             }
                             this.update_available_text = "available";
                         }
                         else if(body.candle_original_version == '2.0.0'){
                             this.update_available_text = "available";
                             if(this.debug){
-                                console.log("running on RC4");
+                                console.log("power settings: running on RC4");
                             }
                         }
                         else if(body.candle_original_version == '2.0.0-beta'){
                             this.update_available_text = ""
                             if(this.debug){
-                                console.log("running on updated release candidate, nice");
+                                console.log("power settings: running on updated release candidate, nice");
                             }
                         }
                         else if(body.candle_original_version == '2.0.1'){
                             this.update_available_text = ""
                             if(this.debug){
-                                console.log("running on 2.0.1, brilliant");
+                                console.log("power settings: running on 2.0.1, brilliant");
                             }
                         }
                         
                         if(body.candle_version == '2.0.1'){
                             this.update_available_text = ""
                             if(this.debug){
-                                console.log("running on latest available version");
+                                console.log("power settings debug: running on latest available version");
                             }
                         }
                         
@@ -618,7 +620,7 @@
                         if(body.ro_exists == false && body.old_overlay_active == false){
                             this.overlay_exists = false;
                             if(this.debug){
-                                console.log("no overlays detected, update is good to go");
+                                console.log("power settings debug: no overlays detected, update is good to go");
                             }
                             document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'none';
                             document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'block';
@@ -654,7 +656,7 @@
                         }
                     ).then((body) => {
                         if(this.debug){
-                            console.log("create backup response: ", body);
+                            console.log("power settings debug: create backup response: ", body);
                         }
                         if(body.state == 'ok'){
                             window.location.pathname = "/extensions/power-settings/backup/candle_backup.tar";
@@ -881,7 +883,7 @@
         show_update_available(){
             // Show that an update is available
             if(this.debug){
-                console.log("in show_update_available. this.overlay_exists: ", this.overlay_exists);
+                console.log("power settings debug: in show_update_available. this.overlay_exists: ", this.overlay_exists);
             }
             
             if(this.update_available_text != ""){
