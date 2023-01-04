@@ -33,10 +33,10 @@ cd -
 
 # Make the tarball
 echo "creating archive"
-TARFILE="power-settings-${version}.tgz"
+TARFILE="power-settings-${version}${TARFILE_SUFFIX}.tgz"
+echo "TARFILE: $TARFILE"
 tar czf ${TARFILE} package
 
+echo "creating shasums"
 shasum --algorithm 256 ${TARFILE} > ${TARFILE}.sha256sum
 cat ${TARFILE}.sha256sum
-
-#rm -rf SHA256SUMS package
