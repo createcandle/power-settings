@@ -94,7 +94,7 @@
                 const back_button = document.getElementById('extension-power-settings-back-button');
                 
                 if(back_button == null){
-                    console.log("Error, missing power settings back button? Aborting");
+                    console.error("Error, missing power settings back button? Aborting");
                     return;
                 }
                 
@@ -167,7 +167,18 @@
                             'action': 'backup_init'
                         }
                     ).then((body) => {
-                        console.log("backup init response: ", body);
+                        if(this.debug){
+                            console.log("backup init response: ", body);
+                        }
+                        
+                        if(typeof body.photo_frame_installed != 'undefined'){
+                            if(body.photo_frame_installed){
+                                document.getElementById('extension-power-settings-container-backup').classList.add('extension-power-settings-photo-frame-installed');
+                            }
+                            else{
+                                document.getElementById('extension-power-settings-container-backup').classList.remove('extension-power-settings-photo-frame-installed');
+                            }
+                        }
                         
                     }).catch((e) => {
                         alert("Error: backup could not connect to controller: ", e);
@@ -292,7 +303,9 @@
                 // MANUAL UPDATE
     
                 document.getElementById('extension-power-settings-manual-update-button').addEventListener('click', () => {
-                    console.log("manual update button clicked");
+                    if(this.debug){
+                        console.log("manual update button clicked");
+                    }
         
                     document.getElementById('extension-power-settings-system-update-container').style.display = 'none';
          
@@ -309,7 +322,9 @@
                                 'action': 'manual_update'
                             }
                         ).then((body) => {
-                            console.log("manual update response: ", body);
+                            if(this.debug){
+                                console.log("manual update response: ", body);
+                            }
                             
                             if(body.state == 'ok'){
                                 window.API.postJson('/settings/system/actions', {
@@ -350,7 +365,9 @@
                             'ntp': ntp_current_state
                         }
                     ).then((body) => {
-                        console.log(body);
+                        if(this.debug){
+                            console.log("set NTP response: ", body);
+                        }
                         
                         if(ntp_current_state == 0){
                             document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'block';
@@ -360,7 +377,7 @@
                         }
                         
                     }).catch((e) => {
-                        console.log("set ntp error: ", e);
+                        console.error("set ntp error: ", e);
                     });
                 });
                 
@@ -380,7 +397,7 @@
                             console.log("sync-time response: ", body);
                         }
                     }).catch((e) => {
-                        console.log("sync time error: ", e);
+                        console.error("sync time error: ", e);
                     });
                 
                 });
@@ -418,7 +435,7 @@
                             this.show_clock_page();
                             
                         }).catch((e) => {
-                            console.log("time submit error: ", e);
+                            console.error("time submit error: ", e);
                             alert("Saving failed: could not connect to the controller");
                         });
                     }
