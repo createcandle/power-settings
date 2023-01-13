@@ -68,11 +68,30 @@ class PowerSettingsAPIHandler(APIHandler):
             
             self.addon_dir = os.path.join(self.user_profile['addonsDir'], self.addon_name)
             self.data_dir = os.path.join(self.user_profile['dataDir'], self.addon_name)
+            # baseDir is another useful option in user_profile
             
             # MQTT
             self.allow_anonymous_mqtt = False
             self.mosquitto_conf_file_path = '/home/pi/.webthings/etc/mosquitto/mosquitto.conf'
             
+            
+            self.bits = 32
+            try:
+                bits_check = run_command('getconf LONG_BIT')
+                self.bits = int(bits_check)
+            except Exception as ex:
+                print("error getting bits of system: " + str(ex))
+            
+            
+            # Backup
+            self.backup_more = False # May be set to true in the UI, in which case logs and photos are also backuped
+            self.backup_logs_failed = False
+            self.backup_photos_failed = False
+            self.uploads_dir_path = os.path.join(self.user_profile['baseDir'], 'uploads')
+            self.photos_dir_path = os.path.join(self.user_profile['dataDir'],'photo-frame','photos')
+            self.photo_frame_installed = False
+            if os.path.isdir(self.photos_dir_path):
+                self.photo_frame_installed = True
             
             # Bootup actions
             self.actions_file_path = '/boot/bootup_actions.sh' # run before the gateway starts
@@ -96,6 +115,9 @@ class PowerSettingsAPIHandler(APIHandler):
             # Backup data dir paths
             self.backup_dir = os.path.join(self.data_dir, "backup") 
             self.backup_file_path = os.path.join(self.backup_dir, "candle_backup.tar")
+            
+            # Backup data logs path
+            self.log_db_file_path = os.path.join(self.user_profile['baseDir'], 'log','logs.sqlite3')
             
             # Restore
             self.restore_file_path = os.path.join(self.data_dir, "candle_restore.tar")
@@ -134,6 +156,8 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("Error loading config: " + str(ex))
                 
             
+            if self.DEBUG:
+                print("System bits: " + str(self.bits))
            
             # Remove hardware clock file if it exists and it should not be enabled
             if self.do_not_use_hardware_clock:
@@ -318,6 +342,8 @@ class PowerSettingsAPIHandler(APIHandler):
             print("Error loading config from database. Using defaults.")
             return
 
+        
+
         if 'Debug' in config:
             self.DEBUG = bool(config['Debug'])
             if self.DEBUG:
@@ -327,6 +353,11 @@ class PowerSettingsAPIHandler(APIHandler):
             self.do_not_use_hardware_clock = bool(config['Do not use hardware clock'])
             if self.DEBUG:
                 print("-Do not use hardware clock preference was in config: " + str(self.do_not_use_hardware_clock))
+
+        #if 'Backup more' in config:
+        #    self.backup_more = bool(config['Backup more'])
+        #    if self.DEBUG:
+        #        print("-Backup more preference was in config: " + str(self.backup_more))
 
         #self.DEBUG = True # TODO: DEBUG, REMOVE
     
@@ -779,7 +810,6 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                                 
-                                
                             elif action == 'files_check':
                                 if self.DEBUG:
                                     print("handling files check")
@@ -815,7 +845,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':state,
                                                       'backup_exists':self.backup_file_exists,
                                                       'restore_exists':self.restore_file_exists, 
-                                                      'disk_usage':self.disk_usage
+                                                      'disk_usage':self.disk_usage,
+                                                      'photo_frame_installed':self.photo_frame_installed,
+                                                      'bits':self.bits
                                                   }),
                                 )
                                 
@@ -825,6 +857,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                     print("API: in create_backup")
                                 state = 'error'
                                 try:
+                                    
+                                    if 'backup_more' in request.body:
+                                        self.backup_more = bool(request.body['backup_more'])
                                     
                                     backup_result = self.backup()
                                     if self.DEBUG:
@@ -844,12 +879,13 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':state,
                                                       'backup_exists':self.backup_file_exists,
                                                       'restore_exists':self.restore_file_exists,
-                                                      'disk_usage':self.disk_usage
+                                                      'disk_usage':self.disk_usage,
+                                                      'logs_failed':self.backup_logs_failed,
+                                                      'photos_failed':self.backup_photos_failed
                                                   }),
                                 )
                                 
                                 
-                            
                             elif action == 'unlink_backup_download_dir':
                                 
                                 state = 'error'
@@ -974,8 +1010,6 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                             
                             
-                            
-                            
                             elif action == 'clock_page_init':
                                 
                                 if self.DEBUG:
@@ -1069,6 +1103,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         'old_overlay_active':self.old_overlay_active,
                                         'post_bootup_actions_supported':self.post_bootup_actions_supported,
                                         'update_needs_two_reboots':self.update_needs_two_reboots,
+                                        'bits':self.bits,
                                         'debug':self.DEBUG
                                     }
                             if self.DEBUG:
@@ -1322,12 +1357,19 @@ class PowerSettingsAPIHandler(APIHandler):
             directory = self.user_profile['baseDir']
         self.backup_file_exists = os.path.isfile(self.backup_file_path)
         self.restore_file_exists = os.path.isfile(self.restore_file_path)
+        self.photo_frame_installed = os.path.isdir(self.photos_dir_path)
         self.disk_usage = shutil.disk_usage(directory)
+        
 
 
     def backup(self):
         if self.DEBUG:
-            print("in backup")
+            print("in backup. self.backup_more: " + str(self.backup_more))
+        
+        # reset indicators
+        self.backup_logs_failed = False
+        self.backup_photos_failed = False
+            
         try:
             if not os.path.isdir(self.backup_dir):
                 if self.DEBUG:
@@ -1340,7 +1382,89 @@ class PowerSettingsAPIHandler(APIHandler):
                 os.system('rm ' + self.backup_file_path)
                 
             if len(self.backup_file_path) > 10:
-                backup_command = 'cd ' + str(self.user_profile['baseDir']) + '; find ./config ./data -maxdepth 2 -name "*.json" -o -name "*.yaml" -o -name "*.sqlite3" | tar -cf ' + str(self.backup_file_path) + ' -T -'
+                extra_tar_commands = ""
+                #log_option = ""
+                #photos_option = ""
+                #uploads_option = ""
+                log_size = 0
+                photos_size = 0
+                uploads_size = 0
+                if self.backup_more == True:
+                    
+                    # get logs file size
+                    if os.path.exists(self.log_db_file_path):
+                        log_size = os.path.getsize(self.log_db_file_path)
+                        if self.DEBUG:
+                            print("log_size: " + str(log_size))
+                        
+                    # calculate photos dir path
+                    if os.path.isdir(self.photos_dir_path):
+                        photos_size = 0
+                        for path, dirs, files in os.walk(self.photos_dir_path):
+                            for f in files:
+                                fp = os.path.join(path, f)
+                                photos_size += os.path.getsize(fp)
+                        if self.DEBUG:
+                            print("photos_size: " + str(photos_size))
+                    else:
+                        if self.DEBUG:
+                            print("photos dir did not exist, photo-frame addon not installed?: " + str(self.photos_dir_path))
+                            
+                    # calculate uploads dir size
+                    if os.path.isdir(self.uploads_dir_path):
+                        for path, dirs, files in os.walk(self.uploads_dir_path):
+                            for f in files:
+                                fp = os.path.join(path, f)
+                                uploads_size += os.path.getsize(fp)
+                        if self.DEBUG:
+                            print("uploads_size: " + str(uploads_size))
+        
+                    
+                    # if logs and photos together are less than 90Mb, then all is well.
+                    if log_size + photos_size + uploads_size < 90000000:
+                        if log_size != 0:
+                            if self.DEBUG:
+                                print("adding logs to the backup command")
+                            extra_tar_commands += '; tar -rf ' + str(self.backup_file_path)  + ' ' + os.path.join('.','log','logs.sqlite3')
+                        if photos_size != 0:
+                            if self.DEBUG:
+                                print("adding photos to the backup command")
+                            extra_tar_commands += '; tar -rf ' + str(self.backup_file_path)  + ' ' + os.path.join('.','data','photo-frame','photos')
+                        if uploads_size != 0:
+                            if self.DEBUG:
+                                print("adding uploads to the backup command")
+                            extra_tar_commands += '; tar -rf ' + str(self.backup_file_path)  + ' ' + os.path.join('.','uploads')
+                        
+                        
+                    # if together they are too big, then prioritize the logs
+                    elif log_size < 90000000 and log_size != 0:
+                        if self.DEBUG:
+                            print("adding big log to backup command, at the cost of photos")
+                        #log_option = './log '
+                        extra_tar_commands += '; tar -rf ' + str(self.backup_file_path)  + ' ' + os.path.join('.','log','logs.sqlite3') #'self.log_db_file_path + ' -T -'
+                        self.backup_photos_failed = True
+                    
+                    # If the logs are too big, perhaps the photos can be backupped
+                    elif photos_size < 90000000 and photos_size != 0:
+                        self.backup_logs_failed = True
+                        extra_tar_commands += '; tar -rf ' + str(self.backup_file_path)  + ' ' + os.path.join('.','addons','photo-frame','photos')
+                        if self.DEBUG:
+                            print("adding photos to backup command, but logs were too big")
+                        
+                    # if both were too big, then that's bad.
+                    else:
+                        self.backup_photos_failed = True
+                        self.backup_logs_failed = True
+                        if self.DEBUG:
+                            print("Warning, both logs and photos are too big for the backup")
+                    
+                else:
+                    if self.DEBUG:
+                        print("self.backup_more was false, skipping logs, photos and uploads")
+                
+                backup_command = 'cd ' + str(self.user_profile['baseDir']) + '; find ./config ./data -maxdepth 2 -name "*.json" -o -name "*.yaml" -o -name "*.sqlite3" | tar -cf ' + str(self.backup_file_path) + ' -T -' 
+                backup_command += extra_tar_commands
+                
                 if self.DEBUG:
                     print("Running backup command: " + str(backup_command))
                 run_command(backup_command)
@@ -1348,12 +1472,14 @@ class PowerSettingsAPIHandler(APIHandler):
             #if self.DEBUG:
             #    print("linking: " + soft_link)
             #os.system(soft_link)
-            
             if os.path.isdir(self.backup_dir) and not os.path.islink(self.backup_download_dir) and not os.path.isdir(self.backup_download_dir):
                 symlink_command = 'ln -s ' + self.backup_dir + ' ' + self.backup_download_dir
                 if self.DEBUG:
                     print("creating symlink command: " + str(symlink_command))
                 os.system(symlink_command) # backup files can now be downloaded
+            else:
+                if self.DEBUG:
+                    print("\nError, could not create symlink to backup download directory. Perhaps already linked?: " + str(os.path.islink(self.backup_download_dir)))
             
             return True
         except Exception as ex:

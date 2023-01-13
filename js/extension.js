@@ -14,6 +14,7 @@
             this.debug = false;
             this.kiosk = false;
             
+            this.bits = 32;
             this.update_available_text = "";
             this.system_update_in_progress = false;
             this.overlay_exists = true;
@@ -493,6 +494,15 @@
                     });
                     
                     
+                    // 32 or 64 bits
+                    if(typeof body.bits != 'undefined'){
+                        this.bits = parseInt(body.bits);
+                        if(this.debug){
+                            console.log("power settings: system bits: ", this.bits);
+                        }
+                        document.getElementById('extension-power-settings-bits').innerText = this.bits + 'bit';
+                    }
+                    
                     // Hardware click detected
                     if(body.hardware_clock_detected){
                         document.body.classList.add('hardware-clock');
@@ -645,19 +655,34 @@
                 
                 // BACKUP
                 
+                // backup more checkbox
+                document.getElementById('extension-power-settings-backup-more-checkbox').addEventListener('change', () => {
+                    if(this.debug){
+                        console.log("backup more checkbox changed");
+                    }
+                    document.getElementById('extension-power-settings-backup-more-tip').style.display = 'block';
+                });
+                
                 document.getElementById('extension-power-settings-create-backup-button').addEventListener('click', () => {
                     //console.log("create backup button clicked");
                     
                     document.getElementById('extension-power-settings-create-backup-button').style.display = 'none';
+                    document.getElementById('extension-power-settings-backuping-spinner').style.display = 'block';
+                    
+                    const backup_more = document.getElementById('extension-power-settings-backup-more-checkbox').checked;
+                    if(this.debug){
+                        console.log("backup_more: ", backup_more);
+                    }
                     
                     window.API.postJson(
                         `/extensions/${this.id}/api/ajax`, {
-                            'action': 'create_backup'
+                            'action': 'create_backup', 'backup_more':backup_more
                         }
                     ).then((body) => {
                         if(this.debug){
                             console.log("power settings debug: create backup response: ", body);
                         }
+                        
                         if(body.state == 'ok'){
                             window.location.pathname = "/extensions/power-settings/backup/candle_backup.tar";
                         }
@@ -665,10 +690,19 @@
                              alert("Sorry, an error occured while creating the backup");
                         }
                         document.getElementById('extension-power-settings-create-backup-button').style.display = 'block';
+                        document.getElementById('extension-power-settings-backuping-spinner').style.display = 'none';
+                        
+                        if(body.photos_failed == true){
+                            document.getElementById('extension-power-settings-backup-more-photos-too-big-tip').style.display = 'block';
+                        }
+                        if(body.logs_failed == true){
+                            document.getElementById('extension-power-settings-backup-more-logs-too-big-tip').style.display = 'block';
+                        }
                         
                     }).catch((e) => {
                         alert("Error, could not create backup: could not connect?");
                         document.getElementById('extension-power-settings-create-backup-button').style.display = 'block';
+                        document.getElementById('extension-power-settings-backuping-spinner').style.display = 'none';
                     });
                     
                 });

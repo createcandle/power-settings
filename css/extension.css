@@ -468,6 +468,7 @@
     margin-top: -0.25rem;
     background: url(/images/checkbox-sprite.png) no-repeat 0 0;
     background-size: 3rem auto;
+    cursor:pointer;
 }
 
 #extension-power-settings-form-ntp + label{
@@ -560,6 +561,10 @@
 
 /*  BACKUP  */
 
+.extension-power-settings-form-backup{
+    margin-top:4rem;
+}
+
 .extension-power-settings-form-backup button{
     width:100%;
     margin-bottom:1rem;
@@ -580,6 +585,21 @@
 #extension-power-settings-backup-file-selector-container p{
     color:red;
     font-weight:bold;
+}
+
+.extension-power-settings-warning-tip{
+    background-color:#a56400;
+    border-radius:.5rem;
+    padding:2rem;
+    margin:2rem 0;
+}
+
+
+.photo-frame-detail{
+    display:none;
+}
+.extension-power-settings-photo-frame-installed .photo-frame-detail{
+    display:initial;
 }
 
 

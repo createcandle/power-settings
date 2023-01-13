@@ -126,11 +126,27 @@
                 <li>Settings for Candle addons</li>
                 <li>General settings for controller and your addons</li>
             </ul>
-            <p>This does NOT contain photos or data logs.</p>
+            <p>By default this does NOT contain <span class="photo-frame-detail">photos or </span>data logs in order to keep file size small.</p>
+            
+            <input type="checkbox" name="extension-power-settings-backup-more-checkbox" id="extension-power-settings-backup-more-checkbox" />
+            <label for="extension-power-settings-backup-more-checkbox">Also backup logs<span class="photo-frame-detail"> and photos</span></label>
+            <p id="extension-power-settings-backup-more-tip" class="extension-power-settings-warning-tip" style="display:none">If you also backup logs<span class="photo-frame-detail"> and photos</span>, then the backup file size will become much bigger. You will only be able to restore it on the latest version of Candle. If the logs <span class="photo-frame-detail">or photos</span> are bigger than 50 megabytes they may not be backuped.</p>
             <div class="extension-power-settings-form-backup">
                 <button id="extension-power-settings-create-backup-button" class="text-button">Create backup</button>
                 <button id="extension-power-settings-download-backup-button" class="text-button" style="display: none;">Download backup</button>
             </div>
+            
+            <div id="extension-power-settings-backuping-spinner" style="display: none; text-align: center;">
+                <div class="extension-power-settings-spinner">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+            </div>
+            
+            <div id="extension-power-settings-backup-more-logs-too-big-tip" class="extension-power-settings-warning-tip" style="display:none">Logs were too big, could not back them up, sorry.</div>
+            <div id="extension-power-settings-backup-more-photos-too-big-tip" class="extension-power-settings-warning-tip" style="display:none">Too many photos, could not back them up, sorry.</div>
         </div>
 
         <div class="extension-power-settings-vlak">
@@ -141,7 +157,7 @@
                 <li>Settings for Candle addons</li>
                 <li>General settings for controller and your addons</li>
             </ul>
-            <p>This does NOT remove or replace photos or data logs.</p>
+            <!--<p>This does NOT remove or replace photos or data logs.</p>-->
             <div id="extension-power-settings-backup-file-selector-container" class="extension-power-settings-form-backup">
                 <input id="extension-power-settings-backup-file-selector" accept=".tar" type="file" value="Upload backup" />
             </div>
@@ -160,7 +176,7 @@
 
         <div id="extension-power-settings-system-update-container" class="extension-power-settings-vlak">
             <p class="extension-power-settings-header">System update</p>
-            <p>You are running Candle Controller version <span id="extension-power-settings-candle-version">...</span></p>
+            <p>You are running <span id="extension-power-settings-bits">32bit</span> Candle Controller version <span id="extension-power-settings-candle-version">...</span></p>
             <p class="extension-power-settings-dev-only">You started with version <span id="extension-power-settings-candle-original-version">...</span></p>
 
             <div id="extension-power-settings-update-failed" style="display: none;">
