@@ -1589,13 +1589,13 @@ class PowerSettingsAPIHandler(APIHandler):
         try:
             self.busy_updating_recovery = True
             
-            os.system('cd /home/pi/.webthings; rm recovery.img; wget -c https://www.candlesmarthome.com/tools/recovery.img.tar.gz; tar -xf recovery.img.tar.gz')
+            os.system('cd /home/pi/.webthings; rm recovery.img; rm recovery.img.tar.gz; wget -c https://www.candlesmarthome.com/tools/recovery.img.tar.gz; tar -xf recovery.img.tar.gz')
             if os.path.exists('/home/pi/.webthings/recovery.img') == False:
                 if self.DEBUG:
                     print("recovery image failed to download or extract, trying once more")
                 # try once more
                 os.system('cd /home/pi/.webthings; rm recovery.img; wget -c https://www.candlesmarthome.com/tools/recovery.img.tar.gz; tar -xf recovery.img.tar.gz')
-                    
+            
             if os.path.exists('/home/pi/.webthings/recovery.img') == False:
                 if self.DEBUG:
                     print("recovery image failed to download or extract!")
