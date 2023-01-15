@@ -614,6 +614,17 @@
                         }
                     }
                     
+                    if(typeof body.busy_updating_recovery != 'undefined'){
+                        if(body.busy_updating_recovery){
+                            if(this.debug){
+                                console.warn("recovery partition update already in progress");
+                            }
+                            document.getElementById('extension-power-settings-update-recovery-button').style.display = 'none';
+                            document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'block';
+                        }
+                    }
+                    
+                    
                     
                     
                     
