@@ -685,11 +685,22 @@ body > #extension-power-settings-update-process-progress-bar-container{
 }
 
 
+#extension-power-settings-update-recovery-failed,
 #extension-power-settings-system-update-error{
     background-color: rgba(255,255,255,.2);
     padding: 2rem;
     margin: 0 2rem 2rem 2rem;
 }
+
+
+
+/*  RESTORE PARTITION UPDATE  */
+
+#extension-power-settings-update-recovery-busy{
+    text-align:center;
+}
+
+
 
 
 
