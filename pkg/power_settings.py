@@ -106,7 +106,7 @@ class PowerSettingsAPIHandler(APIHandler):
             self.manual_update_script_path = os.path.join(self.addon_dir, "manual_update.sh") 
             
             self.system_update_script_path = os.path.join(self.data_dir, "create_latest_candle.sh") 
-            self.live_system_update_script_path = os.path.join(self.data_dir, "live_system_update.sh") 
+            self.live_system_update_script_path = os.path.join(self.data_dir, "live_system_update.sh") # deprecated
             
             # Backup addon dir paths
             self.backup_download_dir = os.path.join(self.addon_dir, "backup")
@@ -135,6 +135,13 @@ class PowerSettingsAPIHandler(APIHandler):
             self.low_voltage = False
             
             
+            # Recovery partition
+            self.recovery_not_supported = None
+            self.recovery_version = 0
+            self.latest_recovery_version = 1
+            self.busy_updating_recovery = False
+            self.updating_recovery_failed = False
+            
             # System updates
             self.bootup_actions_failed = False
             self.live_update_attempted = False
@@ -148,6 +155,9 @@ class PowerSettingsAPIHandler(APIHandler):
             if os.path.isfile('/home/pi/candle/files_check.sh'):
                 self.files_check_exists = True
                 
+            self.exhibit_mode = False
+            if os.path.isfile('/boot/exhibit_mode.txt'):
+                self.exhibit_mode = True
             
             # LOAD CONFIG
             try:
@@ -294,11 +304,14 @@ class PowerSettingsAPIHandler(APIHandler):
             
 
         except Exception as ex:
-            print("Error getting Candle versions: " + str(ex))
+            if self.DEBUG:
+                print("Error getting Candle versions: " + str(ex))
         
-        #self.backup()
+        # get backup context, such as disk size
         self.update_backup_info()
         
+        # get recovery partition version
+        self.check_recovery_partition()
         
         # Check if anonymous MQTT access is currently allowed
         try:
@@ -312,7 +325,8 @@ class PowerSettingsAPIHandler(APIHandler):
                    self.allow_anonymous_mqtt = True
                    
         except Exception as ex:
-            print("Error reading MQTT config file: " + str(ex))
+            if self.DEBUG:
+                print("Error reading MQTT config file: " + str(ex))
            
         if self.DEBUG:
             print("self.allow_anonymous_mqtt: " + str(self.allow_anonymous_mqtt))
@@ -531,6 +545,22 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                                 
+                            # UPDATE RECOVERY PARTITION
+                            elif action == 'update_recovery_partition':
+                                
+                                if self.DEBUG:
+                                    print("start of update_recovery_partition requested")
+                                
+                                self.update_recovery_partition()
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':'ok'}),
+                                )
+                            
+                                
+                                
                             # MANUAL UPDATE
                             elif action == 'manual_update':
                                 
@@ -602,7 +632,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 
                                 
-                            # SYSTEM UPDATE UPDATE
+                            # SYSTEM UPDATE
                             elif action == 'start_system_update':
                                 self.system_update_in_progress = False
                                 if self.system_update_error_detected:
@@ -805,7 +835,11 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'dmesg':dmesg_lines, 
                                                       'system_update_in_progress':self.system_update_in_progress,
                                                       'ro_exists':self.ro_exists,
-                                                      'old_overlay_active':self.old_overlay_active
+                                                      'old_overlay_active':self.old_overlay_active,
+                                                      'recovery_version':self.recovery_version,
+                                                      'latest_recovery_version':self.latest_recovery_version,
+                                                      'busy_updating_recovery':self.busy_updating_recovery,
+                                                      'updating_recovery_failed':self.updating_recovery_failed
                                                   }),
                                 )
                                 
@@ -830,7 +864,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':'ok','files_check_output':files_check_output}),
                                 )
                                 
-                                
+                            
+                            
                             elif action == 'backup_init':
                                 if self.DEBUG:
                                     print("API: in backup_init")
@@ -850,6 +885,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'bits':self.bits
                                                   }),
                                 )
+                                
                                 
                                 
                             elif action == 'create_backup':
@@ -886,6 +922,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                                 
+                                
                             elif action == 'unlink_backup_download_dir':
                                 
                                 state = 'error'
@@ -900,6 +937,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':state}),
                                 )
+                            
                             
                             
                             elif action == 'anonymous_mqtt':
@@ -928,6 +966,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':True}),
                                 )
+                            
+                            
                             
                             elif action == 'get_stats':
                                 
@@ -962,7 +1002,6 @@ class PowerSettingsAPIHandler(APIHandler):
                                     
                                 except Exception as ex:
                                     print("Error checking free memory: " + str(ex))
-                                
                                 
                                 # check if power supply is strong enough (lwo voltage)
                                 try:
@@ -1093,6 +1132,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         'disk_usage':self.disk_usage,
                                         'allow_anonymous_mqtt':self.allow_anonymous_mqtt, 
                                         'hardware_clock_detected':self.hardware_clock_detected,
+                                        'exhibit_mode':self.exhibit_mode,
                                         'candle_version':self.candle_version,
                                         'candle_original_version':self.candle_original_version,
                                         'bootup_actions_failed':self.bootup_actions_failed,
@@ -1104,6 +1144,11 @@ class PowerSettingsAPIHandler(APIHandler):
                                         'post_bootup_actions_supported':self.post_bootup_actions_supported,
                                         'update_needs_two_reboots':self.update_needs_two_reboots,
                                         'bits':self.bits,
+                                        'recovery_version':self.recovery_version,
+                                        'latest_recovery_version':self.latest_recovery_version,
+                                        'busy_updating_recovery':self.busy_updating_recovery,
+                                        'recovery_not_supported':self.recovery_not_supported,
+                                        'updating_recovery_failed':self.updating_recovery_failed,
                                         'debug':self.DEBUG
                                     }
                             if self.DEBUG:
@@ -1117,6 +1162,7 @@ class PowerSettingsAPIHandler(APIHandler):
                           content=json.dumps(response),
                         )
                         
+                    
                     
                     elif request.path == '/set-time':
                         try:
@@ -1138,6 +1184,7 @@ class PowerSettingsAPIHandler(APIHandler):
                               content=json.dumps({"state":False}),
                             )
 
+                        
                         
                     elif request.path == '/set-ntp':
                         if self.DEBUG:
@@ -1485,6 +1532,87 @@ class PowerSettingsAPIHandler(APIHandler):
         except Exception as ex:
             print("error while creating backup: " + str(ex))
         return False
+
+
+
+    # check what version of the recovery partition is installed
+    def check_recovery_partition(self):
+        if self.DEBUG:
+            print("in check_recovery_partition")
+        try:
+            lsblk_output = run_command('lsblk')
+            if not 'mmcblk0p4' in lsblk_output:
+                if self.DEBUG:
+                    print("warning, recovery partition is not supported")
+                self.recovery_not_supported = True
+            else:
+                self.recovery_not_supported = False
+                if self.DEBUG:
+                    print("mmcblk0p4 partition exists")
+                os.system('sudo mkdir -p /mnt/recoverypart')
+                if os.path.exists('/mnt/recoverypart/candle_recovery.txt'):
+                    if self.DEBUG:
+                        print("warning, recovery partition seems to already be mounted")
+                else:
+                    if self.DEBUG:
+                        print("mounting recovery partition")
+                    os.system('sudo mount -t auto /dev/mmcblk0p3 /mnt/recoverypart')
+        
+                if os.path.exists('/mnt/recoverypart/candle_recovery.txt') == False:
+                    if self.DEBUG:
+                        print("ERROR, mounting recovery partition failed") # could be a rare occurance of an unformatted recovery partition
+                else:
+                    with open("/mnt/recoverypart/candle_recovery.txt", "r+") as version_file:
+                        self.recovery_version = int(version_file.read())
+                        if self.DEBUG:
+                            print("recovery partition version: " + str(self.recovery_version))
+                            
+                os.system('sudo umount /mnt/recoverypart')
+                
+                if self.recovery_version == 0:
+                    if self.DEBUG:
+                        print("unable to get recovery partition version")
+                elif self.recovery_version < self.latest_recovery_version:
+                    if self.DEBUG:
+                        print("recovery partition should be updated")
+                
+        except Exception as ex:
+            if self.DEBUG:
+                print("Error in check_recovery_partition: " + str(ex))
+            
+        
+    
+
+    def update_recovery_partition(self):
+        if self.DEBUG:
+            print("in update_recovery_partition")
+        try:
+            self.busy_updating_recovery = True
+            
+            os.system('cd /home/pi/.webthings; rm recovery.img; wget -c https://www.candlesmarthome.com/tools/recovery.img.tar.gz; tar -xf recovery.img.tar.gz')
+            if os.path.exists('/home/pi/.webthings/recovery.img') == False:
+                if self.DEBUG:
+                    print("recovery image failed to download or extract, trying once more")
+                # try once more
+                os.system('cd /home/pi/.webthings; rm recovery.img; wget -c https://www.candlesmarthome.com/tools/recovery.img.tar.gz; tar -xf recovery.img.tar.gz')
+                    
+            if os.path.exists('/home/pi/.webthings/recovery.img') == False:
+                if self.DEBUG:
+                    print("recovery image failed to download or extract!")
+                os.system('cd /home/pi/.webthings; rm recovery.img; rm recovery.img.tar.gz')
+                self.updating_recovery_failed = True
+                
+            else:
+                if self.DEBUG:
+                    print("recovery image file was downloaded and extracted succesfully")
+                os.system('sudo losetup --partscan /dev/loop0 /home/pi/.webthings/recovery.img; sudo dd if=/dev/loop0p2 of=/dev/mmcblk0p3 bs=1M; sudo losetup --detach /dev/loop0 ')
+            
+            self.busy_updating_recovery = False
+        except Exception as ex:
+            print("Error in update_recovery_partition: " + str(ex))
+        #sudo losetup --partscan /dev/loop0 recovery.img
+        #sudo dd if=/dev/loop0p2 of=/dev/mmcblk0p3 bs=1M
+        #losetup --detach /dev/loop0 
 
 
     def unload(self):

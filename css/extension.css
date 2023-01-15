@@ -49,15 +49,19 @@
     display:none;
     text-align:center;
 }
-.developer #extension-power-settings-available-memory-container{
-    display:block;
-}
 
 #allow-anonymous-mqtt-item{
     display:none;
     background-image:url('../images/mqtt-icon.svg');
 }
-.developer #allow-anonymous-mqtt-item{
+
+#extension-power-settings-update-recovery-container{
+    display:none;
+}
+
+.developer #extension-power-settings-available-memory-container,
+.developer #allow-anonymous-mqtt-item,
+.developer #extension-power-settings-update-recovery-container{
     display:block;
 }
 
@@ -127,7 +131,9 @@
 }
 */
 
-.extension-power-settings-container p{
+.extension-power-settings-container p,
+.extension-power-settings-container ul,
+.extension-power-settings-container ol{
     line-height:2.5rem;
 }
 
@@ -135,8 +141,10 @@
     word-wrap:break-word;
 }
 
-
-
+.extension-power-settings-container ul li,
+.extension-power-settings-container ol li{
+    margin-bottom:.7rem;
+}
 
 
 
@@ -682,6 +690,8 @@ body > #extension-power-settings-update-process-progress-bar-container{
     padding: 2rem;
     margin: 0 2rem 2rem 2rem;
 }
+
+
 
 
 

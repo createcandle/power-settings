@@ -156,6 +156,7 @@
             <ul>
                 <li>Settings for Candle addons</li>
                 <li>General settings for controller and your addons</li>
+                <li>Data logs (if the backup contains those)</li>
             </ul>
             <!--<p>This does NOT remove or replace photos or data logs.</p>-->
             <div id="extension-power-settings-backup-file-selector-container" class="extension-power-settings-form-backup">
@@ -283,6 +284,48 @@
             </div>
 
             <pre id="extension-power-settings-update-process-output" class="extension-power-settings-dev-only"></pre>
+        </div>
+        
+        
+        <div id="extension-power-settings-update-recovery-container" class="extension-power-settings-vlak">
+            <p class="extension-power-settings-header">Update & Recovery</p>
+            <div id="extension-power-settings-update-recovery-supported">
+                <p>You Candle Controller has an update and recovery system. This should also be kept up to date. Doing so can be done in the background, and does not require a reboot.</p>
+                <p>Your Update & Recovery system has version: <span id="extension-power-settings-update-recovery-version">...</span></p>
+                <p id="extension-power-settings-update-recovery-ok" style="display:none">Your Update & Recovery system is using the latest available version.</p>
+                <div id="extension-power-settings-update-recovery-should-update" style="display:none">
+                    <p>There is a new version of the Update & Recovery system available!</p>
+                    <div class="extension-power-settings-form-manual-update">
+                        <button id="extension-power-settings-update-recovery-button" class="text-button">Update recovery</button>
+                    </div>
+                </div>
+                <div id="extension-power-settings-update-recovery-busy" style="display:none"> 
+                    <div class="extension-power-settings-spinner">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                    <p style="text-align:center">Upgrading Update & Recovery system</p> 
+                </div>
+                <div id="extension-power-settings-update-recovery-failed" style="display:none">
+                    <h3>Uh oh</h3>
+                    <p>The upgrade of the Update & Recovery system seems to have failed. Not to worry, you can simple try to run the update process again.</p>
+                </div>
+            </div>
+            <div id="extension-power-settings-update-recovery-not-supported" style="display:none">
+                <p>Unfortunately your Candle Controller is relatively old. It does not and cannot support the latest update system. It's recommended to take the following steps:</p>
+                <ol>
+                    <li>Create a backup of your system (settings -> backup).</li>
+                    <li>Flash the latest version of the Candle controller to an SD card. It's recommended to use a new SD card for this. The steps to do this are explained on candlesmarthome.com.</li>
+                    <li>Turn off the Candle controller.
+                    <li>Replace the current SD card in your Candle controller with the new one.</li>
+                    <li>Turn on the Candle controller. Connect it to your network, and create an account again. This is only a temporary account.</li>
+                    <li>Restore the backup. This will also restore your original network settings and login account. (settings -> backup)</li>
+                </ol>
+                <p>If everything went well, then you can use the old SD card for something else. If not, then you can simply go back to your old system by plugging the old SD card back in.</p>
+            </div>
+            
         </div>
         
         
