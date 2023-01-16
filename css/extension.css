@@ -55,10 +55,16 @@
     background-image:url('../images/mqtt-icon.svg');
 }
 
+#extension-power-settings-update-recovery-update-available,
+#extension-power-settings-switch-to-recovery-container,
 #extension-power-settings-update-recovery-container{
     display:none;
 }
 
+
+/* TODO: .system-update-available #extension-power-settings-switch-to-recovery-container, */
+.developer #extension-power-settings-update-recovery-update-available,
+.developer #extension-power-settings-switch-to-recovery-container,
 .developer #extension-power-settings-available-memory-container,
 .developer #allow-anonymous-mqtt-item,
 .developer #extension-power-settings-update-recovery-container{

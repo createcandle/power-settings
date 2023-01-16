@@ -175,6 +175,9 @@
             <div class="section-title-right-flex"></div>
         </div>
 
+
+
+
         <div id="extension-power-settings-system-update-container" class="extension-power-settings-vlak">
             <p class="extension-power-settings-header">System update</p>
             <p>You are running <span id="extension-power-settings-bits">32bit</span> Candle Controller version <span id="extension-power-settings-candle-version">...</span></p>
@@ -287,6 +290,8 @@
         </div>
         
         
+        
+        
         <div id="extension-power-settings-update-recovery-container" class="extension-power-settings-vlak">
             <p class="extension-power-settings-header">Update & Recovery</p>
             <div id="extension-power-settings-update-recovery-supported">
@@ -308,9 +313,6 @@
                     </div>
                     <div id="extension-power-settings-update-recovery-busy-progress-container"><div id="extension-power-settings-update-recovery-busy-progress"></div></div>
                 </div>
-                
-                
-                
                 <div id="extension-power-settings-update-recovery-failed" style="display:none">
                     <h3>Update failed</h3>
                     <p>The upgrade of the Update & Recovery system seems to have failed. Please reboot and try to run the update process again.</p>
@@ -328,8 +330,30 @@
                 </ol>
                 <p>If everything went well, then you can use the old SD card for something else. If not, then you can simply go back to your old system by plugging the old SD card back in.</p>
             </div>
-            
         </div>
+        
+        
+        <div id="extension-power-settings-switch-to-recovery-container" class="extension-power-settings-vlak">
+            <p class="extension-power-settings-header">Upgrade Candle</p>
+            
+            <p>You are running <span id="extension-power-settings-bits2">32bit</span> Candle Controller version <span id="extension-power-settings-candle-version2">...</span></p>
+            <p class="extension-power-settings-dev-only">You started with version <span id="extension-power-settings-candle-original-version2">...</span></p>
+            <div id="extension-power-settings-update-recovery-update-available">
+                <p>A new version of the Candle Controller is available</p>
+                <p>This will update your Candle Controller by downloading the latest version of Candle and over-writing the old version. Your personal data and settings will not be touched, but all the other parts of Candle will be replaced. Here's what will happen:</p>
+                <ol>
+                    <li>The controller reboots and loads a second, tiny version of Linux which is used for Update & Recovery only.</li>
+                    <li>It downloads the latest Candle version, which is about 1.5 gigabytes in size.</li>
+                    <li>It completely overwrites the existing Candle version.</li>
+                    <li>Once complete it sets the system to start up from the upgraded main Candle system again.</li>
+                </ol>
+                <p>It's vital that the upgrade process is not interupted.</p>
+                <div class="extension-power-settings-form-manual-update">
+                    <button id="extension-power-settings-switch-to-recovery-button" class="text-button">Upgrade Candle</button>
+                </div>
+            </div>
+        </div>
+        
         
         
         <div id="extension-power-settings-manual-update-container" class="extension-power-settings-vlak">

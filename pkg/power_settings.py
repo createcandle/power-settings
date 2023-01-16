@@ -87,6 +87,9 @@ class PowerSettingsAPIHandler(APIHandler):
             print("error getting bits of system: " + str(ex))
         
         
+        self.allow_update_via_recovery = False # will be set to True if a number of conditions are met. Allows for the new partition replace upgrade system.
+        
+        
         # Backup
         self.backup_more = False # May be set to true in the UI, in which case logs and photos are also backuped
         self.backup_logs_failed = False
@@ -140,7 +143,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
         # Recovery partition
-        self.recovery_not_supported = None
+        #self.recovery_not_supported = None
         self.recovery_version = 0
         self.latest_recovery_version = 1
         self.busy_updating_recovery = 0  # higher values indicate steps in the process
@@ -258,7 +261,6 @@ class PowerSettingsAPIHandler(APIHandler):
             print("original_version_file_path: " + str(self.original_version_file_path))
             print("self.backup_file_path: " + str(self.backup_file_path))
             print("self.backup_download_dir: " + str(self.backup_download_dir))
-            
             print("self.mosquitto_conf_file_path: " + str(self.mosquitto_conf_file_path))
                 
         
@@ -561,7 +563,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if self.DEBUG:
                                     print("start of update_recovery_partition requested")
                                 
-                                self.busy_updating_recovery = 0;
+                                self.busy_updating_recovery = 0
                                 self.should_start_recovery_update = True
                                 
                                 return APIResponse(
@@ -864,6 +866,27 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'updating_recovery_failed':self.updating_recovery_failed
                                                   }),
                                 )
+                                
+                                
+                            # Switch to recovery partition
+                            elif action == 'switch_to_recovery':
+                                if self.DEBUG:
+                                    print("handling recovery_poll action")
+                                
+                                state = 'upgrade recovery first'
+                                if self.recovery_version == self.latest_recovery_version:
+                                    state = 'ok'
+                                    self.switch_to_recovery()
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
+                                
+                                
+                                
+                                
                                 
                                 
                             elif action == 'files_check':
@@ -1169,7 +1192,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         'recovery_version':self.recovery_version,
                                         'latest_recovery_version':self.latest_recovery_version,
                                         'busy_updating_recovery':self.busy_updating_recovery,
-                                        'recovery_not_supported':self.recovery_not_supported,
+                                        'allow_update_via_recovery':self.allow_update_via_recovery,
                                         'updating_recovery_failed':self.updating_recovery_failed,
                                         'debug':self.DEBUG
                                     }
@@ -1561,14 +1584,15 @@ class PowerSettingsAPIHandler(APIHandler):
     def check_recovery_partition(self):
         if self.DEBUG:
             print("in check_recovery_partition")
+            
         try:
             lsblk_output = run_command('lsblk')
             if not 'mmcblk0p4' in lsblk_output:
                 if self.DEBUG:
                     print("warning, recovery partition is not supported")
-                self.recovery_not_supported = True
+                #self.recovery_not_supported = True
             else:
-                self.recovery_not_supported = False
+                #self.recovery_not_supported = False
                 if self.DEBUG:
                     print("mmcblk0p4 partition exists")
                 os.system('sudo mkdir -p /mnt/recoverypart')
@@ -1580,11 +1604,15 @@ class PowerSettingsAPIHandler(APIHandler):
                         print("mounting recovery partition")
                     os.system('sudo mount -t auto /dev/mmcblk0p3 /mnt/recoverypart')
                     time.sleep(1)
+                    
+                # Check if the recovery partition was mounted properly
                 if os.path.exists('/mnt/recoverypart/candle_recovery.txt') == False:
                     if self.DEBUG:
                         print("ERROR, mounting recovery partition failed") # could be a rare occurance of an unformatted recovery partition
+                        if os.path.exists('/mnt/recoverypart/bin'):
+                            print("However, /mnt/recoverypart/bin does exist, so the partition is mounted?")
                 else:
-                    with open("/mnt/recoverypart/candle_recovery.txt", "r+") as version_file:
+                    with open("/mnt/recoverypart/candle_recovery.txt", "r") as version_file:
                         self.recovery_version = int(version_file.read())
                         if self.DEBUG:
                             print("recovery partition version: " + str(self.recovery_version))
@@ -1597,11 +1625,25 @@ class PowerSettingsAPIHandler(APIHandler):
                 elif self.recovery_version < self.latest_recovery_version:
                     if self.DEBUG:
                         print("recovery partition should be updated")
+                elif self.recovery_version == self.latest_recovery_version:
+                    if self.DEBUG:
+                        print("recovery partition is up to date")
+                    # recovery partition is up to date
+                    
+                    if os.path.exists('/boot/cmdline-update.txt') == False:
+                        if os.path.exists('/boot'):
+                            os.system('echo "console=tty3 root=/dev/mmcblk0p3 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait consoleblank=0 net.ifnames=0 quiet plymouth.ignore-serial-consoles splash logo.nologo" | sudo tee /boot/cmdline-update.txt')
+                    
+                    if os.path.exists('/boot/cmdline-update.txt'):
+                        if self.DEBUG:
+                            print("/boot/cmdline-update.txt exists, update may happen via recovery partition")
+                        self.allow_update_via_recovery = True
                 
         except Exception as ex:
             if self.DEBUG:
                 print("Error in check_recovery_partition: " + str(ex))
             
+    
         
     
 
@@ -1618,30 +1660,38 @@ class PowerSettingsAPIHandler(APIHandler):
             self.updating_recovery_failed = False
             self.busy_updating_recovery = 1
             
+            os.system('sudo umount /mnt/recoverypart')
             
-            os.system('cd /home/pi/.webthings; rm recovery.img; rm recovery.img.tar.gz; wget -c https://www.candlesmarthome.com/tools/recovery.img.tar.gz; tar -xf recovery.img.tar.gz')
+            os.system('cd /home/pi/.webthings; rm recovery.img; rm recovery.img.tar.gz; wget -c https://www.candlesmarthome.com/tools/recovery.img.tar.gz -O recovery.img.tar.gz; tar -xf recovery.img.tar.gz')
             if os.path.exists('/home/pi/.webthings/recovery.img') == False:
                 if self.DEBUG:
                     print("recovery image failed to download or extract, trying once more")
                 # try once more
-                os.system('cd /home/pi/.webthings; rm recovery.img; wget -c https://www.candlesmarthome.com/tools/recovery.img.tar.gz; tar -xf recovery.img.tar.gz')
+                os.system('cd /home/pi/.webthings; rm recovery.img; wget -c https://www.candlesmarthome.com/tools/recovery.img.tar.gz -O recovery.img.tar.gz; tar -xf recovery.img.tar.gz')
             
             self.busy_updating_recovery = 2
             
+            # Recovery image failed to download/extract
             if os.path.exists('/home/pi/.webthings/recovery.img') == False:
                 if self.DEBUG:
                     print("recovery image failed to download or extract!")
-                os.system('sudo umount /mnt/recoverypart')
                 os.system('cd /home/pi/.webthings; rm recovery.img; rm recovery.img.tar.gz')
                 self.updating_recovery_failed = True
                 
+            # Good to go!
             else:
                 if self.DEBUG:
                     print("recovery image file was downloaded and extracted succesfully")
                 self.busy_updating_recovery = 3
+                
+                os.system('sudo mkfs -t ext4 /dev/mmcblk0p3') # format the partition first
+                
+                self.busy_updating_recovery = 4
+                
                 os.system('sudo losetup --partscan /dev/loop0 /home/pi/.webthings/recovery.img; sudo dd if=/dev/loop0p2 of=/dev/mmcblk0p3 bs=1M; sudo losetup --detach /dev/loop0 ')
             
-            
+                self.busy_updating_recovery = 5
+                
         except Exception as ex:
             print("Error in update_recovery_partition: " + str(ex))
         
@@ -1649,8 +1699,27 @@ class PowerSettingsAPIHandler(APIHandler):
         #sudo dd if=/dev/loop0p2 of=/dev/mmcblk0p3 bs=1M
         #losetup --detach /dev/loop0 
         
-        self.busy_updating_recovery = 4
+        # clean up
+        os.system('cd /home/pi/.webthings; rm recovery.img; rm recovery.img.tar.gz')
+        
 
+
+    def switch_to_recovery(self):
+        if self.DEBUG:
+            print("in switch_to_recovery")
+        if os.path.exists('/boot/cmdline-update.txt') and os.path.exists('/boot/cmdline-candle.txt'):
+            if self.busy_updating_recovery == 0 or self.busy_updating_recovery == 5:
+                if self.DEBUG:
+                    print("copying recovery cmdline over the existing one")
+                os.system('sudo cp /boot/cmdline-update.txt /boot/cmdline.txt')
+            else:
+                if self.DEBUG:
+                    print("Error, will not start switch to recovery as busy_updating_recovery is in limbo, indicating a failed recovery partition update: " + str(self.busy_updating_recovery))
+        else:
+            if self.DEBUG:
+                print("Error, /boot/cmdline-update.txt or /boot/cmdline-candle.txt does not exist")
+        
+        
 
     def unload(self):
         if self.DEBUG:

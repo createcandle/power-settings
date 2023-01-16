@@ -123,10 +123,10 @@
                         }
                     ).then((body) => {
                         if(this.debug){
-                            console.log("power settings debug: back button: unlink response: ", body);
+                            console.log("power settings: unlink_backup_download_dir response: ", body);
                         }
                     }).catch((e) => {
-                       console.log("Error: unlinking download: connection failed: ", e);
+                       console.log("Error: unlink_backup_download_dir: connection failed: ", e);
                     });
                     
                     
@@ -194,7 +194,6 @@
                 // Show factory reset page button
                 document.getElementById('extension-power-settings-menu-reset-button').addEventListener('click', () => {
                     //console.log('show reset menu button clicked');
-            
                     this.hide_all_settings_containers();
                     document.getElementById('extension-power-settings-container-reset').classList.remove('extension-power-settings-hidden');
                     document.getElementById('extension-power-settings-pages').classList.remove('hidden');
@@ -205,14 +204,10 @@
                 // Show update page button
                 document.getElementById('extension-power-settings-menu-update-button').addEventListener('click', () => {
                     //console.log('show reset menu button clicked');
-            
                     this.hide_all_settings_containers();
                     document.getElementById('extension-power-settings-container-update').classList.remove('extension-power-settings-hidden');
                     document.getElementById('extension-power-settings-pages').classList.remove('hidden');
                 });
-                
-    
-    
                 
                 
                 // FACTORY RESET
@@ -558,6 +553,7 @@
                             console.log("power settings: system bits: ", this.bits);
                         }
                         document.getElementById('extension-power-settings-bits').innerText = this.bits + 'bit';
+                        document.getElementById('extension-power-settings-bits2').innerText = this.bits + 'bit';
                     }
                     
                     if(typeof body.exhibit_mode != 'undefined'){
@@ -580,6 +576,7 @@
                     // Show Candle version
                     if(typeof body.candle_version != 'undefined'){
                         document.getElementById('extension-power-settings-candle-version').innerText = body.candle_version;
+                        document.getElementById('extension-power-settings-candle-version2').innerText = body.candle_version;
                     }
                     
                     if(typeof body.bootup_actions_failed != 'undefined'){
@@ -612,12 +609,13 @@
                         }
                     }
                     
-                    if(typeof body.recovery_not_supported != 'undefined'){
-                        if(body.recovery_not_supported){
+                    if(typeof body.allow_update_via_recovery != 'undefined'){
+                        if(body.allow_update_via_recovery == false){
                             if(this.debug){
                                 console.warn("recovery partition not supported");
                             }
                             document.getElementById('extension-power-settings-update-recovery-supported').style.display = 'none';
+                            document.getElementById('extension-power-settings-switch-to-recovery-container').style.display = 'none';
                             document.getElementById('extension-power-settings-update-recovery-not-supported').style.display = 'block';
                         }
                     }
@@ -634,12 +632,6 @@
                     }
                     
                     
-                    
-                    
-                    
-                    
-                    
-                    
                     // Show Candle original version
                     if(typeof body.candle_original_version != 'undefined'){
                         if(this.debug){
@@ -647,6 +639,7 @@
                         }
                         if(document.getElementById('extension-power-settings-candle-original-version') != null){
                             document.getElementById('extension-power-settings-candle-original-version').innerText = body.candle_original_version;
+                            document.getElementById('extension-power-settings-candle-original-version2').innerText = body.candle_original_version;
                         }
                         
                         if(body.candle_original_version == 'unknown'){
@@ -679,6 +672,13 @@
                             if(this.debug){
                                 console.log("power settings debug: running on latest available version");
                             }
+                        }
+                        
+                        if(this.update_available_text != ""){
+                            if(this.debug){
+                                console.log("A SYSTEM UPDATE IS AVAILABLE");
+                            }
+                            document.body.classList.add('system-update-available');
                         }
                         
                         if(body.ro_exists == true){
@@ -917,6 +917,42 @@
                 document.getElementById('extension-power-settings-system-update-show-log-button').addEventListener('click', () => {
                     document.getElementById('extension-power-settings-update-process-output').classList.remove('extension-power-settings-dev-only');
                 });
+                
+                
+                
+                
+                // Start RECOVERY update button
+                document.getElementById('extension-power-settings-switch-to-recovery-button').addEventListener('click', () => {
+                    console.log("update via switch to recovery button clicked");
+                    document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'none';
+                    document.getElementById('extension-power-settings-update-recovery-container').style.display = 'none';
+                    
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'switch_to_recovery'
+                        }
+                    ).then((body) => {
+                        if(this.debug){
+                            console.log("switch_to_recovery response: ", body);
+                        }
+                        if(body.state = 'ok'){
+                            window.API.postJson('/settings/system/actions', {
+                                action: 'restartSystem'
+                            }).catch(console.error);
+                        }
+                        else{
+                            alert("Please upgrade the Update & Recovery system first");
+                        }
+                        
+                        
+                    }).catch((e) => {
+                        console.error("Could not start upgrade - connection error");
+                        alert("Could not start upgrade - connection error");
+                    });
+                    
+                });
+                
+                
                 
                 
                 
@@ -1330,6 +1366,7 @@
                                         document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
                                         
                                         document.body.classList.add("system-updating");
+                                        document.body.classList.remove("system-update-available");
                                         
                                         if(typeof body.dmesg != 'undefined'){
                                             if( body.dmesg.indexOf('ERROR') != -1 ){
