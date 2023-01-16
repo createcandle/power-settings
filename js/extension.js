@@ -1161,7 +1161,7 @@
                                         console.log("body.busy_updating_recovery: ", body.busy_updating_recovery);
                                     }
                                     
-                                    if(busy_updating_recovery > 0){
+                                    if(body.busy_updating_recovery > 0){
                                         document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'block';
                                         document.getElementById('extension-power-settings-update-recovery-busy-progress').style.width = (body.busy_updating_recovery * 25) + '%';
                                     }
