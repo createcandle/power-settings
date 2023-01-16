@@ -561,6 +561,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if self.DEBUG:
                                     print("start of update_recovery_partition requested")
                                 
+                                self.busy_updating_recovery = 0;
                                 self.should_start_recovery_update = True
                                 
                                 return APIResponse(
@@ -1648,7 +1649,7 @@ class PowerSettingsAPIHandler(APIHandler):
         #sudo dd if=/dev/loop0p2 of=/dev/mmcblk0p3 bs=1M
         #losetup --detach /dev/loop0 
         
-        self.busy_updating_recovery = 0
+        self.busy_updating_recovery = 4
 
 
     def unload(self):
