@@ -1640,6 +1640,8 @@ class PowerSettingsAPIHandler(APIHandler):
                     
                     if os.path.exists('/boot/cmdline-update.txt') == False:
                         if os.path.exists('/boot'):
+                            if self.DEBUG:
+                                print("creating missing cmdline-update.txt")
                             os.system('echo "console=tty3 root=/dev/mmcblk0p3 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait consoleblank=0 net.ifnames=0 quiet plymouth.ignore-serial-consoles splash logo.nologo" | sudo tee /boot/cmdline-update.txt')
                     
                     if os.path.exists('/boot/cmdline-update.txt'):
