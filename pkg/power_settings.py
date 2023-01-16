@@ -1600,7 +1600,7 @@ class PowerSettingsAPIHandler(APIHandler):
                 if self.DEBUG:
                     print("mmcblk0p4 partition exists")
                 
-                if self.bits = 64:
+                if self.bits == 64:
                     self.allow_recovery_partition_upgrade = True
                 
                 os.system('sudo mkdir -p /mnt/recoverypart')
