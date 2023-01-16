@@ -627,9 +627,7 @@
                             if(this.debug){
                                 console.warn("Switch to recovery partition currently not supported");
                             }
-                            document.getElementById('extension-power-settings-update-recovery-supported').style.display = 'none';
                             document.getElementById('extension-power-settings-switch-to-recovery-container').style.display = 'none';
-                            document.getElementById('extension-power-settings-update-recovery-not-supported').style.display = 'block';
                         }
                     }
                     
