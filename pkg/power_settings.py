@@ -10,7 +10,7 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
 import json
-from time import sleep
+import time
 import base64
 import shutil
 import datetime
@@ -47,6 +47,8 @@ class PowerSettingsAPIHandler(APIHandler):
         self.addon_name = "power-settings"  # overwritteb by data in manifest
         self.DEBUG = False
         
+        self.running = True
+        
         try:
             manifest_fname = os.path.join(
                 os.path.dirname(__file__),
@@ -58,203 +60,205 @@ class PowerSettingsAPIHandler(APIHandler):
 
             with open(manifest_fname, 'rt') as f:
                 manifest = json.load(f)
-
-            APIHandler.__init__(self, manifest['id'])
-            self.manager_proxy.add_api_handler(self)
-            self.addon_name = manifest['id']
+        except Exception as e:
+            print("ERROR, Failed load manifest.json: " + str(e))
             
+        APIHandler.__init__(self, manifest['id'])
+        self.manager_proxy.add_api_handler(self)
+        self.addon_name = manifest['id']
+        
+        if self.DEBUG:
+            print("self.user_profile: " + str(self.user_profile))
+        
+        self.addon_dir = os.path.join(self.user_profile['addonsDir'], self.addon_name)
+        self.data_dir = os.path.join(self.user_profile['dataDir'], self.addon_name)
+        # baseDir is another useful option in user_profile
+        
+        # MQTT
+        self.allow_anonymous_mqtt = False
+        self.mosquitto_conf_file_path = '/home/pi/.webthings/etc/mosquitto/mosquitto.conf'
+        
+        
+        self.bits = 32
+        try:
+            bits_check = run_command('getconf LONG_BIT')
+            self.bits = int(bits_check)
+        except Exception as ex:
+            print("error getting bits of system: " + str(ex))
+        
+        
+        # Backup
+        self.backup_more = False # May be set to true in the UI, in which case logs and photos are also backuped
+        self.backup_logs_failed = False
+        self.backup_photos_failed = False
+        self.uploads_dir_path = os.path.join(self.user_profile['baseDir'], 'uploads')
+        self.photos_dir_path = os.path.join(self.user_profile['dataDir'],'photo-frame','photos')
+        self.photo_frame_installed = False
+        if os.path.isdir(self.photos_dir_path):
+            self.photo_frame_installed = True
+        
+        # Bootup actions
+        self.actions_file_path = '/boot/bootup_actions.sh' # run before the gateway starts
+        self.post_actions_file_path = '/boot/post_bootup_actions.sh' # run 'after' the gateway starts
+        self.late_sh_path = '/home/pi/candle/late.sh'
+        self.system_update_error_detected = False
+        
+        # Factory reset
+        self.keep_z2m_file_path = '/boot/keep_z2m.txt'
+        self.keep_bluetooth_file_path = '/boot/keep_bluetooth.txt'
+        self.factory_reset_script_path = os.path.join(self.addon_dir, "factory_reset.sh") 
+        self.manual_update_script_path = os.path.join(self.addon_dir, "manual_update.sh") 
+        
+        self.system_update_script_path = os.path.join(self.data_dir, "create_latest_candle.sh") 
+        self.live_system_update_script_path = os.path.join(self.data_dir, "live_system_update.sh") # deprecated
+        
+        # Backup addon dir paths
+        self.backup_download_dir = os.path.join(self.addon_dir, "backup")
+        self.restore_backup_script_path = os.path.join(self.addon_dir, "restore_backup.sh") 
+        
+        # Backup data dir paths
+        self.backup_dir = os.path.join(self.data_dir, "backup") 
+        self.backup_file_path = os.path.join(self.backup_dir, "candle_backup.tar")
+        
+        # Backup data logs path
+        self.log_db_file_path = os.path.join(self.user_profile['baseDir'], 'log','logs.sqlite3')
+        
+        # Restore
+        self.restore_file_path = os.path.join(self.data_dir, "candle_restore.tar")
+        
+        # Candle version fie path
+        self.version_file_path = '/boot/candle_version.txt'
+        self.original_version_file_path = '/boot/candle_original_version.txt'
+        
+        # Hardware clock
+        self.hardware_clock_detected = False
+        self.do_not_use_hardware_clock = False
+        self.hardware_clock_file_path = '/boot/candle_hardware_clock.txt'
+        
+        # Low voltage
+        self.low_voltage = False
+        
+        
+        # Recovery partition
+        self.recovery_not_supported = None
+        self.recovery_version = 0
+        self.latest_recovery_version = 1
+        self.busy_updating_recovery = 0  # higher values indicate steps in the process
+        self.updating_recovery_failed = False
+        
+        # System updates
+        self.bootup_actions_failed = False
+        self.live_update_attempted = False
+        self.system_update_in_progress = False
+        
+        self.ro_exists = False
+        if os.path.isdir('/ro'):
+            self.ro_exists = True
+            
+        self.files_check_exists = False
+        if os.path.isfile('/home/pi/candle/files_check.sh'):
+            self.files_check_exists = True
+            
+        self.exhibit_mode = False
+        if os.path.isfile('/boot/exhibit_mode.txt'):
+            self.exhibit_mode = True
+        
+        # LOAD CONFIG
+        try:
+            self.add_from_config()
+        except Exception as ex:
+            print("Error loading config: " + str(ex))
+            
+        
+        if self.DEBUG:
+            print("System bits: " + str(self.bits))
+       
+        # Remove hardware clock file if it exists and it should not be enabled
+        if self.do_not_use_hardware_clock:
+            if os.path.isfile(self.hardware_clock_file_path):
+                if self.DEBUG:
+                    print("removing " + str(self.hardware_clock_file_path))
+                run_command('sudo rm ' + str(self.hardware_clock_file_path))
+        else:
+            self.hardware_clock_check()
+        
+        # Create local backups directory
+        if not os.path.isdir(self.backup_dir):
             if self.DEBUG:
-                print("self.user_profile: " + str(self.user_profile))
-            
-            self.addon_dir = os.path.join(self.user_profile['addonsDir'], self.addon_name)
-            self.data_dir = os.path.join(self.user_profile['dataDir'], self.addon_name)
-            # baseDir is another useful option in user_profile
-            
-            # MQTT
-            self.allow_anonymous_mqtt = False
-            self.mosquitto_conf_file_path = '/home/pi/.webthings/etc/mosquitto/mosquitto.conf'
-            
-            
-            self.bits = 32
-            try:
-                bits_check = run_command('getconf LONG_BIT')
-                self.bits = int(bits_check)
-            except Exception as ex:
-                print("error getting bits of system: " + str(ex))
-            
-            
-            # Backup
-            self.backup_more = False # May be set to true in the UI, in which case logs and photos are also backuped
-            self.backup_logs_failed = False
-            self.backup_photos_failed = False
-            self.uploads_dir_path = os.path.join(self.user_profile['baseDir'], 'uploads')
-            self.photos_dir_path = os.path.join(self.user_profile['dataDir'],'photo-frame','photos')
-            self.photo_frame_installed = False
-            if os.path.isdir(self.photos_dir_path):
-                self.photo_frame_installed = True
-            
-            # Bootup actions
-            self.actions_file_path = '/boot/bootup_actions.sh' # run before the gateway starts
-            self.post_actions_file_path = '/boot/post_bootup_actions.sh' # run 'after' the gateway starts
-            self.late_sh_path = '/home/pi/candle/late.sh'
-            self.system_update_error_detected = False
-            
-            # Factory reset
-            self.keep_z2m_file_path = '/boot/keep_z2m.txt'
-            self.keep_bluetooth_file_path = '/boot/keep_bluetooth.txt'
-            self.factory_reset_script_path = os.path.join(self.addon_dir, "factory_reset.sh") 
-            self.manual_update_script_path = os.path.join(self.addon_dir, "manual_update.sh") 
-            
-            self.system_update_script_path = os.path.join(self.data_dir, "create_latest_candle.sh") 
-            self.live_system_update_script_path = os.path.join(self.data_dir, "live_system_update.sh") # deprecated
-            
-            # Backup addon dir paths
-            self.backup_download_dir = os.path.join(self.addon_dir, "backup")
-            self.restore_backup_script_path = os.path.join(self.addon_dir, "restore_backup.sh") 
-            
-            # Backup data dir paths
-            self.backup_dir = os.path.join(self.data_dir, "backup") 
-            self.backup_file_path = os.path.join(self.backup_dir, "candle_backup.tar")
-            
-            # Backup data logs path
-            self.log_db_file_path = os.path.join(self.user_profile['baseDir'], 'log','logs.sqlite3')
-            
-            # Restore
-            self.restore_file_path = os.path.join(self.data_dir, "candle_restore.tar")
-            
-            # Candle version fie path
-            self.version_file_path = '/boot/candle_version.txt'
-            self.original_version_file_path = '/boot/candle_original_version.txt'
-            
-            # Hardware clock
-            self.hardware_clock_detected = False
-            self.do_not_use_hardware_clock = False
-            self.hardware_clock_file_path = '/boot/candle_hardware_clock.txt'
-            
-            # Low voltage
-            self.low_voltage = False
-            
-            
-            # Recovery partition
-            self.recovery_not_supported = None
-            self.recovery_version = 0
-            self.latest_recovery_version = 1
-            self.busy_updating_recovery = False
-            self.updating_recovery_failed = False
-            
-            # System updates
-            self.bootup_actions_failed = False
-            self.live_update_attempted = False
-            self.system_update_in_progress = False
-            
-            self.ro_exists = False
-            if os.path.isdir('/ro'):
-                self.ro_exists = True
-                
-            self.files_check_exists = False
-            if os.path.isfile('/home/pi/candle/files_check.sh'):
-                self.files_check_exists = True
-                
-            self.exhibit_mode = False
-            if os.path.isfile('/boot/exhibit_mode.txt'):
-                self.exhibit_mode = True
-            
-            # LOAD CONFIG
-            try:
-                self.add_from_config()
-            except Exception as ex:
-                print("Error loading config: " + str(ex))
-                
-            
+                print("creating backup directory in data path: " + str(self.backup_dir))
+            os.mkdir(self.backup_dir)
+        
+        
+        # Remove old actions script if it survived somehow
+        if os.path.isfile(self.actions_file_path):
+            print("ERROR: old actions script still exists! Removing it now.")
+            os.system('sudo rm ' + str(self.actions_file_path))
+        
+        
+        # Remove rw-once file
+        if os.path.isfile('/boot/candle_rw_once.txt'):
+            os.system('sudo rm /boot/candle_rw_once.txt')
             if self.DEBUG:
-                print("System bits: " + str(self.bits))
-           
-            # Remove hardware clock file if it exists and it should not be enabled
-            if self.do_not_use_hardware_clock:
-                if os.path.isfile(self.hardware_clock_file_path):
-                    if self.DEBUG:
-                        print("removing " + str(self.hardware_clock_file_path))
-                    run_command('sudo rm ' + str(self.hardware_clock_file_path))
-            else:
-                self.hardware_clock_check()
-            
-            # Create local backups directory
-            if not os.path.isdir(self.backup_dir):
-                if self.DEBUG:
-                    print("creating backup directory in data path: " + str(self.backup_dir))
-                os.mkdir(self.backup_dir)
-            
-            
-            # Remove old actions script if it survived somehow
-            if os.path.isfile(self.actions_file_path):
-                print("ERROR: old actions script still exists! Removing it now.")
-                os.system('sudo rm ' + str(self.actions_file_path))
-            
-            
-            # Remove rw-once file
-            if os.path.isfile('/boot/candle_rw_once.txt'):
-                os.system('sudo rm /boot/candle_rw_once.txt')
-                if self.DEBUG:
-                    print("On next reboot the controller will be read-only again")
-            else:
-                if self.DEBUG:
-                    print("no candle_rw.txt file spotted")
-            
-            if os.path.isfile('/boot/bootup_actions.sh'):
-                print("bootup_actions.sh already exists. Maybe power-settings addon was restarted after preparing an update?")
-                os.system('sudo rm /boot/bootup_actions.sh')
-            
-            if os.path.isfile('/boot/bootup_actions_failed.sh'):
-                self.bootup_actions_failed = True 
-                
-                # clean up the bootup_actions file regardless because it will keep running even if the file is deleted
-                os.system('sudo rm /boot/bootup_actions_failed.sh')
-                if self.DEBUG:
-                    print("/boot/bootup_actions_failed.sh detected")
-                    
-            
-            if os.path.isfile('/boot/candle_stay_rw.txt'):
-                if self.DEBUG:
-                    print("Note: Candle is in permanent RW mode.")
-            
-            
-            # remove old download symlink if it somehow survived
-            if os.path.islink(self.backup_download_dir):
-                if self.DEBUG:
-                    print("unlinking download dir that survived somehow")
-                os.system('unlink ' + self.backup_download_dir) # remove symlink, so the backup files can not longer be downloaded
-            
-            
-            # Remove old restore file if it exists
-            if os.path.isfile(self.restore_file_path):
-                os.system('rm ' + str(self.restore_file_path))
-                if self.DEBUG:
-                    print("removed old restore file")
-            
-            
-            self.update_needs_two_reboots = False
-            if not os.path.isfile('/boot/candle_original_version.txt'):
-                self.update_needs_two_reboots = True
-            
-            
-            self.check_update_processes()
-            
-            self.update_backup_info()
-            
+                print("On next reboot the controller will be read-only again")
+        else:
             if self.DEBUG:
-                print("power settings: self.user_profile: " + str(self.user_profile))
-                print("self.addon_dir: " + str(self.addon_dir))
-                print("self.actions_file_path: " + str(self.actions_file_path))
-                print("self.manager_proxy = " + str(self.manager_proxy))
-                print("Created new API HANDLER: " + str(manifest['id']))
-                print("user_profile: " + str(self.user_profile))
-                print("actions_file_path: " + str(self.actions_file_path))
-                print("version_file_path: " + str(self.version_file_path))
-                print("original_version_file_path: " + str(self.original_version_file_path))
-                print("self.backup_file_path: " + str(self.backup_file_path))
-                print("self.backup_download_dir: " + str(self.backup_download_dir))
+                print("no candle_rw.txt file spotted")
+        
+        if os.path.isfile('/boot/bootup_actions.sh'):
+            print("bootup_actions.sh already exists. Maybe power-settings addon was restarted after preparing an update?")
+            os.system('sudo rm /boot/bootup_actions.sh')
+        
+        if os.path.isfile('/boot/bootup_actions_failed.sh'):
+            self.bootup_actions_failed = True 
+            
+            # clean up the bootup_actions file regardless because it will keep running even if the file is deleted
+            os.system('sudo rm /boot/bootup_actions_failed.sh')
+            if self.DEBUG:
+                print("/boot/bootup_actions_failed.sh detected")
                 
-                print("self.mosquitto_conf_file_path: " + str(self.mosquitto_conf_file_path))
+        
+        if os.path.isfile('/boot/candle_stay_rw.txt'):
+            if self.DEBUG:
+                print("Note: Candle is in permanent RW mode.")
+        
+        
+        # remove old download symlink if it somehow survived
+        if os.path.islink(self.backup_download_dir):
+            if self.DEBUG:
+                print("unlinking download dir that survived somehow")
+            os.system('unlink ' + self.backup_download_dir) # remove symlink, so the backup files can not longer be downloaded
+        
+        
+        # Remove old restore file if it exists
+        if os.path.isfile(self.restore_file_path):
+            os.system('rm ' + str(self.restore_file_path))
+            if self.DEBUG:
+                print("removed old restore file")
+        
+        
+        self.update_needs_two_reboots = False
+        if not os.path.isfile('/boot/candle_original_version.txt'):
+            self.update_needs_two_reboots = True
+        
+        
+        self.check_update_processes()
+        
+        self.update_backup_info()
+        
+        if self.DEBUG:
+            print("power settings: self.user_profile: " + str(self.user_profile))
+            print("self.addon_dir: " + str(self.addon_dir))
+            print("self.actions_file_path: " + str(self.actions_file_path))
+            print("self.manager_proxy = " + str(self.manager_proxy))
+            print("Created new API HANDLER: " + str(manifest['id']))
+            print("user_profile: " + str(self.user_profile))
+            print("actions_file_path: " + str(self.actions_file_path))
+            print("version_file_path: " + str(self.version_file_path))
+            print("original_version_file_path: " + str(self.original_version_file_path))
+            print("self.backup_file_path: " + str(self.backup_file_path))
+            print("self.backup_download_dir: " + str(self.backup_download_dir))
+            
+            print("self.mosquitto_conf_file_path: " + str(self.mosquitto_conf_file_path))
                 
         except Exception as e:
             print("ERROR, Failed to init UX extension API handler: " + str(e))
@@ -332,7 +336,13 @@ class PowerSettingsAPIHandler(APIHandler):
             print("self.allow_anonymous_mqtt: " + str(self.allow_anonymous_mqtt))
         
         
-        
+        while self.running:
+            time.sleep(1)
+            if self.should_start_recovery_update == True:
+                if self.DEBUG:
+                    print("should_start_recovery_update was True. Calling update_recovery_partition")
+                self.should_start_recovery_update == False:
+                self.update_recovery_partition()
         
         
     # Read the settings from the add-on settings page
@@ -551,7 +561,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if self.DEBUG:
                                     print("start of update_recovery_partition requested")
                                 
-                                self.update_recovery_partition()
+                                self.should_start_recovery_update = True
                                 
                                 return APIResponse(
                                   status=200,
@@ -835,9 +845,20 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'dmesg':dmesg_lines, 
                                                       'system_update_in_progress':self.system_update_in_progress,
                                                       'ro_exists':self.ro_exists,
-                                                      'old_overlay_active':self.old_overlay_active,
-                                                      'recovery_version':self.recovery_version,
-                                                      'latest_recovery_version':self.latest_recovery_version,
+                                                      'old_overlay_active':self.old_overlay_active
+                                                  }),
+                                )
+                                
+                                
+                            # used while updating the recovery partition
+                            elif action == 'recovery_poll':
+                                if self.DEBUG:
+                                    print("handling recovery_poll action")
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':'ok',
                                                       'busy_updating_recovery':self.busy_updating_recovery,
                                                       'updating_recovery_failed':self.updating_recovery_failed
                                                   }),
@@ -1557,7 +1578,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     if self.DEBUG:
                         print("mounting recovery partition")
                     os.system('sudo mount -t auto /dev/mmcblk0p3 /mnt/recoverypart')
-        
+                    time.sleep(1)
                 if os.path.exists('/mnt/recoverypart/candle_recovery.txt') == False:
                     if self.DEBUG:
                         print("ERROR, mounting recovery partition failed") # could be a rare occurance of an unformatted recovery partition
@@ -1587,7 +1608,15 @@ class PowerSettingsAPIHandler(APIHandler):
         if self.DEBUG:
             print("in update_recovery_partition")
         try:
-            self.busy_updating_recovery = True
+            
+            if self.busy_updating_recovery > 0:
+                if self.DEBUG:
+                    print("Warning, already busy update_recovery_partition. Aborting.")
+                return
+                
+            self.updating_recovery_failed = False
+            self.busy_updating_recovery = 1
+            
             
             os.system('cd /home/pi/.webthings; rm recovery.img; rm recovery.img.tar.gz; wget -c https://www.candlesmarthome.com/tools/recovery.img.tar.gz; tar -xf recovery.img.tar.gz')
             if os.path.exists('/home/pi/.webthings/recovery.img') == False:
@@ -1596,23 +1625,30 @@ class PowerSettingsAPIHandler(APIHandler):
                 # try once more
                 os.system('cd /home/pi/.webthings; rm recovery.img; wget -c https://www.candlesmarthome.com/tools/recovery.img.tar.gz; tar -xf recovery.img.tar.gz')
             
+            self.busy_updating_recovery = 2
+            
             if os.path.exists('/home/pi/.webthings/recovery.img') == False:
                 if self.DEBUG:
                     print("recovery image failed to download or extract!")
+                os.system('sudo umount /mnt/recoverypart')
                 os.system('cd /home/pi/.webthings; rm recovery.img; rm recovery.img.tar.gz')
                 self.updating_recovery_failed = True
                 
             else:
                 if self.DEBUG:
                     print("recovery image file was downloaded and extracted succesfully")
+                self.busy_updating_recovery = 3
                 os.system('sudo losetup --partscan /dev/loop0 /home/pi/.webthings/recovery.img; sudo dd if=/dev/loop0p2 of=/dev/mmcblk0p3 bs=1M; sudo losetup --detach /dev/loop0 ')
             
-            self.busy_updating_recovery = False
+            
         except Exception as ex:
             print("Error in update_recovery_partition: " + str(ex))
+        
         #sudo losetup --partscan /dev/loop0 recovery.img
         #sudo dd if=/dev/loop0p2 of=/dev/mmcblk0p3 bs=1M
         #losetup --detach /dev/loop0 
+        
+        self.busy_updating_recovery = 0
 
 
     def unload(self):

@@ -20,6 +20,9 @@
             this.system_update_in_progress = false;
             this.overlay_exists = true;
 
+            this.interval = null;
+            this.recovery_interval = null;
+
             const getUrl = window.location;
             this.baseUrl = getUrl.protocol + "//" + getUrl.host + "/things";
 
@@ -307,6 +310,9 @@
                     document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'block';
                     document.getElementById('extension-power-settings-update-recovery-failed').style.display = 'none';
                     
+                    document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'block';
+                    document.getElementById('extension-power-settings-update-recovery-busy-progress').style.width = '0%';
+                    
                     
                     window.API.postJson(
                         `/extensions/${this.id}/api/ajax`, {
@@ -317,13 +323,15 @@
                             console.log("update_recovery_partition update response: ", body);
                         }
                         
-                        if(body.state == 'ok'){
+                        this.start_recovery_poll();
+                        /*
+                        if(body.state == 'ok'){ // currently hardcoded to return 'ok'
                             console.log("updating recovery partition succeeded");
                         }
                         else{
                             console.log("update recovery response was NOT ok");
                         }
-            
+                        */
                     }).catch((e) => {
                         console.error("Error starting update of recovery partition: ", e);
                     });
@@ -615,12 +623,13 @@
                     }
                     
                     if(typeof body.busy_updating_recovery != 'undefined'){
-                        if(body.busy_updating_recovery){
+                        if(body.busy_updating_recovery > 0){
                             if(this.debug){
                                 console.warn("recovery partition update already in progress");
                             }
                             document.getElementById('extension-power-settings-update-recovery-button').style.display = 'none';
                             document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'block';
+                            document.getElementById('extension-power-settings-update-recovery-busy-progress').style.width = (body.busy_updating_recovery * 25) + '%';
                         }
                     }
                     
@@ -1107,6 +1116,92 @@
             
             this.start_poll();
 			
+        }
+        
+        
+        
+        
+        start_recovery_poll(){
+            if(this.debug){
+                console.log("in start_recovery_poll");
+            }
+            
+			try{
+				clearInterval(this.recovery_interval);
+                this.recovery_interval = null;
+                if(this.debug){
+                    console.log("cleared old recovery_interval for /poll");
+                }
+			}
+			catch(e){
+				//console.log("no interval to clear?: " + e);
+			}
+            
+            if(this.recovery_interval == null){
+    			this.recovery_interval = setInterval(() => {
+                    if(this.debug){
+                        console.log("in recovery_interval for /poll");
+                    }
+                    
+                    try{
+                        // /poll
+        		        window.API.postJson(
+        		          `/extensions/${this.id}/api/ajax`,
+                            {'action':'recovery_poll'}
+
+        		        ).then((body) => {
+                            
+                            try{
+                                if(this.debug){
+                                    console.log("recovery update poll response: ", body);
+                                }
+                                
+                                if(typeof body.busy_updating_recovery != 'undefined'){
+                                    if(this.debug){
+                                        console.log("body.busy_updating_recovery: ", body.busy_updating_recovery);
+                                    }
+                                    
+                                    if(busy_updating_recovery > 0){
+                                        document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'block';
+                                        document.getElementById('extension-power-settings-update-recovery-busy-progress').style.width = (body.busy_updating_recovery * 25) + '%';
+                                    }
+                                    
+                                    if(body.busy_updating_recovery > 0 && body.updating_recovery_failed == true){
+                                        document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'none';
+                                        document.getElementById('extension-power-settings-update-recovery-failed').style.display = 'block';
+                                    }
+                                }
+                                
+                            }
+                            catch(e){
+                                console.log("Error in try/catch inside /poll request: ", e);
+                            }
+                        
+    
+        		        }).catch((e) => {
+        		  			console.log("Error calling /poll: ", e);
+        		        });
+    
+                    }
+                    catch(e){
+                        console.log("Error doing poll: ", e);
+                    }
+                
+                    /*
+                    if(this.volume_indicator_countdown > 0){
+                        this.volume_indicator_countdown--;
+                        if(document.getElementById('extension-internet-radio-volume-indicator-container') != null){
+                            if(this.volume_indicator_countdown == 0){
+                                document.getElementById('extension-internet-radio-volume-indicator-container').classList.add('extension-internet-radio-hidden');
+                            }
+                        }
+                    }
+                    */
+
+    			}, 5000);
+            }
+            
+            
         }
         
         
