@@ -149,6 +149,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.busy_updating_recovery = 0  # higher values indicate steps in the process
         self.updating_recovery_failed = False
         self.should_start_recovery_update = False
+        self.allow_recovery_partition_upgrade = False
         
         # System updates
         self.bootup_actions_failed = False
@@ -1197,6 +1198,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         'busy_updating_recovery':self.busy_updating_recovery,
                                         'allow_update_via_recovery':self.allow_update_via_recovery,
                                         'updating_recovery_failed':self.updating_recovery_failed,
+                                        'allow_recovery_partition_upgrade':self.allow_recovery_partition_upgrade,
                                         'debug':self.DEBUG
                                     }
                             if self.DEBUG:
@@ -1593,11 +1595,14 @@ class PowerSettingsAPIHandler(APIHandler):
             if not 'mmcblk0p4' in lsblk_output:
                 if self.DEBUG:
                     print("warning, recovery partition is not supported")
-                #self.recovery_not_supported = True
+            
             else:
-                #self.recovery_not_supported = False
                 if self.DEBUG:
                     print("mmcblk0p4 partition exists")
+                
+                if self.bits = 64:
+                    self.allow_recovery_partition_upgrade = True
+                
                 os.system('sudo mkdir -p /mnt/recoverypart')
                 if os.path.exists('/mnt/recoverypart/candle_recovery.txt'):
                     if self.DEBUG:

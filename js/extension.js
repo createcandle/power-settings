@@ -609,10 +609,23 @@
                         }
                     }
                     
+                    
+                    
+                    if(typeof body.allow_recovery_partition_upgrade != 'undefined'){
+                        if(body.allow_recovery_partition_upgrade == false){
+                            if(this.debug){
+                                console.warn("recovery partition does not even exist");
+                            }
+                            document.getElementById('extension-power-settings-update-recovery-supported').style.display = 'none';
+                            document.getElementById('extension-power-settings-switch-to-recovery-container').style.display = 'none';
+                            document.getElementById('extension-power-settings-update-recovery-not-supported').style.display = 'block';
+                        }
+                    }
+                    
                     if(typeof body.allow_update_via_recovery != 'undefined'){
                         if(body.allow_update_via_recovery == false){
                             if(this.debug){
-                                console.warn("recovery partition not supported");
+                                console.warn("Switch to recovery partition currently not supported");
                             }
                             document.getElementById('extension-power-settings-update-recovery-supported').style.display = 'none';
                             document.getElementById('extension-power-settings-switch-to-recovery-container').style.display = 'none';
