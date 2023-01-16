@@ -340,7 +340,7 @@ class PowerSettingsAPIHandler(APIHandler):
             if self.should_start_recovery_update == True:
                 if self.DEBUG:
                     print("should_start_recovery_update was True. Calling update_recovery_partition")
-                self.should_start_recovery_update == False:
+                self.should_start_recovery_update = False
                 self.update_recovery_partition()
         
         
