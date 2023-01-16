@@ -260,8 +260,7 @@ class PowerSettingsAPIHandler(APIHandler):
             
             print("self.mosquitto_conf_file_path: " + str(self.mosquitto_conf_file_path))
                 
-        except Exception as e:
-            print("ERROR, Failed to init UX extension API handler: " + str(e))
+        
         
         self.old_overlay_active = False
         self.post_bootup_actions_supported = False
@@ -1653,9 +1652,12 @@ class PowerSettingsAPIHandler(APIHandler):
 
     def unload(self):
         if self.DEBUG:
-            print("Shutting down adapter")
+            print("Shutting down power settings adapter")
+        self.running = False
         os.system('sudo timedatectl set-ntp on') # If add-on is removed or disabled, re-enable network time protocol.
         if os.path.islink(self.backup_download_dir):
+            if self.DEBUG:
+                print("removing backup download symlink")
             os.system('unlink ' + self.backup_download_dir) # remove symlink, so the backup files can not longer be downloaded
 
 
