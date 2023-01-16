@@ -145,6 +145,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.latest_recovery_version = 1
         self.busy_updating_recovery = 0  # higher values indicate steps in the process
         self.updating_recovery_failed = False
+        self.should_start_recovery_update = False
         
         # System updates
         self.bootup_actions_failed = False
@@ -336,7 +337,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
         while self.running:
-            time.sleep(1)
+            time.sleep(2)
             if self.should_start_recovery_update == True:
                 if self.DEBUG:
                     print("should_start_recovery_update was True. Calling update_recovery_partition")
