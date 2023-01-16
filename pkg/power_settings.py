@@ -873,8 +873,11 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if self.DEBUG:
                                     print("handling recovery_poll action")
                                 
-                                state = 'upgrade recovery first'
-                                if self.recovery_version == self.latest_recovery_version:
+                                if self.bits == 32:
+                                    state = 'This only works on 64 bit Candle'
+                                else:
+                                    state = 'upgrade recovery first'
+                                if self.recovery_version == self.latest_recovery_version and self.bits == 64:
                                     state = 'ok'
                                     self.switch_to_recovery()
                                 
@@ -1637,7 +1640,10 @@ class PowerSettingsAPIHandler(APIHandler):
                     if os.path.exists('/boot/cmdline-update.txt'):
                         if self.DEBUG:
                             print("/boot/cmdline-update.txt exists, update may happen via recovery partition")
-                        self.allow_update_via_recovery = True
+                        if self.bits == 64:
+                            if self.DEBUG:
+                                print("system is also 64 bit. Update may happen via recovery partition")
+                            self.allow_update_via_recovery = True
                 
         except Exception as ex:
             if self.DEBUG:
