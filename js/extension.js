@@ -317,7 +317,6 @@
                     
                     document.getElementById('extension-power-settings-system-update-button').style.display = 'none';
                     document.getElementById('extension-power-settings-update-recovery-button').style.display = 'none';
-                    document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'block';
                     document.getElementById('extension-power-settings-update-recovery-failed').style.display = 'none';
                     
                     document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'block';
@@ -647,7 +646,7 @@
                     }
                     
                     if(typeof body.busy_updating_recovery != 'undefined'){
-                        if(body.busy_updating_recovery > 0){
+                        if(body.busy_updating_recovery > 0 && body.busy_updating_recovery < 5){
                             if(this.debug){
                                 console.warn("recovery partition update already in progress");
                             }
@@ -1223,7 +1222,7 @@
                                         console.log("body.busy_updating_recovery: ", body.busy_updating_recovery);
                                     }
                                     
-                                    if(body.busy_updating_recovery > 0){
+                                    if(body.busy_updating_recovery > 0 && body.busy_updating_recovery < 5){
                                         document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'block';
                                         document.getElementById('extension-power-settings-update-recovery-busy-progress').style.width = (body.busy_updating_recovery * 20) + '%';
                                     }
