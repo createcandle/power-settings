@@ -207,6 +207,15 @@
                     this.hide_all_settings_containers();
                     document.getElementById('extension-power-settings-container-update').classList.remove('extension-power-settings-hidden');
                     document.getElementById('extension-power-settings-pages').classList.remove('hidden');
+                    
+                    this.update_checks();
+                    
+                });
+                
+                
+                // Ethernet check button
+                document.getElementById('extension-power-settings-pages-update-ethernet-retest-button').addEventListener('click', () => {
+                    this.update_checks();
                 });
                 
                 
@@ -1758,6 +1767,33 @@
 
 
             }, 5000);
+        }
+        
+        
+        // calls update_init
+        update_checks(){
+            window.API.postJson(
+                `/extensions/${this.id}/api/ajax`, {
+                    'action': 'update_init'
+                }
+            ).then((body) => {
+                if(this.debug){
+                    console.log("update init response: ", body);
+                }
+                
+                if(typeof body.ethernet_connected != 'undefined'){
+                    this.ethernet_connected = body.ethernet_connected;
+                    if(this.ethernet_connected){
+                        document.getElementById('extension-power-settings-pages-update-missing-ethernet').classList.add('hidden');
+                    }
+                    else{
+                        document.getElementById('extension-power-settings-pages-update-missing-ethernet').classList.remove('hidden');
+                    }
+                }
+                
+            }).catch((e) => {
+                alert("Error: backup could not connect to controller: ", e);
+            });
         }
         
         

@@ -14,6 +14,7 @@ import time
 import base64
 import shutil
 import datetime
+import urllib.request
 import functools
 import subprocess
 
@@ -314,11 +315,19 @@ class PowerSettingsAPIHandler(APIHandler):
             if self.DEBUG:
                 print("Error getting Candle versions: " + str(ex))
         
+        # Connected via ethernet?
+        self.ethernet_connected = False
+        self.check_ethernet_connected()
+        
         # get backup context, such as disk size
         self.update_backup_info()
         
         # get recovery partition version
         self.check_recovery_partition()
+        
+        
+        
+        
         
         # Check if anonymous MQTT access is currently allowed
         try:
@@ -472,6 +481,22 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("Error in hardware_clock_check: " + str(ex))
         
         
+    def check_ethernet_connected(self):
+        try:
+            ethernet_state = run_command('cat /sys/class/net/eth0/operstate')
+            if self.DEBUG:
+                print("ethernet_state: " + str(ethernet_state))
+            cable_needed = False
+            if 'down' in ethernet_state:
+                if self.DEBUG:
+                    print("No ethernet cable connected")
+                cable_needed = True
+            else:
+                if self.DEBUG:
+                    print("Ethernet cable seems connected")
+            self.ethernet_connected = not cable_needed
+        except Exception as ex:
+            print("Error in check_ethernet_connection: " + str(ex))
 
 
     def handle_request(self, request):
@@ -915,6 +940,27 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                             
                             
+                            
+                            
+                            
+                            elif action == 'update_init':
+                                if self.DEBUG:
+                                    print("API: in update_init")
+                                
+                                state = 'ok'
+                                
+                                self.check_ethernet_connected()
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state,
+                                                      'ethernet_connected':self.ethernet_connected
+                                                  }),
+                                )
+                            
+                            
+                            
                             elif action == 'backup_init':
                                 if self.DEBUG:
                                     print("API: in backup_init")
@@ -934,7 +980,6 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'bits':self.bits
                                                   }),
                                 )
-                                
                                 
                                 
                             elif action == 'create_backup':
@@ -1600,10 +1645,13 @@ class PowerSettingsAPIHandler(APIHandler):
                 if self.DEBUG:
                     print("mmcblk0p4 partition exists")
                 
+                # if there are four partitions, and the system is 64 bits, then allow the upgrade of the recovery partition
                 if self.bits == 64:
                     self.allow_recovery_partition_upgrade = True
                 
-                os.system('sudo mkdir -p /mnt/recoverypart')
+                if not os.path.exists('/mnt/recoverypart'):
+                    os.system('sudo mkdir -p /mnt/recoverypart')
+                    
                 if os.path.exists('/mnt/recoverypart/candle_recovery.txt'):
                     if self.DEBUG:
                         print("warning, recovery partition seems to already be mounted")
@@ -1611,7 +1659,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     if self.DEBUG:
                         print("mounting recovery partition")
                     os.system('sudo mount -t auto /dev/mmcblk0p3 /mnt/recoverypart')
-                    time.sleep(1)
+                    time.sleep(.2)
                     
                 # Check if the recovery partition was mounted properly
                 if os.path.exists('/mnt/recoverypart/candle_recovery.txt') == False:
@@ -1624,6 +1672,29 @@ class PowerSettingsAPIHandler(APIHandler):
                         self.recovery_version = int(version_file.read())
                         if self.DEBUG:
                             print("recovery partition version: " + str(self.recovery_version))
+                    
+                    
+                    # Check if the kernel modules of the recovery partition are the correct version, since the recovery partion is started with the kernel from the system partion.
+                    # But only make the effort if the system isn't connected via Ethernet already.
+                    uname_parts = run_command('uname -a').split()
+                    if len(uname_parts) > 2:
+                        linux_version_string = str(uname_parts[2])
+                        if self.DEBUG:
+                            print("linux_version_string: " + str(linux_version_string))
+                        intended_kernel_modules_path = '/mnt/recoverypart/lib/modules/' + linux_version_string
+                        
+                        if os.path.exists('/mnt/recoverypart/lib/modules'):
+                            if not os.path.exists(intended_kernel_modules_path):
+                                if self.DEBUG:
+                                    print("Warning, will attempt to fix incorrect kernel modules folder: " + str(intended_kernel_modules_path))
+                                os.system('sudo rm -rf /mnt/recoverypart/lib/modules/*; sudo cp -r /lib/modules/* /mnt/recoverypart/lib/modules/')
+                                
+                            else:
+                                if self.DEBUG:
+                                    print("OK, The recovery partition has the correct kernel modules folder")
+                        else:
+                            if self.DEBUG:
+                                print("Error, the /lib/modules folder could not be found; is the recovery partition really mounted?")
                             
                 os.system('sudo umount /mnt/recoverypart')
                 
@@ -1642,7 +1713,7 @@ class PowerSettingsAPIHandler(APIHandler):
                         if os.path.exists('/boot'):
                             if self.DEBUG:
                                 print("creating missing cmdline-update.txt")
-                            os.system('echo "console=tty3 root=/dev/mmcblk0p3 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait consoleblank=0 net.ifnames=0 quiet plymouth.ignore-serial-consoles splash logo.nologo" | sudo tee /boot/cmdline-update.txt')
+                            os.system('echo "console=tty1 root=/dev/mmcblk0p3 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait consoleblank=0 net.ifnames=0 quiet plymouth.ignore-serial-consoles splash logo.nologo" | sudo tee /boot/cmdline-update.txt')
                     
                     if os.path.exists('/boot/cmdline-update.txt'):
                         if self.DEBUG:
@@ -1656,9 +1727,6 @@ class PowerSettingsAPIHandler(APIHandler):
             if self.DEBUG:
                 print("Error in check_recovery_partition: " + str(ex))
             
-    
-        
-    
 
     def update_recovery_partition(self):
         if self.DEBUG:
@@ -1673,15 +1741,54 @@ class PowerSettingsAPIHandler(APIHandler):
             self.updating_recovery_failed = False
             self.busy_updating_recovery = 1
             
+            recovery_checksum = None
+            try:
+                with urllib.request.urlopen('http://www.candlesmarthome.com/img/recovery/recovery.img.tar.gz.checksum') as f:
+                    recovery_checksum = f.read().decode('utf-8')
+                    if self.DEBUG:
+                        print("recovery checksum should be: " + str(recovery_checksum))
+            except Exception as ex:
+                if self.DEBUG:
+                    print("Aborting recovery partition update, error trying to download image checksum: " + str(ex))
+                self.updating_recovery_failed = True
+                return
+            
+            if recovery_checksum == None:
+                if self.DEBUG:
+                    print("Aborting recovery partition update, recovery checksum was still None")
+                self.updating_recovery_failed = True
+                return
+            
+            # just to be safe
             os.system('sudo umount /mnt/recoverypart')
             
-            os.system('cd /home/pi/.webthings; rm recovery.img; rm recovery.img.tar.gz; wget -c https://www.candlesmarthome.com/tools/recovery.img.tar.gz -O recovery.img.tar.gz; tar -xf recovery.img.tar.gz')
-            if os.path.exists('/home/pi/.webthings/recovery.img') == False:
-                if self.DEBUG:
-                    print("recovery image failed to download or extract, trying once more")
-                # try once more
-                os.system('cd /home/pi/.webthings; rm recovery.img; wget -c https://www.candlesmarthome.com/tools/recovery.img.tar.gz -O recovery.img.tar.gz; tar -xf recovery.img.tar.gz')
+            os.system('cd /home/pi/.webthings; rm recovery.img; rm recovery.img.tar.gz; wget https://www.candlesmarthome.com/tools/recovery.img.tar.gz -O recovery.img.tar.gz')
             
+            if not os.path.exists('/home/pi/.webthings/recovery.img.tar.gz'):
+                if self.DEBUG:
+                    print("recovery image failed to download, waiting a few seconds and then trying once more")
+                time.sleep(10)
+                os.system('cd /home/pi/.webthings; rm recovery.img; wget https://www.candlesmarthome.com/tools/recovery.img.tar.gz -O recovery.img.tar.gz; tar -xf recovery.img.tar.gz')
+            
+            if not os.file.exists('/home/pi/.webthings/recovery.img.tar.gz'):
+                if self.DEBUG:
+                    print("Recovery partition file failed to download")
+                self.updating_recovery_failed = True
+                return
+            
+            downloaded_recovery_file_checksum = run_command('md5sum /home/pi/.webthings/recovery.img.tar.gz')
+            if len(recovery_checksum) == 32 and recovery_checksum in downloaded_recovery_file_checksum:
+                if self.DEBUG:
+                    print("checksums matched")
+            
+            else:
+                if self.DEBUG:
+                    print("Aborting, downloaded recovery img file checksums did not match")
+                self.updating_recovery_failed = True
+                return
+            
+            os.system('cd /home/pi/.webthings; tar -xf recovery.img.tar.gz')
+                        
             self.busy_updating_recovery = 2
             
             # Recovery image failed to download/extract
@@ -1720,17 +1827,27 @@ class PowerSettingsAPIHandler(APIHandler):
     def switch_to_recovery(self):
         if self.DEBUG:
             print("in switch_to_recovery")
-        if os.path.exists('/boot/cmdline-update.txt') and os.path.exists('/boot/cmdline-candle.txt'):
-            if self.busy_updating_recovery == 0 or self.busy_updating_recovery == 5:
-                if self.DEBUG:
-                    print("copying recovery cmdline over the existing one")
-                os.system('sudo cp /boot/cmdline-update.txt /boot/cmdline.txt')
+        try:
+            if os.path.exists('/boot/cmdline-update.txt') and os.path.exists('/boot/cmdline-candle.txt'):
+                if self.busy_updating_recovery == 0 or self.busy_updating_recovery == 5:
+                    self.check_ethernet_connected()
+                    if self.ethernet_connected:
+                        if self.DEBUG:
+                            print("copying recovery cmdline over the existing one")
+                        os.system('sudo cp /boot/cmdline-update.txt /boot/cmdline.txt')
+                
+                    else:
+                        if self.DEBUG:
+                            print("Error, no ethernet cable connected")    
+                else:
+                    if self.DEBUG:
+                        print("Error, will not start switch to recovery as busy_updating_recovery is in limbo, indicating a failed recovery partition update: " + str(self.busy_updating_recovery))
             else:
                 if self.DEBUG:
-                    print("Error, will not start switch to recovery as busy_updating_recovery is in limbo, indicating a failed recovery partition update: " + str(self.busy_updating_recovery))
-        else:
+                    print("Error, /boot/cmdline-update.txt or /boot/cmdline-candle.txt does not exist")
+        except Exception as ex:
             if self.DEBUG:
-                print("Error, /boot/cmdline-update.txt or /boot/cmdline-candle.txt does not exist")
+                print("Error in switch_to_recovery: " + str(ex))
         
         
 
