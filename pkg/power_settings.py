@@ -882,7 +882,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             # used while updating the recovery partition
                             elif action == 'recovery_poll':
                                 if self.DEBUG:
-                                    print("handling recovery_poll action")
+                                    print("handling recovery_poll action. self.busy_updating_recovery: " + str(self.busy_updating_recovery))
                                 
                                 return APIResponse(
                                   status=200,
@@ -941,8 +941,6 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                             
                             
-                            
-                            
                             elif action == 'update_init':
                                 if self.DEBUG:
                                     print("API: in update_init")
@@ -980,6 +978,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'bits':self.bits
                                                   }),
                                 )
+                                
                                 
                                 
                             elif action == 'create_backup':
@@ -1770,7 +1769,7 @@ class PowerSettingsAPIHandler(APIHandler):
                 time.sleep(10)
                 os.system('cd /home/pi/.webthings; rm recovery.img; wget https://www.candlesmarthome.com/tools/recovery.img.tar.gz -O recovery.img.tar.gz; tar -xf recovery.img.tar.gz')
             
-            if not os.file.exists('/home/pi/.webthings/recovery.img.tar.gz'):
+            if not os.path.exists('/home/pi/.webthings/recovery.img.tar.gz'):
                 if self.DEBUG:
                     print("Recovery partition file failed to download")
                 self.updating_recovery_failed = True

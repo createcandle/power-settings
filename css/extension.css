@@ -690,14 +690,13 @@ body > #extension-power-settings-update-process-progress-bar-container{
     background-color: rgba(255,255,255,.2);
 }
 
-
+#extension-power-settings-update-recovery-ok,
 #extension-power-settings-update-recovery-failed,
 #extension-power-settings-system-update-error{
     background-color: rgba(255,255,255,.2);
     padding: 2rem;
     margin: 0 2rem 2rem 2rem;
 }
-
 
 #extension-power-settings-pages-update-missing-ethernet{
     background-color: rgba(0,0,0,.2);

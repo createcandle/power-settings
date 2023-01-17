@@ -1236,6 +1236,7 @@
                                     if(body.busy_updating_recovery == 5){
                                         document.getElementById('extension-power-settings-update-recovery-should-update').style.display = 'none';
                                         document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'none';
+                                        document.getElementById('extension-power-settings-update-recovery-ok').style.display = 'block';
                                         clearInterval(this.recovery_interval);
                                     }
                                 }
