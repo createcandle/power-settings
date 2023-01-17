@@ -105,6 +105,10 @@
     
 }
 
+#extension-power-settings-view .hidden{
+    display:none!important;
+}
+
 #extension-power-settings-content > *{
     max-width:60rem;
 }
@@ -690,12 +694,11 @@ body > #extension-power-settings-update-process-progress-bar-container{
     background-color: rgba(255,255,255,.2);
 }
 
-#extension-power-settings-update-recovery-ok,
 #extension-power-settings-update-recovery-failed,
 #extension-power-settings-system-update-error{
-    background-color: rgba(255,255,255,.2);
+    background-color: #600;
     padding: 2rem;
-    margin: 0 2rem 2rem 2rem;
+    margin: 2rem 0;
 }
 
 #extension-power-settings-pages-update-missing-ethernet{

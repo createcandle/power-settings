@@ -612,6 +612,8 @@
                                 console.log("power settings: a new version of the Update & Recovery partition is available: ", body.latest_recovery_version);
                             }
                             document.getElementById('extension-power-settings-update-recovery-should-update').style.display = 'block';
+                            document.getElementById('extension-power-settings-update-recovery-container').style.display = 'none';
+                            
                         }
                     
                     }
