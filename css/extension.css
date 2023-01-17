@@ -699,6 +699,14 @@ body > #extension-power-settings-update-process-progress-bar-container{
 }
 
 
+#extension-power-settings-pages-update-missing-ethernet{
+    background-color: rgba(0,0,0,.2);
+    padding: 2rem;
+    margin: 4rem 0;
+    border-radius:.5rem;
+}
+
+
 
 /*  RESTORE PARTITION UPDATE  */
 

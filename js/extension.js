@@ -85,6 +85,7 @@
         }
 
 
+        // Mostly adds event listeners once settings_page.html has loaded in
         create_extra_settings(){
             
             
@@ -104,7 +105,6 @@
                 
                 
                 // Kiosk?
-                
                 if(document.getElementById('virtualKeyboardChromeExtension') != null){
                     document.body.classList.add('kiosk');
                     this.kiosk = true;
@@ -214,9 +214,15 @@
                 
                 
                 // Ethernet check button
-                document.getElementById('extension-power-settings-pages-update-ethernet-retest-button').addEventListener('click', () => {
-                    this.update_checks();
-                });
+                if( document.getElementById('extension-power-settings-pages-update-ethernet-retest-button') != null){
+                    document.getElementById('extension-power-settings-pages-update-ethernet-retest-button').addEventListener('click', () => {
+                        this.update_checks();
+                    });
+                }
+                else{
+                    console.error("power settings: extension-power-settings-pages-update-ethernet-retest-button does not exist yet? cannot attach listener");
+                }
+                
                 
                 
                 // FACTORY RESET
@@ -1772,13 +1778,16 @@
         
         // calls update_init
         update_checks(){
+            if(this.debug){
+                console.log("in update_checks");
+            }
             window.API.postJson(
                 `/extensions/${this.id}/api/ajax`, {
                     'action': 'update_init'
                 }
             ).then((body) => {
                 if(this.debug){
-                    console.log("update init response: ", body);
+                    console.log("system update_init response: ", body);
                 }
                 
                 if(typeof body.ethernet_connected != 'undefined'){
@@ -1792,7 +1801,7 @@
                 }
                 
             }).catch((e) => {
-                alert("Error: backup could not connect to controller: ", e);
+                console.log("Error: update_checks could not connect to controller: ", e);
             });
         }
         
