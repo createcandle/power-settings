@@ -857,7 +857,7 @@
     			document.getElementById("extension-power-settings-backup-file-selector").addEventListener('change', () => {
     				var filesSelected = document.getElementById("extension-power-settings-backup-file-selector").files;
     				
-                    document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>';
+                    document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<div id="extension-power-settings-upload-in-progress"><div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div><p>Upload in progress</p></div>';
                     this.upload_files(filesSelected);
     			});
                 
@@ -1859,7 +1859,7 @@
                         {'action':'upload', 'filename':filename, 'filedata': finalFile, 'parts_total':1, 'parts_current':1} //e.target.result
 
       			      ).then((body) => {
-                            console.log("saving restore file result: ", body);
+                            console.log("file upload done. Response: ", body);
                             
                             if(body.state == 'ok'){
                                 if(confirm("The system must now reboot to finish restoring the backup")){

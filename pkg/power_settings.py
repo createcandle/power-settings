@@ -81,11 +81,16 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
         self.bits = 32
+        
         try:
             bits_check = run_command('getconf LONG_BIT')
             self.bits = int(bits_check)
         except Exception as ex:
             print("error getting bits of system: " + str(ex))
+        
+        self.bits_extension = ""
+        if self.bits == 64:
+            self.bits_extension = "64"
         
         
         self.allow_update_via_recovery = False # will be set to True if a number of conditions are met. Allows for the new partition replace upgrade system.
@@ -102,6 +107,7 @@ class PowerSettingsAPIHandler(APIHandler):
             self.photo_frame_installed = True
         
         # Bootup actions
+        #self.early_actions_file_path = '/boot/bootup_actions_early.sh' # run before the gateway starts
         self.actions_file_path = '/boot/bootup_actions.sh' # run before the gateway starts
         self.post_actions_file_path = '/boot/post_bootup_actions.sh' # run 'after' the gateway starts
         self.late_sh_path = '/home/pi/candle/late.sh'
@@ -146,6 +152,7 @@ class PowerSettingsAPIHandler(APIHandler):
         # Recovery partition
         #self.recovery_not_supported = None
         self.recovery_version = 0
+        self.recovery_partition_bits = 32
         self.latest_recovery_version = 1
         self.busy_updating_recovery = 0  # higher values indicate steps in the process
         self.updating_recovery_failed = False
@@ -259,6 +266,7 @@ class PowerSettingsAPIHandler(APIHandler):
             print("Created new API HANDLER: " + str(manifest['id']))
             print("user_profile: " + str(self.user_profile))
             print("actions_file_path: " + str(self.actions_file_path))
+            #print("early_actions_file_path: " + str(self.early_actions_file_path))
             print("version_file_path: " + str(self.version_file_path))
             print("original_version_file_path: " + str(self.original_version_file_path))
             print("self.backup_file_path: " + str(self.backup_file_path))
@@ -404,20 +412,23 @@ class PowerSettingsAPIHandler(APIHandler):
         if "/boot/bootup_actions" in check_bootup_actions_running:
             print("BOOTUP ACTIONS SEEMS TO BE RUNNING!")
             self.system_update_in_progress = True
-        if "/boot/post_bootup_actions" in check_bootup_actions_running:
+        elif "/boot/post_bootup_actions" in check_bootup_actions_running:
             print("POST BOOTUP ACTIONS SEEMS TO BE RUNNING!")
             self.system_update_in_progress = True
         
-        check_bootup_actions_running = run_command("sudo ps aux | grep live_system_updat")
-        if "live_system_update" in check_bootup_actions_running:
-            print("LIVE UPDATE SEEMS TO BE RUNNING!")
-            self.system_update_in_progress = True
+        """
+        if self.system_update_in_progress == False:
+            check_bootup_actions_running = run_command("sudo ps aux | grep live_system_updat")
+            if "live_system_update" in check_bootup_actions_running:
+                print("LIVE UPDATE SEEMS TO BE RUNNING!")
+                self.system_update_in_progress = True
             
-        check_bootup_actions_running = run_command("sudo ps aux | grep 'live update in chroo")
-        if "live update in chroot" in check_bootup_actions_running:
-            print("LIVE UPDATE SEEMS TO BE RUNNING!")
-            self.system_update_in_progress = True
-        
+        if self.system_update_in_progress == False:
+            check_bootup_actions_running = run_command("sudo ps aux | grep 'live update in chroo")
+            if "live update in chroot" in check_bootup_actions_running:
+                print("LIVE UPDATE SEEMS TO BE RUNNING!")
+                self.system_update_in_progress = True
+        """
         
         
     def hardware_clock_check(self):
@@ -845,6 +856,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                 dmesg_lines = ""
                                 try:
                                     if self.system_update_in_progress:
+                                        
+                                        self.check_update_processes()
+                                        
                                         dmesg_output = run_command("dmesg --level=err,warn | grep Candle")
                                         if dmesg_output != None:
                                             if dmesg_output != "":
@@ -856,8 +870,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                                         line = line.replace("Candle:","")
                                                         dmesg_lines += line + "\n"
                                                         
-                                                    if self.DEBUG:
-                                                        print(line)
+                                                    #if self.DEBUG:
+                                                    #    print(line)
                                                         
                                                 if "ERROR" in dmesg_lines:
                                                     self.system_update_error_detected = True        
@@ -897,25 +911,15 @@ class PowerSettingsAPIHandler(APIHandler):
                             # Switch to recovery partition
                             elif action == 'switch_to_recovery':
                                 if self.DEBUG:
-                                    print("handling recovery_poll action")
+                                    print("handling switch_to_recovery action")
                                 
-                                if self.bits == 32:
-                                    state = 'This only works on 64 bit Candle'
-                                else:
-                                    state = 'upgrade recovery first'
-                                if self.recovery_version == self.latest_recovery_version and self.bits == 64:
-                                    state = 'ok'
-                                    self.switch_to_recovery()
+                                    state = self.switch_to_recovery()
                                 
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
                                   content=json.dumps({'state':state}),
                                 )
-                                
-                                
-                                
-                                
                                 
                                 
                             elif action == 'files_check':
@@ -939,8 +943,6 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                             
-                            
-                            
                             elif action == 'update_init':
                                 if self.DEBUG:
                                     print("API: in update_init")
@@ -953,7 +955,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                   status=200,
                                   content_type='application/json',
                                   content=json.dumps({'state':state,
-                                                      'ethernet_connected':self.ethernet_connected
+                                                      'ethernet_connected':self.ethernet_connected,
+                                                      'bits':self.bits,
+                                                      'recovery_partition_bits':self.recovery_partition_bits
                                                   }),
                                 )
                             
@@ -1355,8 +1359,11 @@ class PowerSettingsAPIHandler(APIHandler):
                                             print("save complete")
                                         
                                         if os.path.isfile(self.restore_backup_script_path):
+                                            #if self.bits == 32:
                                             restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.actions_file_path)
-                                            if self.DEBUG:
+                                            #else:
+                                            #    restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.early_actions_file_path)
+                                            #if self.DEBUG:
                                                 print("restore backup copy command: " + str(restore_command))
                                             os.system(restore_command)
                                             
@@ -1672,6 +1679,9 @@ class PowerSettingsAPIHandler(APIHandler):
                         if self.DEBUG:
                             print("recovery partition version: " + str(self.recovery_version))
                     
+                    if os.path.exists('/mnt/recoverypart/64bits.txt'):
+                        self.recovery_partition_bits = 64
+                    
                     
                     # Check if the kernel modules of the recovery partition are the correct version, since the recovery partion is started with the kernel from the system partion.
                     # But only make the effort if the system isn't connected via Ethernet already.
@@ -1806,7 +1816,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     print("recovery image file was downloaded and extracted succesfully")
                 self.busy_updating_recovery = 3
                 
-                os.system('sudo mkfs -t ext4 /dev/mmcblk0p3') # format the partition first
+                os.system('sudo mkfs -g -t ext4 /dev/mmcblk0p3 -F') # format the partition first
                 
                 self.busy_updating_recovery = 4
                 
@@ -1834,10 +1844,14 @@ class PowerSettingsAPIHandler(APIHandler):
                 if self.busy_updating_recovery == 0 or self.busy_updating_recovery == 5:
                     self.check_ethernet_connected()
                     if self.ethernet_connected:
-                        if self.DEBUG:
-                            print("copying recovery cmdline over the existing one")
-                        os.system('sudo cp /boot/cmdline-update.txt /boot/cmdline.txt')
-                
+                        if self.bits == self.recovery_partition_bits:
+                            if self.DEBUG:
+                                print("copying recovery cmdline over the existing one")
+                            os.system('sudo cp /boot/cmdline-update.txt /boot/cmdline.txt')
+                            return True
+                        else:
+                            if self.DEBUG:
+                                print("Error, recovery partition bits is not the same as current system bits. Recovery system will not be able to boot. Make recovery partition match system bits first.")
                     else:
                         if self.DEBUG:
                             print("Error, no ethernet cable connected")    
@@ -1850,7 +1864,7 @@ class PowerSettingsAPIHandler(APIHandler):
         except Exception as ex:
             if self.DEBUG:
                 print("Error in switch_to_recovery: " + str(ex))
-        
+        return False
         
 
     def unload(self):

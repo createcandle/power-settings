@@ -598,11 +598,21 @@
     box-sizing:border-box;
     width:100%;
     max-width:100%;
+    cursor:pointer;
 }
 
 #extension-power-settings-backup-file-selector-container p{
-    color:red;
+    text-align:center;
     font-weight:bold;
+    padding:2rem;
+    background-color:rgba(0,0,0,.2);
+    border-radius:.5rem;
+    margin-top:2rem;
+}
+
+#extension-power-settings-backup-file-selector-container .extension-power-settings-backuping-spinner{
+    display:block;
+    margin:0 auto;
 }
 
 .extension-power-settings-warning-tip{
