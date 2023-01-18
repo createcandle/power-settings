@@ -1675,6 +1675,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     
                     # Check if the kernel modules of the recovery partition are the correct version, since the recovery partion is started with the kernel from the system partion.
                     # But only make the effort if the system isn't connected via Ethernet already.
+                    """
                     uname_parts = run_command('uname -a').split()
                     if len(uname_parts) > 2:
                         linux_version_string = str(uname_parts[2])
@@ -1694,6 +1695,8 @@ class PowerSettingsAPIHandler(APIHandler):
                         else:
                             if self.DEBUG:
                                 print("Error, the /lib/modules folder could not be found; is the recovery partition really mounted?")
+                    """
+                    
                             
                 os.system('sudo umount /mnt/recoverypart')
                 
