@@ -70,6 +70,7 @@ if [ -f /tmp/addons.json ]; then
                     mv ./package "/home/pi/.webthings/addons/$directory"
                     chown -R pi:pi "/home/pi/.webthings/addons/$directory"
                     echo "Candle: succesfully downloaded missing addon: $directory" >> /dev/kmsg
+                    echo "Candle: restoring backup: succesfully downloaded addon: $directory" >> /boot/candle_log.txt
                 fi
                 rm missing.tar
             else
