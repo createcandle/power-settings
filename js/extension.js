@@ -606,6 +606,9 @@
                     
                         if(body.recovery_version == body.latest_recovery_version){
                             document.getElementById('extension-power-settings-update-recovery-ok').style.display = 'block';
+                            if(document.body.classList.contains('developer')){
+                                document.getElementById('extension-power-settings-update-recovery-should-update').style.display = 'block';
+                            }
                         }
                         else{
                             if(this.debug){
@@ -1810,7 +1813,7 @@
                     }
                 }
                 
-                // recovery_partition_bits is no longer needed, as having the recovery partition be 32 bits works for both 32 and 64 bit kernels
+                // dealing with recovery_partition_bits is no longer needed, as having the recovery partition be 32 bits works for both 32 and 64 bit kernels
                 
             }).catch((e) => {
                 console.log("Error: update_checks could not connect to controller: ", e);

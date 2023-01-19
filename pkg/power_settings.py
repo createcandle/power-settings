@@ -1344,14 +1344,12 @@ class PowerSettingsAPIHandler(APIHandler):
                             filename = ""
                             filedata = ""
                             
-                            
                             # Save file
                             try:
                                 filename = request.body['filename']
                                 if self.DEBUG:
                                     print("upload provided filename: " + str(filename))
                                 if filename.endswith('.tar'):
-                                    
                                     
                                     if os.path.isfile(self.restore_file_path):
                                         os.system('rm ' + str(self.restore_file_path))
@@ -1373,33 +1371,47 @@ class PowerSettingsAPIHandler(APIHandler):
                                             print("save complete")
                                         
                                         if os.path.isfile(self.restore_backup_script_path):
-                                            #if self.bits == 32:
-                                            restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.actions_file_path)
-                                            #else:
-                                            #    restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.early_actions_file_path)
-                                            if self.DEBUG:
-                                                print("restore backup copy command: " + str(restore_command))
-                                            os.system(restore_command)
                                             
-                                            # clean up the non-blocking file if it exists.
-                                            if os.path.isfile('/boot/bootup_actions_non_blocking.txt'):
+                                            # make sure the tar file is valid
+                                            
+                                            tar_test = run_command('tar -xvzf ' + str(self.restore_backup_script_path) + ' -O > /dev/null').lower()
+                                            if "error" in tar_test:
+                                                state = 'invalid file'
                                                 if self.DEBUG:
-                                                    print("/boot/bootup_actions_non_blocking.txt still existed")
-                                                os.system('rm /boot/bootup_actions_non_blocking.txt')
+                                                    print("untar test of backup file resulted in error")
+                                            else:
+                                                #if self.bits == 32:
+                                                restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.actions_file_path)
+                                                #else:
+                                                #    restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.early_actions_file_path)
+                                                if self.DEBUG:
+                                                    print("restore backup copy command: " + str(restore_command))
+                                                os.system(restore_command)
                                             
-                                            state = 'ok'
+                                                # clean up the non-blocking file if it exists.
+                                                if os.path.isfile('/boot/bootup_actions_non_blocking.txt'):
+                                                    if self.DEBUG:
+                                                        print("/boot/bootup_actions_non_blocking.txt still existed")
+                                                    os.system('rm /boot/bootup_actions_non_blocking.txt')
+                                            
+                                                state = 'ok'
+                                            
                                         else:
-                                            print("Error: self.restore_backup_script_path did not exist?")
+                                            if self.DEBUG:
+                                                print("Error: self.restore_backup_script_path did not exist?")
+                                            state = 'missing file'
                                         
                             except Exception as ex:
-                                print("Error saving data to file: " + str(ex))
+                                if self.DEBUG:
+                                    print("Error saving data to file: " + str(ex))
                                 state = 'error'
                             #data = self.save_photo(str(request.body['filename']), str(request.body['filedata']), str(request.body['parts_total']), str(request.body['parts_current']) ) #new_value,date,property_id
                             #if isinstance(data, str):
                             #    state = 'error'
                             #else:
                             #    state = 'ok'
-                            print("save return state: " + str(state))
+                            if self.DEBUG:
+                                print("save return state: " + str(state))
                             
                             return APIResponse(
                               status=200,
