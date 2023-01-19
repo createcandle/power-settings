@@ -1372,12 +1372,12 @@ class PowerSettingsAPIHandler(APIHandler):
                                     with open(self.restore_file_path, "wb") as fh:
                                         fh.write(base64.b64decode(filedata))
                                         
-                                        if os.path.isfile(self.restore_backup_script_path):
+                                        if os.path.isfile(self.restore_file_path):
                                             if self.DEBUG:
                                                 print("file save complete")
                                                 
                                             # make sure the tar file is valid
-                                            tar_test_command = 'tar -xf ' + str(self.restore_backup_script_path) + ' -O > /dev/null'
+                                            tar_test_command = 'tar -xf ' + str(self.restore_file_path) + ' -O > /dev/null'
                                             if self.DEBUG:
                                                 print("tar_test_command: " + str(tar_test_command))
                                                 
