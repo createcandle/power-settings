@@ -1372,23 +1372,22 @@ class PowerSettingsAPIHandler(APIHandler):
                                     with open(self.restore_file_path, "wb") as fh:
                                         fh.write(base64.b64decode(filedata))
                                         
-                                        if self.DEBUG:
-                                            print("save complete")
-                                        
                                         if os.path.isfile(self.restore_backup_script_path):
-                                            
+                                            if self.DEBUG:
+                                                print("file save complete")
+                                                
                                             # make sure the tar file is valid
-                                            
-                                            tar_test = run_command('tar -xf ' + str(self.restore_backup_script_path) + ' -O > /dev/null').lower()
-                                            if "error" in tar_test:
+                                            tar_test_command = 'tar -xf ' + str(self.restore_backup_script_path) + ' -O > /dev/null'
+                                            if self.DEBUG:
+                                                print("tar_test_command: " + str(tar_test_command))
+                                                
+                                            tar_test = run_command(tar_test_command)
+                                            if "error" in tar_test.lower():
                                                 state = 'invalid tar file'
                                                 if self.DEBUG:
                                                     print("untar test of backup file resulted in error: " + str(tar_test))
                                             else:
-                                                #if self.bits == 32:
-                                                #restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.actions_file_path)
-                                                #else:
-                                                #    restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.early_actions_file_path)
+                                                restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.actions_file_path)
                                                 if self.DEBUG:
                                                     print("restore backup copy command: " + str(restore_command))
                                                 os.system(restore_command)

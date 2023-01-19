@@ -628,21 +628,21 @@
                     
                         }
                         
-                        if(typeof body.recovery_update_failed != 'undefined'){
+                        if(typeof body.updating_recovery_failed != 'undefined'){
                         
-                            if(body.recovery_update_failed){
+                            if(body.updating_recovery_failed){
                                 if(this.debug){
-                                    console.warn("body.recovery_update_failed!");
+                                    console.warn("body.updating_recovery_failed!");
                                 }
                                 document.getElementById('extension-power-settings-update-recovery-failed').style.display = 'block';
-                                document.getElementById('extension-power-settings-system-update-button').style.display = 'none';
+                                document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'none';
                             }
                         }
                         
                         if(typeof body.allow_update_via_recovery != 'undefined'){
                             if(body.allow_update_via_recovery == false){
                                 if(this.debug){
-                                    console.warn("Switch to recovery partition currently not supported");
+                                    console.log("Switch to recovery partition currently not supported (maybe recovery partition needs update first, or doesn't exist. Or no ethernet cable.)");
                                 }
                                 document.getElementById('extension-power-settings-switch-to-recovery-container').style.display = 'none';
                             }
@@ -1906,38 +1906,41 @@
                 }
                 */
 
-                document.getElementById('extension-power-settings-upload-progress-bar-container').style.display = 'block';
+                document.getElementById('extension-power-settings-upload-progress-container').style.display = 'block';
                     
                 //console.log("this1: ", this);
     		    var reader = new FileReader();
 
+                /*
                 function handleEvent(event) {
                     console.log("file upload event: ", event);
                     //console.log(`${event.type}: ${event.loaded} bytes transferred`);
 
                     if (event.type === "progress") {
-                        
+                        console.log("progress event");
                         if(event.lengthComputable){
                             console.log("upload length is computable");
                             const percent = (event.loaded / event.total ) * 100;
                             console.log("upload percent: ", percent);
-                            document.getElementById('extension-power-settings-upload-progress-bar').style.width = percent + "%";
+                            //document.getElementById('extension-power-settings-upload-progress-bar').style.width = percent + "%";
                         }
                     }
                 }
 
                 function addListeners(reader) {
-                    reader.addEventListener('loadstart', handleEvent);
-                    reader.addEventListener('load', handleEvent);
-                    reader.addEventListener('loadend', handleEvent);
+                    //reader.addEventListener('loadstart', handleEvent);
+                    //reader.addEventListener('load', handleEvent);
+                    //reader.addEventListener('loadend', handleEvent);
                     reader.addEventListener('progress', handleEvent);
-                    reader.addEventListener('error', handleEvent);
-                    reader.addEventListener('abort', handleEvent);
+                    //reader.addEventListener('error', handleEvent);
+                    //reader.addEventListener('abort', handleEvent);
                 }
                 addListeners(reader);
-
+                */
     		    reader.addEventListener("load", (e) => {
-                    //console.log('reader loaded');
+                    if(this.debug){
+                        console.log('file reader loaded');
+                    }
 			        var finalFile = reader.result;
                     
                     finalFile = finalFile.substring(finalFile.indexOf(',') + 1);
@@ -1948,8 +1951,9 @@
                         {'action':'upload', 'filename':filename, 'filedata': finalFile, 'parts_total':1, 'parts_current':1} //e.target.result
 
       			      ).then((body) => {
-                            console.log("file upload done. Response: ", body);
-                            
+                            if(this.debug){
+                                console.log("file upload done. Response: ", body);
+                            }
                             if(body.state == 'ok'){
                                 if(confirm("The system must now reboot to finish restoring the backup")){
                                     window.API.postJson('/settings/system/actions', {

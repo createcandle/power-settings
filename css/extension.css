@@ -201,7 +201,7 @@
 .extension-power-settings-progress-bar{
     width:0%;
     height:100%;
-    background-color:black;
+    background-color:white;
     text-align:center;
 }
 
@@ -638,6 +638,10 @@
 
 
 /*  RESTORE BACKUP  */
+
+#extension-power-settings-upload-progress-container{
+    display:none;
+}
 
 #extension-power-settings-upload-progress-bar-container{
     display:none;
