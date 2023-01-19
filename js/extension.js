@@ -1810,6 +1810,8 @@
                     }
                 }
                 
+                // recovery_partition_bits is no longer needed, as having the recovery partition be 32 bits works for both 32 and 64 bit kernels
+                
             }).catch((e) => {
                 console.log("Error: update_checks could not connect to controller: ", e);
             });

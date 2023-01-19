@@ -409,14 +409,26 @@ class PowerSettingsAPIHandler(APIHandler):
         
     def check_update_processes(self):
         check_bootup_actions_running = run_command("sudo ps aux | grep bootup_action")
-        if "/boot/bootup_actions" in check_bootup_actions_running:
-            if self.DEBUG:
-                print("BOOTUP ACTIONS SEEMS TO BE RUNNING!")
-            self.system_update_in_progress = True
-        elif "/boot/post_bootup_actions" in check_bootup_actions_running:
-            if self.DEBUG:
-                print("POST BOOTUP ACTIONS SEEMS TO BE RUNNING!")
-            self.system_update_in_progress = True
+        if self.DEBUG:
+            print("checking for bootup_actions in ps aux output: " + str(check_bootup_actions_running))
+        if os.path.exists('/boot/bootup_actions_failed.sh'):
+            if "/boot/bootup_actions" in check_bootup_actions_running:
+                if self.DEBUG:
+                    print("BOOTUP ACTIONS SEEMS TO BE RUNNING!")
+                self.system_update_in_progress = True
+            elif "/boot/post_bootup_actions" in check_bootup_actions_running:
+                if self.DEBUG:
+                    print("POST BOOTUP ACTIONS SEEMS TO BE RUNNING!")
+                self.system_update_in_progress = True
+            else:
+                self.system_update_in_progress = False
+        else:
+            self.system_update_in_progress = False
+        
+        if self.DEBUG:
+            if self.system_update_in_progress == False:
+                print("no system update in progress")
+        
         
         """
         if self.system_update_in_progress == False:
@@ -1714,7 +1726,7 @@ class PowerSettingsAPIHandler(APIHandler):
                 
                 if self.recovery_version == 0:
                     if self.DEBUG:
-                        print("unable to get recovery partition version")
+                        print("unable to get recovery partition version (0)")
                 elif self.recovery_version < self.latest_recovery_version:
                     if self.DEBUG:
                         print("recovery partition should be updated")
