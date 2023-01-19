@@ -1844,6 +1844,10 @@
                     }
                 }
                 
+                if(this.debug){
+                    console.log("update_checks: this.update_available_text: ", this.update_available_text);
+                }
+                
                 // Show the switch-to-recovery update option?
                 if(typeof body.allow_update_via_recovery != 'undefined'){
                     if(body.allow_update_via_recovery){
@@ -1853,14 +1857,23 @@
                             }
                             else{
                                 document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'none';
+                                if(this.debug){
+                                    console.log("- ethernet not connected");
+                                }
                             }
                         }
                         else{
                             document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'none';
+                            if(this.debug){
+                                console.log("- this.update_available_text was not 'available'");
+                            }
                         }
                     }
                     else{
                         document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'none';
+                        if(this.debug){
+                            console.log("- not allowing update via recovery");
+                        }
                     }
                 }
                 

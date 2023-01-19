@@ -61,6 +61,10 @@
     display:none;
 }
 
+.system-update-available #extension-power-settings-update-recovery-update-available{
+    display:block;
+}
+
 
 /* TODO: .system-update-available #extension-power-settings-switch-to-recovery-container, */
 .developer #extension-power-settings-update-recovery-update-available,
@@ -677,6 +681,7 @@
     display:block;
 }
 
+/*  TODO: REMOVE THIS BLOCK  */
 body:not(.developer) #extension-power-settings-switch-to-recovery-button{
     display:none;
 }

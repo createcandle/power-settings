@@ -1828,7 +1828,8 @@ class PowerSettingsAPIHandler(APIHandler):
                 if self.DEBUG:
                     print("recovery image failed to download, waiting a few seconds and then trying once more")
                 time.sleep(10)
-                os.system('cd /home/pi/.webthings; rm recovery.fs; wget https://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz -O recovery.fs.tar.gz; tar -xf recovery.fs.tar.gz')
+                os.system('wget https://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz -O /home/pi/.webthings/recovery.fs.tar.gz')
+                #os.system('cd /home/pi/.webthings; rm recovery.fs; wget https://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz -O recovery.fs.tar.gz') #; tar -xf recovery.fs.tar.gz
             
             if not os.path.exists('/home/pi/.webthings/recovery.fs.tar.gz'):
                 if self.DEBUG:
@@ -1836,8 +1837,15 @@ class PowerSettingsAPIHandler(APIHandler):
                 self.updating_recovery_failed = True
                 return
             
+            if self.DEBUG:
+                print("recovery partition file downloaded OK")
+            
             downloaded_recovery_file_checksum = run_command('md5sum /home/pi/.webthings/recovery.fs.tar.gz')
-            if len(recovery_checksum) == 32 and recovery_checksum in downloaded_recovery_file_checksum:
+            if self.DEBUG:
+                print("file checksum    : " + str(downloaded_recovery_file_checksum))
+                print("desired checksum : " + str(recovery_checksum))
+                print("recovery_cheksum length should be 32: " + str(len(recovery_checksum)))
+            if len(recovery_checksum) >= 32 and recovery_checksum in downloaded_recovery_file_checksum:
                 if self.DEBUG:
                     print("checksums matched")
                 self.busy_updating_recovery = 2
