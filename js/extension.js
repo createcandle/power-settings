@@ -732,11 +732,16 @@
                                 }
                                 this.update_available_text = "in progress...";
 								document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
-								document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
+								if(document.getElementById('extension-power-settings-menu-update-button-indicator') != null){
+                                    document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
+                                }
                                 this.start_poll();
                             }
                             else{
-                                document.getElementById('extension-power-settings-update-progress-container').style.display = 'nonef';
+                                document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
+                               if(document.getElementById('extension-power-settings-menu-update-button-indicator') != null){
+                                    document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
+                                }
                             }
                         }
                         
@@ -1397,8 +1402,9 @@
                                         
                                         document.getElementById('extension-power-settings-menu-update-button').style.border = "2px solid white";
                                         document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
-                                        document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
-                                        
+                                        if(document.getElementById('extension-power-settings-menu-update-button-indicator') != null){
+                                            document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
+                                        }
                                         document.body.classList.add("system-updating");
                                         document.body.classList.remove("system-update-available");
                                         
@@ -1432,7 +1438,9 @@
                                         document.getElementById('extension-power-settings-update-process-progress-bar-container').style.display = 'none';
                                         
                                         document.getElementById('extension-power-settings-menu-update-button').style.border = "none";
-                                        document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "";
+                                        if(document.getElementById('extension-power-settings-menu-update-button-indicator') != null){
+                                            document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "";
+                                        }
                                         //document.getElementById('extension-power-settings-update-process-output').innerHTML = "";
                                         //document.getElementById('extension-power-settings-system-update').style.display = 'none';
                                         //document.getElementById('extension-power-settings-manual-update-container').style.display = 'block';

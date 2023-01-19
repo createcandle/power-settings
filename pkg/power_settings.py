@@ -410,10 +410,12 @@ class PowerSettingsAPIHandler(APIHandler):
     def check_update_processes(self):
         check_bootup_actions_running = run_command("sudo ps aux | grep bootup_action")
         if "/boot/bootup_actions" in check_bootup_actions_running:
-            print("BOOTUP ACTIONS SEEMS TO BE RUNNING!")
+            if self.DEBUG:
+                print("BOOTUP ACTIONS SEEMS TO BE RUNNING!")
             self.system_update_in_progress = True
         elif "/boot/post_bootup_actions" in check_bootup_actions_running:
-            print("POST BOOTUP ACTIONS SEEMS TO BE RUNNING!")
+            if self.DEBUG:
+                print("POST BOOTUP ACTIONS SEEMS TO BE RUNNING!")
             self.system_update_in_progress = True
         
         """
