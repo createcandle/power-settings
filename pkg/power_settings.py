@@ -93,6 +93,7 @@ class PowerSettingsAPIHandler(APIHandler):
             self.bits_extension = "64"
         
         
+        self.recovery_partition_exists = False
         self.allow_update_via_recovery = False # will be set to True if a number of conditions are met. Allows for the new partition replace upgrade system.
         
         
@@ -1258,6 +1259,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         'recovery_version':self.recovery_version,
                                         'latest_recovery_version':self.latest_recovery_version,
                                         'busy_updating_recovery':self.busy_updating_recovery,
+                                        'recovery_partition_exists':self.recovery_partition_exists,
                                         'allow_update_via_recovery':self.allow_update_via_recovery,
                                         'updating_recovery_failed':self.updating_recovery_failed,
                                         'allow_recovery_partition_upgrade':self.allow_recovery_partition_upgrade,
@@ -1636,7 +1638,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     if self.DEBUG:
                         print("self.backup_more was false, skipping logs, photos and uploads")
                 
-                backup_command = 'cd ' + str(self.user_profile['baseDir']) + '; find ./config ./data -maxdepth 2 -name "*.json" -o -name "*.yaml" -o -name "*.sqlite3" | tar -cf ' + str(self.backup_file_path) + ' -T -' 
+                backup_command = 'cd ' + str(self.user_profile['baseDir']) + '; find ./config ./data -maxdepth 2 -name "*.json" -o -name "*.xtt" -o -name "*.yaml" -o -name "*.xml" -o -name "*.sqlite3" -o -name "*.blacklisted_devices" -o -name "*.trusted_devices" -o -name "*.ignored_devices" -o -name "*.db"  | tar -cf ' + str(self.backup_file_path) + ' -T -' 
                 backup_command += extra_tar_commands
                 
                 if self.DEBUG:
@@ -1672,10 +1674,11 @@ class PowerSettingsAPIHandler(APIHandler):
             if not 'mmcblk0p4' in lsblk_output:
                 if self.DEBUG:
                     print("warning, recovery partition is not supported")
-            
+                self.recovery_partition_exists = False
             else:
                 if self.DEBUG:
                     print("mmcblk0p4 partition exists")
+                self.recovery_partition_exists = True
                 
                 # if there are four partitions, and the system is 64 bits, then allow the upgrade of the recovery partition
                 if self.bits == 64:
@@ -1766,6 +1769,10 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("Error in check_recovery_partition: " + str(ex))
             
 
+
+    
+    
+
     def update_recovery_partition(self):
         if self.DEBUG:
             print("in update_recovery_partition")
@@ -1779,9 +1786,19 @@ class PowerSettingsAPIHandler(APIHandler):
             self.updating_recovery_failed = False
             self.busy_updating_recovery = 1
             
+            if os.path.exists('/home/pi/.webthings/recovery.fs.tar.gz'):
+                if self.DEBUG:
+                    print("Warning, recovery.fs.tar.gz already existed. Deleting")
+                os.system('sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
+                
+            if os.path.exists('/home/pi/.webthings/recovery.fs'):
+                os.system('sudo rm /home/pi/.webthings/recovery.fs')
+                if self.DEBUG:
+                    print("Warning, recovery.fs.tar.gz already existed. Deleting")
+            
             recovery_checksum = None
             try:
-                with urllib.request.urlopen('http://www.candlesmarthome.com/img/recovery/recovery.img.tar.gz.checksum') as f:
+                with urllib.request.urlopen('http://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz.checksum') as f:
                     recovery_checksum = f.read().decode('utf-8')
                     if self.DEBUG:
                         print("recovery checksum should be: " + str(recovery_checksum))
@@ -1800,40 +1817,44 @@ class PowerSettingsAPIHandler(APIHandler):
             # just to be safe
             os.system('sudo umount /mnt/recoverypart')
             
-            os.system('cd /home/pi/.webthings; rm recovery.img; rm recovery.img.tar.gz; wget https://www.candlesmarthome.com/img/recovery/recovery.img.tar.gz -O recovery.img.tar.gz')
+            os.system('wget https://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz -O /home/pi/.webthings/recovery.fs.tar.gz')
             
-            if not os.path.exists('/home/pi/.webthings/recovery.img.tar.gz'):
+            if not os.path.exists('/home/pi/.webthings/recovery.fs.tar.gz'):
                 if self.DEBUG:
                     print("recovery image failed to download, waiting a few seconds and then trying once more")
                 time.sleep(10)
-                os.system('cd /home/pi/.webthings; rm recovery.img; wget https://www.candlesmarthome.com/img/recovery/recovery.img.tar.gz -O recovery.img.tar.gz; tar -xf recovery.img.tar.gz')
+                os.system('cd /home/pi/.webthings; rm recovery.fs; wget https://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz -O recovery.fs.tar.gz; tar -xf recovery.fs.tar.gz')
             
-            if not os.path.exists('/home/pi/.webthings/recovery.img.tar.gz'):
+            if not os.path.exists('/home/pi/.webthings/recovery.fs.tar.gz'):
                 if self.DEBUG:
                     print("Recovery partition file failed to download")
                 self.updating_recovery_failed = True
                 return
             
-            downloaded_recovery_file_checksum = run_command('md5sum /home/pi/.webthings/recovery.img.tar.gz')
+            downloaded_recovery_file_checksum = run_command('md5sum /home/pi/.webthings/recovery.fs.tar.gz')
             if len(recovery_checksum) == 32 and recovery_checksum in downloaded_recovery_file_checksum:
                 if self.DEBUG:
                     print("checksums matched")
-            
+                self.busy_updating_recovery = 2
+                
             else:
                 if self.DEBUG:
                     print("Aborting, downloaded recovery img file checksums did not match")
                 self.updating_recovery_failed = True
+                os.system('sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
                 return
             
-            os.system('cd /home/pi/.webthings; tar -xf recovery.img.tar.gz')
-                        
             self.busy_updating_recovery = 2
             
+            os.system('cd /home/pi/.webthings; tar -xf recovery.fs.tar.gz')
+            
+            
+            
             # Recovery image failed to download/extract
-            if os.path.exists('/home/pi/.webthings/recovery.img') == False:
+            if os.path.exists('/home/pi/.webthings/recovery.fs') == False:
                 if self.DEBUG:
                     print("recovery image failed to download or extract!")
-                os.system('cd /home/pi/.webthings; rm recovery.img; rm recovery.img.tar.gz')
+                os.system('sudo rm /home/pi/.webthings/recovery.fs; sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
                 self.updating_recovery_failed = True
                 
             # Good to go!
@@ -1846,20 +1867,19 @@ class PowerSettingsAPIHandler(APIHandler):
                 
                 self.busy_updating_recovery = 4
                 
-                os.system('sudo losetup --partscan /dev/loop0 /home/pi/.webthings/recovery.img; sudo dd if=/dev/loop0p2 of=/dev/mmcblk0p3 bs=1M; sudo losetup --detach /dev/loop0 ')
-            
+                os.system('sudo dd if=/home/pi/.webthings/recovery.fs of=/dev/mmcblk0p3 bs=1M; sudo rm /home/pi/.webthings/recovery.fs; sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
+
                 self.busy_updating_recovery = 5
                 
         except Exception as ex:
             print("Error in update_recovery_partition: " + str(ex))
         
-        #sudo losetup --partscan /dev/loop0 recovery.img
+        # old method of mounting the entire disk image
+        #sudo losetup --partscan /dev/loop0 recovery.fs
         #sudo dd if=/dev/loop0p2 of=/dev/mmcblk0p3 bs=1M
         #losetup --detach /dev/loop0 
         
-        # clean up
-        os.system('cd /home/pi/.webthings; rm recovery.img; rm recovery.img.tar.gz')
-        
+    
 
 
     def switch_to_recovery(self):

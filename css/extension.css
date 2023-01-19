@@ -650,12 +650,30 @@
     margin-bottom:30vh;
 }
 
+
+.developer-only{
+    display:none;
+}
+.developer .developer-only{
+    display:initial;
+}
+/*
 #extension-power-settings-manual-update-container{
     display:none;
 }
 .developer #extension-power-settings-manual-update-container{
     display:block;
 }
+
+
+.has-recovery-partition #extension-power-settings-system-update-container{
+    display:none;
+}
+
+.developer .has-recovery-partition #extension-power-settings-system-update-container{
+    display:block;
+}
+*/
 
 .extension-power-settings-form-system-update,
 .extension-power-settings-form-manual-update{

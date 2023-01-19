@@ -18,6 +18,7 @@
             this.bits = 32;
             this.update_available_text = "";
             this.system_update_in_progress = false;
+            this.recovery_partition_exists = false;
             this.overlay_exists = true;
 
             this.interval = null;
@@ -512,9 +513,13 @@
                     
                     if(typeof body.debug != 'undefined'){
                         this.debug = body.debug;
-                        if(this.debug){
-                            console.log('power settings debug: init response: ', body);
-                        }
+                    }
+                    else{
+                        console.error("power settings: init response: body.debug was undefined");
+                    }
+                    
+                    if(this.debug){
+                        console.log('power settings debug: init response: ', body);
                     }
                     
                     // show server time in input fields
@@ -622,6 +627,9 @@
                     }
                     
                     if(typeof body.recovery_update_failed != 'undefined'){
+                        if(this.debug){
+                            console.warn("body.recovery_update_failed: ", body.recovery_update_failed);
+                        }
                         if(body.recovery_update_failed){
                             document.getElementById('extension-power-settings-update-recovery-failed').style.display = 'block';
                             document.getElementById('extension-power-settings-system-update-button').style.display = 'none';
@@ -727,31 +735,12 @@
                             }
                         }
                         
-                        if(typeof body.system_update_in_progress != 'undefined'){
-                            this.system_update_in_progress = body.system_update_in_progress;
-                            if(body.system_update_in_progress == true){
-                                if(this.debug){
-                                    console.log("A SYSTEM UPDATE IS ALREADY IN PROGRESS (bootup_actions.sh on an older release candidate)");
-                                }
-                                this.update_available_text = "in progress...";
-								document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
-								if(document.getElementById('extension-power-settings-menu-update-button-indicator') != null){
-                                    document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
-                                }
-                                this.start_poll();
-                            }
-                            else{
-                                document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
-                               if(document.getElementById('extension-power-settings-menu-update-button-indicator') != null){
-                                    document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "";
-                                }
-                            }
-                        }
+                        
                         
 
                         if(this.system_update_in_progress == false){
                             setTimeout( () => {
-                                this.show_update_available();
+                                this.show_update_available(); // reacts to this.update_avaiable_text being set
                             }, 3000);
                         }
                         else{
@@ -776,6 +765,38 @@
                         }
                     }
             
+                    
+                    if(typeof body.recovery_partition_exists != 'undefined'){
+                        this.recovery_partition_exists = body.recovery_partition_exists;
+                    }
+                    if(this.recovery_partition_exists){
+                        if(this.debug){
+                            console.log("power settings: recovery partition exists. Adding class.");
+                        }
+                        document.getElementById('extension-power-settings-container-update').classList.add('has-recovery-partition');
+                    }
+                    
+                    
+                    if(typeof body.system_update_in_progress != 'undefined'){
+                        this.system_update_in_progress = body.system_update_in_progress;
+                        if(body.system_update_in_progress == true){
+                            if(this.debug){
+                                console.log("A SYSTEM UPDATE IS ALREADY IN PROGRESS (bootup_actions.sh on an older release candidate)");
+                            }
+                            this.update_available_text = "in progress...";
+							document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
+							if(document.getElementById('extension-power-settings-menu-update-button-indicator') != null){
+                                document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
+                            }
+                            this.start_poll();
+                        }
+                        else{
+                            document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
+                           if(document.getElementById('extension-power-settings-menu-update-button-indicator') != null){
+                                document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "";
+                            }
+                        }
+                    }
                     
                     if(typeof body.old_overlay_active != 'undefined' && typeof body.ro_exists != 'undefined' && typeof body.post_bootup_actions_supported != 'undefined'){
                         
