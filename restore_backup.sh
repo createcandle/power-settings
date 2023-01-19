@@ -20,6 +20,7 @@ fi
 COUNTER=0
 
 if [ ! -f /home/pi/.webthings/data/power-settings/candle_restore.tar ]; then
+    echo "Error, backup file to restore from is missing. Aborting."
     echo "Error, backup file to restore from is missing. Aborting." >> /boot/candle_log.txt
     
     echo "Candle: Backup restored, but downloading latest addons list failed. Did not restore addons." >> /dev/kmsg
@@ -150,7 +151,7 @@ else
                     URLS=`echo "${URLS}" | head -1`
                     echo "$URLS"
             
-                    wget "$URLS" -O missing.tar
+                    wget $URLS -O missing.tar
             
                 else
                     echo "Did not find a download URL - does addon exist?"
