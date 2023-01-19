@@ -31,7 +31,6 @@ if [ ! -f /home/pi/.webthings/data/power-settings/candle_restore.tar ]; then
     fi
     sleep 7
     
-    
 else
     
     if [ -e "/bin/ply-image" ] && [ -e /dev/fb0 ] && [ -f "/boot/splash_updating-0.png" ] && [ -f "/boot/splash_updating180-0.png" ]; then
@@ -233,3 +232,4 @@ fi
 rm /boot/bootup_actions.sh
 rm /boot/bootup_actions_failed.sh
 #sudo systemctl start webthings-gateway.service
+exit 1

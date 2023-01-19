@@ -743,7 +743,7 @@
                             else{
                                 document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
                                if(document.getElementById('extension-power-settings-menu-update-button-indicator') != null){
-                                    document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
+                                    document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "";
                                 }
                             }
                         }

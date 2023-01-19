@@ -1374,11 +1374,11 @@ class PowerSettingsAPIHandler(APIHandler):
                                             
                                             # make sure the tar file is valid
                                             
-                                            tar_test = run_command('tar -xvzf ' + str(self.restore_backup_script_path) + ' -O > /dev/null').lower()
+                                            tar_test = run_command('tar -xf ' + str(self.restore_backup_script_path) + ' -O > /dev/null').lower()
                                             if "error" in tar_test:
-                                                state = 'invalid file'
+                                                state = 'invalid tar file'
                                                 if self.DEBUG:
-                                                    print("untar test of backup file resulted in error")
+                                                    print("untar test of backup file resulted in error: " + str(tar_test))
                                             else:
                                                 #if self.bits == 32:
                                                 restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.actions_file_path)
