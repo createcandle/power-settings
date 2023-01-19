@@ -106,7 +106,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.photo_frame_installed = False
         if os.path.isdir(self.photos_dir_path):
             self.photo_frame_installed = True
-        
+
         # Bootup actions
         #self.early_actions_file_path = '/boot/bootup_actions_early.sh' # run before the gateway starts
         self.actions_file_path = '/boot/bootup_actions.sh' # run before the gateway starts
@@ -155,10 +155,9 @@ class PowerSettingsAPIHandler(APIHandler):
         self.recovery_version = 0
         self.recovery_partition_bits = 32
         self.latest_recovery_version = 1
-        self.busy_updating_recovery = 0  # higher values indicate steps in the process
+        self.busy_updating_recovery = 0  # higher values indicate steps in the process. 5 is a likely succesfull upgrade.
         self.updating_recovery_failed = False
         self.should_start_recovery_update = False
-        self.allow_recovery_partition_upgrade = False
         
         # System updates
         self.bootup_actions_failed = False
@@ -918,7 +917,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':'ok',
                                                       'busy_updating_recovery':self.busy_updating_recovery,
-                                                      'updating_recovery_failed':self.updating_recovery_failed
+                                                      'updating_recovery_failed':self.updating_recovery_failed,
+                                                      'allow_update_via_recovery':self.allow_update_via_recovery
                                                   }),
                                 )
                                 
@@ -970,9 +970,13 @@ class PowerSettingsAPIHandler(APIHandler):
                                   status=200,
                                   content_type='application/json',
                                   content=json.dumps({'state':state,
-                                                      'ethernet_connected':self.ethernet_connected,
                                                       'bits':self.bits,
-                                                      'recovery_partition_bits':self.recovery_partition_bits
+                                                      'recovery_version':self.recovery_version,
+                                                      'latest_recovery_version':self.latest_recovery_version,
+                                                      #'recovery_partition_bits':self.recovery_partition_bits,
+                                                      'ethernet_connected':self.ethernet_connected,
+                                                      'recovery_partition_exists':self.recovery_partition_exists,
+                                                      'allow_update_via_recovery':self.allow_update_via_recovery
                                                   }),
                                 )
                             
@@ -1262,7 +1266,6 @@ class PowerSettingsAPIHandler(APIHandler):
                                         'recovery_partition_exists':self.recovery_partition_exists,
                                         'allow_update_via_recovery':self.allow_update_via_recovery,
                                         'updating_recovery_failed':self.updating_recovery_failed,
-                                        'allow_recovery_partition_upgrade':self.allow_recovery_partition_upgrade,
                                         'debug':self.DEBUG
                                     }
                             if self.DEBUG:
@@ -1383,14 +1386,14 @@ class PowerSettingsAPIHandler(APIHandler):
                                                     print("untar test of backup file resulted in error: " + str(tar_test))
                                             else:
                                                 #if self.bits == 32:
-                                                restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.actions_file_path)
+                                                #restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.actions_file_path)
                                                 #else:
                                                 #    restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.early_actions_file_path)
                                                 if self.DEBUG:
                                                     print("restore backup copy command: " + str(restore_command))
                                                 os.system(restore_command)
                                             
-                                                # clean up the non-blocking file if it exists.
+                                                # clean up the non-blocking file if it exists. TODO: is this still used?
                                                 if os.path.isfile('/boot/bootup_actions_non_blocking.txt'):
                                                     if self.DEBUG:
                                                         print("/boot/bootup_actions_non_blocking.txt still existed")
@@ -1402,6 +1405,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                             if self.DEBUG:
                                                 print("Error: self.restore_backup_script_path did not exist?")
                                             state = 'missing file'
+                                else:
+                                    if self.DEBUG:
+                                        print("Error: wrong file extension")
+                                    state = 'wrong file extension'
                                         
                             except Exception as ex:
                                 if self.DEBUG:
@@ -1680,10 +1687,6 @@ class PowerSettingsAPIHandler(APIHandler):
                     print("mmcblk0p4 partition exists")
                 self.recovery_partition_exists = True
                 
-                # if there are four partitions, and the system is 64 bits, then allow the upgrade of the recovery partition
-                if self.bits == 64:
-                    self.allow_recovery_partition_upgrade = True
-                
                 if not os.path.exists('/mnt/recoverypart'):
                     os.system('sudo mkdir -p /mnt/recoverypart')
                     
@@ -1708,6 +1711,7 @@ class PowerSettingsAPIHandler(APIHandler):
                         if self.DEBUG:
                             print("recovery partition version: " + str(self.recovery_version))
                     
+                    # not really needed at the moment, as a 32 bit partition is fine for both types of systems for now.
                     if os.path.exists('/mnt/recoverypart/64bits.txt'):
                         self.recovery_partition_bits = 64
                     
@@ -1736,7 +1740,6 @@ class PowerSettingsAPIHandler(APIHandler):
                                 print("Error, the /lib/modules folder could not be found; is the recovery partition really mounted?")
                     """
                     
-                            
                 os.system('sudo umount /mnt/recoverypart')
                 
                 if self.recovery_version == 0:
@@ -1754,15 +1757,18 @@ class PowerSettingsAPIHandler(APIHandler):
                         if os.path.exists('/boot'):
                             if self.DEBUG:
                                 print("creating missing cmdline-update.txt")
-                            os.system('echo "console=tty1 root=/dev/mmcblk0p3 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait consoleblank=0 net.ifnames=0 quiet plymouth.ignore-serial-consoles splash logo.nologo" | sudo tee /boot/cmdline-update.txt')
+                            os.system('echo "console=tty3 root=/dev/mmcblk0p3 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait consoleblank=0 net.ifnames=0 quiet plymouth.ignore-serial-consoles splash logo.nologo" | sudo tee /boot/cmdline-update.txt')
                     
                     if os.path.exists('/boot/cmdline-update.txt'):
                         if self.DEBUG:
                             print("/boot/cmdline-update.txt exists, update may happen via recovery partition")
-                        if self.bits == 64:
-                            if self.DEBUG:
-                                print("system is also 64 bit. Update may happen via recovery partition")
-                            self.allow_update_via_recovery = True
+                        
+                        if self.DEBUG:
+                            print("Update may happen via recovery partition")
+                        self.allow_update_via_recovery = True
+                        
+                        #if self.bits == 64:
+                            
                 
         except Exception as ex:
             if self.DEBUG:
@@ -1869,6 +1875,8 @@ class PowerSettingsAPIHandler(APIHandler):
                 
                 os.system('sudo dd if=/home/pi/.webthings/recovery.fs of=/dev/mmcblk0p3 bs=1M; sudo rm /home/pi/.webthings/recovery.fs; sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
 
+                self.check_recovery_partition()
+
                 self.busy_updating_recovery = 5
                 
         except Exception as ex:
@@ -1886,27 +1894,29 @@ class PowerSettingsAPIHandler(APIHandler):
         if self.DEBUG:
             print("in switch_to_recovery")
         try:
-            if os.path.exists('/boot/cmdline-update.txt') and os.path.exists('/boot/cmdline-candle.txt'):
-                if self.busy_updating_recovery == 0 or self.busy_updating_recovery == 5:
-                    self.check_ethernet_connected()
-                    if self.ethernet_connected:
-                        if self.bits == self.recovery_partition_bits:
+            if self.recovery_version > 0 and self.recovery_version == self.latest_recovery_version:
+                if os.path.exists('/boot/cmdline-update.txt') and os.path.exists('/boot/cmdline-candle.txt'):
+                    if self.busy_updating_recovery == 0 or self.busy_updating_recovery == 5:
+                        self.check_ethernet_connected()
+                        if self.ethernet_connected:
                             if self.DEBUG:
                                 print("copying recovery cmdline over the existing one")
                             os.system('sudo cp /boot/cmdline-update.txt /boot/cmdline.txt')
                             return True
+                        
                         else:
                             if self.DEBUG:
-                                print("Error, recovery partition bits is not the same as current system bits. Recovery system will not be able to boot. Make recovery partition match system bits first.")
+                                print("Error, no ethernet cable connected")    
                     else:
                         if self.DEBUG:
-                            print("Error, no ethernet cable connected")    
+                            print("Error, will not start switch to recovery as busy_updating_recovery is in limbo, indicating a failed recovery partition update: " + str(self.busy_updating_recovery))
                 else:
                     if self.DEBUG:
-                        print("Error, will not start switch to recovery as busy_updating_recovery is in limbo, indicating a failed recovery partition update: " + str(self.busy_updating_recovery))
+                        print("Error, /boot/cmdline-update.txt or /boot/cmdline-candle.txt does not exist")
             else:
                 if self.DEBUG:
-                    print("Error, /boot/cmdline-update.txt or /boot/cmdline-candle.txt does not exist")
+                    print("Error, recovery partition does not exist/has not been installed (still version 0)")
+                    
         except Exception as ex:
             if self.DEBUG:
                 print("Error in switch_to_recovery: " + str(ex))

@@ -156,10 +156,13 @@
             <ul>
                 <li>Settings for Candle addons</li>
                 <li>General settings for controller and your addons</li>
-                <li>Data logs (if the backup contains those)</li>
+                <li>Data logs (if present in the backup)</li>
             </ul>
             <p>Once the backup has loaded the controller will reboot, download any missing addons, change the settings, and then start the controller again.</p>
             <!--<p>This does NOT remove or replace photos or data logs.</p>-->
+            <div id="extension-power-settings-upload-progress-bar-container" class="extension-power-settings-progress-bar-container">
+                <div id="extension-power-settings-upload-progress-bar" class="extension-power-settings-progress-bar"></div>
+            </div>
             <div id="extension-power-settings-backup-file-selector-container" class="extension-power-settings-form-backup">
                 <input id="extension-power-settings-backup-file-selector" accept=".tar" type="file" value="Upload backup" />
             </div>
@@ -267,8 +270,8 @@
             <div id="extension-power-settings-update-progress-container" class="extension-power-settings-vlak" style="display: none;">
                 <p>SYSTEM UPDATE IN PROGRESS</p>
                 <p style="margin-top: 0; font-style: italic;">This can take 2 hours</p>
-                <div id="extension-power-settings-update-process-progress-bar-container">
-                    <div id="extension-power-settings-update-process-progress-bar"></div>
+                <div id="extension-power-settings-update-process-progress-bar-container" class="extension-power-settings-progress-bar-container">
+                    <div id="extension-power-settings-update-process-progress-bar" class="extension-power-settings-progress-bar"></div>
                     <div id="extension-power-settings-update-process-progress-bar-text">SYSTEM UPDATE IN PROGRESS</div>
                 </div>
 
@@ -289,8 +292,6 @@
 
             <pre id="extension-power-settings-update-process-output" class="extension-power-settings-dev-only"></pre>
         </div>
-        
-        
         
         
         <div id="extension-power-settings-update-recovery-container" class="extension-power-settings-vlak developer-only">

@@ -184,6 +184,11 @@
 
 
 #extension-power-settings-update-process-progress-bar-container{
+    
+}
+
+
+.extension-power-settings-progress-bar-container{
     border:2px solid white;
     border-radius:2rem;
     height:2rem;
@@ -193,10 +198,11 @@
     position:relative;
 }
 
-#extension-power-settings-update-process-progress-bar{
+.extension-power-settings-progress-bar{
     width:0%;
     height:100%;
-    background-color:white;
+    background-color:black;
+    text-align:center;
 }
 
 #extension-power-settings-update-progress-container > #extension-power-settings-update-process-progress-bar-container > #extension-power-settings-update-process-progress-bar-text{
@@ -631,6 +637,15 @@
 }
 
 
+/*  RESTORE BACKUP  */
+
+#extension-power-settings-upload-progress-bar-container{
+    display:none;
+    width:50%;
+    margin:4rem auto 0 auto;
+}
+
+
 
 /*  Memory and Disk use  */
 
@@ -655,8 +670,14 @@
     display:none;
 }
 .developer .developer-only{
-    display:initial;
+    display:block;
 }
+
+body:not(.developer) #extension-power-settings-switch-to-recovery-button{
+    display:none;
+}
+
+
 /*
 #extension-power-settings-manual-update-container{
     display:none;
@@ -664,7 +685,7 @@
 .developer #extension-power-settings-manual-update-container{
     display:block;
 }
-
+*/
 
 .has-recovery-partition #extension-power-settings-system-update-container{
     display:none;
@@ -673,7 +694,7 @@
 .developer .has-recovery-partition #extension-power-settings-system-update-container{
     display:block;
 }
-*/
+
 
 .extension-power-settings-form-system-update,
 .extension-power-settings-form-manual-update{
