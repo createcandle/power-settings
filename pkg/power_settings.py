@@ -1365,7 +1365,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.actions_file_path)
                                             #else:
                                             #    restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.early_actions_file_path)
-                                            #if self.DEBUG:
+                                            if self.DEBUG:
                                                 print("restore backup copy command: " + str(restore_command))
                                             os.system(restore_command)
                                             
@@ -1776,13 +1776,13 @@ class PowerSettingsAPIHandler(APIHandler):
             # just to be safe
             os.system('sudo umount /mnt/recoverypart')
             
-            os.system('cd /home/pi/.webthings; rm recovery.img; rm recovery.img.tar.gz; wget https://www.candlesmarthome.com/tools/recovery.img.tar.gz -O recovery.img.tar.gz')
+            os.system('cd /home/pi/.webthings; rm recovery.img; rm recovery.img.tar.gz; wget https://www.candlesmarthome.com/img/recovery/recovery.img.tar.gz -O recovery.img.tar.gz')
             
             if not os.path.exists('/home/pi/.webthings/recovery.img.tar.gz'):
                 if self.DEBUG:
                     print("recovery image failed to download, waiting a few seconds and then trying once more")
                 time.sleep(10)
-                os.system('cd /home/pi/.webthings; rm recovery.img; wget https://www.candlesmarthome.com/tools/recovery.img.tar.gz -O recovery.img.tar.gz; tar -xf recovery.img.tar.gz')
+                os.system('cd /home/pi/.webthings; rm recovery.img; wget https://www.candlesmarthome.com/img/recovery/recovery.img.tar.gz -O recovery.img.tar.gz; tar -xf recovery.img.tar.gz')
             
             if not os.path.exists('/home/pi/.webthings/recovery.img.tar.gz'):
                 if self.DEBUG:
