@@ -880,9 +880,11 @@
                 
     			document.getElementById("extension-power-settings-backup-file-selector").addEventListener('change', () => {
     				var filesSelected = document.getElementById("extension-power-settings-backup-file-selector").files;
-                    document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<div id="extension-power-settings-upload-in-progress"><p>Transferring file</p></div>';
+                    document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<div id="extension-power-settings-upload-in-progress"><div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div><p>Transferring file</p></div>';
                     this.upload_files(filesSelected);
     			});
+                
+                
                 
                 
                 // Get the latest time for the clock page
@@ -1906,7 +1908,7 @@
                 }
                 */
 
-                document.getElementById('extension-power-settings-upload-progress-container').style.display = 'block';
+                //document.getElementById('extension-power-settings-upload-progress-container').style.display = 'block';
                     
                 //console.log("this1: ", this);
     		    var reader = new FileReader();
