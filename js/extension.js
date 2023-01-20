@@ -513,6 +513,9 @@
                         console.error("power settings: init response: body.debug was undefined: ", body);
                     }
                     
+                    // If the Candle overlay was active, then it shouldn't be anymmore.
+                    document.getElementById('candle-tools').style.display = 'none';
+                    
                     if(this.debug){
                         console.log('power settings debug: init response: ', body);
                     }
