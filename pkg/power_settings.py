@@ -159,6 +159,12 @@ class PowerSettingsAPIHandler(APIHandler):
         self.updating_recovery_failed = False
         self.should_start_recovery_update = False
         
+        self.recovery_partition_mount_point = os.path.join(self.user_profile['dataDir'], self.addon_name,'recoverypart')
+        
+        if not os.path.exists(self.recovery_partition_mount_point):
+            os.system('mkdir -p ' + str(self.recovery_partition_mount_point))
+        
+        
         # System updates
         self.bootup_actions_failed = False
         self.live_update_attempted = False
@@ -333,7 +339,8 @@ class PowerSettingsAPIHandler(APIHandler):
         # get recovery partition version
         self.check_recovery_partition()
         
-        
+        # TODO: test only
+        self.update_recovery_partition()
         
         
         
@@ -1670,6 +1677,7 @@ class PowerSettingsAPIHandler(APIHandler):
 
 
 
+
     # check what version of the recovery partition is installed
     def check_recovery_partition(self):
         if self.DEBUG:
@@ -1686,32 +1694,39 @@ class PowerSettingsAPIHandler(APIHandler):
                     print("mmcblk0p4 partition exists")
                 self.recovery_partition_exists = True
                 
-                if not os.path.exists('/mnt/recoverypart'):
-                    os.system('sudo mkdir -p /mnt/recoverypart')
-                    
-                if os.path.exists('/mnt/recoverypart/candle_recovery.txt'):
+                if not os.path.exists(self.recovery_partition_mount_point):
+                    os.system('sudo mkdir -p ' + str(self.recovery_partition_mount_point))
+                
+                candle_recovery_text_path = os.path.join(self.recovery_partition_mount_point,'candle_recovery.txt')
+                if os.path.exists(candle_recovery_text_path):
                     if self.DEBUG:
                         print("warning, recovery partition seems to already be mounted")
                 else:
-                    if self.DEBUG:
-                        print("mounting recovery partition")
-                    os.system('sudo mount -t auto /dev/mmcblk0p3 /mnt/recoverypart')
-                    time.sleep(.2)
+                    
+                    if os.path.exists(self.recovery_partition_mount_point):
+                        if self.DEBUG:
+                            print("mounting recovery partition")
+                        os.system('sudo mount -r -t auto /dev/mmcblk0p3 ' + self.recovery_partition_mount_point)
+                        time.sleep(.2)
+                    else:
+                        if self.DEBUG:
+                            print("Error, mount point for recovery partition did not exist")
+                        return
                     
                 # Check if the recovery partition was mounted properly
-                if os.path.exists('/mnt/recoverypart/candle_recovery.txt') == False:
+                if os.path.exists(candle_recovery_text_path) == False:
                     if self.DEBUG:
                         print("ERROR, mounting recovery partition failed") # could be a rare occurance of an unformatted recovery partition
-                        if os.path.exists('/mnt/recoverypart/bin'):
-                            print("However, /mnt/recoverypart/bin does exist, so the partition is mounted?")
+                        if os.path.exists(os.path.join(self.recovery_partition_mount_point,'bin')):
+                            print("However, /bin does exist, so the partition is mounted?")
                 else:
-                    with open("/mnt/recoverypart/candle_recovery.txt", "r") as version_file:
+                    with open(candle_recovery_text_path, "r") as version_file:
                         self.recovery_version = int(version_file.read())
                         if self.DEBUG:
                             print("recovery partition version: " + str(self.recovery_version))
                     
                     # not really needed at the moment, as a 32 bit partition is fine for both types of systems for now.
-                    if os.path.exists('/mnt/recoverypart/64bits.txt'):
+                    if os.path.exists(os.path.join(self.recovery_partition_mount_point,'64bits.txt')):
                         self.recovery_partition_bits = 64
                     
                     
@@ -1739,7 +1754,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 print("Error, the /lib/modules folder could not be found; is the recovery partition really mounted?")
                     """
                     
-                os.system('sudo umount /mnt/recoverypart')
+                os.system('sudo umount ' + str(self.recovery_partition_mount_point))
                 
                 if self.recovery_version == 0:
                     if self.DEBUG:
@@ -1763,7 +1778,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             print("/boot/cmdline-update.txt exists, update may happen via recovery partition")
                         
                         if self.DEBUG:
-                            print("Update may happen via recovery partition")
+                            print("Update may happen via recovery partition (if the network cable is also plugged in)")
                         self.allow_update_via_recovery = True
                         
                         #if self.bits == 64:
@@ -1783,6 +1798,8 @@ class PowerSettingsAPIHandler(APIHandler):
             print("in update_recovery_partition")
         try:
             
+            
+            
             if self.busy_updating_recovery > 0:
                 if self.DEBUG:
                     print("Warning, already busy update_recovery_partition. Aborting.")
@@ -1793,20 +1810,22 @@ class PowerSettingsAPIHandler(APIHandler):
             
             if os.path.exists('/home/pi/.webthings/recovery.fs.tar.gz'):
                 if self.DEBUG:
-                    print("Warning, recovery.fs.tar.gz already existed. Deleting")
+                    print("Warning, recovery.fs.tar.gz already exists. Deleting")
                 os.system('sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
                 
             if os.path.exists('/home/pi/.webthings/recovery.fs'):
-                os.system('sudo rm /home/pi/.webthings/recovery.fs')
                 if self.DEBUG:
-                    print("Warning, recovery.fs.tar.gz already existed. Deleting")
+                    print("Warning, recovery.fs.tar.gz already exists. Deleting")
+                os.system('sudo rm /home/pi/.webthings/recovery.fs')
+                
             
             recovery_checksum = None
             try:
                 with urllib.request.urlopen('http://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz.checksum') as f:
                     recovery_checksum = f.read().decode('utf-8')
+                    recovery_checksum = recovery_checksum.strip()
                     if self.DEBUG:
-                        print("recovery checksum should be: " + str(recovery_checksum))
+                        print("recovery checksum should be: ->" + str(recovery_checksum) + "<-")
             except Exception as ex:
                 if self.DEBUG:
                     print("Aborting recovery partition update, error trying to download image checksum: " + str(ex))
@@ -1815,12 +1834,20 @@ class PowerSettingsAPIHandler(APIHandler):
             
             if recovery_checksum == None:
                 if self.DEBUG:
-                    print("Aborting recovery partition update, recovery checksum was still None")
+                    print("Aborting recovery partition update, desired recovery checksum was still None")
                 self.updating_recovery_failed = True
                 return
             
-            # just to be safe
-            os.system('sudo umount /mnt/recoverypart')
+            
+            if os.path.exists(os.path.join(self.recovery_partition_mount_point,'bin')):
+                if self.DEBUG:
+                    print("Warning, recovery partition seemed to already be mounted! Will attempts to unmount it first")
+                os.system('sudo umount ' + str(self.recovery_partition_mount_point))
+                if os.path.exists(os.path.join(self.recovery_partition_mount_point,'bin')):
+                    if self.DEBUG:
+                        print("Error, unmounting recovery partition (that shouldn't have been mounted in the first place) failed")
+                    self.updating_recovery_failed = True
+                    return
             
             os.system('wget https://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz -O /home/pi/.webthings/recovery.fs.tar.gz')
             
@@ -1840,12 +1867,14 @@ class PowerSettingsAPIHandler(APIHandler):
             if self.DEBUG:
                 print("recovery partition file downloaded OK")
             
-            downloaded_recovery_file_checksum = run_command('md5sum /home/pi/.webthings/recovery.fs.tar.gz')
+            downloaded_recovery_file_checksum = run_command("md5sum /home/pi/.webthings/recovery.fs.tar.gz | awk '{print $1}'")
+            downloaded_recovery_file_checksum = downloaded_recovery_file_checksum.strip()
             if self.DEBUG:
-                print("file checksum    : " + str(downloaded_recovery_file_checksum))
-                print("desired checksum : " + str(recovery_checksum))
-                print("recovery_cheksum length should be 32: " + str(len(recovery_checksum)))
-            if len(recovery_checksum) >= 32 and recovery_checksum in downloaded_recovery_file_checksum:
+                print("file checksum    : ->" + str(downloaded_recovery_file_checksum) + "<-")
+                print("desired checksum : ->" + str(recovery_checksum) + "<-")
+                print("downloaded_recovery_file_checksum length should be 32: " + str(len(downloaded_recovery_file_checksum)))
+                print("recovery_checksum length should be 32: " + str(len(recovery_checksum)))
+            if len(recovery_checksum) == 32 and len(downloaded_recovery_file_checksum) == 32 and str(recovery_checksum) == str(downloaded_recovery_file_checksum):
                 if self.DEBUG:
                     print("checksums matched")
                 self.busy_updating_recovery = 2
@@ -1875,6 +1904,12 @@ class PowerSettingsAPIHandler(APIHandler):
                 if self.DEBUG:
                     print("recovery image file was downloaded and extracted succesfully")
                 self.busy_updating_recovery = 3
+                
+                lsblk_output = run_command('lsblk')
+                if not 'mmcblk0p4' in lsblk_output:
+                    if self.DEBUG:
+                        print("Error, updating recovery partition was called, but system does not have four partitions. Aborting!")
+                    return
                 
                 os.system('sudo mkfs -g -t ext4 /dev/mmcblk0p3 -F') # format the partition first
                 
