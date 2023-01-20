@@ -339,9 +339,6 @@ class PowerSettingsAPIHandler(APIHandler):
         # get recovery partition version
         self.check_recovery_partition()
         
-        # TODO: test only
-        self.update_recovery_partition()
-        
         
         
         # Check if anonymous MQTT access is currently allowed
@@ -1243,38 +1240,40 @@ class PowerSettingsAPIHandler(APIHandler):
                                         
                                 shell_date = run_command("date")
                                         
+                                response = {'hours':now.hour,
+                                            'minutes':now.minute,
+                                            'shell_date':shell_date,
+                                            'ntp':current_ntp_state,
+                                            'backup_exists':self.backup_file_exists,
+                                            'restore_exists':self.restore_file_exists,
+                                            'disk_usage':self.disk_usage,
+                                            'allow_anonymous_mqtt':self.allow_anonymous_mqtt, 
+                                            'hardware_clock_detected':self.hardware_clock_detected,
+                                            'exhibit_mode':self.exhibit_mode,
+                                            'candle_version':self.candle_version,
+                                            'candle_original_version':self.candle_original_version,
+                                            'bootup_actions_failed':self.bootup_actions_failed,
+                                            'system_update_in_progress':self.system_update_in_progress,
+                                            'files_check_exists':self.files_check_exists,
+                                            'live_update_attempted':self.live_update_attempted,
+                                            'ro_exists':self.ro_exists,
+                                            'old_overlay_active':self.old_overlay_active,
+                                            'post_bootup_actions_supported':self.post_bootup_actions_supported,
+                                            'update_needs_two_reboots':self.update_needs_two_reboots,
+                                            'bits':self.bits,
+                                            'recovery_version':self.recovery_version,
+                                            'latest_recovery_version':self.latest_recovery_version,
+                                            'busy_updating_recovery':self.busy_updating_recovery,
+                                            'recovery_partition_exists':self.recovery_partition_exists,
+                                            'allow_update_via_recovery':self.allow_update_via_recovery,
+                                            'updating_recovery_failed':self.updating_recovery_failed,
+                                            'debug':self.DEBUG
+                                        }
+                                        
                             except Exception as ex:
                                 print("Error in /init response preparation: " + str(ex))
                             
-                            response = {'hours':now.hour,
-                                        'minutes':now.minute,
-                                        'shell_date':shell_date,
-                                        'ntp':current_ntp_state,
-                                        'backup_exists':self.backup_file_exists,
-                                        'restore_exists':self.restore_file_exists,
-                                        'disk_usage':self.disk_usage,
-                                        'allow_anonymous_mqtt':self.allow_anonymous_mqtt, 
-                                        'hardware_clock_detected':self.hardware_clock_detected,
-                                        'exhibit_mode':self.exhibit_mode,
-                                        'candle_version':self.candle_version,
-                                        'candle_original_version':self.candle_original_version,
-                                        'bootup_actions_failed':self.bootup_actions_failed,
-                                        'system_update_in_progress':self.system_update_in_progress,
-                                        'files_check_exists':self.files_check_exists,
-                                        'live_update_attempted':self.live_update_attempted,
-                                        'ro_exists':self.ro_exists,
-                                        'old_overlay_active':self.old_overlay_active,
-                                        'post_bootup_actions_supported':self.post_bootup_actions_supported,
-                                        'update_needs_two_reboots':self.update_needs_two_reboots,
-                                        'bits':self.bits,
-                                        'recovery_version':self.recovery_version,
-                                        'latest_recovery_version':self.latest_recovery_version,
-                                        'busy_updating_recovery':self.busy_updating_recovery,
-                                        'recovery_partition_exists':self.recovery_partition_exists,
-                                        'allow_update_via_recovery':self.allow_update_via_recovery,
-                                        'updating_recovery_failed':self.updating_recovery_failed,
-                                        'debug':self.DEBUG
-                                    }
+                            
                             if self.DEBUG:
                                 print("Init response: " + str(response))
                         except Exception as ex:
@@ -1798,7 +1797,12 @@ class PowerSettingsAPIHandler(APIHandler):
             print("in update_recovery_partition")
         try:
             
-            
+            # this should never be needed... but just in case.
+            lsblk_output = run_command('lsblk')
+            if not 'mmcblk0p4' in lsblk_output:
+                if self.DEBUG:
+                    print("Error, updating recovery partition was called, but system does not have four partitions. Aborting!")
+                return
             
             if self.busy_updating_recovery > 0:
                 if self.DEBUG:
@@ -1904,12 +1908,6 @@ class PowerSettingsAPIHandler(APIHandler):
                 if self.DEBUG:
                     print("recovery image file was downloaded and extracted succesfully")
                 self.busy_updating_recovery = 3
-                
-                lsblk_output = run_command('lsblk')
-                if not 'mmcblk0p4' in lsblk_output:
-                    if self.DEBUG:
-                        print("Error, updating recovery partition was called, but system does not have four partitions. Aborting!")
-                    return
                 
                 os.system('sudo mkfs -g -t ext4 /dev/mmcblk0p3 -F') # format the partition first
                 

@@ -510,7 +510,7 @@
                         this.debug = body.debug;
                     }
                     else{
-                        console.error("power settings: init response: body.debug was undefined");
+                        console.error("power settings: init response: body.debug was undefined: ", body);
                     }
                     
                     if(this.debug){
