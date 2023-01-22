@@ -346,6 +346,7 @@
     
     
                 // MANUAL UPDATE
+                // This only runs apt-get upgrade
     
                 document.getElementById('extension-power-settings-manual-update-button').addEventListener('click', () => {
                     if(this.debug){
@@ -353,46 +354,64 @@
                     }
         
                     document.getElementById('extension-power-settings-system-update-container').style.display = 'none';
-         
-                    if( document.getElementById('extension-power-settings-manual-update-understand').value != 'I understand'){
-                        alert("You must type 'I understand' before the manual update process can start.");
-                    }
-                    else{
+
+                    document.getElementById('connectivity-scrim').classList.remove('hidden');
+                    document.getElementById('extension-power-settings-back-button').style.display = 'none';
+                                   
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'manual_update'
+                        }
+                    ).then((body) => {
+                        if(this.debug){
+                            console.log("manual update response: ", body);
+                        }
                         
-                        document.getElementById('connectivity-scrim').classList.remove('hidden');
-                        document.getElementById('extension-power-settings-back-button').style.display = 'none';
-                                       
-                        window.API.postJson(
-                            `/extensions/${this.id}/api/ajax`, {
-                                'action': 'manual_update'
-                            }
-                        ).then((body) => {
-                            if(this.debug){
-                                console.log("manual update response: ", body);
-                            }
-                            
-                            if(body.state == 'ok'){
-                                window.API.postJson('/settings/system/actions', {
-                                    action: 'restartSystem'
-                                }).catch(console.error);
-                            }
-                            else{
-                                alert("Error, could not prepare sytem for manual update! Try rebooting and see what happens.");
-                                document.getElementById('extension-power-settings-back-button').style.display = 'block';
-                                document.getElementById('connectivity-scrim').classList.add('hidden');
-                            }
-                
-                        }).catch((e) => {
-                            alert("Error while attempting to start manual update: could not connect?");
+                        if(body.state == 'ok'){
+                            window.API.postJson('/settings/system/actions', {
+                                action: 'restartSystem'
+                            }).catch(console.error);
+                        }
+                        else{
+                            alert("Error, could not prepare sytem for manual update! Try rebooting and see what happens.");
                             document.getElementById('extension-power-settings-back-button').style.display = 'block';
                             document.getElementById('connectivity-scrim').classList.add('hidden');
-                        });
-                        
-                        
-                    }
+                        }
+            
+                    }).catch((e) => {
+                        alert("Error while attempting to start manual update: could not connect?");
+                        document.getElementById('extension-power-settings-back-button').style.display = 'block';
+                        document.getElementById('connectivity-scrim').classList.add('hidden');
+                    });
                 });
     
     
+                // MANUAL SYSTEM UPDATE TO CUTTING EDGE VIA SCRIPT
+                /*
+                document.getElementById('extension-power-settings-force-update-to-cutting-edge-button').addEventListener('click', () => {
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'start_system_update', 'cutting_edge':true, 'live_update':false
+                        }
+                    ).then((body) => {
+                        if(this.debug){
+                            console.log("start update to cutting edge response: ", body);
+                        }
+                        if (body.state == false){
+                            document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
+                            alert("Starting the update seems to have failed");
+                        }
+                        else{
+                            this.overlay_exists = false;
+                            document.getElementById('extension-power-settings-system-update-available-container').style.display = 'none';
+                            document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
+                        }
+        
+                    }).catch((e) => {
+                        console.error("Error, could not start system cutting edge update: could not connect to controller: ", e);
+                    });
+                });
+                */
                 
     
     
@@ -523,6 +542,12 @@
                     // Does the recovery partition exist?
                     if(typeof body.recovery_partition_exists != 'undefined'){
                         this.recovery_partition_exists = body.recovery_partition_exists;
+                        
+                        if(this.recovery_partition_exists == false){
+                            document.getElementById('extension-power-settings-update-recovery-not-supported').style.display = 'block';
+                        }
+                        
+                        
                     }
                     
                     // show server time in input fields
@@ -575,7 +600,7 @@
                             console.log("power settings: system bits: ", this.bits);
                         }
                         document.getElementById('extension-power-settings-bits').innerText = this.bits + 'bit';
-                        document.getElementById('extension-power-settings-bits2').innerText = this.bits + 'bit';
+                        //document.getElementById('extension-power-settings-bits2').innerText = this.bits + 'bit';
                     }
                     
                     if(typeof body.exhibit_mode != 'undefined'){
@@ -598,7 +623,7 @@
                     // Show Candle version
                     if(typeof body.candle_version != 'undefined'){
                         document.getElementById('extension-power-settings-candle-version').innerText = body.candle_version;
-                        document.getElementById('extension-power-settings-candle-version2').innerText = body.candle_version;
+                        //document.getElementById('extension-power-settings-candle-version2').innerText = body.candle_version;
                     }
                     
                     if(typeof body.bootup_actions_failed != 'undefined'){
@@ -663,7 +688,11 @@
                         }
                         
                     }
-                    
+                    else{
+                        if(typeof body.recovery_version != 'undefined'){
+                            document.getElementById('extension-power-settings-update-recovery-version').innerText = "unsupported";
+                        }
+                    }
                     
                     
                     
@@ -678,7 +707,7 @@
                         }
                         if(document.getElementById('extension-power-settings-candle-original-version') != null){
                             document.getElementById('extension-power-settings-candle-original-version').innerText = body.candle_original_version;
-                            document.getElementById('extension-power-settings-candle-original-version2').innerText = body.candle_original_version;
+                            //document.getElementById('extension-power-settings-candle-original-version2').innerText = body.candle_original_version;
                         }
                         
                         if(body.candle_original_version == 'unknown'){
@@ -940,7 +969,6 @@
                 
                 
                 
-                
                 // Start update button
                 document.getElementById('extension-power-settings-system-update-button').addEventListener('click', () => {
                     if( document.getElementById('extension-power-settings-system-update-understand').value != 'I understand'){
@@ -956,7 +984,7 @@
                 document.getElementById('extension-power-settings-force-update-button').addEventListener('click', () => {
                     //console.log("force system update button clicked");
                     document.getElementById('extension-power-settings-system-update-available-container').style.display = 'block';
-                    document.getElementById('extension-power-settings-no-updates').style.display = 'none';
+                    //document.getElementById('extension-power-settings-no-updates').style.display = 'none';
                 });
                 
                 
@@ -979,31 +1007,38 @@
                 // Start RECOVERY update button
                 document.getElementById('extension-power-settings-switch-to-recovery-button').addEventListener('click', () => {
                     console.log("update via switch to recovery button clicked");
-                    document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'none';
-                    document.getElementById('extension-power-settings-update-recovery-container').style.display = 'none';
                     
-                    window.API.postJson(
-                        `/extensions/${this.id}/api/ajax`, {
-                            'action': 'switch_to_recovery'
-                        }
-                    ).then((body) => {
-                        if(this.debug){
-                            console.log("switch_to_recovery response: ", body);
-                        }
-                        if(body.state = 'ok'){
-                            window.API.postJson('/settings/system/actions', {
-                                action: 'restartSystem'
-                            }).catch(console.error);
-                        }
-                        else{
-                            alert("Please upgrade the Update & Recovery system first");
-                        }
+                    
+                
+                    if( document.getElementById('extension-power-settings-switch-to-recovery-understand').value != 'I understand'){
+                        alert("You must type 'I understand' before the system update can start.");
+                    }
+                    else{
+                        document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'none';
+                        document.getElementById('extension-power-settings-update-recovery-container').style.display = 'none';
+                    
+                        window.API.postJson(
+                            `/extensions/${this.id}/api/ajax`, {
+                                'action': 'switch_to_recovery'
+                            }
+                        ).then((body) => {
+                            if(this.debug){
+                                console.log("switch_to_recovery response: ", body);
+                            }
+                            if(body.state = 'ok'){
+                                window.API.postJson('/settings/system/actions', {
+                                    action: 'restartSystem'
+                                }).catch(console.error);
+                            }
+                            else{
+                                alert("Please upgrade the Update & Recovery system first");
+                            }
                         
-                        
-                    }).catch((e) => {
-                        console.error("Could not start upgrade - connection error");
-                        alert("Could not start upgrade - connection error");
-                    });
+                        }).catch((e) => {
+                            console.error("Could not start upgrade - connection error");
+                            alert("Could not start upgrade - connection error");
+                        });
+                    }
                     
                 });
                 

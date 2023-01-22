@@ -61,6 +61,7 @@
     display:none;
 }
 
+.system-update-available #extension-power-settings-switch-to-recovery-container,
 .system-update-available #extension-power-settings-update-recovery-update-available{
     display:block;
 }
@@ -164,15 +165,6 @@
 
 
 /*  SYSTEM UPDATES  */
-
-.extension-power-settings-dev-only{
-    display:none;
-}
-
-.developer .extension-power-settings-dev-only{
-    display:block;
-}
-
 
 #extension-power-settings-update-failed{
     background-color:red;
@@ -673,11 +665,11 @@
     margin-bottom:30vh;
 }
 
-
-.developer-only{
+.extension-power-settings-developer-only{
     display:none;
+    background-color:#555;
 }
-.developer .developer-only{
+.developer .extension-power-settings-developer-only{
     display:block;
 }
 
@@ -706,7 +698,7 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-button{
 
 
 .extension-power-settings-form-system-update,
-.extension-power-settings-form-manual-update{
+.extension-power-settings-align-right{
     text-align:right;
 }
 

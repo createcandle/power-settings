@@ -192,33 +192,65 @@
             <div class="section-title-right-flex"></div>
         </div>
 
-
-
-
-        <div id="extension-power-settings-system-update-container" class="extension-power-settings-vlak">
-            <p class="extension-power-settings-header">System update</p>
+        <div id="extension-power-settings-update-general-container" class="extension-power-settings-vlak">
             <p>You are running <span id="extension-power-settings-bits">32bit</span> Candle Controller version <span id="extension-power-settings-candle-version">...</span></p>
-            <p class="extension-power-settings-dev-only">You started with version <span id="extension-power-settings-candle-original-version">...</span></p>
+            
+            <div id="extension-power-settings-no-updates" style="display: none;">
+                <p>Your sytem is up-to-date.</p>
+            </div>
+            
+            <div id="extension-power-settings-update-recovery-not-supported" class="extension-power-settings-vlak" style="display:none; margin:2rem 0">
+                <p>Thank you for being such an early adopter of Candle!</p>
+                <p>Unfortunately your Candle Controller cannot support the new, more robust update system. It's recommended to take the following steps:</p>
+                <ol>
+                    <li>Create a backup of your system (settings -> backup).</li>
+                    <li>Flash the latest version of the Candle controller to an SD card. It's recommended to use a new SD card for this. The steps to do this are explained on candlesmarthome.com.</li>
+                    <li>Turn off the Candle controller.
+                    <li>Replace the current SD card in your Candle controller with the new one.</li>
+                    <li>Turn on the Candle controller. Connect it to your network, and create an account again. This is only a temporary account.</li>
+                    <li>Restore the backup (settings -> backup). This will also restore your original network settings and login account.</li>
+                </ol>
+                <p>If everything went well, then you can use the old SD card for something else. If not, then you can simply go back to your "old" Candle system by plugging that SD card back in.</p>
+            </div>
+        </div>
+        
+        <div id="extension-power-settings-update-developer-options-container" class="extension-power-settings-vlak extension-power-settings-developer-only" style="background-color:#555">
+            <p class="extension-power-settings-header">Developer options</p>
+            <p>Your Update & Recovery system has version: <span id="extension-power-settings-update-recovery-version">...</span></p>
+            <p>Use of these developer options is at your own risk.</p>
+            <hr/>
+            <p>You can force Linux to update to the latest version. This simply runs <span style="font-weight:bold">apt upgrade</span> on the system, and then reboots. This might be useful if you have security worries, for example.</p>
+            <div class="extension-power-settings-align-right">
+                <button id="extension-power-settings-manual-update-button" class="text-button">Manual update</button>
+            </div>
+            <br/>
+            <hr/>
+            <p>You can force the system to re-update to the latest version of Candle. This could easily break your system. You should always run this twice (first time will update the kernel, second time updates the rest).</p>
+            <div class="extension-power-settings-align-right">
+                <button id="extension-power-settings-force-update-button" class="text-button">Force update</button>
+            </div>
+            <!--<button class="text-button" id="extension-power-settings-force-update-to-cutting-edge-button">Update to cutting edge</button>-->
+            <br/>
+            <hr/>
+            <p>You can run a quick check to see if there are any missing files. This gives an indication if an update failed.</p>
+            <div class="extension-power-settings-align-right">
+                <button class="text-button" id="extension-power-settings-update-files-check-button" style="display:none">Test filesystem</button>
+            </div>
+            <div id="extension-power-settings-update-files-check-output"></div>
+        </div>
+        
 
+        <div id="extension-power-settings-system-update-available-container" class="extension-power-settings-vlak" style="display: none;">
+        <!--<div id="extension-power-settings-system-update-container" class="extension-power-settings-vlak">-->
+            <p class="extension-power-settings-header">System update</p>
+            
             <div id="extension-power-settings-update-failed" style="display: none;">
-                <h2>Update failed</h2>
+                <h2>Update failed!</h2>
                 <p>The previous system update seems to have failed. Since you're reading this it can't be all that bad. You could attempt the update again.</p>
                 <p>Visit candlesmarthome.com/troubleshooting if you want to figure out what happened.</p>
             </div>
-
-            <div id="extension-power-settings-no-updates" style="display: none;">
-                <p>There are currently no system updates available.</p>
-                <div class="extension-power-settings-form-system-update">
-                    <button id="extension-power-settings-update-files-check-button" class="text-button extension-power-settings-dev-only">Test</button>
-                    <button id="extension-power-settings-force-update-button" class="text-button extension-power-settings-dev-only">Force update</button>
-                    <span></span>
-                    <button class="text-button" disabled>System update</button>
-                </div>
-            </div>
-
-            <div id="extension-power-settings-update-files-check-output"></div>
-
-            <div id="extension-power-settings-system-update-available-container" style="display: none;">
+            
+            <div>
                 <p>A system update is available.</p>
 
                 <ul>
@@ -231,8 +263,8 @@
                 <p id="extension-power-settings-system-update-needs-two-reboots" class="extension-power-settings-vlak" style="display: none;">
                     NOTE: because you're running an older version of Candle you will need to run the update process twice.
                 </p>
-                <br />
-                <br />
+                <br/>
+                <br/>
 
                 <div id="extension-power-settings-system-update-overlay-still-enabled-container" class="extension-power-settings-vlak" style="display: none;">
                     <p>Before you can install the update the system's disk protection must first be disabled. After the system update is complete this protection will automatically be re-enabled.</p>
@@ -253,19 +285,21 @@
                 </div>
 
                 <div id="extension-power-settings-system-update-overlay-disabled-container" style="display: none;">
-                    <div class="extension-power-settings-dev-only">
+                    <div class="extension-power-settings-developer-only">
                         <input type="checkbox" name="extension-power-settings-cutting-edge-checkbox" id="extension-power-settings-cutting-edge-checkbox" />
                         <label for="extension-power-settings-cutting-edge-checkbox">Update to the cutting edge build (RISKY!)</label>
                         <p class="field-description" style="opacity: 0.6; margin-top: 0.3rem;">This option is available because you have enabled developer mode.</p>
                     </div>
 
-                    <div id="extension-power-settings-live-update-option" class="extension-power-settings-dev-only" style="display: none;">
+                    <!--
+                    <div id="extension-power-settings-live-update-option" class="extension-power-settings-developer-only" style="display: none;">
                         <input type="checkbox" name="extension-power-settings-live-update-checkbox" id="extension-power-settings-live-update-checkbox" />
                         <label for="extension-power-settings-live-update-checkbox">Update while the system is running</label>
                         <p class="field-description" style="opacity: 0.6; margin-top: 0.3rem;">
                             Experimental feature! The system will automatically reboot once the process is complete. It is strongly advised to reboot before starting the live update process.
                         </p>
                     </div>
+                    -->
 
                     <br />
                     <label for="extension-power-settings-system-update-understand">Type "I understand" to confirm: </label><br />
@@ -303,19 +337,19 @@
                 </div>
             </div>
 
-            <pre id="extension-power-settings-update-process-output" class="extension-power-settings-dev-only"></pre>
+            <pre id="extension-power-settings-update-process-output" class="extension-power-settings-developer-only"></pre>
         </div>
         
         
-        <div id="extension-power-settings-update-recovery-container" class="extension-power-settings-vlak developer-only">
+        <div id="extension-power-settings-update-recovery-container" class="extension-power-settings-vlak extension-power-settings-developer-only">
             <p class="extension-power-settings-header">Update & Recovery</p>
             <div id="extension-power-settings-update-recovery-supported">
-                <p>You Candle Controller has an update and recovery system. This should also be kept up to date. Doing so can be done in the background, and does not require a reboot.</p>
-                <p class="extension-power-settings-dev-only">Your Update & Recovery system has version: <span id="extension-power-settings-update-recovery-version">...</span></p>
-                <p id="extension-power-settings-update-recovery-ok" style="display:none">Your Update & Recovery system is using the latest available version.</p>
+                <p>Your Candle Controller has an update and recovery system. This should also be kept up to date. Doing so can be done in the background, and does not require a reboot.</p>
+                
+                <p id="extension-power-settings-update-recovery-ok" style="display:none">Your Update & Recovery system is up-to-date.</p>
                 <div id="extension-power-settings-update-recovery-should-update" style="display:none">
                     <p>There is a new version of the Update & Recovery system available!</p>
-                    <div class="extension-power-settings-form-manual-update">
+                    <div class="extension-power-settings-align-right">
                         <button id="extension-power-settings-update-recovery-button" class="text-button">Update recovery</button>
                     </div>
                 </div>
@@ -333,57 +367,55 @@
                     <p>The upgrade of the Update & Recovery system seems to have failed. Please reboot and try to run the update process again.</p>
                 </div>
             </div>
-            <div id="extension-power-settings-update-recovery-not-supported" style="display:none">
-                <p>Unfortunately your Candle Controller is relatively old. It does not and cannot support the latest update system. It's recommended to take the following steps:</p>
-                <ol>
-                    <li>Create a backup of your system (settings -> backup).</li>
-                    <li>Flash the latest version of the Candle controller to an SD card. It's recommended to use a new SD card for this. The steps to do this are explained on candlesmarthome.com.</li>
-                    <li>Turn off the Candle controller.
-                    <li>Replace the current SD card in your Candle controller with the new one.</li>
-                    <li>Turn on the Candle controller. Connect it to your network, and create an account again. This is only a temporary account.</li>
-                    <li>Restore the backup (settings -> backup). This will also restore your original network settings and login account.</li>
-                </ol>
-                <p>If everything went well, then you can use the old SD card for something else. If not, then you can simply go back to your old system by plugging the old SD card back in.</p>
-            </div>
+            
         </div>
         
         
-        <div id="extension-power-settings-switch-to-recovery-container" class="extension-power-settings-vlak developer-only">
+        <div id="extension-power-settings-switch-to-recovery-container" class="extension-power-settings-vlak extension-power-settings-developer-only">
             <p class="extension-power-settings-header">Upgrade Candle</p>
             
-            <p>You are running <span id="extension-power-settings-bits2">32bit</span> Candle Controller version <span id="extension-power-settings-candle-version2">...</span></p>
-            <p class="extension-power-settings-dev-only">You started with version <span id="extension-power-settings-candle-original-version2">...</span></p>
-            <div id="extension-power-settings-update-recovery-update-available">
-                <p>A new version of the Candle Controller is available</p>
-                <p>This will update your Candle Controller by downloading the latest version of Candle and over-writing the old version. Your personal data and settings will not be touched, but all the other parts of Candle will be replaced. Here's what will happen:</p>
-                <ol>
-                    <li>The controller reboots and loads a second, tiny version of Linux which is used for Update & Recovery only.</li>
-                    <li>It downloads the latest Candle version, which is about 1.5 gigabytes in size.</li>
-                    <li>It completely overwrites the existing Candle version.</li>
-                    <li>Once complete it sets the system to start up from the upgraded main Candle system again.</li>
-                </ol>
-                <p>It's vital that the upgrade process is not interupted.</p>
-                
+            <p>A new version of the Candle Controller is available</p>
+            <p>This will update your Candle Controller by downloading the latest version of Candle and over-writing the old version. Your personal data and settings will not be touched, but all the other parts of Candle will be replaced. Here's what will happen:</p>
+            <ol>
+                <li>The controller reboots and loads a second, tiny version of Linux which is used for Update & Recovery only.</li>
+                <li>It downloads the latest Candle version, which is about 1.5 gigabytes in size.</li>
+                <li>It completely overwrites the existing Candle version.</li>
+                <li>Once complete it sets the system to start up from the upgraded main Candle system again.</li>
+            </ol>
+            <p>It's vital that the upgrade process is not interupted.</p>
+            
+            <div id="extension-power-settings-switch-to-recovery-prepare-container">
+                <p>
+                    <label for="extension-power-settings-switch-to-recovery-understand">Type "I understand" to confirm: </label><br />
+                    <input type="text" name="extension-power-settings-switch-to-recovery-understand" id="extension-power-settings-switch-to-recovery-understand" required  />
+                </p>
+            
                 <div id="extension-power-settings-pages-update-missing-ethernet" class="hidden">
-                    <p>You will need to connect a network cable to your Candle Controller before you can continue with the update</p>
+                    <div style="text-align:center">
+                        <img src="/images/ethernet.svg" data-l10n-id="network-settings-ethernet-image" class="network-settings-list-item-icon" alt="Ethernet" style="padding-bottom:0">
+                    </div>
+                    <p>You will need to connect a network cable to your Candle Controller before you can continue with the update.</p>
                     <div style="text-align:center">
                         <button id="extension-power-settings-pages-update-ethernet-retest-button" class="text-button">I have connected a network cable</button>
                     </div>
                 </div>
-                
-                <div class="extension-power-settings-form-manual-update">
+            
+                <div class="extension-power-settings-align-right">
                     <button id="extension-power-settings-switch-to-recovery-button" class="text-button">Upgrade Candle</button>
                 </div>
             </div>
+            
+            
         </div>
         
-        
-        
-        <div id="extension-power-settings-manual-update-container" class="extension-power-settings-vlak developer-only">
-            <p class="extension-power-settings-header">Manual update</p>
+        <!--
+        <div id="extension-power-settings-manual-update-container" class="extension-power-settings-vlak extension-power-settings-developer-only">
+            <p class="extension-power-settings-header">Manual security update</p>
             <p>This will update all installed programs to the latest version, which may, for example, help alleviate urgent security worries. However, it may also cause unexpected issues, since these updates are not tested.</p>
+            <p>It basically runs <span style="font-weight:bold">apt upgrade</span> on the system.</p>
             <p></p>
-
+            
+            
             <ul>
                 <li>Although unlikely, your system could stop working.</li>
                 <li>It means your system is no longer "standard", so you can no longer get accurate advice or help. Future "official" updates may fail.</li>
@@ -395,11 +427,11 @@
                 <label for="extension-power-settings-manual-update-understand">Type "I understand" to confirm: </label><br />
                 <input type="text" name="extension-power-settings-manual-update-understand" id="extension-power-settings-manual-update-understand" required  />
             </p>
-            <div class="extension-power-settings-form-manual-update">
+            <div class="extension-power-settings-align-right">
                 <button id="extension-power-settings-manual-update-button" class="text-button">Manual update</button>
             </div>
         </div>
-        
+        -->
         
     </div>
 

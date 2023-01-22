@@ -164,6 +164,8 @@ class PowerSettingsAPIHandler(APIHandler):
         if not os.path.exists(self.recovery_partition_mount_point):
             os.system('mkdir -p ' + str(self.recovery_partition_mount_point))
         
+        self.download_update_phase = 0
+        
         
         # System updates
         self.bootup_actions_failed = False
@@ -620,6 +622,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 self.busy_updating_recovery = 0
                                 self.should_start_recovery_update = True
+                                #self.system_update_in_progress = True
                                 
                                 return APIResponse(
                                   status=200,
@@ -700,7 +703,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 
                                 
-                            # SYSTEM UPDATE
+                            # SYSTEM UPDATE OLD SCHOOL
                             elif action == 'start_system_update':
                                 self.system_update_in_progress = False
                                 if self.system_update_error_detected:
@@ -911,7 +914,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                                 
-                            # used while updating the recovery partition
+                            # used while updating the recovery partition and installing a system update via the recovery partition
                             elif action == 'recovery_poll':
                                 if self.DEBUG:
                                     print("handling recovery_poll action. self.busy_updating_recovery: " + str(self.busy_updating_recovery))
@@ -922,9 +925,11 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':'ok',
                                                       'busy_updating_recovery':self.busy_updating_recovery,
                                                       'updating_recovery_failed':self.updating_recovery_failed,
-                                                      'allow_update_via_recovery':self.allow_update_via_recovery
+                                                      'allow_update_via_recovery':self.allow_update_via_recovery,
+                                                      'download_update_phase':self.download_update_phase
                                                   }),
                                 )
+                                
                                 
                                 
                             # Switch to recovery partition
@@ -980,7 +985,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       #'recovery_partition_bits':self.recovery_partition_bits,
                                                       'ethernet_connected':self.ethernet_connected,
                                                       'recovery_partition_exists':self.recovery_partition_exists,
-                                                      'allow_update_via_recovery':self.allow_update_via_recovery
+                                                      'allow_update_via_recovery':self.allow_update_via_recovery,
+                                                      'system_update_in_progress':self.system_update_in_progress,
                                                   }),
                                 )
                             
@@ -1797,6 +1803,10 @@ class PowerSettingsAPIHandler(APIHandler):
             print("in update_recovery_partition")
         try:
             
+            
+            
+            
+            
             # this should never be needed... but just in case.
             lsblk_output = run_command('lsblk')
             if not 'mmcblk0p4' in lsblk_output:
@@ -1916,8 +1926,12 @@ class PowerSettingsAPIHandler(APIHandler):
                 os.system('sudo dd if=/home/pi/.webthings/recovery.fs of=/dev/mmcblk0p3 bs=1M; sudo rm /home/pi/.webthings/recovery.fs; sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
 
                 self.check_recovery_partition()
-
-                self.busy_updating_recovery = 5
+                
+                if self.recovery_version == self.latest_recovery_version:
+                    self.busy_updating_recovery = 5
+                
+                    
+                        
                 
         except Exception as ex:
             print("Error in update_recovery_partition: " + str(ex))
