@@ -723,22 +723,28 @@
                             }
                         }
                         else if(body.candle_original_version == '2.0.0-beta'){
-                            this.update_available_text = ""
+                            this.update_available_text = "available"
                             if(this.debug){
                                 console.log("power settings: running on updated release candidate, nice");
                             }
                         }
                         else if(body.candle_original_version == '2.0.1'){
+                            this.update_available_text = "available"
+                            if(this.debug){
+                                console.log("power settings: running on 2.0.1");
+                            }
+                        }
+                        else if(body.candle_original_version == '2.0.2'){
                             this.update_available_text = ""
                             if(this.debug){
-                                console.log("power settings: running on 2.0.1, brilliant");
+                                console.log("power settings: running on 2.0.2, brilliant");
                             }
                         }
                         
-                        if(body.candle_version == '2.0.1'){ // on the latest version
+                        if(body.candle_version == '2.0.2'){ // on the latest version
                             this.update_available_text = ""
                             if(this.debug){
-                                console.log("power settings debug: running on latest available version");
+                                console.log("power settings debug: running on latest available 2.0.2 version");
                             }
                         }
                         
@@ -752,16 +758,6 @@
                         if(body.ro_exists == true){
                             if(this.debug){
                                 console.log("/ro exists");
-                            }
-                            if(body.live_update_attempted == false){
-                                // Doesn't really add anything but risk for a system update
-                                //document.getElementById('extension-power-settings-live-update-option').style.display = "block";
-                            }
-                            else{
-                                if(this.debug){
-                                    console.log("blocking possibility of second live update");
-                                }
-                                document.getElementById('extension-power-settings-live-update-checkbox').checked = false;
                             }
                         }
                         
