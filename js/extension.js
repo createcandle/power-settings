@@ -544,9 +544,9 @@
                         
                         if(this.recovery_partition_exists == false){
                             document.getElementById('extension-power-settings-update-recovery-not-supported').style.display = 'block';
+                            document.getElementById('extension-power-settings-update-recovery-container').style.display = 'none';
+                            document.getElementById('extension-power-settings-switch-to-recovery-container').style.display = 'none';
                         }
-                        
-                        
                     }
                     
                     // show server time in input fields
@@ -674,6 +674,9 @@
                                 }
                                 document.getElementById('extension-power-settings-switch-to-recovery-container').style.display = 'none';
                             }
+                        }
+                        else{
+                            console.error("power settings: allow_update_via_recovery is not present in init data");
                         }
                     
                         if(typeof body.busy_updating_recovery != 'undefined'){
@@ -1856,7 +1859,7 @@
         // calls update_init
         update_checks(){
             if(this.debug){
-                console.log("in update_checks");
+                console.log("power settings debug: in update_checks");
             }
             window.API.postJson(
                 `/extensions/${this.id}/api/ajax`, {
@@ -1910,7 +1913,7 @@
                     else{
                         document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'none';
                         if(this.debug){
-                            console.log("- not allowing update via recovery");
+                            console.log("- not allowing update via recovery, hiding switch-to-recovery-button");
                         }
                     }
                 }
