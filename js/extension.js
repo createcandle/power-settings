@@ -318,7 +318,6 @@
                     document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'block';
                     document.getElementById('extension-power-settings-update-recovery-busy-progress').style.width = '0%';
                     
-                    
                     window.API.postJson(
                         `/extensions/${this.id}/api/ajax`, {
                             'action': 'update_recovery_partition'
@@ -357,7 +356,7 @@
 
                     document.getElementById('connectivity-scrim').classList.remove('hidden');
                     document.getElementById('extension-power-settings-back-button').style.display = 'none';
-                                   
+                    
                     window.API.postJson(
                         `/extensions/${this.id}/api/ajax`, {
                             'action': 'manual_update'
@@ -642,6 +641,7 @@
                             if(body.recovery_version == body.latest_recovery_version){
                                 document.getElementById('extension-power-settings-update-recovery-ok').style.display = 'block';
                                 if(document.body.classList.contains('developer')){
+                                    document.getElementById('extension-power-settings-update-recovery-should-update').style.background = '#555';
                                     document.getElementById('extension-power-settings-update-recovery-should-update').style.display = 'block';
                                 }
                             }
@@ -1904,6 +1904,10 @@
                             document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'none';
                             if(this.debug){
                                 console.log("- this.update_available_text was not 'available'");
+                            }
+                            
+                            if(this.update_available_text == "in progress"){
+                                
                             }
                         }
                     }

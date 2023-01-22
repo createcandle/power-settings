@@ -164,8 +164,6 @@ class PowerSettingsAPIHandler(APIHandler):
         if not os.path.exists(self.recovery_partition_mount_point):
             os.system('mkdir -p ' + str(self.recovery_partition_mount_point))
         
-        self.download_update_phase = 0
-        
         
         # System updates
         self.bootup_actions_failed = False
@@ -925,8 +923,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':'ok',
                                                       'busy_updating_recovery':self.busy_updating_recovery,
                                                       'updating_recovery_failed':self.updating_recovery_failed,
-                                                      'allow_update_via_recovery':self.allow_update_via_recovery,
-                                                      'download_update_phase':self.download_update_phase
+                                                      'allow_update_via_recovery':self.allow_update_via_recovery
                                                   }),
                                 )
                                 
@@ -1903,7 +1900,6 @@ class PowerSettingsAPIHandler(APIHandler):
             self.busy_updating_recovery = 2
             
             os.system('cd /home/pi/.webthings; tar -xf recovery.fs.tar.gz')
-            
             
             
             # Recovery image failed to download/extract
