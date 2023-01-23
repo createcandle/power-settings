@@ -543,9 +543,18 @@
                         this.recovery_partition_exists = body.recovery_partition_exists;
                         
                         if(this.recovery_partition_exists == false){
+                            if(this.debug){
+                                console.log('power settings: there is no recovery partition');
+                            }
                             document.getElementById('extension-power-settings-update-recovery-not-supported').style.display = 'block';
                             document.getElementById('extension-power-settings-update-recovery-container').style.display = 'none';
                             document.getElementById('extension-power-settings-switch-to-recovery-container').style.display = 'none';
+                        }
+                        else{
+                            if(this.debug){
+                                console.log('power settings: recovery partition exists');
+                            }
+                            document.getElementById('extension-power-settings-system-update-available-container').style.display = 'none';
                         }
                     }
                     
@@ -756,6 +765,9 @@
                                 console.log("A SYSTEM UPDATE IS AVAILABLE");
                             }
                             document.body.classList.add('system-update-available');
+                            if(this.recovery_partition_exists){
+                                
+                            }
                         }
                         
                         if(body.ro_exists == true){
@@ -1005,9 +1017,9 @@
                 
                 // Start RECOVERY update button
                 document.getElementById('extension-power-settings-switch-to-recovery-button').addEventListener('click', () => {
-                    console.log("update via switch to recovery button clicked");
-                    
-                    
+                    if(this.debug){
+                        console.log("update via switch to recovery button clicked");
+                    }
                 
                     if( document.getElementById('extension-power-settings-switch-to-recovery-understand').value != 'I understand'){
                         alert("You must type 'I understand' before the system update can start.");
@@ -1168,7 +1180,10 @@
                 }
                 
                 document.getElementById('extension-power-settings-no-updates').style.display = 'none';
-                document.getElementById('extension-power-settings-system-update-available-container').style.display = 'block';
+                if(!this.recovery_partition_exists){
+                    document.getElementById('extension-power-settings-system-update-available-container').style.display = 'block';
+                }
+                
                 
                 document.getElementById('extension-power-settings-menu-update-button').style.border = "2px solid white";
                 document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
@@ -1181,7 +1196,6 @@
                     document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'none';
                     document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'block';
                 }
-                
                 
             }
             else{
