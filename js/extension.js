@@ -541,7 +541,9 @@
                     // Does the recovery partition exist?
                     if(typeof body.recovery_partition_exists != 'undefined'){
                         this.recovery_partition_exists = body.recovery_partition_exists;
-                        
+                        if(this.debug){
+                            console.log('power settings debug: this.recovery_partition_exists: ', this.recovery_partition_exists);
+                        }
                         if(this.recovery_partition_exists == false){
                             if(this.debug){
                                 console.log('power settings: there is no recovery partition');
@@ -656,13 +658,14 @@
                             }
                             else{
                                 if(this.debug){
-                                    console.log("power settings: a new version of the Update & Recovery partition is available: ", body.latest_recovery_version);
+                                    console.log("power settings: a new version of the Update & Recovery partition is available: V", body.latest_recovery_version);
                                 }
-                                document.getElementById('extension-power-settings-update-recovery-should-update').style.display = 'block';
+                                
                                 document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'none';
+                                document.getElementById('extension-power-settings-update-recovery-container').style.display = 'block';
+                                document.getElementById('extension-power-settings-update-recovery-should-update').style.display = 'block';
                         
                             }
-                    
                         }
                         
                         if(typeof body.updating_recovery_failed != 'undefined'){
