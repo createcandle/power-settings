@@ -1686,6 +1686,9 @@ class PowerSettingsAPIHandler(APIHandler):
         if self.DEBUG:
             print("in check_recovery_partition")
             
+        # TODO: DEV
+        return
+            
         try:
             lsblk_output = run_command('lsblk')
             if not 'mmcblk0p4' in lsblk_output:
