@@ -744,7 +744,7 @@
                             }
                         }
                         else if(body.candle_original_version == '2.0.1'){
-                            this.update_available_text = ""
+                            this.update_available_text = "available"
                             if(this.debug){
                                 console.log("power settings: running on 2.0.1");
                             }

@@ -92,7 +92,7 @@ class PowerSettingsAPIHandler(APIHandler):
         if self.bits == 64:
             self.bits_extension = "64"
         
-        
+
         self.recovery_partition_exists = False
         self.allow_update_via_recovery = False # will be set to True if a number of conditions are met. Allows for the new partition replace upgrade system.
         
@@ -163,6 +163,12 @@ class PowerSettingsAPIHandler(APIHandler):
         
         if not os.path.exists(self.recovery_partition_mount_point):
             os.system('mkdir -p ' + str(self.recovery_partition_mount_point))
+        
+        
+        # Memory and disk space
+        self.user_partition_free_disk_space = run_command("df /home/pi/.webthings | awk 'NR==2{print $4}'")
+        self.total_memory = run_command("awk '/^MemTotal:/{print $2}' /proc/meminfo")
+        
         
         
         # System updates
@@ -985,6 +991,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'recovery_partition_exists':self.recovery_partition_exists,
                                                       'allow_update_via_recovery':self.allow_update_via_recovery,
                                                       'system_update_in_progress':self.system_update_in_progress,
+                                                      'user_partition_free_disk_space':self.user_partition_free_disk_space,
+                                                      'total_memory': self.total_memory
                                                   }),
                                 )
                             
@@ -1686,9 +1694,6 @@ class PowerSettingsAPIHandler(APIHandler):
         if self.DEBUG:
             print("in check_recovery_partition")
             
-        # TODO: DEV
-        return
-            
         try:
             lsblk_output = run_command('lsblk')
             if not 'mmcblk0p4' in lsblk_output:
@@ -1803,10 +1808,6 @@ class PowerSettingsAPIHandler(APIHandler):
         if self.DEBUG:
             print("in update_recovery_partition")
         try:
-            
-            
-            
-            
             
             # this should never be needed... but just in case.
             lsblk_output = run_command('lsblk')
