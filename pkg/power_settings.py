@@ -154,7 +154,7 @@ class PowerSettingsAPIHandler(APIHandler):
         #self.recovery_not_supported = None
         self.recovery_version = 0
         self.recovery_partition_bits = 32
-        self.latest_recovery_version = 1
+        self.latest_recovery_version = 2
         self.busy_updating_recovery = 0  # higher values indicate steps in the process. 5 is a likely succesfull upgrade.
         self.updating_recovery_failed = False
         self.should_start_recovery_update = False
@@ -1765,7 +1765,7 @@ class PowerSettingsAPIHandler(APIHandler):
                 elif self.recovery_version < self.latest_recovery_version:
                     if self.DEBUG:
                         print("recovery partition should be updated")
-                elif self.recovery_version == self.latest_recovery_version:
+                elif self.recovery_version >= self.latest_recovery_version:
                     if self.DEBUG:
                         print("recovery partition is up to date")
                     # recovery partition is up to date
