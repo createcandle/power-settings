@@ -1906,6 +1906,9 @@
                 if(typeof body.allow_update_via_recovery != 'undefined'){
                     if(body.allow_update_via_recovery){
                         if(this.update_available_text == "available"){
+                            
+                            document.getElementById('extension-power-settings-switch-to-recovery-container').style.display = 'block';
+                            
                             if(this.ethernet_connected){
                                 document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'block';
                             }
@@ -1922,9 +1925,9 @@
                                 console.log("- this.update_available_text was not 'available'");
                             }
                             
-                            if(this.update_available_text == "in progress"){
+                            //if(this.update_available_text == "in progress"){
                                 
-                            }
+                            //}
                         }
                     }
                     else{

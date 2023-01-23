@@ -978,6 +978,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':state,
                                                       'bits':self.bits,
                                                       'recovery_version':self.recovery_version,
+                                                      'candle_version':self.candle_version,
                                                       'latest_recovery_version':self.latest_recovery_version,
                                                       #'recovery_partition_bits':self.recovery_partition_bits,
                                                       'ethernet_connected':self.ethernet_connected,
