@@ -1912,7 +1912,7 @@
                             document.getElementById('extension-power-settings-switch-to-recovery-container').style.display = 'block';
                             
                             if(this.ethernet_connected){
-                                document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'block';
+                                document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'inline-block';
                             }
                             else{
                                 document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'none';
