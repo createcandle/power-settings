@@ -1028,7 +1028,7 @@
                         alert("You must type 'I understand' before the system update can start.");
                     }
                     else{
-                        document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'none';
+                        document.getElementById('extension-power-settings-switch-to-recovery-start-container').style.display = 'none';
                         document.getElementById('extension-power-settings-update-recovery-container').style.display = 'none';
                     
                         window.API.postJson(
@@ -1040,6 +1040,7 @@
                                 console.log("switch_to_recovery response: ", body);
                             }
                             if(body.state = 'ok'){
+                                document.getElementById('extension-power-settings-update-recovery-rebooting').style.display = 'block';
                                 window.API.postJson('/settings/system/actions', {
                                     action: 'restartSystem'
                                 }).catch(console.error);
@@ -1050,6 +1051,7 @@
                         
                         }).catch((e) => {
                             console.error("Could not start upgrade - connection error");
+                            document.getElementById('extension-power-settings-switch-to-recovery-start-container').style.display = 'block';
                             alert("Could not start upgrade - connection error");
                         });
                     }
