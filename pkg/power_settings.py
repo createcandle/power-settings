@@ -1924,7 +1924,7 @@ class PowerSettingsAPIHandler(APIHandler):
 
                 self.check_recovery_partition()
                 
-                if self.recovery_version == self.latest_recovery_version:
+                if self.recovery_version >= self.latest_recovery_version:
                     self.busy_updating_recovery = 5
                 
                     
