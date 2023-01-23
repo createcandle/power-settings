@@ -1892,9 +1892,11 @@
                     this.ethernet_connected = body.ethernet_connected;
                     if(this.ethernet_connected){
                         document.getElementById('extension-power-settings-pages-update-missing-ethernet').classList.add('hidden');
+                        document.getElementById('extension-power-settings-switch-to-recovery-start-container').classList.remove('hidden');
                     }
                     else{
                         document.getElementById('extension-power-settings-pages-update-missing-ethernet').classList.remove('hidden');
+                        document.getElementById('extension-power-settings-switch-to-recovery-start-container').classList.add('hidden');
                     }
                 }
                 

@@ -385,11 +385,6 @@
             <p>It's vital that the upgrade process is not interupted. Depending on your internet speed this process should take between 30 minutes and 2 hours.</p>
             
             <div id="extension-power-settings-switch-to-recovery-prepare-container">
-                <p>
-                    <label for="extension-power-settings-switch-to-recovery-understand">Type "I understand" to confirm: </label><br />
-                    <input type="text" name="extension-power-settings-switch-to-recovery-understand" id="extension-power-settings-switch-to-recovery-understand" required  />
-                </p>
-            
                 <div id="extension-power-settings-pages-update-missing-ethernet" class="hidden">
                     <div style="text-align:center">
                         <img src="/images/ethernet.svg" data-l10n-id="network-settings-ethernet-image" class="network-settings-list-item-icon" alt="Ethernet" style="padding-bottom:0">
@@ -399,9 +394,14 @@
                         <button id="extension-power-settings-pages-update-ethernet-retest-button" class="text-button">I have connected a network cable</button>
                     </div>
                 </div>
-            
-                <div class="extension-power-settings-align-right">
-                    <button id="extension-power-settings-switch-to-recovery-button" class="text-button">Upgrade Candle</button>
+                <div id="extension-power-settings-switch-to-recovery-start-container">
+                    <p>
+                        <label for="extension-power-settings-switch-to-recovery-understand">Type "I understand" to confirm: </label><br />
+                        <input type="text" name="extension-power-settings-switch-to-recovery-understand" id="extension-power-settings-switch-to-recovery-understand" required  />
+                    </p>
+                    <div class="extension-power-settings-align-right">
+                        <button id="extension-power-settings-switch-to-recovery-button" class="text-button">Upgrade Candle</button>
+                    </div>
                 </div>
             </div>
             
