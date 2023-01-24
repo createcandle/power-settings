@@ -68,9 +68,6 @@ class PowerSettingsAPIHandler(APIHandler):
         self.manager_proxy.add_api_handler(self)
         self.addon_name = manifest['id']
         
-        if self.DEBUG:
-            print("self.user_profile: " + str(self.user_profile))
-        
         self.addon_dir = os.path.join(self.user_profile['addonsDir'], self.addon_name)
         self.data_dir = os.path.join(self.user_profile['dataDir'], self.addon_name)
         # baseDir is another useful option in user_profile
@@ -1920,7 +1917,8 @@ class PowerSettingsAPIHandler(APIHandler):
                     print("recovery image file was downloaded and extracted succesfully")
                 self.busy_updating_recovery = 3
                 
-                os.system('sudo mkfs -g -t ext4 /dev/mmcblk0p3 -F') # format the partition first
+                #os.system('sudo mkfs -g -t ext4 /dev/mmcblk0p3 -F') # format the partition first
+                os.system('sudo dd if=/dev/zero of=/dev/mmcblk0p3 bs=1M') # empty
                 
                 self.busy_updating_recovery = 4
                 

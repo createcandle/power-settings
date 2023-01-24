@@ -15,7 +15,7 @@
             this.kiosk = false;
             this.exhibit_mode = false;
             
-            this.bits = 32;
+            this.bits = "UNKNOWN";
             this.update_available_text = "";
             this.system_update_in_progress = false;
             this.recovery_partition_exists = false;
