@@ -1906,8 +1906,10 @@
                 }
                 
                 // Show the switch-to-recovery update option?
+                
                 if(typeof body.allow_update_via_recovery != 'undefined'){
                     if(body.allow_update_via_recovery){
+                        /*
                         if(this.update_available_text == "available"){
                             
                             document.getElementById('extension-power-settings-switch-to-recovery-container').style.display = 'block';
@@ -1932,14 +1934,16 @@
                                 
                             //}
                         }
+                        */
                     }
                     else{
-                        document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'none';
+                        document.getElementById('extension-power-settings-switch-to-recovery-start-container').style.display = 'none';
                         if(this.debug){
                             console.log("- not allowing update via recovery, hiding switch-to-recovery-button");
                         }
                     }
                 }
+                
                 
                 // dealing with recovery_partition_bits is no longer needed, as having the recovery partition be 32 bits works for both 32 and 64 bit kernels
                 
