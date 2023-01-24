@@ -163,8 +163,8 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
         # Memory and disk space
-        self.user_partition_free_disk_space = run_command("df /home/pi/.webthings | awk 'NR==2{print $4}'")
-        self.total_memory = run_command("awk '/^MemTotal:/{print $2}' /proc/meminfo")
+        self.user_partition_free_disk_space = run_command("df /home/pi/.webthings | awk 'NR==2{print $4}' | tr -d '\n'")
+        self.total_memory = run_command("awk '/^MemTotal:/{print $2}' /proc/meminfo | tr -d '\n'")
         
         
         
@@ -980,18 +980,31 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':state,
                                                       'bits':self.bits,
-                                                      'recovery_version':self.recovery_version,
+                                                      
                                                       'candle_version':self.candle_version,
-                                                      'latest_recovery_version':self.latest_recovery_version,
-                                                      #'recovery_partition_bits':self.recovery_partition_bits,
-                                                      'ethernet_connected':self.ethernet_connected,
+                                                      'candle_original_version':self.candle_original_version,
+                                                      
+                                                      'bootup_actions_failed':self.bootup_actions_failed,
+                                                      'files_check_exists':self.files_check_exists,
+                                                      'ro_exists':self.ro_exists,
+                                                      'old_overlay_active':self.old_overlay_active,
+                                                      'post_bootup_actions_supported':self.post_bootup_actions_supported,
+                                                      'update_needs_two_reboots':self.update_needs_two_reboots,
+                                                      
                                                       'recovery_partition_exists':self.recovery_partition_exists,
+                                                      'recovery_version':self.recovery_version,
+                                                      'latest_recovery_version':self.latest_recovery_version,
                                                       'allow_update_via_recovery':self.allow_update_via_recovery,
+                                                      'busy_updating_recovery':self.busy_updating_recovery,
+                                                      'ethernet_connected':self.ethernet_connected,
+                                                      'updating_recovery_failed':self.updating_recovery_failed,
+                                                      
                                                       'system_update_in_progress':self.system_update_in_progress,
                                                       'user_partition_free_disk_space':self.user_partition_free_disk_space,
                                                       'total_memory': self.total_memory
                                                   }),
                                 )
+                            
                             
                             
                             

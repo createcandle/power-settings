@@ -643,223 +643,6 @@
                     }
                     
                     
-                    // Show Update & Recovery partition version
-                    if(this.recovery_partition_exists){
-                        if(typeof body.recovery_version != 'undefined'){
-                            document.getElementById('extension-power-settings-update-recovery-version').innerText = body.recovery_version;
-                        
-                            // Is a new version of the recovery partition available?
-                            if(body.recovery_version == body.latest_recovery_version){
-                                document.getElementById('extension-power-settings-update-recovery-ok').style.display = 'block';
-                                if(document.body.classList.contains('developer')){
-                                    document.getElementById('extension-power-settings-update-recovery-should-update').style.background = '#555';
-                                    document.getElementById('extension-power-settings-update-recovery-should-update').style.display = 'block';
-                                }
-                            }
-                            else{
-                                if(this.debug){
-                                    console.log("power settings: a new version of the Update & Recovery partition is available: V", body.latest_recovery_version);
-                                }
-                                
-                                document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'none';
-                                document.getElementById('extension-power-settings-update-recovery-container').style.display = 'block';
-                                document.getElementById('extension-power-settings-update-recovery-should-update').style.display = 'block';
-                        
-                            }
-                        }
-                        
-                        if(typeof body.updating_recovery_failed != 'undefined'){
-                        
-                            if(body.updating_recovery_failed){
-                                if(this.debug){
-                                    console.warn("body.updating_recovery_failed!");
-                                }
-                                document.getElementById('extension-power-settings-update-recovery-failed').style.display = 'block';
-                                document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'none';
-                            }
-                        }
-                        
-                        if(typeof body.allow_update_via_recovery != 'undefined'){
-                            if(body.allow_update_via_recovery == false){
-                                if(this.debug){
-                                    console.log("Switch to recovery partition currently not supported (maybe recovery partition needs update first, or doesn't exist. Or no ethernet cable.)");
-                                }
-                                document.getElementById('extension-power-settings-switch-to-recovery-container').style.display = 'none';
-                            }
-                        }
-                        else{
-                            console.error("power settings: allow_update_via_recovery is not present in init data");
-                        }
-                    
-                        if(typeof body.busy_updating_recovery != 'undefined'){
-                            if(body.busy_updating_recovery > 0 && body.busy_updating_recovery < 5){
-                                if(this.debug){
-                                    console.warn("recovery partition update already in progress");
-                                }
-                                document.getElementById('extension-power-settings-update-recovery-button').style.display = 'none';
-                                document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'block';
-                                document.getElementById('extension-power-settings-update-recovery-busy-progress').style.width = (body.busy_updating_recovery * 20) + '%';
-                            }
-                        }
-                        
-                    }
-                    else{
-                        if(typeof body.recovery_version != 'undefined'){
-                            document.getElementById('extension-power-settings-update-recovery-version').innerText = "unsupported";
-                        }
-                    }
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    // Show Candle original version
-                    if(typeof body.candle_original_version != 'undefined'){
-                        if(this.debug){
-                            console.log("power settings debug: body.candle_original_version: ", body.candle_original_version);
-                        }
-                        if(document.getElementById('extension-power-settings-candle-original-version') != null){
-                            document.getElementById('extension-power-settings-candle-original-version').innerText = body.candle_original_version;
-                            //document.getElementById('extension-power-settings-candle-original-version2').innerText = body.candle_original_version;
-                        }
-                        
-                        if(body.candle_original_version == 'unknown'){
-                            if(this.debug){
-                                console.log("power settings: running on early release candidate");
-                            }
-                            this.update_available_text = "available";
-                        }
-                        else if(body.candle_original_version == '2.0.0'){
-                            this.update_available_text = "available";
-                            if(this.debug){
-                                console.log("power settings: running on RC4");
-                            }
-                        }
-                        else if(body.candle_original_version == '2.0.0-beta'){
-                            this.update_available_text = "available"
-                            if(this.debug){
-                                console.log("power settings: running on updated release candidate, nice");
-                            }
-                        }
-                        else if(body.candle_original_version == '2.0.1'){
-                            this.update_available_text = "available"
-                            if(this.debug){
-                                console.log("power settings: running on 2.0.1");
-                            }
-                        }
-                        else if(body.candle_original_version == '2.0.2'){
-                            this.update_available_text = ""
-                            if(this.debug){
-                                console.log("power settings: running on 2.0.2, brilliant");
-                            }
-                        }
-                        
-                        if(body.candle_version == '2.0.2'){ // on the latest version
-                            this.update_available_text = ""
-                            if(this.debug){
-                                console.log("power settings debug: running on latest available 2.0.2 version");
-                            }
-                        }
-                        
-                        if(this.update_available_text != ""){
-                            if(this.debug){
-                                console.log("A SYSTEM UPDATE IS AVAILABLE");
-                            }
-                            document.body.classList.add('system-update-available');
-                            if(this.recovery_partition_exists){
-                                
-                            }
-                        }
-                        
-                        if(body.ro_exists == true){
-                            if(this.debug){
-                                console.log("/ro exists");
-                            }
-                        }
-                        
-
-                        if(this.system_update_in_progress == false){
-                            setTimeout( () => {
-                                this.show_update_available(); // reacts to this.update_avaiable_text being set
-                            }, 3000);
-                        }
-                        else{
-                            document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
-                            document.getElementById('extension-power-settings-no-updates').style.display = 'none';
-                            document.getElementById('extension-power-settings-menu-update-button').style.border = "2px solid white";
-                            document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
-                        }
-            
-                        if(body.files_check_exists){
-                            document.getElementById('extension-power-settings-update-files-check-button').style.display = 'inline-block';
-                        }
-                        
-                        if(body.update_needs_two_reboots == true){
-                            //document.getElementById('extension-power-settings-system-update-needs-two-reboots').style.display = 'block';
-                        }
-            
-                    }
-                    else{
-                        if(this.debug){
-                            console.log("power settings error, candle_original_version was not defined. body: ", body);
-                        }
-                    }
-            
-                    
-                    if(this.recovery_partition_exists){
-                        if(this.debug){
-                            console.log("power settings: recovery partition exists. Adding class.");
-                        }
-                        // Show only the recovery partition update system. Developers can still see and use the old system.
-                        document.getElementById('extension-power-settings-container-update').classList.add('has-recovery-partition');
-                    }
-                    
-                    
-                    if(typeof body.system_update_in_progress != 'undefined'){
-                        this.system_update_in_progress = body.system_update_in_progress;
-                        if(body.system_update_in_progress == true){
-                            if(this.debug){
-                                console.log("A SYSTEM UPDATE IS ALREADY IN PROGRESS (bootup_actions.sh on an older release candidate)");
-                            }
-                            this.update_available_text = "in progress...";
-							document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
-							if(document.getElementById('extension-power-settings-menu-update-button-indicator') != null){
-                                document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
-                            }
-                            this.start_poll();
-                        }
-                        else{
-                            document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
-                           if(document.getElementById('extension-power-settings-menu-update-button-indicator') != null){
-                                document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "";
-                            }
-                        }
-                    }
-                    
-                    
-                    if(typeof body.old_overlay_active != 'undefined' && typeof body.ro_exists != 'undefined' && typeof body.post_bootup_actions_supported != 'undefined'){
-                        
-                        if(body.ro_exists == false && body.old_overlay_active == false){
-                            this.overlay_exists = false;
-                            if(this.debug){
-                                console.log("power settings debug: no overlays detected, update is good to go");
-                            }
-                            document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'none';
-                            document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'block';
-                        }
-                        else{
-                            this.overlay_exists = true;
-                            if(this.debug){
-                                console.log("overlays detected, must first be disabled");
-                            }
-                            document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'block';
-                            document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'none';
-                        }
-                        
-                    }
-                    
                 }).catch((e) => {
                     console.log("power-settings init error: ", e);
                 });
@@ -1889,6 +1672,222 @@
                     console.log("system update_init response: ", body);
                 }
                 
+                
+                // Show Candle original version
+                if(typeof body.candle_original_version != 'undefined'){
+                    if(this.debug){
+                        console.log("power settings debug: body.candle_original_version: ", body.candle_original_version);
+                    }
+                    if(document.getElementById('extension-power-settings-candle-original-version') != null){
+                        document.getElementById('extension-power-settings-candle-original-version').innerText = body.candle_original_version;
+                        //document.getElementById('extension-power-settings-candle-original-version2').innerText = body.candle_original_version;
+                    }
+                    
+                    if(body.candle_original_version == 'unknown'){
+                        if(this.debug){
+                            console.log("power settings: running on early release candidate");
+                        }
+                        this.update_available_text = "available";
+                    }
+                    else if(body.candle_original_version == '2.0.0'){
+                        this.update_available_text = "available";
+                        if(this.debug){
+                            console.log("power settings: running on RC4");
+                        }
+                    }
+                    else if(body.candle_original_version == '2.0.0-beta'){
+                        this.update_available_text = "available"
+                        if(this.debug){
+                            console.log("power settings: running on updated release candidate, nice");
+                        }
+                    }
+                    else if(body.candle_original_version == '2.0.1'){
+                        this.update_available_text = "available"
+                        if(this.debug){
+                            console.log("power settings: running on 2.0.1");
+                        }
+                    }
+                    else if(body.candle_original_version == '2.0.2'){
+                        this.update_available_text = ""
+                        if(this.debug){
+                            console.log("power settings: running on 2.0.2, brilliant");
+                        }
+                    }
+                    
+                    if(body.candle_version == '2.0.2'){ // on the latest version
+                        this.update_available_text = ""
+                        if(this.debug){
+                            console.log("power settings debug: running on latest available 2.0.2 version");
+                        }
+                    }
+                    
+                    if(this.update_available_text != ""){
+                        if(this.debug){
+                            console.log("A SYSTEM UPDATE IS AVAILABLE");
+                        }
+                        document.body.classList.add('system-update-available');
+                        if(this.recovery_partition_exists){
+                            
+                        }
+                    }
+                    
+                    if(body.ro_exists == true){
+                        if(this.debug){
+                            console.log("/ro exists");
+                        }
+                    }
+                    
+
+                    if(this.system_update_in_progress == false){
+                        setTimeout( () => {
+                            this.show_update_available(); // reacts to this.update_avaiable_text value
+                        }, 3000);
+                    }
+                    else{
+                        document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
+                        document.getElementById('extension-power-settings-no-updates').style.display = 'none';
+                        document.getElementById('extension-power-settings-menu-update-button').style.border = "2px solid white";
+                        document.getElementById('extension-power-settings-menu-update-button').style.borderRadius = ".5rem";
+                    }
+        
+                    if(body.files_check_exists){
+                        document.getElementById('extension-power-settings-update-files-check-button').style.display = 'inline-block';
+                    }
+                    
+                    if(body.update_needs_two_reboots == true){
+                        //document.getElementById('extension-power-settings-system-update-needs-two-reboots').style.display = 'block';
+                    }
+        
+                }
+                else{
+                    if(this.debug){
+                        console.log("power settings error, candle_original_version was not defined. body: ", body);
+                    }
+                }
+        
+                
+                if(this.recovery_partition_exists){
+                    if(this.debug){
+                        console.log("power settings: recovery partition exists. Adding class.");
+                    }
+                    // Show only the recovery partition update system. Developers can still see and use the old system.
+                    document.getElementById('extension-power-settings-container-update').classList.add('has-recovery-partition');
+                }
+                
+                
+                if(typeof body.system_update_in_progress != 'undefined'){
+                    this.system_update_in_progress = body.system_update_in_progress;
+                    if(body.system_update_in_progress == true){
+                        if(this.debug){
+                            console.log("A SYSTEM UPDATE IS ALREADY IN PROGRESS (bootup_actions.sh on an older release candidate)");
+                        }
+                        this.update_available_text = "in progress...";
+						document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
+						if(document.getElementById('extension-power-settings-menu-update-button-indicator') != null){
+                            document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "in progress";
+                        }
+                        this.start_poll();
+                    }
+                    else{
+                        document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
+                       if(document.getElementById('extension-power-settings-menu-update-button-indicator') != null){
+                            document.getElementById('extension-power-settings-menu-update-button-indicator').innerText = "";
+                        }
+                    }
+                }
+                
+                
+                if(typeof body.old_overlay_active != 'undefined' && typeof body.ro_exists != 'undefined' && typeof body.post_bootup_actions_supported != 'undefined'){
+                    
+                    if(body.ro_exists == false && body.old_overlay_active == false){
+                        this.overlay_exists = false;
+                        if(this.debug){
+                            console.log("power settings debug: no overlays detected, update is good to go");
+                        }
+                        document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'none';
+                        document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'block';
+                    }
+                    else{
+                        this.overlay_exists = true;
+                        if(this.debug){
+                            console.log("overlays detected, must first be disabled");
+                        }
+                        document.getElementById('extension-power-settings-system-update-overlay-still-enabled-container').style.display = 'block';
+                        document.getElementById('extension-power-settings-system-update-overlay-disabled-container').style.display = 'none';
+                    }
+                    
+                }
+                
+                
+                // Show Update & Recovery partition version
+                if(this.recovery_partition_exists){
+                    if(typeof body.recovery_version != 'undefined'){
+                        document.getElementById('extension-power-settings-update-recovery-version').innerText = body.recovery_version;
+                    
+                        // Is a new version of the recovery partition available?
+                        if(body.recovery_version == body.latest_recovery_version){
+                            document.getElementById('extension-power-settings-update-recovery-ok').style.display = 'block';
+                            if(document.body.classList.contains('developer')){
+                                document.getElementById('extension-power-settings-update-recovery-should-update').style.background = '#555';
+                                document.getElementById('extension-power-settings-update-recovery-should-update').style.display = 'block';
+                                document.getElementById('extension-power-settings-switch-to-recovery-start-container').style.display = 'block';
+                            }
+                        }
+                        else{
+                            if(this.debug){
+                                console.log("power settings: a new version of the Update & Recovery partition is available: V", body.latest_recovery_version);
+                            }
+                            
+                            
+                            document.getElementById('extension-power-settings-switch-to-recovery-start-container').style.display = 'none';
+                            document.getElementById('extension-power-settings-update-recovery-container').style.display = 'block';
+                            document.getElementById('extension-power-settings-update-recovery-should-update').style.display = 'block';
+                    
+                        }
+                    }
+                    
+                    if(typeof body.updating_recovery_failed != 'undefined'){
+                    
+                        if(body.updating_recovery_failed){
+                            if(this.debug){
+                                console.warn("body.updating_recovery_failed!");
+                            }
+                            document.getElementById('extension-power-settings-update-recovery-failed').style.display = 'block';
+                            document.getElementById('extension-power-settings-switch-to-recovery-start-container').style.display = 'none';
+                        }
+                    }
+                    
+                    if(typeof body.allow_update_via_recovery != 'undefined'){
+                        if(body.allow_update_via_recovery == false){
+                            if(this.debug){
+                                console.log("Switch to recovery partition currently not supported (maybe recovery partition needs update first, or doesn't exist. Or no ethernet cable.)");
+                            }
+                            document.getElementById('extension-power-settings-switch-to-recovery-container').style.display = 'none';
+                        }
+                    }
+                    else{
+                        console.error("power settings: allow_update_via_recovery is not present in init data");
+                    }
+                
+                    if(typeof body.busy_updating_recovery != 'undefined'){
+                        if(body.busy_updating_recovery > 0 && body.busy_updating_recovery < 5){
+                            if(this.debug){
+                                console.warn("recovery partition update already in progress");
+                            }
+                            document.getElementById('extension-power-settings-update-recovery-button').style.display = 'none';
+                            document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'block';
+                            document.getElementById('extension-power-settings-update-recovery-busy-progress').style.width = (body.busy_updating_recovery * 20) + '%';
+                        }
+                    }
+                    
+                }
+                else{
+                    if(typeof body.recovery_version != 'undefined'){
+                        document.getElementById('extension-power-settings-update-recovery-version').innerText = "unsupported";
+                    }
+                }
+                
+                
                 // Show the ethernet cable warning?
                 if(typeof body.ethernet_connected != 'undefined'){
                     this.ethernet_connected = body.ethernet_connected;
@@ -1914,17 +1913,17 @@
                             document.getElementById('extension-power-settings-switch-to-recovery-container').style.display = 'block';
                             
                             if(this.ethernet_connected){
-                                document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'inline-block';
+                                document.getElementById('extension-power-settings-switch-to-recovery-start-container').style.display = 'block';
                             }
                             else{
-                                document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'none';
+                                document.getElementById('extension-power-settings-switch-to-recovery-start-container').style.display = 'none';
                                 if(this.debug){
                                     console.log("- ethernet not connected");
                                 }
                             }
                         }
                         else{
-                            document.getElementById('extension-power-settings-switch-to-recovery-button').style.display = 'none';
+                            document.getElementById('extension-power-settings-switch-to-recovery-start-container').style.display = 'none';
                             if(this.debug){
                                 console.log("- this.update_available_text was not 'available'");
                             }
