@@ -214,9 +214,17 @@
             </div>
         </div>
         
+        <div id="extension-power-settings-update-no-space-available" class="extension-power-settings-vlak" style="display:none; background-color:#600">
+            <h3>Not enough memory or disk space</h3>
+            <p>Your user data partition is too full to run updates.</p>
+        </div>
+        
+        
         <div id="extension-power-settings-update-developer-options-container" class="extension-power-settings-vlak extension-power-settings-developer-only" style="background-color:#555">
             <p class="extension-power-settings-header">Developer options</p>
             <p>Your Update & Recovery system has version: <span id="extension-power-settings-update-recovery-version">...</span></p>
+            <p>Memory size: <span id="extension-power-settings-update-total-memory">...</span>Mb</p>
+            <p>Space available on the user data partition: <span id="extension-power-settings-user-partition-free-disk-space">...</span>Mb</p>
             <p>Use of these developer options is at your own risk.</p>
             <hr/>
             <p>You can force Linux to update to the latest version. This simply runs <span style="font-weight:bold">apt upgrade</span> on the system, and then reboots.</p>
@@ -240,7 +248,7 @@
         </div>
         
 
-        <div id="extension-power-settings-system-update-available-container" class="extension-power-settings-vlak" style="display: none;">
+        <div id="extension-power-settings-system-update-available-container" class="extension-power-settings-vlak extension-power-settings-developer-only" style="display: none;">
         <!--<div id="extension-power-settings-system-update-container" class="extension-power-settings-vlak">-->
             <p class="extension-power-settings-header">System update</p>
             
@@ -250,9 +258,8 @@
                 <p>Visit candlesmarthome.com/troubleshooting if you want to figure out what happened.</p>
             </div>
             
-            <div>
+            <div class="extension-power-settings-developer-only">
                 <p>A system update is available.</p>
-
                 <ul>
                     <li>Always make a backup first!</li>
                     <li>Do not change settings while the update is in progress.</li>
@@ -384,6 +391,8 @@
                 <li>Once complete it sets the system to start from the upgraded main Candle system again, and reboots.</li>
             </ol>
             <p>It's vital that the upgrade process is not interupted. Depending on your internet speed this process should take between 30 minutes and 2 hours.</p>
+            
+            <p id="extension-power-settings-low-memory-hint" style="display:none">Note: the update will take longer because your system has less than 2 gigabytes of memory.</p>
             
             <div id="extension-power-settings-switch-to-recovery-prepare-container">
                 <div id="extension-power-settings-pages-update-missing-ethernet" class="hidden">

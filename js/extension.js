@@ -23,6 +23,10 @@
 
             this.interval = null;
             this.recovery_interval = null;
+            
+            this.total_memory = 0;
+            this.user_partition_free_disk_space = 0;
+            
 
             const getUrl = window.location;
             this.baseUrl = getUrl.protocol + "//" + getUrl.host + "/things";
@@ -1672,6 +1676,34 @@
                     console.log("system update_init response: ", body);
                 }
                 
+                if(typeof body.total_memory != 'undefined'){
+                    if(body.total_memory < 1600){
+                        document.getElementById('extension-power-settings-low-memory-hint').style.display = 'block';
+                    }
+                    this.total_memory = body.total_memory;
+                    if(this.debug){
+                        console.log("power settings: total memory: " + this.total_memory + "Mb");
+                    }
+                    document.getElementById('extension-power-settings-update-total-memory').innerText = this.total_memory;
+                    
+                }
+                if(typeof body.user_partition_free_disk_space != 'undefined'){
+                    this.user_partition_free_disk_space = body.user_partition_free_disk_space;
+                    const free_user_disk = Math.floor(body.user_partition_free_disk_space / 1000);
+                    if(this.debug){
+                        console.log("power settings: user disk free: " + free_user_disk + "Mb, (" + this.user_partition_free_disk_space + ")");
+                    }
+                    document.getElementById('extension-power-settings-user-partition-free-disk-space').innerText = free_user_disk;
+                }
+                
+
+                if(this.total_memory < 1600 && this.user_partition_free_disk_space < 1600000){
+                    document.getElementById('extension-power-settings-update-no-space-available').style.display = 'block';
+                }
+                else{
+                     document.getElementById('extension-power-settings-update-no-space-available').style.display = 'none';
+                }
+                
                 
                 // Show Candle original version
                 if(typeof body.candle_original_version != 'undefined'){
@@ -1726,9 +1758,6 @@
                             console.log("A SYSTEM UPDATE IS AVAILABLE");
                         }
                         document.body.classList.add('system-update-available');
-                        if(this.recovery_partition_exists){
-                            
-                        }
                     }
                     
                     if(body.ro_exists == true){

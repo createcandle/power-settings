@@ -163,9 +163,20 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
         # Memory and disk space
-        self.user_partition_free_disk_space = run_command("df /home/pi/.webthings | awk 'NR==2{print $4}' | tr -d '\n'")
-        self.total_memory = run_command("awk '/^MemTotal:/{print $2}' /proc/meminfo | tr -d '\n'")
-        
+        self.user_partition_free_disk_space = 0
+        self.total_memory = 0
+        try:
+            self.user_partition_free_disk_space = int(run_command("df /home/pi/.webthings | awk 'NR==2{print $4}' | tr -d '\n'"))
+            total_memory = run_command("awk '/^MemTotal:/{print $2}' /proc/meminfo | tr -d '\n'")
+            self.total_memory = int( int(''.join(filter(str.isdigit, total_memory))) / 1000)
+            
+            # Check total memory in system
+            #total_memory = subprocess.check_output("awk '/^MemTotal:/{print $2}' /proc/meminfo", shell=True)
+            #total_memory = total_memory.decode('utf-8')
+            #
+            
+        except Exception as ex:
+            print("Error getting total memory or free user partition disk space: " + str(ex))
         
         
         # System updates
@@ -1113,7 +1124,6 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                             elif action == 'get_stats':
                                 
-                                total_memory = '?'
                                 free_memory = '?'
                                 try:
                                     
@@ -1133,12 +1143,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                     if self.DEBUG:
                                         print("available_memory: " + str(available_memory))
                                     
-                                    # Check total memory in system
-                                    total_memory = subprocess.check_output("awk '/^MemTotal:/{print $2}' /proc/meminfo", shell=True)
-                                    total_memory = total_memory.decode('utf-8')
-                                    total_memory = int( int(''.join(filter(str.isdigit, total_memory))) / 1000)
                                     if self.DEBUG:
-                                        print("total_memory: " + str(total_memory))
+                                        print("total_memory: " + str(self.total_memory))
                                     
                                     self.update_backup_info()
                                     
@@ -1182,7 +1188,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                   status=200,
                                   content_type='application/json',
                                   content=json.dumps({'state':True, 
-                                                      'total_memory':total_memory, 
+                                                      'total_memory':self.total_memory, 
                                                       'available_memory':available_memory, 
                                                       'free_memory':free_memory, 
                                                       'disk_usage':self.disk_usage, 
@@ -1942,6 +1948,17 @@ class PowerSettingsAPIHandler(APIHandler):
                 if self.recovery_version >= self.latest_recovery_version:
                     self.busy_updating_recovery = 5
                 
+            # clean up any downloaded files
+            if os.path.exists('/home/pi/.webthings/recovery.fs.tar.gz'):
+                if self.DEBUG:
+                    print("Warning, recovery.fs.tar.gz already exists. Deleting")
+                os.system('sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
+                
+            if os.path.exists('/home/pi/.webthings/recovery.fs'):
+                if self.DEBUG:
+                    print("Warning, recovery.fs.tar.gz already exists. Deleting")
+                os.system('sudo rm /home/pi/.webthings/recovery.fs')
+                    
                     
                         
                 
