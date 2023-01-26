@@ -827,7 +827,7 @@
                                 console.log("switch_to_recovery response: ", body);
                             }
                             if(body.state = 'ok'){
-                                document.getElementById('extension-power-settings-update-recovery-rebooting').style.display = 'block';
+                                document.getElementById('extension-power-settings-switch-to-recovery-busy-container').style.display = 'block';
                                 window.API.postJson('/settings/system/actions', {
                                     action: 'restartSystem'
                                 }).catch(console.error);
@@ -1092,15 +1092,35 @@
                                         console.log("body.busy_updating_recovery: ", body.busy_updating_recovery);
                                     }
                                     
+                                    const recovery_hints = ['','downloading...','extracting...','deleting old recovery system...','installing...','done'];
+                                    document.getElementById('extension-power-settings-update-recovery-progress-hint').innerText = recovery_hints[body.busy_updating_recovery];
+                                    
                                     if(body.busy_updating_recovery > 0 && body.busy_updating_recovery < 5){
                                         document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'block';
                                         document.getElementById('extension-power-settings-update-recovery-busy-progress').style.width = (body.busy_updating_recovery * 20) + '%';
                                     }
-                                    
-                                    if(body.busy_updating_recovery > 0 && body.updating_recovery_failed == true){
-                                        document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'none';
-                                        document.getElementById('extension-power-settings-update-recovery-failed').style.display = 'block';
+                                    if(body.busy_updating_recovery > 0){
+                                        
+                                        if(body.updating_recovery_failed == true){
+                                            document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'none';
+                                            document.getElementById('extension-power-settings-update-recovery-failed').style.display = 'block';
+                                            document.getElementById('extension-power-settings-update-recovery-step-hint').innerText = "";
+                                        }
                                     }
+                                    
+                                    
+                                    
+                                    
+                                    if(body.updating_recovery_failed){
+                                        
+                                    }
+                                    if(body.busy_updating_recovery == 0){
+                                        
+                                    }
+                                    else if(body.busy_updating_recovery == 1){
+                                        
+                                    }
+                                    
                                     
                                     if(body.busy_updating_recovery == 5){
                                         

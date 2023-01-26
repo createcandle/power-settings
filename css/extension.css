@@ -707,10 +707,21 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-button{
     justify-content: space-between;
 }
 
-
-
 .extension-power-settings-container button{
     font-size: 1.8rem;
+}
+
+#extension-power-settings-low-memory-hint{
+    font-style:italic;
+}
+
+
+#extension-power-settings-switch-to-recovery-busy-container{
+    display:none;
+    background-color:rgba(255,255,255,.1);
+    padding:2rem;
+    margin:2rem 0;
+    text-align:center;
 }
 
 

@@ -715,7 +715,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 
                                 
-                            # SYSTEM UPDATE OLD SCHOOL
+                            # OLD SCHOOL SYSTEM UPDATE 
                             elif action == 'start_system_update':
                                 self.system_update_in_progress = False
                                 if self.system_update_error_detected:
@@ -948,7 +948,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if self.DEBUG:
                                     print("handling switch_to_recovery action")
                                 
-                                    state = self.switch_to_recovery()
+                                state = self.switch_to_recovery()
                                 
                                 return APIResponse(
                                   status=200,
@@ -1959,8 +1959,6 @@ class PowerSettingsAPIHandler(APIHandler):
                     print("Warning, recovery.fs.tar.gz already exists. Deleting")
                 os.system('sudo rm /home/pi/.webthings/recovery.fs')
                     
-                    
-                        
                 
         except Exception as ex:
             print("Error in update_recovery_partition: " + str(ex))
