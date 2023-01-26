@@ -828,6 +828,54 @@
                             }
                             if(body.state = 'ok'){
                                 document.getElementById('extension-power-settings-switch-to-recovery-busy-container').style.display = 'block';
+                                
+                                setTimeout(() => {
+                                    
+                                    console.log("30 seconds have passed. Time to check if the recovery partition is running");
+                                    var message_counter = 0;
+                                    
+                                    fetch('/message.json')
+                                    .then(response => {
+                                         if (!response.ok) {
+                                             throw new Error("HTTP error " + response.status);
+                                         }
+                                         return response.json();
+                                    })
+                                    .then(json => {
+                                         console.log("managed to fetch a status message!", json);
+                                         window.recovery_messages_interval = setInterval(function () {
+                                             fetch('./message.json')
+                                             .then((response) => response.json())
+                                             .then((json) => {
+                                                 console.log(json);
+                                                 document.getElementById('message').innerHTML = json.message;
+                    
+                                                 if(json.message != previous_message){
+                                                     previous_message = json.message;
+                                                     console.log("New message: ", json.message);
+                                                     message_counter++;
+                                                     //document.getElementById('progress-bar').style.width = (counter * 10) + "%";
+                                                 }
+                    
+                                             })
+                                             .catch(function () {
+                                                 console.error("failed to fetch message from recovery");
+                                             });
+                                             
+                                         }, 4000);
+                                     })
+                                     .catch(function () {
+                                         console.error("Failed to load message.json");
+                                         setTimeout(function(){
+                                              window.location.replace(window.location.origin);
+                                         }, 30000);
+                                     })
+                                
+                                }, 20000);
+                                   
+                                
+                                
+                                
                                 window.API.postJson('/settings/system/actions', {
                                     action: 'restartSystem'
                                 }).catch(console.error);
