@@ -790,7 +790,22 @@ body > #extension-power-settings-update-process-progress-bar-container{
 }
 
 
-
+#extension-power-settings-just_updated-via-recovery-container{
+    padding:0 7rem;
+    position:absolute;
+    top:8rem;
+    height:calc(100% - 16rem);
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+#extension-power-settings-just_updated-via-recovery{
+    max-width:30rem;
+    padding:2rem;
+    background-color:black;
+    border-radius:.5rem;
+}
 
 
 @media screen and (min-width: 1024px) {

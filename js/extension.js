@@ -646,6 +646,39 @@
                         }
                     }
                     
+                    // Show a pop-up modal message after a system update
+                    if(typeof body.just_updated_via_recovery != 'undefined' && typeof body.updated_via_recovery_aborted != 'undefined' && typeof body.updated_via_recovery_interupted != 'undefined'){
+                        if(body.just_updated_via_recovery || body.update_via_recovery_aborted || body.update_via_recovery_interupted){
+                            var div = document.createElement('div');
+                            div.setAttribute('id','extension-power-settings-just_updated-via-recovery-container');
+                            var modal_html = '<div id="extension-power-settings-just_updated-via-recovery">'
+                            if(body.just_updated_via_recovery){
+                                modal_html += '<h1>Your controller has been updated</h1>';
+                                div.style.background="green";
+                                
+                                // Extra warning after switch to 64 bit
+                                if(body.candle_original_version == '2.0.1' || body.candle_original_version == '2.0.0'){
+                                    modal_html += '<p>If any addons are not working properly, try re-installing them.</p>';
+                                }
+                            }
+                            else if(body.update_via_recovery_aborted){
+                                modal_html += '<h1>The controller update process failed</h1><p>Please try again</p>';
+                                div.style.background="red";
+                            }
+                            else if(body.update_via_recovery_interupted){
+                                modal_html += '<h1>The controller update process was interupted</h1><p>Frankly it is amazing you are even seeing this message. You should probably run the update process again.</p>';
+                                div.style.background="red";
+                            }
+                            modal_html += '<div style="text-align:right"><button id="extension-power-settings-just_updated-via-recovery-ok-button" class="text-button">OK</button></div></div>';
+                            div.innerHTML = modal_html;
+                            document.body.appendChild(div);
+                            document.getElementById('extension-power-settings-just_updated-via-recovery-ok-button').addEventListener('click', () => {
+                                document.getElementById('extension-power-settings-just_updated-via-recovery-container').style.display = 'none';
+                            });
+                        }
+                    }
+                    
+                    
                     
                 }).catch((e) => {
                     console.log("power-settings init error: ", e);
@@ -1704,7 +1737,7 @@
         */
         
         check_if_back(){
-            //console.log("in check if back");
+            console.log("power settigns: in check if back");
             setTimeout(() => {
                 
                 window.API.postJson(
@@ -1974,6 +2007,10 @@
                             document.getElementById('extension-power-settings-update-recovery-button').style.display = 'none';
                             document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'block';
                             document.getElementById('extension-power-settings-update-recovery-busy-progress').style.width = (body.busy_updating_recovery * 20) + '%';
+                            if(this.recovery_interval == null){
+                                this.start_recovery_poll();
+                            }
+                            
                         }
                     }
                     

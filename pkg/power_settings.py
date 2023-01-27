@@ -161,6 +161,21 @@ class PowerSettingsAPIHandler(APIHandler):
         if not os.path.exists(self.recovery_partition_mount_point):
             os.system('mkdir -p ' + str(self.recovery_partition_mount_point))
         
+        self.just_updated_via_recovery = False
+        if os.path.exists('/boot/candle_update_via_recovery_done.txt'):
+            self.just_updated_via_recovery = True
+            os.system("sudo rm /boot/candle_update_via_recovery_done.txt")
+        
+        self.update_via_recovery_aborted = False
+        if os.path.exists('/boot/candle_update_via_recovery_aborted.txt'):
+            self.update_via_recovery_aborted = True
+            os.system("sudo rm /boot/candle_update_via_recovery_aborted.txt")
+        
+        self.update_via_recovery_interupted = False
+        if os.path.exists('/boot/candle_update_via_recovery_interupted.txt'):
+            self.update_via_recovery_interupted = True
+            os.system("sudo rm /boot/candle_update_via_recovery_interupted.txt")
+        
         
         # Memory and disk space
         self.user_partition_free_disk_space = 0
@@ -1268,6 +1283,15 @@ class PowerSettingsAPIHandler(APIHandler):
                                         
                                 shell_date = run_command("date")
                                         
+                                just_updated_via_recovery = self.just_updated_via_recovery
+                                self.just_updated_via_recovery = False
+                                
+                                update_via_recovery_aborted = self.update_via_recovery_aborted
+                                self.update_via_recovery_aborted = False
+                                
+                                update_via_recovery_interupted = self.update_via_recovery_interupted
+                                self.update_via_recovery_interupted = False
+                                
                                 response = {'hours':now.hour,
                                             'minutes':now.minute,
                                             'shell_date':shell_date,
@@ -1295,6 +1319,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'recovery_partition_exists':self.recovery_partition_exists,
                                             'allow_update_via_recovery':self.allow_update_via_recovery,
                                             'updating_recovery_failed':self.updating_recovery_failed,
+                                            'update_via_recovery_aborted':update_via_recovery_aborted,
+                                            'update_via_recovery_interupted':update_via_recovery_interupted,
                                             'debug':self.DEBUG
                                         }
                                         
