@@ -194,9 +194,9 @@
 
         <div id="extension-power-settings-update-general-container" class="extension-power-settings-vlak">
             <p>You are running <span id="extension-power-settings-bits">32bit</span> Candle Controller version <span id="extension-power-settings-candle-version">...</span></p>
-            
+            <p class="extension-power-settings-developer-only">You originally started with Candle version: <span id="extension-power-settings-candle-original-version">unknown</span></p>
             <div id="extension-power-settings-no-updates" style="display: none;">
-                <p>Your sytem is up-to-date.</p>
+                <p>Your system is up-to-date.</p>
             </div>
             
             <div id="extension-power-settings-update-recovery-not-supported" class="extension-power-settings-vlak" style="display:none; margin:2rem 0">
@@ -226,11 +226,23 @@
             <p>Memory size: <span id="extension-power-settings-update-total-memory">...</span>Mb</p>
             <p>Space available on the user data partition: <span id="extension-power-settings-user-partition-free-disk-space">...</span>Mb</p>
             <p>Use of these developer options is at your own risk.</p>
+            
+            <br/>
             <hr/>
             <p>You can force Linux to update to the latest version. This simply runs <span style="font-weight:bold">apt upgrade</span> on the system, and then reboots.</p>
             <div class="extension-power-settings-align-right">
                 <button id="extension-power-settings-manual-update-button" class="text-button">Manual update</button>
             </div>
+            
+            <!--
+            <br/>
+            <hr/>
+            <p>By default the user data partition is 6 Gb, and you are unlikely to run out of space. However, you can expand the user data partition to the full size of the SD card. This process will reboot the system.</p>
+            <div class="extension-power-settings-align-right">
+                <button id="extension-power-settings-expand-user-partition-button" class="text-button">Expand user partition</button>
+            </div>
+            -->
+            
             <br/>
             <hr/>
             <p>You can force the system to re-update to the latest version of Candle using the "old" update script. This could easily break your system. It should always be run twice (first time will update the kernel, second time updates the rest).</p>

@@ -659,6 +659,25 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                                 
                                 
+                                
+                            # EXPAND USER PARTITION
+                            """
+                            elif action == 'expand_user_partition':
+                                
+                                if self.DEBUG:
+                                    print("request to expand_user_partition")
+                                
+                                if self.recovery_partition_exists:
+                                    os.system('')
+                                
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':'ok'}),
+                                )
+                            """
+                                
                             # MANUAL UPDATE
                             elif action == 'manual_update':
                                 
@@ -676,6 +695,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':'ok'}),
                                 )
+                                
+                                
+                            
                                 
                                 
                             # /disable_overlay - Disable old RO overlay on older Candle systems.

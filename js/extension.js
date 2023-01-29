@@ -224,6 +224,28 @@
                 }
                 
                 
+                // Expand user partition button
+                /*
+                document.getElementById('extension-power-settings-expand-user-partition-button').addEventListener('click', () => {
+                    console.log('expand user partition button clicked');
+                    document.getElementById('extension-power-settings-expand-user-partition-button').style.display = 'none';
+                    
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'expand_user_partition'
+                        }
+                    ).then((body) => {
+                        if(this.debug){
+                            console.log("expand_user_partition response: ", body);
+                        }
+                    }).catch((e) => {
+                        console.error("Error: expand_user_partition could not connect to controller: ", e);
+                    });
+                    
+                });
+                */
+                
+                
                 
                 // FACTORY RESET
     
@@ -657,7 +679,7 @@
                                 div.style.background="green";
                                 
                                 // Extra warning after switch to 64 bit
-                                if(body.candle_original_version == '2.0.1' || body.candle_original_version == '2.0.0'){
+                                if(body.candle_original_version == '2.0.1' || body.candle_original_version == '2.0.0' || body.candle_original_version == '2.0.0-beta'){
                                     modal_html += '<p>If any addons are not working properly, try re-installing them.</p>';
                                 }
                             }
