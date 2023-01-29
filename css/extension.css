@@ -673,11 +673,11 @@
     display:block;
 }
 
-/*  TODO: REMOVE THIS BLOCK */
+/*  TODO: REMOVE THIS BLOCK
 body:not(.developer) #extension-power-settings-switch-to-recovery-button{
     display:none;
 }
-
+*/
 
 /*
 #extension-power-settings-manual-update-container{
