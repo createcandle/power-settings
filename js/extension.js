@@ -1227,13 +1227,10 @@
                                     
                                     if(body.busy_updating_recovery == 5){
                                         
-                                        
-                                        
-                                        
                                         document.getElementById('extension-power-settings-update-recovery-should-update').style.display = 'none';
                                         document.getElementById('extension-power-settings-update-recovery-busy').style.display = 'none';
                                         //document.getElementById('extension-power-settings-update-recovery-ok').style.display = 'block';
-                                        clearInterval(this.recovery_interval);
+                                        
                                         
                                         if(body.allow_update_via_recovery){
                                             if(this.debug){
@@ -1242,7 +1239,13 @@
                                             document.getElementById('extension-power-settings-update-recovery-ok').style.display = 'block';
                                             this.update_checks();
                                         }
+                                        else{
+                                            if(this.debug){
+                                                console.warn("recovery partition was updated, but allow_update_via_recovery was still false");
+                                            }
+                                        }
                                         
+                                        clearInterval(this.recovery_interval);
                                     }
                                 }
                                 
@@ -2065,7 +2068,11 @@
                 
                 if(typeof body.allow_update_via_recovery != 'undefined'){
                     if(body.allow_update_via_recovery){
-                        /*
+                        //if(body.busy_updating_recovery == 5){
+                        //    document.getElementById('extension-power-settings-switch-to-recovery-start-container').style.display = 'block';
+                        //}
+                        
+                        
                         if(this.update_available_text == "available"){
                             
                             document.getElementById('extension-power-settings-switch-to-recovery-container').style.display = 'block';
@@ -2090,7 +2097,7 @@
                                 
                             //}
                         }
-                        */
+                        
                     }
                     else{
                         document.getElementById('extension-power-settings-switch-to-recovery-start-container').style.display = 'none';
