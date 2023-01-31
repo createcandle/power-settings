@@ -45,11 +45,11 @@ class PowerSettingsAPIHandler(APIHandler):
         """Initialize the object."""
         #print("INSIDE API HANDLER INIT")
         
-        self.addon_name = "power-settings"  # overwritteb by data in manifest
+        self.addon_id = "power-settings"
         self.DEBUG = False
-        
         self.running = True
         
+        """
         try:
             manifest_fname = os.path.join(
                 os.path.dirname(__file__),
@@ -61,19 +61,20 @@ class PowerSettingsAPIHandler(APIHandler):
 
             with open(manifest_fname, 'rt') as f:
                 manifest = json.load(f)
+                self.addon_id = manifest['id']
         except Exception as e:
             print("ERROR, Failed load manifest.json: " + str(e))
-            
+        """
         
         try:
-            APIHandler.__init__(self, manifest['id'])
+            APIHandler.__init__(self, self.addon_id) # manifest['id']
             self.manager_proxy.add_api_handler(self)
         except Exception as ex:
             print('Power settings: error adding api handler to manager_proxy: ' + str(ex))
-        self.addon_name = manifest['id']
         
-        self.addon_dir = os.path.join(self.user_profile['addonsDir'], self.addon_name)
-        self.data_dir = os.path.join(self.user_profile['dataDir'], self.addon_name)
+        
+        self.addon_dir = os.path.join(self.user_profile['addonsDir'], self.addon_id)
+        self.data_dir = os.path.join(self.user_profile['dataDir'], self.addon_id)
         # baseDir is another useful option in user_profile
         
         # MQTT
@@ -166,7 +167,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.updating_recovery_failed = False
         self.should_start_recovery_update = False
         
-        self.recovery_partition_mount_point = os.path.join(self.user_profile['dataDir'], self.addon_name,'recoverypart')
+        self.recovery_partition_mount_point = os.path.join(self.user_profile['dataDir'], self.addon_id,'recoverypart')
         
         if not os.path.exists(self.recovery_partition_mount_point):
             os.system('mkdir -p ' + str(self.recovery_partition_mount_point))
@@ -308,7 +309,7 @@ class PowerSettingsAPIHandler(APIHandler):
             print("self.addon_dir: " + str(self.addon_dir))
             print("self.actions_file_path: " + str(self.actions_file_path))
             print("self.manager_proxy = " + str(self.manager_proxy))
-            print("Created new API HANDLER: " + str(manifest['id']))
+            print("Created new API HANDLER: " + str(self.addon_id))
             print("user_profile: " + str(self.user_profile))
             print("actions_file_path: " + str(self.actions_file_path))
             #print("early_actions_file_path: " + str(self.early_actions_file_path))
@@ -412,7 +413,7 @@ class PowerSettingsAPIHandler(APIHandler):
     def add_from_config(self):
         """Attempt to add all configured devices."""
         try:
-            database = Database(self.addon_name)
+            database = Database(self.addon_id)
             if not database.open():
                 print("Could not open settings database")
                 #self.close_proxy()
