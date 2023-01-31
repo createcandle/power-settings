@@ -26,7 +26,9 @@
             
             this.total_memory = 0;
             this.user_partition_free_disk_space = 0;
-            
+            this.log_size = 0;
+            this.photos_size = 0;
+            this.uploads_size = 0;
 
             const getUrl = window.location;
             this.baseUrl = getUrl.protocol + "//" + getUrl.host + "/things";
@@ -175,6 +177,19 @@
                             console.log("backup init response: ", body);
                         }
                         
+                        if(typeof body.log_size != 'undefined'){
+                            this.log_size = body.log_size;
+                            document.getElementById('extension-power-settings-log-size').innerText = Math.round(this.log_size / 1000000);
+                        }
+                        if(typeof body.photos_size != 'undefined'){
+                            this.photos_size = body.photos_size;
+                            document.getElementById('extension-power-settings-photos-size').innerText = Math.round(this.photos_size / 1000000);
+                        }
+                        if(typeof body.uploads_size != 'undefined'){
+                            this.uploads_size = body.uploads_size;
+                            document.getElementById('extension-power-settings-uploads-size').innerText = Math.round(this.uploads_size / 1000000);
+                        }
+                        
                         if(typeof body.photo_frame_installed != 'undefined'){
                             if(body.photo_frame_installed){
                                 document.getElementById('extension-power-settings-container-backup').classList.add('extension-power-settings-photo-frame-installed');
@@ -209,7 +224,13 @@
                     document.getElementById('extension-power-settings-pages').classList.remove('hidden');
                     
                     this.update_checks();
-                    
+                });
+                
+                // Force-reveal the recovery update options, for developers
+                document.getElementById('extension-power-settings-force-reveal-recovery-update-button').addEventListener('click', () => {
+                    console.log('force show recovery update options button clicked');
+                    document.getElementById('extension-power-settings-update-recovery-container').classList.add('extension-power-settings-developer-only');
+                    document.getElementById('extension-power-settings-switch-to-recovery-container').classList.add('extension-power-settings-developer-only');
                 });
                 
                 
@@ -716,7 +737,14 @@
                     if(this.debug){
                         console.log("backup more checkbox changed");
                     }
-                    document.getElementById('extension-power-settings-backup-more-tip').style.display = 'block';
+                    const total_additional_files_size = this.log_size + this.photos_size + this.uploads_size;
+                    if(this.debug){
+                        console.log("total_additional_files_size: ", total_additional_files_size);
+                    }
+                    if(total_additional_files_size > 90000000){
+                        document.getElementById('extension-power-settings-backup-more-tip').style.display = 'block';
+                    }
+                    
                 });
                 
                 document.getElementById('extension-power-settings-create-backup-button').addEventListener('click', () => {
@@ -886,7 +914,7 @@
                                 
                                 setTimeout(() => {
                                     
-                                    console.log("30 seconds have passed. Time to check if the recovery partition is running");
+                                    console.log("40 seconds have passed. Time to check if the recovery partition is running");
                                     var message_counter = 0;
                                     
                                     fetch('/message.json')
@@ -926,7 +954,7 @@
                                          }, 30000);
                                      })
                                 
-                                }, 20000);
+                                }, 40000);
                                    
                                 
                                 
@@ -1927,6 +1955,9 @@
                     }
                     // Show only the recovery partition update system. Developers can still see and use the old system.
                     document.getElementById('extension-power-settings-container-update').classList.add('has-recovery-partition');
+                    
+                    // Allow developers to reveal the recovery update options, even if the system is already up to date
+                    document.getElementById('extension-power-settings-force-reveal-recovery-update-button').style.display = 'block';
                 }
                 
                 

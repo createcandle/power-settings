@@ -127,6 +127,9 @@
                 <li>General settings for controller and your addons</li>
             </ul>
             <p>By default this does NOT contain <span class="photo-frame-detail">photos or </span>data logs in order to keep file size small.</p>
+            <p class="extension-power-settings-developer-only">Log size: <span id="extension-power-settings-log-size">unknown</span>Mb</p>
+            <p class="extension-power-settings-developer-only">Photos size: <span id="extension-power-settings-photos-size">unknown</span>Mb</p>
+            <p class="extension-power-settings-developer-only">Uploads size: <span id="extension-power-settings-uploads-size">unknown</span>Mb</p>
             
             <input type="checkbox" name="extension-power-settings-backup-more-checkbox" id="extension-power-settings-backup-more-checkbox" />
             <label for="extension-power-settings-backup-more-checkbox">Also backup logs<span class="photo-frame-detail"> and photos</span></label>
@@ -248,7 +251,7 @@
             <p>You can force the system to re-update to the latest version of Candle using the "old" update script. This could easily break your system. It should always be run twice (first time will update the kernel, second time updates the rest).</p>
             <p>If your system has an Update & Recovery partition, then it's recommended to use that instead. You can start manual updates of the recovery partition and the system using that method below.</p>
             <div class="extension-power-settings-align-right">
-                <button id="extension-power-settings-force-update-button" class="text-button">Force update</button>
+                <button id="extension-power-settings-force-reveal-recovery-update-button" class="text-button" style="display:none">Force reveal of modern update</button> <button id="extension-power-settings-force-update-button" class="text-button">Force classic update</button>
             </div>
             <!--<button class="text-button" id="extension-power-settings-force-update-to-cutting-edge-button">Update to cutting edge</button>-->
             <br/>
@@ -429,6 +432,12 @@
                 </div>
             </div>
             <div id="extension-power-settings-switch-to-recovery-busy-container">
+                <div class="extension-power-settings-spinner">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
                 <h3>UPGRADING</h3>
                 <p>Your controller will be offline until the process is complete.</p>
             </div>

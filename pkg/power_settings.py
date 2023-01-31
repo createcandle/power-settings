@@ -64,8 +64,12 @@ class PowerSettingsAPIHandler(APIHandler):
         except Exception as e:
             print("ERROR, Failed load manifest.json: " + str(e))
             
-        APIHandler.__init__(self, manifest['id'])
-        self.manager_proxy.add_api_handler(self)
+        
+        try:
+            APIHandler.__init__(self, manifest['id'])
+            self.manager_proxy.add_api_handler(self)
+        except Exception as ex:
+            print('Power settings: error adding api handler to manager_proxy: ' + str(ex))
         self.addon_name = manifest['id']
         
         self.addon_dir = os.path.join(self.user_profile['addonsDir'], self.addon_name)
@@ -101,8 +105,14 @@ class PowerSettingsAPIHandler(APIHandler):
         self.uploads_dir_path = os.path.join(self.user_profile['baseDir'], 'uploads')
         self.photos_dir_path = os.path.join(self.user_profile['dataDir'],'photo-frame','photos')
         self.photo_frame_installed = False
+        self.photos_size = 0
+        self.log_size = 0
+        self.uploads_size = 0
         if os.path.isdir(self.photos_dir_path):
             self.photo_frame_installed = True
+        
+        
+            
 
         # Bootup actions
         #self.early_actions_file_path = '/boot/bootup_actions_early.sh' # run before the gateway starts
@@ -991,7 +1001,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':state}),
                                 )
                                 
-                                
+                            
+                            # Check if any Candle system files are missing
                             elif action == 'files_check':
                                 if self.DEBUG:
                                     print("handling files check")
@@ -1013,6 +1024,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                             
+                            # Called when the user opens the update page
                             elif action == 'update_init':
                                 if self.DEBUG:
                                     print("API: in update_init")
@@ -1053,7 +1065,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                             
                             
-                            
+                            # Called when the user opens the backup page
                             elif action == 'backup_init':
                                 if self.DEBUG:
                                     print("API: in backup_init")
@@ -1070,6 +1082,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'restore_exists':self.restore_file_exists, 
                                                       'disk_usage':self.disk_usage,
                                                       'photo_frame_installed':self.photo_frame_installed,
+                                                      'log_size':int(self.log_size),
+                                                      'photos_size':int(self.photos_size),
+                                                      'uploads_size':int(self.uploads_size),
                                                       'bits':self.bits
                                                   }),
                                 )
@@ -1612,6 +1627,7 @@ class PowerSettingsAPIHandler(APIHandler):
             print("Error rebooting: " + str(e))
 
 
+    
     def update_backup_info(self, directory=None):
         if self.DEBUG:
             print("in update_backup_info")
@@ -1621,7 +1637,51 @@ class PowerSettingsAPIHandler(APIHandler):
         self.restore_file_exists = os.path.isfile(self.restore_file_path)
         self.photo_frame_installed = os.path.isdir(self.photos_dir_path)
         self.disk_usage = shutil.disk_usage(directory)
-        
+        self.get_backup_sizes()
+
+
+    # Gets the size of files and folders for the extended backup
+    def get_backup_sizes(self):
+        if self.DEBUG:
+            print("in get_backup_sizes")
+            
+        # get logs file size
+        if os.path.exists(self.log_db_file_path):
+            self.log_size = os.path.getsize(self.log_db_file_path)
+            if self.DEBUG:
+                print("log_size: " + str(self.log_size))
+        else:
+            if self.DEBUG:
+                print("Error, log database file did not exist?")
+            
+        # calculate photos dir size
+        if os.path.isdir(self.photos_dir_path):
+            photos_size = 0
+            for path, dirs, files in os.walk(self.photos_dir_path):
+                for f in files:
+                    fp = os.path.join(path, f)
+                    photos_size += os.path.getsize(fp)
+            if self.DEBUG:
+                print("photos_size: " + str(photos_size))
+            self.photos_size = photos_size
+        else:
+            if self.DEBUG:
+                print("photos dir did not exist, photo-frame addon not installed?: " + str(self.photos_dir_path))
+                
+                
+        # calculate uploads dir size
+        if os.path.isdir(self.uploads_dir_path):
+            uploads_size = 0
+            for path, dirs, files in os.walk(self.uploads_dir_path):
+                for f in files:
+                    fp = os.path.join(path, f)
+                    uploads_size += os.path.getsize(fp)
+            if self.DEBUG:
+                print("uploads_size: " + str(uploads_size))
+            self.uploads_size = uploads_size
+        else:
+            if self.DEBUG:
+                print("Error, uploads dir did not exist?")
 
 
     def backup(self):
@@ -1648,58 +1708,29 @@ class PowerSettingsAPIHandler(APIHandler):
                 #log_option = ""
                 #photos_option = ""
                 #uploads_option = ""
-                log_size = 0
-                photos_size = 0
-                uploads_size = 0
+                
                 if self.backup_more == True:
                     
-                    # get logs file size
-                    if os.path.exists(self.log_db_file_path):
-                        log_size = os.path.getsize(self.log_db_file_path)
-                        if self.DEBUG:
-                            print("log_size: " + str(log_size))
-                        
-                    # calculate photos dir path
-                    if os.path.isdir(self.photos_dir_path):
-                        photos_size = 0
-                        for path, dirs, files in os.walk(self.photos_dir_path):
-                            for f in files:
-                                fp = os.path.join(path, f)
-                                photos_size += os.path.getsize(fp)
-                        if self.DEBUG:
-                            print("photos_size: " + str(photos_size))
-                    else:
-                        if self.DEBUG:
-                            print("photos dir did not exist, photo-frame addon not installed?: " + str(self.photos_dir_path))
-                            
-                    # calculate uploads dir size
-                    if os.path.isdir(self.uploads_dir_path):
-                        for path, dirs, files in os.walk(self.uploads_dir_path):
-                            for f in files:
-                                fp = os.path.join(path, f)
-                                uploads_size += os.path.getsize(fp)
-                        if self.DEBUG:
-                            print("uploads_size: " + str(uploads_size))
-        
+                    self.get_backup_sizes()
                     
                     # if logs and photos together are less than 90Mb, then all is well.
-                    if log_size + photos_size + uploads_size < 90000000:
-                        if log_size != 0:
+                    if self.log_size + self.photos_size + self.uploads_size < 90000000:
+                        if self.log_size != 0:
                             if self.DEBUG:
                                 print("adding logs to the backup command")
                             extra_tar_commands += '; tar -rf ' + str(self.backup_file_path)  + ' ' + os.path.join('.','log','logs.sqlite3')
-                        if photos_size != 0:
+                        if self.photos_size != 0:
                             if self.DEBUG:
                                 print("adding photos to the backup command")
                             extra_tar_commands += '; tar -rf ' + str(self.backup_file_path)  + ' ' + os.path.join('.','data','photo-frame','photos')
-                        if uploads_size != 0:
+                        if self.uploads_size != 0:
                             if self.DEBUG:
                                 print("adding uploads to the backup command")
                             extra_tar_commands += '; tar -rf ' + str(self.backup_file_path)  + ' ' + os.path.join('.','uploads')
                         
                         
                     # if together they are too big, then prioritize the logs
-                    elif log_size < 90000000 and log_size != 0:
+                    elif self.log_size < 90000000 and self.log_size != 0:
                         if self.DEBUG:
                             print("adding big log to backup command, at the cost of photos")
                         #log_option = './log '
@@ -1707,7 +1738,7 @@ class PowerSettingsAPIHandler(APIHandler):
                         self.backup_photos_failed = True
                     
                     # If the logs are too big, perhaps the photos can be backupped
-                    elif photos_size < 90000000 and photos_size != 0:
+                    elif self.photos_size < 90000000 and self.photos_size != 0:
                         self.backup_logs_failed = True
                         extra_tar_commands += '; tar -rf ' + str(self.backup_file_path)  + ' ' + os.path.join('.','addons','photo-frame','photos')
                         if self.DEBUG:
