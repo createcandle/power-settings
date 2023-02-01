@@ -225,7 +225,7 @@ fi
 
 
 
-
+chown -R pi:pi /home/pi/.webthings/addons
 chown -R pi:pi /home/pi/.webthings/data
 
 # Clean up
