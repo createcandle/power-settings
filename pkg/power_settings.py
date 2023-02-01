@@ -113,6 +113,8 @@ class PowerSettingsAPIHandler(APIHandler):
             self.photo_frame_installed = True
         
         
+        # Ugly fix for issue with Candle 2.0.2.
+        os.system('sudo chown pi:pi ' + str(self.user_profile['dataDir']))
             
 
         # Bootup actions
