@@ -114,7 +114,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
         # Ugly fix for issue with Candle 2.0.2.
-        os.system('sudo chown pi:pi ' + str(self.user_profile['dataDir']))
+        os.system('sudo chown -R pi:pi ' + str(self.user_profile['dataDir']))
             
 
         # Bootup actions
