@@ -226,7 +226,7 @@ fi
 
 
 
-
+chown -R pi:pi /home/pi/.webthings/data
 
 # Clean up
 rm /boot/bootup_actions.sh
