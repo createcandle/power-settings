@@ -689,7 +689,10 @@
                     if(typeof body.user_partition_expanded != 'undefined'){
                         if(body.user_partition_expanded == false){
                             console.log("user partition not yet expanded");
-                            document.getElementById('extension-power-settings-show-user-partition-expansion-button').style.display = 'inline-block';
+                            if(document.getElementById('extension-power-settings-show-user-partition-expansion-button') != null){
+                                document.getElementById('extension-power-settings-show-user-partition-expansion-button').style.display = 'inline-block';
+                            }
+                            
                         }
                     }
                     
