@@ -2112,7 +2112,8 @@ class PowerSettingsAPIHandler(APIHandler):
                 if self.DEBUG:
                     print("start sector: " + str(start_sector))
             
-                expand_command = 'echo -e "d\n4\nn\np\n' + str(start_sector) + '\n\nN\np\nq" | sudo fdisk /dev/mmcblk0'
+                #expand_command = 'echo -e "d\n4\nn\np\n' + str(start_sector) + '\n\nN\np\nq" | sudo fdisk /dev/mmcblk0'
+                expand_command = 'echo -e "d\n4\nn\np\n' + str(start_sector) + '\n\nN\nw\nq" | sudo fdisk /dev/mmcblk0'
                 #expand_string = "d\n4\nn\np\n" + str(start_sector) + "\n\nN\nw\nq"
                 if self.DEBUG:
                     print("expand_command: " + str(expand_command))
