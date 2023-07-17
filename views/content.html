@@ -21,10 +21,41 @@
                 <button type="button" id="extension-power-settings-shutdown" title="Shuts down the controller">Shut down</button>
                 <button type="button" id="extension-power-settings-restart" title="Restarts the controller software without completely reboot">Restart</button>
               </div>
+              
               <br/><br/>
-              <div id="extension-power-settings-low-voltage-warning"  class="extension-power-settings-low-warning extension-power-settings-vlak" style="display:none"><p>Warning, a low voltage was detected.<br/><br/>Your power supply might not be powerful or stable enough.</p></div>
-              <div id="extension-power-settings-low-memory-warning"  class="extension-power-settings-low-warning extension-power-settings-vlak" style="display:none"><p>Warning, the system is low on memory</p></div>
-              <div id="extension-power-settings-low-storage-warning" class="extension-power-settings-low-warning extension-power-settings-vlak" style="display:none"><p>Warning, the disk is getting very full</p></div>
+              
+              <div id="extension-power-settings-low-voltage-warning"  class="extension-power-settings-low-warning extension-power-settings-vlak" style="display:none">
+                  <p>Warning, a low voltage was detected.<br/><br/>
+                      Your power supply might not be powerful or stable enough.
+                 </p>
+              </div>
+              
+              <div id="extension-power-settings-low-memory-warning"  class="extension-power-settings-low-warning extension-power-settings-vlak" style="display:none">
+                  <p>Warning, the system is low on memory</p>
+              </div>
+              
+              <div id="extension-power-settings-low-storage-warning" class="extension-power-settings-low-warning extension-power-settings-vlak" style="display:none">
+                  <p>Warning, the disk is getting very full</p>
+                  <div style="text-align:center">
+                      <button id="extension-power-settings-show-user-partition-expansion-button" class="text-button" style="display:none">Make more space</button>
+                  </div>
+              </div>
+              
+              <div id="extension-power-settings-expand-user-partition-explanation" class="extension-power-settings-low-warning extension-power-settings-vlak" style="display:none">
+                  <p>There is still some unused space on your SD card that Candle could make use of. This expansion process will reboot your controller.</p>
+                  <div class="extension-power-settings-two-buttons-container" style="display:flex;justify-content:space-between">
+                      <button id="extension-power-settings-expand-user-partition-cancel-button" class="text-button">Cancel</button>
+                      <button id="extension-power-settings-expand-user-partition-start-button" class="text-button">Start expansion</button>
+                  </div>
+              </div>
+              
+              <div id="extension-power-settings-busy-expanding-user-partition" class="extension-power-settings-low-warning extension-power-settings-vlak" style="display:none">
+                  <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
+                  <p style="text-align:center">Expanding, please wait</p>
+              </div>
+              
+              
+              
               <div id="extension-power-settings-available-memory-container">
                   Total memory: <span id="extension-power-settings-total-memory">?</span>Mb<br/>
                   Available memory: <span id="extension-power-settings-available-memory">?</span>Mb<br/>

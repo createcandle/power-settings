@@ -192,12 +192,15 @@ class PowerSettingsAPIHandler(APIHandler):
         
         # Memory and disk space
         self.user_partition_free_disk_space = 0
+        self.unused_volume_space = None
         self.total_memory = 0
         try:
             self.user_partition_free_disk_space = int(run_command("df /home/pi/.webthings | awk 'NR==2{print $4}' | tr -d '\n'"))
             total_memory = run_command("awk '/^MemTotal:/{print $2}' /proc/meminfo | tr -d '\n'")
             self.total_memory = int( int(''.join(filter(str.isdigit, total_memory))) / 1000)
             
+            # How much space is there at the end of the SD card that isn't used?
+            self.unused_volume_space = int(run_command("sudo parted /dev/mmcblk0 unit B print free | grep 'Free Space' | tail -n1 | awk '{print $3}' | tr -d 'B\n'"))
             # Check total memory in system
             #total_memory = subprocess.check_output("awk '/^MemTotal:/{print $2}' /proc/meminfo", shell=True)
             #total_memory = total_memory.decode('utf-8')
@@ -206,6 +209,10 @@ class PowerSettingsAPIHandler(APIHandler):
         except Exception as ex:
             print("Error getting total memory or free user partition disk space: " + str(ex))
         
+        # User partition expansion
+        self.user_partition_expanded = False
+        if os.path.exists('/boot/candle_user_partition_expanded.txt'):
+            self.user_partition_expanded = True
         
         # System updates
         self.bootup_actions_failed = False
@@ -233,6 +240,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         if self.DEBUG:
             print("System bits: " + str(self.bits))
+            print("unused volume space: " + str(self.unused_volume_space))
        
         # Remove hardware clock file if it exists and it should not be enabled
         if self.do_not_use_hardware_clock:
@@ -431,9 +439,7 @@ class PowerSettingsAPIHandler(APIHandler):
         if not config:
             print("Error loading config from database. Using defaults.")
             return
-
-        
-
+            
         if 'Debug' in config:
             self.DEBUG = bool(config['Debug'])
             if self.DEBUG:
@@ -444,12 +450,6 @@ class PowerSettingsAPIHandler(APIHandler):
             if self.DEBUG:
                 print("-Do not use hardware clock preference was in config: " + str(self.do_not_use_hardware_clock))
 
-        #if 'Backup more' in config:
-        #    self.backup_more = bool(config['Backup more'])
-        #    if self.DEBUG:
-        #        print("-Backup more preference was in config: " + str(self.backup_more))
-
-        #self.DEBUG = True # TODO: DEBUG, REMOVE
     
         
         
@@ -476,21 +476,8 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("no system update in progress")
         
         
-        """
-        if self.system_update_in_progress == False:
-            check_bootup_actions_running = run_command("sudo ps aux | grep live_system_updat")
-            if "live_system_update" in check_bootup_actions_running:
-                print("LIVE UPDATE SEEMS TO BE RUNNING!")
-                self.system_update_in_progress = True
-            
-        if self.system_update_in_progress == False:
-            check_bootup_actions_running = run_command("sudo ps aux | grep 'live update in chroo")
-            if "live update in chroot" in check_bootup_actions_running:
-                print("LIVE UPDATE SEEMS TO BE RUNNING!")
-                self.system_update_in_progress = True
-        """
         
-        
+    # Check if an i2c hardware clock module is installed
     def hardware_clock_check(self):
         try:
             init_hardware_clock = False
@@ -552,6 +539,7 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("Error in hardware_clock_check: " + str(ex))
         
         
+        
     def check_ethernet_connected(self):
         try:
             ethernet_state = run_command('cat /sys/class/net/eth0/operstate')
@@ -568,6 +556,7 @@ class PowerSettingsAPIHandler(APIHandler):
             self.ethernet_connected = not cable_needed
         except Exception as ex:
             print("Error in check_ethernet_connection: " + str(ex))
+
 
 
     def handle_request(self, request):
@@ -654,6 +643,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                                 
+                                
                             # UPDATE RECOVERY PARTITION
                             elif action == 'update_recovery_partition':
                                 
@@ -674,20 +664,20 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 
                             # EXPAND USER PARTITION
-                            #elif action == 'expand_user_partition':
+                            elif action == 'expand_user_partition':
                                 
-                            #    if self.DEBUG:
-                            #        print("request to expand_user_partition")
+                                if self.DEBUG:
+                                    print("request to expand_user_partition")
                                 
-                            #    if self.recovery_partition_exists:
-                            #        os.system('')
+                                state = self.expand_user_partition()
                                 
+                                # because this reboots the system this will likely not be called
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
                                 
-                            #    return APIResponse(
-                            #      status=200,
-                            #      content_type='application/json',
-                            #      content=json.dumps({'state':'ok'}),
-                            #    )
                                 
                             # MANUAL UPDATE
                             elif action == 'manual_update':
@@ -1004,6 +994,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':state}),
                                 )
                                 
+                                
                             
                             # Check if any Candle system files are missing
                             elif action == 'files_check':
@@ -1026,6 +1017,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':'ok','files_check_output':files_check_output}),
                                 )
                                 
+                            
                             
                             # Called when the user opens the update page
                             elif action == 'update_init':
@@ -1288,6 +1280,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                             
+                            
+                            
                             else:
                                 return APIResponse(
                                   status=404
@@ -1312,6 +1306,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             try:
                                 
                                 self.check_update_processes()
+                                self.update_backup_info()
                                 
                                 for line in run_command("timedatectl show").splitlines():
                                     if self.DEBUG:
@@ -1321,8 +1316,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                         
                                 shell_date = run_command("date")
                                         
-                                just_updated_via_recovery = self.just_updated_via_recovery
-                                self.just_updated_via_recovery = False
+                                #just_updated_via_recovery = self.just_updated_via_recovery
+                                #self.just_updated_via_recovery = False
                                 
                                 update_via_recovery_aborted = self.update_via_recovery_aborted
                                 self.update_via_recovery_aborted = False
@@ -1359,6 +1354,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'updating_recovery_failed':self.updating_recovery_failed,
                                             'update_via_recovery_aborted':update_via_recovery_aborted,
                                             'update_via_recovery_interupted':update_via_recovery_interupted,
+                                            'user_partition_expanded':self.user_partition_expanded,
+                                            'unused_volume_space': self.unused_volume_space,
                                             'debug':self.DEBUG
                                         }
                                         
@@ -2082,6 +2079,65 @@ class PowerSettingsAPIHandler(APIHandler):
             if self.DEBUG:
                 print("Error in switch_to_recovery: " + str(ex))
         return False
+        
+        
+        
+    def expand_user_partition(self):
+        if self.DEBUG:
+            print("in expand_user_partition")
+            
+        # List unused disk space: 
+        # echo -e "F\nq" | sudo fdisk /dev/mmcblk0
+        
+        # current partition size in gigabytes:
+        # fdisk -l | grep mmcblk0p4 | awk '{print $5}' | tr -d 'G\n'
+        
+        # starting sector:
+        # sudo fdisk -l | grep mmcblk0p4 | awk '{print $2}' | tr -d 'G\n'
+        
+        if not os.path.exists('/boot/candle_user_partition_expanded.txt'):
+            self.user_partition_expanded = True
+            
+            # save information to candle_log.txt
+            date_string = run_command('date')
+            if self.DEBUG:
+                print("date: " + str(date))    
+            os.system('echo "' + str(date_string) + ' expanding user partition" | sudo tee -a /boot/candle_log.txt')
+            os.system('sudo fdisk -l | sudo tee -a /boot/candle_log.txt')
+            if os.path.exists('/home/pi/.webthings/candle.log'):
+                os.system('echo "' + str(date_string) + ' expanding user partition" | sudo tee -a /home/pi/.webthings/candle.log')
+            
+            start_sector = run_command("sudo fdisk -l | grep mmcblk0p4 | awk '{print $2}' | tr -d '\n'")
+            if start_sector.isdigit() and len(start_sector) > 4:
+                if self.DEBUG:
+                    print("start sector: " + str(start_sector))
+            
+                expand_command = 'echo -e "d\n4\nn\np\n' + str(start_sector) + '\n\nN\np\nq" | sudo fdisk /dev/mmcblk0'
+                #expand_string = "d\n4\nn\np\n" + str(start_sector) + "\n\nN\nw\nq"
+                if self.DEBUG:
+                    print("expand_command: " + str(expand_command))
+                expand_output = run_command(expand_command)
+                if self.DEBUG:
+                    print("expand output: " + str(expand_output))
+                resize2fs_output = run_command('sudo resize2fs /dev/mmcblk0p4')
+                if self.DEBUG:
+                    print("resize2fs_output: " + str(resize2fs_output))
+                    print("rebooting...")
+                    
+                os.system('sudo touch /boot/candle_user_partition_expanded.txt')
+                os.system('sudo reboot')
+                
+                return True
+                
+            else:
+                if self.DEBUG:
+                    print("start_sector was not a (long) digit")
+        else:
+            if self.DEBUG:
+                print("spotted file indicating file_system was already expanded?")
+
+        return False
+        
         
 
     def unload(self):

@@ -608,46 +608,52 @@
                     }
                     
                     // show server time in input fields
-                    hours.placeholder = body['hours'];
-                    minutes.placeholder = body['minutes'];
-                    ntp.checked = body['ntp'];
-                    
-                    if(body['ntp'] == false){
-                        document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'block';
+                    if(typeof body.hours != 'undefined'){
+                        hours.placeholder = body['hours'];
+                        minutes.placeholder = body['minutes'];
+                    }
+                    if(typeof body.ntp != 'undefined'){
+                        ntp.checked = body['ntp'];
+                        if(body['ntp'] == false){
+                            document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'block';
+                        }
                     }
                     
-                    // Add MQTT checkbox
-                    var mqtt_element = document.createElement('li');
-                    mqtt_element.setAttribute('id','allow-anonymous-mqtt-item');
-                    mqtt_element.setAttribute('class','developer-checkbox-item');
-                    document.querySelector('#developer-settings > ul').prepend(mqtt_element);
                     
-                    var mqtt_checked = "";
-                    if(body.allow_anonymous_mqtt){
-                        mqtt_checked = "checked";
-                    }
+                    if(typeof body.allow_anonymous_mqtt != 'undefined'){
+                        // Add MQTT checkbox
+                        var mqtt_element = document.createElement('li');
+                        mqtt_element.setAttribute('id','allow-anonymous-mqtt-item');
+                        mqtt_element.setAttribute('class','developer-checkbox-item');
+                        document.querySelector('#developer-settings > ul').prepend(mqtt_element);
                     
-                    document.getElementById('allow-anonymous-mqtt-item').innerHTML = '<input id="allow-anonymous-mqtt-checkbox" class="developer-checkbox" type="checkbox" '  + mqtt_checked + '> <label for="allow-anonymous-mqtt-checkbox" title="This can pose a security risk, so only enable this if you really need to.">Allow anonymous MQTT</label>';
-               
-                    document.getElementById('allow-anonymous-mqtt-checkbox').addEventListener('change', () => {
-                        if(this.debug){
-                            console.log('allow anonymous MQTT checkbox value changed');
+                        var mqtt_checked = "";
+                        if(body.allow_anonymous_mqtt){
+                            mqtt_checked = "checked";
                         }
                     
-                        const checkbox_state = document.getElementById('allow-anonymous-mqtt-checkbox').checked;
-                        window.API.postJson(
-                            `/extensions/${this.id}/api/ajax`, {
-                                'action': 'anonymous_mqtt','allow_anonymous_mqtt': checkbox_state
-                            }
-                        ).then((body) => {
+                        document.getElementById('allow-anonymous-mqtt-item').innerHTML = '<input id="allow-anonymous-mqtt-checkbox" class="developer-checkbox" type="checkbox" '  + mqtt_checked + '> <label for="allow-anonymous-mqtt-checkbox" title="This can pose a security risk, so only enable this if you really need to.">Allow anonymous MQTT</label>';
+               
+                        document.getElementById('allow-anonymous-mqtt-checkbox').addEventListener('change', () => {
                             if(this.debug){
-                                console.log("allow_anonymous MQTT response: ", body);
-                            }                                    
+                                console.log('allow anonymous MQTT checkbox value changed');
+                            }
+                    
+                            const checkbox_state = document.getElementById('allow-anonymous-mqtt-checkbox').checked;
+                            window.API.postJson(
+                                `/extensions/${this.id}/api/ajax`, {
+                                    'action': 'anonymous_mqtt','allow_anonymous_mqtt': checkbox_state
+                                }
+                            ).then((body) => {
+                                if(this.debug){
+                                    console.log("allow_anonymous MQTT response: ", body);
+                                }                                    
                         
-                        }).catch((e) => {
-                            alert("Error, allow_anonymous MQTT setting was not changed: could not connect to controller: ", e);
+                            }).catch((e) => {
+                                alert("Error, allow_anonymous MQTT setting was not changed: could not connect to controller: ", e);
+                            });
                         });
-                    });
+                    }
                     
                     
                     // 32 or 64 bits
@@ -671,11 +677,22 @@
                     }
                     
                     
-                    // Hardware click detected
-                    if(body.hardware_clock_detected){
-                        document.body.classList.add('hardware-clock');
-                        document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'block';
+                    // Hardware clock detected
+                    if(typeof body.hardware_clock_detected != 'undefined'){
+                        if(body.hardware_clock_detected){
+                            document.body.classList.add('hardware-clock');
+                            document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'block';
+                        }
                     }
+                    
+                    
+                    if(typeof body.user_partition_expanded != 'undefined'){
+                        if(body.user_partition_expanded == false){
+                            console.log("user partition not yet expanded");
+                            document.getElementById('extension-power-settings-show-user-partition-expansion-button').style.display = 'inline-block';
+                        }
+                    }
+                    
                     
                     // Show Candle version
                     if(typeof body.candle_version != 'undefined'){
@@ -1672,6 +1689,48 @@
                 
                 this.check_if_back();
                 
+            });
+            
+            
+            
+            // Show expand user partition reveal div
+            document.getElementById("extension-power-settings-show-user-partition-expansion-button").addEventListener('click', () => {
+                document.getElementById("extension-power-settings-low-storage-warning").style.display = 'none';
+                document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'block';
+            });
+            
+            // Cancel expand user partition button
+            document.getElementById("extension-power-settings-expand-user-partition-cancel-button").addEventListener('click', () => {
+                document.getElementById("extension-power-settings-low-storage-warning").style.display = 'block';
+                document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'none';
+            });
+            
+            // Start expand user partition button
+            document.getElementById("extension-power-settings-expand-user-partition-start-button").addEventListener('click', () => {
+                document.getElementById("extension-power-settings-busy-expanding-user-partition").style.display = 'block';
+                document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'none';
+                
+                window.API.postJson(
+                    `/extensions/${this.id}/api/ajax`, {
+                        'action': 'expand_user_partition'
+                    }
+                ).then((body) => {
+                    if(this.debug){
+                        console.log("expand_user_partition response: ", body);
+                    }
+                    console.log("expand_user_partition response: ", body);
+            
+                    if(typeof body.state != 'undefined'){
+                        if(body.state == false){
+                            document.getElementById("extension-power-settings-busy-expanding-user-partition").style.display = 'none';
+                            document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'block';
+                            alert("Error, disk expansion could not be started");
+                        }
+                    }
+            
+                }).catch((e) => {
+                    console.error("Error requesting expand user partition: ", e);
+                });
             });
             
             
