@@ -5,6 +5,12 @@ set +e
 # Some of the commands can only work when the disk overlay is disabled, but are run anyway to keep this a universal solution.
 
 
+BOOT_DIR="/boot"
+if lsblk | grep /boot/firmware; then
+    echo "firmware partition is mounted at /boot/firmware"
+    BOOT_DIR="/boot/firmware"
+fi
+
 #raspi-config nonint disable_bootro
 echo "stopping browser and Candle Controller"
 pkill chromium-browse
@@ -98,9 +104,9 @@ systemd-tmpfiles --remove
 rm -rf /var/log/*
 
 # Clear other files
-rm -rf /boot/.Spotlight*
-rm -rf /boot/.Trashes*
-rm -rf /boot/.TemporaryItems*
+rm -rf $BOOT_DIR/.Spotlight*
+rm -rf $BOOT_DIR/.Trashes*
+rm -rf $BOOT_DIR/.TemporaryItems*
 rm -rf /usr/share/doc
 
 # remove ReSpeaker symlink
@@ -110,7 +116,7 @@ rm /etc/asound.conf
 
 #if [ "$RESETZ2M" == "true" ]; then
 
-if [ -f "/boot/keep_z2m.txt" ]; then
+if [ -f "$BOOT_DIR/keep_z2m.txt" ]; then
     echo "Factory reset is allowing Zigbee2MQTT to remain"
 else
     echo "Factory reset: also resetting Zigbee2MQTT"
@@ -121,7 +127,7 @@ else
 fi
 
 
-if [ -f "/boot/keep_bluetooth.txt" ]; then
+if [ -f "$BOOT_DIR/keep_bluetooth.txt" ]; then
     echo "Factory reset is allowing Bluetooth devices to remain paired"
 else
     echo "Factory reset: also removing Bluetooth pairings"
@@ -153,7 +159,7 @@ if [ -f "/home/pi/.webthings/swap" ]; then
   rm /home/pi/.webthings/swap
 fi
 
-if [ -f "/boot/developer.txt" ]; then
+if [ -f "$BOOT_DIR/developer.txt" ]; then
   echo "filling unused space on user partition with zeros"
   cat /dev/zero > /home/pi/.webthings/zero.fill
   sync
@@ -167,7 +173,7 @@ if [ -f "/boot/developer.txt" ]; then
   sync
   rm -f /zero.fill
   echo "filling with zeros done"
-  rm /boot/developer.txt
+  rm $BOOT_DIR/developer.txt
 fi
 
 # Make the next run a first run
@@ -177,14 +183,14 @@ echo "" > /etc/machine-id
 echo "machine ID after: "
 cat /etc/machine-id
 
-rm /boot/candle_first_run_complete.txt
-rm /boot/candle_swap_enabled.txt
+rm $BOOT_DIR/candle_first_run_complete.txt
+rm $BOOT_DIR/candle_swap_enabled.txt
 
 # If a respeaker hat is plugged in, the ReSpeaker code will recreate this file each boot
 rm /etc/asound.conf
 
 # Disable the tunnel functionality
-rm /boot/tunnel.txt
+rm $BOOT_DIR/tunnel.txt
 cp /home/pi/.webthings/etc/webthings_settings_backup.js /home/pi/.webthings/etc/webthings_settings.js
 
 
@@ -200,20 +206,20 @@ raspi-config nonint do_ssh 1 # 0 is enable, 1 is disable
 echo "waiting 5 seconds"
 sleep 5
 
-rm /boot/rotate180.txt
-rm /boot/keep_z2m.txt
-rm /boot/keep_bluetooth.txt
-rm /boot/write_enabled.txt
-rm /boot/candle_rw_once.txt
-rm /boot/candle_rw_keep.txt
-rm /boot/candle_log.txt
-rm /boot/debug.txt
-rm /boot/raspinfo.txt
-rm /boot/candle_hardware_clock.txt
-rm /boot/candle_cutting_edge.txt
-touch /boot/hide_mouse_pointer.txt
-rm /boot/bootup_actions.sh
-rm /boot/bootup_actions_failed.sh
+rm $BOOT_DIR/rotate180.txt
+rm $BOOT_DIR/keep_z2m.txt
+rm $BOOT_DIR/keep_bluetooth.txt
+rm $BOOT_DIR/write_enabled.txt
+rm $BOOT_DIR/candle_rw_once.txt
+rm $BOOT_DIR/candle_rw_keep.txt
+rm $BOOT_DIR/candle_log.txt
+rm $BOOT_DIR/debug.txt
+rm $BOOT_DIR/raspinfo.txt
+rm $BOOT_DIR/candle_hardware_clock.txt
+rm $BOOT_DIR/candle_cutting_edge.txt
+touch $BOOT_DIR/hide_mouse_pointer.txt
+rm $BOOT_DIR/bootup_actions.sh
+rm $BOOT_DIR/bootup_actions_failed.sh
 
 # only a log of factory resets is kept internally.
 factory_resets="$(cat /home/pi/.webthings/candle.log | grep factory reset)"
