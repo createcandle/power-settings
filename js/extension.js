@@ -685,7 +685,7 @@
                         }
                     }
                     
-                    
+                    // User partition expanded
                     if(typeof body.user_partition_expanded != 'undefined'){
                         if(body.user_partition_expanded == false){
                             console.log("user partition not yet expanded");

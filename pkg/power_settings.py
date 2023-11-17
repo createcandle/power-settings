@@ -81,6 +81,9 @@ class PowerSettingsAPIHandler(APIHandler):
         self.allow_anonymous_mqtt = False
         self.mosquitto_conf_file_path = '/home/pi/.webthings/etc/mosquitto/mosquitto.conf'
         
+        self.boot_path = '/boot'
+        if os.path.exists('/boot/firmware'):
+            self.boot_path = '/boot/firmware'
         
         self.bits = 32
         
@@ -118,15 +121,15 @@ class PowerSettingsAPIHandler(APIHandler):
             
 
         # Bootup actions
-        #self.early_actions_file_path = '/boot/bootup_actions_early.sh' # run before the gateway starts
-        self.actions_file_path = '/boot/bootup_actions.sh' # run before the gateway starts
-        self.post_actions_file_path = '/boot/post_bootup_actions.sh' # run 'after' the gateway starts
+        #self.early_actions_file_path = self.boot_path + '/bootup_actions_early.sh' # run before the gateway starts
+        self.actions_file_path = self.boot_path + '/bootup_actions.sh' # run before the gateway starts
+        self.post_actions_file_path = self.boot_path + '/post_bootup_actions.sh' # run 'after' the gateway starts
         self.late_sh_path = '/home/pi/candle/late.sh'
         self.system_update_error_detected = False
         
         # Factory reset
-        self.keep_z2m_file_path = '/boot/keep_z2m.txt'
-        self.keep_bluetooth_file_path = '/boot/keep_bluetooth.txt'
+        self.keep_z2m_file_path = self.boot_path + '/keep_z2m.txt'
+        self.keep_bluetooth_file_path = self.boot_path + '/keep_bluetooth.txt'
         self.factory_reset_script_path = os.path.join(self.addon_dir, "factory_reset.sh") 
         self.manual_update_script_path = os.path.join(self.addon_dir, "manual_update.sh") 
         
@@ -148,13 +151,13 @@ class PowerSettingsAPIHandler(APIHandler):
         self.restore_file_path = os.path.join(self.data_dir, "candle_restore.tar")
         
         # Candle version fie path
-        self.version_file_path = '/boot/candle_version.txt'
-        self.original_version_file_path = '/boot/candle_original_version.txt'
+        self.version_file_path = self.boot_path + '/candle_version.txt'
+        self.original_version_file_path = self.boot_path + '/candle_original_version.txt'
         
         # Hardware clock
         self.hardware_clock_detected = False
         self.do_not_use_hardware_clock = False
-        self.hardware_clock_file_path = '/boot/candle_hardware_clock.txt'
+        self.hardware_clock_file_path = self.boot_path + '/candle_hardware_clock.txt'
         
         # Low voltage
         self.low_voltage = False
@@ -175,19 +178,19 @@ class PowerSettingsAPIHandler(APIHandler):
             os.system('mkdir -p ' + str(self.recovery_partition_mount_point))
         
         self.just_updated_via_recovery = False
-        if os.path.exists('/boot/candle_update_via_recovery_done.txt'):
+        if os.path.exists(self.boot_path + '/candle_update_via_recovery_done.txt'):
             self.just_updated_via_recovery = True
-            os.system("sudo rm /boot/candle_update_via_recovery_done.txt")
+            os.system("sudo rm " + str(self.boot_path) + "/candle_update_via_recovery_done.txt")
         
         self.update_via_recovery_aborted = False
-        if os.path.exists('/boot/candle_update_via_recovery_aborted.txt'):
+        if os.path.exists(self.boot_path + '/candle_update_via_recovery_aborted.txt'):
             self.update_via_recovery_aborted = True
-            os.system("sudo rm /boot/candle_update_via_recovery_aborted.txt")
+            os.system("sudo rm " + str(self.boot_path) + "/candle_update_via_recovery_aborted.txt")
         
         self.update_via_recovery_interupted = False
-        if os.path.exists('/boot/candle_update_via_recovery_interupted.txt'):
+        if os.path.exists(self.boot_path + '/candle_update_via_recovery_interupted.txt'):
             self.update_via_recovery_interupted = True
-            os.system("sudo rm /boot/candle_update_via_recovery_interupted.txt")
+            os.system("sudo rm " + str(self.boot_path) + "/candle_update_via_recovery_interupted.txt")
         
         
         # Memory and disk space
@@ -211,7 +214,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         # User partition expansion
         self.user_partition_expanded = False
-        if os.path.exists('/boot/candle_user_partition_expanded.txt'):
+        if os.path.exists(self.boot_path + '/candle_user_partition_expanded.txt'):
             self.user_partition_expanded = True
         
         # System updates
@@ -228,7 +231,7 @@ class PowerSettingsAPIHandler(APIHandler):
             self.files_check_exists = True
             
         self.exhibit_mode = False
-        if os.path.isfile('/boot/exhibit_mode.txt'):
+        if os.path.isfile(self.boot_path + '/exhibit_mode.txt'):
             self.exhibit_mode = True
         
         # LOAD CONFIG
@@ -265,28 +268,28 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
         # Remove rw-once file
-        if os.path.isfile('/boot/candle_rw_once.txt'):
-            os.system('sudo rm /boot/candle_rw_once.txt')
+        if os.path.isfile(self.boot_path + '/candle_rw_once.txt'):
+            os.system('sudo rm ' + str(self.boot_path) + '/candle_rw_once.txt')
             if self.DEBUG:
                 print("On next reboot the controller will be read-only again")
         else:
             if self.DEBUG:
                 print("no candle_rw.txt file spotted")
         
-        if os.path.isfile('/boot/bootup_actions.sh'):
+        if os.path.isfile(self.boot_path + '/bootup_actions.sh'):
             print("bootup_actions.sh already exists. Maybe power-settings addon was restarted after preparing an update?")
-            os.system('sudo rm /boot/bootup_actions.sh')
+            os.system('sudo rm ' + str(self.boot_path) + '/bootup_actions.sh')
         
-        if os.path.isfile('/boot/bootup_actions_failed.sh'):
+        if os.path.isfile(self.boot_path + '/bootup_actions_failed.sh'):
             self.bootup_actions_failed = True 
             
             # clean up the bootup_actions file regardless because it will keep running even if the file is deleted
-            os.system('sudo rm /boot/bootup_actions_failed.sh')
+            os.system('sudo rm ' + str(self.boot_path) + '/bootup_actions_failed.sh')
             if self.DEBUG:
-                print("/boot/bootup_actions_failed.sh detected")
+                print("/boot/firmware/bootup_actions_failed.sh detected")
                 
         
-        if os.path.isfile('/boot/candle_stay_rw.txt'):
+        if os.path.isfile(self.boot_path + '/candle_stay_rw.txt'):
             if self.DEBUG:
                 print("Note: Candle is in permanent RW mode.")
         
@@ -306,7 +309,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
         self.update_needs_two_reboots = False
-        if not os.path.isfile('/boot/candle_original_version.txt'):
+        if not os.path.isfile(self.boot_path + '/candle_original_version.txt'):
             self.update_needs_two_reboots = True
         
         
@@ -355,8 +358,8 @@ class PowerSettingsAPIHandler(APIHandler):
                         print("\nself.candle_original_version: " + str(self.candle_original_version))
 
 
-            if os.path.isfile('/boot/cmdline.txt'):
-                with open('/boot/cmdline.txt') as f:
+            if os.path.isfile(self.boot_path + '/cmdline.txt'):
+                with open(self.boot_path + '/cmdline.txt') as f:
                     #self.candle_version = f.readlines()
                     cmdline = f.read()
                     if "boot=overlay" in cmdline:
@@ -457,12 +460,12 @@ class PowerSettingsAPIHandler(APIHandler):
         check_bootup_actions_running = run_command("sudo ps aux | grep bootup_action")
         if self.DEBUG:
             print("checking for bootup_actions in ps aux output: " + str(check_bootup_actions_running))
-        if os.path.exists('/boot/bootup_actions_failed.sh'):
-            if "/boot/bootup_actions" in check_bootup_actions_running:
+        if os.path.exists(self.boot_path + '/bootup_actions_failed.sh'):
+            if self.boot_path + "/bootup_actions" in check_bootup_actions_running:
                 if self.DEBUG:
                     print("BOOTUP ACTIONS SEEMS TO BE RUNNING!")
                 self.system_update_in_progress = True
-            elif "/boot/post_bootup_actions" in check_bootup_actions_running:
+            elif self.boot_path + "/post_bootup_actions" in check_bootup_actions_running:
                 if self.DEBUG:
                     print("POST BOOTUP ACTIONS SEEMS TO BE RUNNING!")
                 self.system_update_in_progress = True
@@ -687,7 +690,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 # Place the factory reset file in the correct location so that it will be activated at boot.
                                 #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
-                                os.system('sudo touch /boot/candle_rw_once.txt')
+                                os.system('sudo touch ' + str(self.boot_path) + '/candle_rw_once.txt')
                                 os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
                                 
                                 
@@ -709,9 +712,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 try:
                                     if os.path.isdir('/ro') or os.path.isfile('/bin/ro-root.sh'):
-                                        #os.system('sudo touch /boot/bootup_actions_non_blocking.txt')
-                                        os.system('sudo touch /boot/candle_rw_once.txt')
-                                        if not os.path.isfile('/boot/candle_rw_once.txt'):
+                                        os.system('sudo touch ' + str(self.boot_path) + '/candle_rw_once.txt')
+                                        if not os.path.isfile(self.boot_path + '/candle_rw_once.txt'):
                                             state = False
                                             
                                     if self.old_overlay_active:
@@ -720,8 +722,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                         os.system('sudo raspi-config nonint disable_bootro')
                                         os.system('sudo raspi-config nonint disable_overlayfs')
                                 
-                                    if os.path.isfile('/boot/cmdline.txt'):
-                                        with open('/boot/cmdline.txt') as f:
+                                    if os.path.isfile(self.boot_path + '/cmdline.txt'):
+                                        with open(self.boot_path + '/cmdline.txt') as f:
                                             #self.candle_version = f.readlines()
                                             cmdline = f.read()
                                             if "boot=overlay" in cmdline:
@@ -730,7 +732,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 state == False
                                             else:
                                                 if self.DEBUG:
-                                                    print("Old overlay is gone from /boot/cmdline.txt")
+                                                    print("Old overlay is gone from cmdline.txt")
                                         
                                 except Exception as ex:
                                     if self.DEBUG:
@@ -767,14 +769,14 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                     if 'cutting_edge' in request.body:
                                         if request.body['cutting_edge'] == True:
-                                            os.system('sudo touch /boot/candle_cutting_edge.txt')
+                                            os.system('sudo touch ' + str(self.boot_path) + '/candle_cutting_edge.txt')
                                             if self.DEBUG:
-                                                print("created /boot/candle_cutting_edge.txt file")
+                                                print("created /boot/firmware/candle_cutting_edge.txt file")
                                         else:
-                                            if os.path.isfile('/boot/candle_cutting_edge.txt'):
-                                                os.system('sudo rm /boot/candle_cutting_edge.txt')
+                                            if os.path.isfile(self.boot_path + '/candle_cutting_edge.txt'):
+                                                os.system('sudo rm ' + str(self.boot_path) + '/candle_cutting_edge.txt')
                                                 if self.DEBUG:
-                                                    print("removed /boot/candle_cutting_edge.txt file")
+                                                    print("removed candle_cutting_edge.txt file from boot partition")
                                 
                                 
                                     if self.DEBUG:
@@ -826,7 +828,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
                                         if not os.path.isdir('/ro') and self.old_overlay_active == False:
                                             
-                                            if os.path.isfile('/boot/candle_cutting_edge.txt'):
+                                            if os.path.isfile(self.boot_path + '/candle_cutting_edge.txt'):
                                                 os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle_dev.sh -O ' + str(self.system_update_script_path))
                                             else:
                                                 os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh -O ' + str(self.system_update_script_path))
@@ -852,7 +854,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         
                                                     if os.path.isfile( str(self.post_actions_file_path)):
                                                         
-                                                        os.system('sudo touch /boot/candle_rw_once.txt')
+                                                        os.system('sudo touch ' + str(self.boot_path) + '/candle_rw_once.txt')
                                                         
                                                         if self.old_overlay_active:
                                                             if self.DEBUG:
@@ -1488,10 +1490,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 os.system(restore_command)
                                             
                                                 # clean up the non-blocking file if it exists. TODO: is this still used?
-                                                if os.path.isfile('/boot/bootup_actions_non_blocking.txt'):
+                                                if os.path.isfile(self.boot_path + '/bootup_actions_non_blocking.txt'):
                                                     if self.DEBUG:
-                                                        print("/boot/bootup_actions_non_blocking.txt still existed")
-                                                    os.system('rm /boot/bootup_actions_non_blocking.txt')
+                                                        print("/boot/firmware/bootup_actions_non_blocking.txt still existed")
+                                                    os.system('sudo rm ' + str(self.boot_path) + '/bootup_actions_non_blocking.txt')
                                             
                                                 state = 'ok'
                                             
@@ -1631,13 +1633,16 @@ class PowerSettingsAPIHandler(APIHandler):
     def update_backup_info(self, directory=None):
         if self.DEBUG:
             print("in update_backup_info")
-        if directory == None:
-            directory = self.user_profile['baseDir']
-        self.backup_file_exists = os.path.isfile(self.backup_file_path)
-        self.restore_file_exists = os.path.isfile(self.restore_file_path)
-        self.photo_frame_installed = os.path.isdir(self.photos_dir_path)
-        self.disk_usage = shutil.disk_usage(directory)
-        self.get_backup_sizes()
+        try:
+            if directory == None:
+                directory = self.user_profile['baseDir']
+            self.backup_file_exists = os.path.isfile(self.backup_file_path)
+            self.restore_file_exists = os.path.isfile(self.restore_file_path)
+            self.photo_frame_installed = os.path.isdir(self.photos_dir_path)
+            self.disk_usage = shutil.disk_usage(directory)
+            self.get_backup_sizes()
+        except Exception as ex:
+            print("error in update_backup_info: " + str(ex))
 
 
     # Gets the size of files and folders for the extended backup
@@ -1871,15 +1876,15 @@ class PowerSettingsAPIHandler(APIHandler):
                         print("recovery partition is up to date")
                     # recovery partition is up to date
                     
-                    if os.path.exists('/boot/cmdline-update.txt') == False:
-                        if os.path.exists('/boot'):
+                    if os.path.exists(self.boot_path + '/cmdline-update.txt') == False:
+                        if os.path.exists(self.boot_path):
                             if self.DEBUG:
                                 print("creating missing cmdline-update.txt")
-                            os.system('echo "console=tty3 root=/dev/mmcblk0p3 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait consoleblank=0 net.ifnames=0 quiet plymouth.ignore-serial-consoles splash logo.nologo" | sudo tee /boot/cmdline-update.txt')
+                            os.system('echo "console=tty3 root=/dev/mmcblk0p3 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait consoleblank=0 net.ifnames=0 quiet plymouth.ignore-serial-consoles splash logo.nologo" | sudo tee ' + str(self.boot_path) + '/cmdline-update.txt')
                     
-                    if os.path.exists('/boot/cmdline-update.txt'):
+                    if os.path.exists(self.boot_path + '/cmdline-update.txt'):
                         if self.DEBUG:
-                            print("/boot/cmdline-update.txt exists, update may happen via recovery partition")
+                            print("/boot/firmware/cmdline-update.txt exists, update may happen via recovery partition")
                         
                         if self.DEBUG:
                             print("Update may happen via recovery partition (if the network cable is also plugged in)")
@@ -2053,13 +2058,13 @@ class PowerSettingsAPIHandler(APIHandler):
             print("in switch_to_recovery")
         try:
             if self.recovery_version > 0 and self.recovery_version == self.latest_recovery_version:
-                if os.path.exists('/boot/cmdline-update.txt') and os.path.exists('/boot/cmdline-candle.txt'):
+                if os.path.exists(self.boot_path + '/cmdline-update.txt') and os.path.exists(self.boot_path + '/cmdline-candle.txt'):
                     if self.busy_updating_recovery == 0 or self.busy_updating_recovery == 5:
                         self.check_ethernet_connected()
                         if self.ethernet_connected:
                             if self.DEBUG:
                                 print("copying recovery cmdline over the existing one")
-                            os.system('sudo cp /boot/cmdline-update.txt /boot/cmdline.txt')
+                            os.system('sudo cp ' + str(self.boot_path) + '/cmdline-update.txt ' + str(self.boot_path) + '/cmdline.txt')
                             return True
                         
                         else:
@@ -2070,7 +2075,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             print("Error, will not start switch to recovery as busy_updating_recovery is in limbo, indicating a failed recovery partition update: " + str(self.busy_updating_recovery))
                 else:
                     if self.DEBUG:
-                        print("Error, /boot/cmdline-update.txt or /boot/cmdline-candle.txt does not exist")
+                        print("Error, /boot/firmware/cmdline-update.txt or /boot/firmware/cmdline-candle.txt does not exist")
             else:
                 if self.DEBUG:
                     print("Error, recovery partition does not exist/has not been installed (still version 0)")
@@ -2095,15 +2100,15 @@ class PowerSettingsAPIHandler(APIHandler):
         # starting sector:
         # sudo fdisk -l | grep mmcblk0p4 | awk '{print $2}' | tr -d 'G\n'
         
-        if not os.path.exists('/boot/candle_user_partition_expanded.txt'):
+        if not os.path.exists(self.boot_path + '/candle_user_partition_expanded.txt'):
             self.user_partition_expanded = True
             
             # save information to candle_log.txt
             date_string = run_command('date')
             if self.DEBUG:
                 print("date: " + str(date))    
-            os.system('echo "' + str(date_string) + ' expanding user partition" | sudo tee -a /boot/candle_log.txt')
-            os.system('sudo fdisk -l | sudo tee -a /boot/candle_log.txt')
+            os.system('echo "' + str(date_string) + ' expanding user partition" | sudo tee -a ' + str(self.boot_path) + '/candle_log.txt')
+            os.system('sudo fdisk -l | sudo tee -a ' + str(self.boot_path) + '/candle_log.txt')
             if os.path.exists('/home/pi/.webthings/candle.log'):
                 os.system('echo "' + str(date_string) + ' expanding user partition" | sudo tee -a /home/pi/.webthings/candle.log')
             
@@ -2125,7 +2130,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     print("resize2fs_output: " + str(resize2fs_output))
                     print("rebooting...")
                     
-                os.system('sudo touch /boot/candle_user_partition_expanded.txt')
+                os.system('sudo touch ' + str(self.boot_path) + '/candle_user_partition_expanded.txt')
                 os.system('sudo reboot')
                 
                 return True
