@@ -6,15 +6,15 @@ set +e
 
 
 BOOT_DIR="/boot"
-if lsblk | grep /boot/firmware; then
-    echo "firmware partition is mounted at /boot/firmware"
+if lsblk | grep -q /boot/firmware; then
+    #echo "firmware partition is mounted at /boot/firmware"
     BOOT_DIR="/boot/firmware"
 fi
 
 #raspi-config nonint disable_bootro
-echo "stopping browser and Candle Controller"
-pkill chromium-browse
-pkill chromium-browser
+echo "factory reset: stopping browser and Candle Controller"
+pkill -f chromium-browse
+pkill -f chromium-browser
 systemctl stop webthings-gateway.service
 sleep 5
 
@@ -159,22 +159,7 @@ if [ -f "/home/pi/.webthings/swap" ]; then
   rm /home/pi/.webthings/swap
 fi
 
-if [ -f "$BOOT_DIR/developer.txt" ]; then
-  echo "filling unused space on user partition with zeros"
-  cat /dev/zero > /home/pi/.webthings/zero.fill
-  sync
-  sleep 5
-  sync
-  rm -f /home/pi/.webthings/zero.fill
-  echo "filling unused space on system partition with zeros"
-  cat /dev/zero > /zero.fill
-  sync
-  sleep 5
-  sync
-  rm -f /zero.fill
-  echo "filling with zeros done"
-  rm $BOOT_DIR/developer.txt
-fi
+
 
 # Make the next run a first run
 echo "machine ID before: "
@@ -232,7 +217,7 @@ echo "$(date) - factory reset"
 
 echo " "
 echo " "
-echo "DONE!"
+echo "Factory Reset DONE!"
 echo " "
 echo " "
 echo "Shutting down Raspberry Pi..."
@@ -245,5 +230,21 @@ echo "sudo /home/pi/candle/debug.sh" > /home/pi/.bash_history
 echo "Well hello there" >> /home/pi/.bash_history
 #cat /dev/null > /home/pi/.bash_history
 
+if [ -f "$BOOT_DIR/developer.txt" ]; then
+  echo "filling unused space on user partition with zeros"
+  cat /dev/zero > /home/pi/.webthings/zero.fill
+  sync
+  sleep 5
+  sync
+  rm -f /home/pi/.webthings/zero.fill
+  echo "filling unused space on system partition with zeros"
+  cat /dev/zero > /zero.fill
+  sync
+  sleep 5
+  sync
+  rm -f /zero.fill
+  echo "filling with zeros done"
+  rm $BOOT_DIR/developer.txt
+fi
 
 shutdown -P now
