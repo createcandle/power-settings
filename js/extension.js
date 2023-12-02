@@ -683,15 +683,33 @@
                         document.getElementById('extension-power-settings-device-model').innerText = body.device_model;
                     }
 					
-                    if(typeof body.device_linux != 'undefined' && typeof body.device_kernel != 'undefined'){
+                    if(typeof body.device_linux != 'undefined'){
                         if(this.debug){
-                            console.log("power settings: device_linux: ", body.device_linux, body.device_kernel);
+                            console.log("power settings: device_linux: ", body.device_linux);
                         }
                         document.getElementById('extension-power-settings-device-linux').innerText = body.device_linux;
 						if(body.device_kernel != ''){
 							document.getElementById('extension-power-settings-device-kernel').innerText = body.device_kernel;
 						}
                     }
+					
+                    if(typeof body.device_kernel != 'undefined'){
+                        if(this.debug){
+                            console.log("power settings: device_kernel: ", body.device_kernel);
+                        }
+						if(body.device_kernel != ''){
+							document.getElementById('extension-power-settings-device-kernel').innerText = body.device_kernel;
+						}
+                    }
+					
+                    if(typeof body.device_sd_card_size != 'undefined'){
+                        if(this.debug){
+                            console.log("power settings: sd_card_size: ", body.device_sd_card_size);
+                        }
+                        document.getElementById('extension-power-settings-device-sd-card-size').innerText = Math.round(body.device_sd_card_size / 1000000000) + "GB";
+                    }
+					
+					
 					
 					
                     
@@ -1739,30 +1757,7 @@
             
             // Start expand user partition button
             document.getElementById("extension-power-settings-expand-user-partition-start-button").addEventListener('click', () => {
-                document.getElementById("extension-power-settings-busy-expanding-user-partition").style.display = 'block';
-                document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'none';
-                
-                window.API.postJson(
-                    `/extensions/${this.id}/api/ajax`, {
-                        'action': 'expand_user_partition'
-                    }
-                ).then((body) => {
-                    if(this.debug){
-                        console.log("expand_user_partition response: ", body);
-                    }
-                    console.log("expand_user_partition response: ", body);
-            
-                    if(typeof body.state != 'undefined'){
-                        if(body.state == false){
-                            document.getElementById("extension-power-settings-busy-expanding-user-partition").style.display = 'none';
-                            document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'block';
-                            alert("Error, disk expansion could not be started");
-                        }
-                    }
-            
-                }).catch((e) => {
-                    console.error("Error requesting expand user partition: ", e);
-                });
+                this.start_partition_expansion();
             });
             
             
@@ -2293,6 +2288,38 @@
     		    reader.readAsDataURL( files[0] );
     	  	}
     	}
+		
+		
+		
+		start_partition_expansion(){
+            document.getElementById("extension-power-settings-busy-expanding-user-partition").style.display = 'block';
+            document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'none';
+			document.getElementById("extension-power-settings-show-user-partition-expansion-button").style.display = 'none';
+            
+            window.API.postJson(
+                `/extensions/${this.id}/api/ajax`, {
+                    'action': 'expand_user_partition'
+                }
+            ).then((body) => {
+                if(this.debug){
+                    console.log("expand_user_partition response: ", body);
+                }
+                console.log("expand_user_partition response: ", body);
+        
+                if(typeof body.state != 'undefined'){
+                    if(body.state == false){
+                        document.getElementById("extension-power-settings-busy-expanding-user-partition").style.display = 'none';
+                        document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'block';
+                        alert("Error, disk expansion could not be started");
+                    }
+                }
+        
+            }).catch((e) => {
+                console.error("Error requesting expand user partition: ", e);
+            });
+		}
+		
+		
 		
 		
 		

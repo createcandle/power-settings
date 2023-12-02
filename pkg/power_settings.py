@@ -104,6 +104,9 @@ class PowerSettingsAPIHandler(APIHandler):
         self.device_linux = run_command("lsb_release -a | grep Description")
         self.device_linux = self.device_linux.replace('Description:	', '')
         
+        self.device_sd_card_size = int(run_command("sudo blockdev --getsize64 /dev/mmcblk0"))
+        
+        
 
         self.recovery_partition_exists = False
         self.allow_update_via_recovery = False # will be set to True if a number of conditions are met. Allows for the new partition replace upgrade system.
@@ -204,6 +207,18 @@ class PowerSettingsAPIHandler(APIHandler):
         self.user_partition_free_disk_space = 0
         self.unused_volume_space = None
         self.total_memory = 0
+        
+        
+        # User partition expansion
+        self.user_partition_expanded = True
+        #if os.path.exists(self.boot_path + '/candle_user_partition_expanded.txt'):
+        #    self.user_partition_expanded = True
+        
+        # System updates
+        self.bootup_actions_failed = False
+        self.live_update_attempted = False
+        self.system_update_in_progress = False
+        
         try:
             self.user_partition_free_disk_space = int(run_command("df /home/pi/.webthings | awk 'NR==2{print $4}' | tr -d '\n'"))
             total_memory = run_command("awk '/^MemTotal:/{print $2}' /proc/meminfo | tr -d '\n'")
@@ -211,6 +226,11 @@ class PowerSettingsAPIHandler(APIHandler):
             
             # How much space is there at the end of the SD card that isn't used?
             self.unused_volume_space = int(run_command("sudo parted /dev/mmcblk0 unit B print free | grep 'Free Space' | tail -n1 | awk '{print $3}' | tr -d 'B\n'"))
+            #print("unused_volume_space: " + str(self.unused_volume_space))
+            
+            if self.unused_volume_space > 1000000000:
+                self.user_partition_expanded = False
+            
             # Check total memory in system
             #total_memory = subprocess.check_output("awk '/^MemTotal:/{print $2}' /proc/meminfo", shell=True)
             #total_memory = total_memory.decode('utf-8')
@@ -218,16 +238,6 @@ class PowerSettingsAPIHandler(APIHandler):
             
         except Exception as ex:
             print("Error getting total memory or free user partition disk space: " + str(ex))
-        
-        # User partition expansion
-        self.user_partition_expanded = False
-        if os.path.exists(self.boot_path + '/candle_user_partition_expanded.txt'):
-            self.user_partition_expanded = True
-        
-        # System updates
-        self.bootup_actions_failed = False
-        self.live_update_attempted = False
-        self.system_update_in_progress = False
         
         self.ro_exists = False
         if os.path.isdir('/ro'):
@@ -1368,6 +1378,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'device_model':self.device_model.rstrip(),
                                             'device_kernel':self.device_kernel.rstrip(),
                                             'device_linux':self.device_linux.rstrip(),
+                                            'device_sd_card_size':self.device_sd_card_size,
                                             'debug':self.DEBUG
                                         }
                                         
@@ -2110,7 +2121,8 @@ class PowerSettingsAPIHandler(APIHandler):
         # starting sector:
         # sudo fdisk -l | grep mmcblk0p4 | awk '{print $2}' | tr -d 'G\n'
         
-        if not os.path.exists(self.boot_path + '/candle_user_partition_expanded.txt'):
+        #if not os.path.exists(self.boot_path + '/candle_user_partition_expanded.txt'):
+        if self.user_partition_expanded == False:
             self.user_partition_expanded = True
             
             # save information to candle_log.txt
@@ -2175,12 +2187,13 @@ def run_command(cmd, timeout_seconds=60):
         if p.returncode == 0:
             result_string = p.stdout;
             if type(result_string) == 'bytes':
-                print("result string was bytes: ", result_string)
-                result_string = result_string.decode('UTF-8')
+                #print("result string was bytes: ", result_string)
                 result_string = result_string.split(b'\x00')
+                result_string = result_string.decode('UTF-8')
+                
                 #result_string = result_string.replace(b'\x00','')
             #result_string = result_string.replace('\x00','')
-            print("result_string: ", type(result_string))
+            #print("result_string: ", type(result_string))
             
             #if type(result_string) != 'str':
             #    result_string = result_string.decode('UTF-8')
