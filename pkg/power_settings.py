@@ -97,6 +97,13 @@ class PowerSettingsAPIHandler(APIHandler):
         if self.bits == 64:
             self.bits_extension = "64"
         
+        
+        #self.device_model = run_command("tr -d '\0' < /proc/device-tree/model")
+        self.device_model = run_command("cat /proc/device-tree/model")
+        self.device_kernel = run_command("uname -r")
+        self.device_linux = run_command("lsb_release -a | grep Description")
+        self.device_linux = self.device_linux.replace('Description:	', '')
+        
 
         self.recovery_partition_exists = False
         self.allow_update_via_recovery = False # will be set to True if a number of conditions are met. Allows for the new partition replace upgrade system.
@@ -1321,10 +1328,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                 #just_updated_via_recovery = self.just_updated_via_recovery
                                 #self.just_updated_via_recovery = False
                                 
-                                update_via_recovery_aborted = self.update_via_recovery_aborted
+                                local_update_via_recovery_aborted = self.update_via_recovery_aborted
                                 self.update_via_recovery_aborted = False
                                 
-                                update_via_recovery_interupted = self.update_via_recovery_interupted
+                                local_update_via_recovery_interupted = self.update_via_recovery_interupted
                                 self.update_via_recovery_interupted = False
                                 
                                 response = {'hours':now.hour,
@@ -1354,10 +1361,13 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'recovery_partition_exists':self.recovery_partition_exists,
                                             'allow_update_via_recovery':self.allow_update_via_recovery,
                                             'updating_recovery_failed':self.updating_recovery_failed,
-                                            'update_via_recovery_aborted':update_via_recovery_aborted,
-                                            'update_via_recovery_interupted':update_via_recovery_interupted,
+                                            'update_via_recovery_aborted':local_update_via_recovery_aborted,
+                                            'update_via_recovery_interupted':local_update_via_recovery_interupted,
                                             'user_partition_expanded':self.user_partition_expanded,
                                             'unused_volume_space': self.unused_volume_space,
+                                            'device_model':self.device_model.rstrip(),
+                                            'device_kernel':self.device_kernel.rstrip(),
+                                            'device_linux':self.device_linux.rstrip(),
                                             'debug':self.DEBUG
                                         }
                                         
@@ -2163,14 +2173,25 @@ def run_command(cmd, timeout_seconds=60):
         p = subprocess.run(cmd, timeout=timeout_seconds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, universal_newlines=True)
 
         if p.returncode == 0:
+            result_string = p.stdout;
+            if type(result_string) == 'bytes':
+                print("result string was bytes: ", result_string)
+                result_string = result_string.decode('UTF-8')
+                result_string = result_string.split(b'\x00')
+                #result_string = result_string.replace(b'\x00','')
+            #result_string = result_string.replace('\x00','')
+            print("result_string: ", type(result_string))
+            
+            #if type(result_string) != 'str':
+            #    result_string = result_string.decode('UTF-8')
             #print("command ran succesfully")
-            return p.stdout #.decode('utf-8')
+            return result_string #p.stdout.decode('UTF-8') #.decode('utf-8')
             #yield("Command success")
         else:
             if p.stderr:
                 return str(p.stderr) # + '\n' + "Command failed"   #.decode('utf-8'))
 
     except Exception as e:
-        print("Error running command: "  + str(e))
+        print("Error running command: "  + str(e) + ", cmd was: " + str(cmd))
         
         

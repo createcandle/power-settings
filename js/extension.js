@@ -141,6 +141,7 @@
                 
                 // Add buttons to settings menu
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-time-button">Clock</a></li>';
+				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-system-button">System Information</a></li>';
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-backup-button">Backup & Restore</a></li>';
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-update-button">Update <span id="extension-power-settings-menu-update-button-indicator">' + this.update_available_text + '</span></a></li>';
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-reset-button">Factory reset</a></li>';
@@ -160,6 +161,14 @@
                 });
                 
                 
+                // Show System details page button
+                document.getElementById('extension-power-settings-menu-system-button').addEventListener('click', () => {
+                    this.hide_all_settings_containers();
+                    document.getElementById('extension-power-settings-container-system').classList.remove('extension-power-settings-hidden');
+                    document.getElementById('extension-power-settings-pages').classList.remove('hidden');
+					this.get_stats();
+				});
+				
                 // Show backup page button
                 document.getElementById('extension-power-settings-menu-backup-button').addEventListener('click', () => {
                     //console.log('show backup menu button clicked');
@@ -665,6 +674,26 @@
                         document.getElementById('extension-power-settings-bits').innerText = this.bits + 'bit';
                         //document.getElementById('extension-power-settings-bits2').innerText = this.bits + 'bit';
                     }
+					
+                    // Device model
+                    if(typeof body.device_model != 'undefined'){
+                        if(this.debug){
+                            console.log("power settings: device_model: ", body.device_model);
+                        }
+                        document.getElementById('extension-power-settings-device-model').innerText = body.device_model;
+                    }
+					
+                    if(typeof body.device_linux != 'undefined' && typeof body.device_kernel != 'undefined'){
+                        if(this.debug){
+                            console.log("power settings: device_linux: ", body.device_linux, body.device_kernel);
+                        }
+                        document.getElementById('extension-power-settings-device-linux').innerText = body.device_linux;
+						if(body.device_kernel != ''){
+							document.getElementById('extension-power-settings-device-kernel').innerText = body.device_kernel;
+						}
+                    }
+					
+					
                     
                     if(typeof body.exhibit_mode != 'undefined'){
                         this.exhibit_mode = body.exhibit_mode;
@@ -688,7 +717,7 @@
                     // User partition expanded
                     if(typeof body.user_partition_expanded != 'undefined'){
                         if(body.user_partition_expanded == false){
-                            console.log("user partition not yet expanded");
+                            console.log("power settings: user partition not yet expanded");
                             if(document.getElementById('extension-power-settings-show-user-partition-expansion-button') != null){
                                 document.getElementById('extension-power-settings-show-user-partition-expansion-button').style.display = 'inline-block';
                             }
@@ -1737,61 +1766,7 @@
             });
             
             
-            window.API.postJson(
-                `/extensions/${this.id}/api/ajax`, {
-                    'action': 'get_stats'
-                }
-            ).then((body) => {
-                //console.log("get stats response: ", body);
-                if(this.debug){
-                    console.log("get stats response: ", body);
-                }            
-
-                // Show the total memory
-                if(typeof body['total_memory'] != 'undefined'){
-                    document.getElementById('extension-power-settings-total-memory').innerText = body['total_memory'];
-                }            
-                // Show the available memory. This is different from "free" memory
-                if(typeof body['available_memory'] != 'undefined'){
-                    document.getElementById('extension-power-settings-available-memory').innerText = body['available_memory'];
-                    if(body['available_memory'] < 80){
-                        document.getElementById('extension-power-settings-low-memory-warning').style.display = 'block';
-                    }
-                    if(body['available_memory'] < 40){
-                        document.getElementById('extension-power-settings-available-memory-container').style.display = 'block';
-                    }
-                }
-                // Show the free memory.
-                if(typeof body['free_memory'] != 'undefined'){
-                    document.getElementById('extension-power-settings-free-memory').innerText = body['free_memory'];
-                }
-                
-                // Show the total and available disk space
-                if(typeof body['disk_usage'] != 'undefined'){
-                    const free_disk_space = Math.floor(body['disk_usage'][2] / 1024000);
-                    document.getElementById('extension-power-settings-total-disk').innerText = Math.floor(body['disk_usage'][0] / 1024000);
-                    document.getElementById('extension-power-settings-free-disk').innerText = free_disk_space;
-                    
-                    if(free_disk_space < 1000){
-                        document.getElementById('extension-power-settings-low-storage-warning').style.display = 'block';
-                    }
-                    
-                    if(free_disk_space < 500){
-                        document.getElementById('extension-power-settings-available-memory-container').style.display = 'block';
-                    }
-                }
-                
-                // Show low voltage warning
-                if(typeof body['low_voltage'] != 'undefined'){
-                    if(body['low_voltage'] == true){
-                        document.getElementById('extension-power-settings-low-voltage-warning').style.display = 'block';
-                    }
-                }
-                
-            
-            }).catch((e) => {
-                console.log("Error, getting memory and disk stats failed: could not connect to controller: ", e);
-            });
+            this.get_stats();
             
             
             // Hide the shutdown and reboot buttons if a system update is in progress
@@ -2318,6 +2293,121 @@
     		    reader.readAsDataURL( files[0] );
     	  	}
     	}
+		
+		
+		
+		get_stats(){
+            window.API.postJson(
+                `/extensions/${this.id}/api/ajax`, {
+                    'action': 'get_stats'
+                }
+            ).then((body) => {
+                //console.log("get stats response: ", body);
+                if(this.debug){
+                    console.log("get stats response: ", body);
+                }            
+
+                // Show the total memory
+                if(typeof body['total_memory'] != 'undefined'){
+                    document.getElementById('extension-power-settings-total-memory').innerText = body['total_memory'];
+                
+					let total_memory = parseInt(body['total_memory']);
+	                if(this.debug){
+	                    console.log("power settings: total_memory: ", total_memory);
+	                }     
+					if(total_memory > 600){
+						document.getElementById('extension-power-settings-device-model-memory').innerText = Math.round(total_memory/1000 ) + 'GB ';
+					}
+					else{
+						document.getElementById('extension-power-settings-device-model-memory').innerText = '500MB';
+					}
+					
+					
+				
+	                // Show the available memory. This is different from "free" memory
+	                if(typeof body['available_memory'] != 'undefined'){
+	                    document.getElementById('extension-power-settings-available-memory').innerText = body['available_memory'];
+						let low_mem_el = document.getElementById('extension-power-settings-low-memory-warning');
+						
+						if(low_mem_el){
+		                    if(body['available_memory'] < 80){
+		                        low_mem_el.style.display = 'block';
+		                    }
+		                    if(body['available_memory'] < 40){
+		                        low_mem_el.style.background = 'red';
+		                    }
+						}
+	                    
+					
+		                // Show the free memory.
+		                if(typeof body['free_memory'] != 'undefined'){
+		                    document.getElementById('extension-power-settings-free-memory').innerText = body['free_memory'];
+							
+							
+							let total_mem = parseFloat(body['total_memory']);
+							let avail_mem = parseFloat(body['available_memory']);
+							let free_mem = parseFloat(body['free_memory']);
+							
+							let used_mem = ( (total_mem - avail_mem) / total_mem) * 100;
+							console.log("used_mem: ", used_mem);
+							
+							let purgeable_mem = ( (avail_mem-free_mem) / total_mem) * 100;
+							console.log("purgeable_mem: ", purgeable_mem);
+							
+							document.getElementById('extension-power-settings-memory-used-bar').style.width = used_mem + '%';
+							document.getElementById('extension-power-settings-memory-purgeable-bar').style.width = purgeable_mem + '%';
+		                }
+	                }
+				
+				
+				}            
+                
+                
+                
+                // Show the total and available disk space
+                if(typeof body['disk_usage'] != 'undefined'){
+					
+					const total_disk_space = Math.floor(body['disk_usage'][0] / 1024000);
+                    const free_disk_space = Math.floor(body['disk_usage'][2] / 1024000);
+					const used_disk_space = total_disk_space - free_disk_space;
+					
+                    document.getElementById('extension-power-settings-total-disk').innerText = total_disk_space;
+                    document.getElementById('extension-power-settings-free-disk').innerText = free_disk_space;
+                    
+					let low_storage_el = document.getElementById('extension-power-settings-low-storage-warning');
+					if(low_storage_el){
+	                    if(free_disk_space < 1000){
+	                        document.getElementById('extension-power-settings-low-storage-warning').style.display = 'block';
+	                    }
+                    
+	                    if(free_disk_space < 500){
+	                        document.getElementById('extension-power-settings-low-storage-warning').style.background = 'red';
+	                    }
+					}
+					
+					let used_disk_percentage = (used_disk_space / total_disk_space) * 100;
+					console.log("used_disk_percentage: ", used_disk_percentage);
+					
+					document.getElementById('extension-power-settings-disk-used-bar').style.width = used_disk_percentage + '%';
+                    
+                }
+                
+                // Show low voltage warning
+                if(typeof body['low_voltage'] != 'undefined'){
+                    if(body['low_voltage'] == true){
+						let low_voltage_el = document.getElementById('extension-power-settings-low-voltage-warning');
+						if(low_voltage_el){
+							low_voltage_el.style.display = 'block';
+						}
+                        
+                    }
+                }
+                
+            
+            }).catch((e) => {
+                console.log("Error, getting memory and disk stats failed: could not connect to controller: ", e);
+            });
+		}
         
         
     }

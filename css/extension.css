@@ -46,7 +46,7 @@
 }
 
 #extension-power-settings-available-memory-container{
-    display:none;
+    /*display:none;*/
     text-align:center;
 }
 
@@ -428,6 +428,10 @@
 
 
 
+#extension-power-settings-menu-system-button{
+    cursor:pointer;
+    background-image:url('../images/system.svg');
+}
 
 #extension-power-settings-menu-backup-button{
     cursor:pointer;
@@ -649,11 +653,41 @@
 
 /*  Memory and Disk use  */
 
+.extension-power-settings-key-label{
+	display:inline-block;
+	min-width:12rem;
+}
+
+
+
 .extension-power-settings-low-warning{
     background-color:#c57f00!important;
     text-align:center;
     font-weight:bold;
     border-radius:.5rem;
+}
+
+
+.extension-power-settings-bar-container{
+	text-align:left;
+	border-radius:1rem;
+	height:2rem;
+	margin:1rem 0;
+	border:2px solid rgba(255,255,255,.5);
+	box-sizing:border-box;
+	overflow:hidden;
+	width:100%;
+}
+
+.extension-power-settings-bar{
+	height:2rem;
+	width:0;
+	background-color:#888;
+	display:inline-block;
+}
+
+#extension-power-settings-memory-purgeable-bar{
+	background-color:#444;
 }
 
 
@@ -765,6 +799,19 @@ body > #extension-power-settings-update-process-progress-bar-container{
     border-radius:.5rem;
 }
 
+
+
+/*  EXPAND PARTITION  */
+
+body:not(.developer) #extension-power-settings-expand-user-partition-explanation{
+	display:none;
+}
+
+/*  SWIT%CH TO RECOVERY  */
+
+body:not(.developer) #extension-power-settings-switch-to-recovery-start-container{
+	display:none;
+}
 
 
 /*  RESTORE PARTITION UPDATE  */
