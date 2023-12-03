@@ -150,8 +150,6 @@
                 
                 // Show time page button
                 document.getElementById('extension-power-settings-menu-time-button').addEventListener('click', () => {
-                    //console.log('show time menu button clicked');
-            
                     this.hide_all_settings_containers();
                     document.getElementById('extension-power-settings-container-time').classList.remove('extension-power-settings-hidden');
                     document.getElementById('extension-power-settings-pages').classList.remove('hidden');
@@ -160,7 +158,6 @@
                     
                 });
                 
-                
                 // Show System details page button
                 document.getElementById('extension-power-settings-menu-system-button').addEventListener('click', () => {
                     this.hide_all_settings_containers();
@@ -168,6 +165,7 @@
                     document.getElementById('extension-power-settings-pages').classList.remove('hidden');
 					this.get_stats();
 				});
+				
 				
                 // Show backup page button
                 document.getElementById('extension-power-settings-menu-backup-button').addEventListener('click', () => {
@@ -736,11 +734,13 @@
                     if(typeof body.user_partition_expanded != 'undefined'){
                         if(body.user_partition_expanded == false){
                             console.log("power settings: user partition not yet expanded");
-                            if(document.getElementById('extension-power-settings-show-user-partition-expansion-button') != null){
-                                document.getElementById('extension-power-settings-show-user-partition-expansion-button').style.display = 'inline-block';
+                            if(document.getElementById('extension-power-settings-user-partition-expansion-hint') != null){
+								document.getElementById('extension-power-settings-user-partition-expansion-hint').style.display = 'block';
                             }
-                            
                         }
+						else{
+							console.log("power settings: user partition seems to be fully expanded");
+						}
                     }
                     
                     
@@ -1123,7 +1123,7 @@
                 
             }
             else{
-                console.log("power settings error: settings menu didn't exist yet, so cannot append additional elements");
+                console.error("power settings error: settings menu didn't exist yet, so cannot append additional elements");
             }
             
             
@@ -1744,22 +1744,32 @@
             
             
             // Show expand user partition reveal div
-            document.getElementById("extension-power-settings-show-user-partition-expansion-button").addEventListener('click', () => {
+			/*
+            document.getElementById("extension-power-settings-user-partition-expansion-button").addEventListener('click', () => {
                 document.getElementById("extension-power-settings-low-storage-warning").style.display = 'none';
                 document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'block';
             });
+			*/
             
-            // Cancel expand user partition button
-            document.getElementById("extension-power-settings-expand-user-partition-cancel-button").addEventListener('click', () => {
-                document.getElementById("extension-power-settings-low-storage-warning").style.display = 'block';
-                document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'none';
-            });
+			const expansion_more_button_el = document.getElementById('extension-power-settings-expand-user-partition-more-button');
+            // Show System details page when clicking on expand partition more button
+            if(expansion_more_button_el){
+				expansion_more_button_el.addEventListener('click', () => {
+                	this.hide_all_settings_containers();
+                	document.getElementById('extension-power-settings-container-system').classList.remove('extension-power-settings-hidden');
+                	document.getElementById('extension-power-settings-pages').classList.remove('hidden');
+					this.get_stats();
+				});
+			}
             
+			
+			
             // Start expand user partition button
+			/*
             document.getElementById("extension-power-settings-expand-user-partition-start-button").addEventListener('click', () => {
                 this.start_partition_expansion();
             });
-            
+            */
             
             this.get_stats();
             
@@ -2099,7 +2109,7 @@
                                 this.start_recovery_poll();
                             }
                             
-                        }
+                        }f
                     }
                     
                 }
@@ -2292,10 +2302,13 @@
 		
 		
 		start_partition_expansion(){
+			console.log("power settings: starting partition expansion");
             document.getElementById("extension-power-settings-busy-expanding-user-partition").style.display = 'block';
             document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'none';
-			document.getElementById("extension-power-settings-show-user-partition-expansion-button").style.display = 'none';
-            
+			document.getElementById("extension-power-settings-user-partition-expansion-hint").style.display = 'none';
+			
+            document.getElementById('connectivity-scrim').classList.remove('hidden');
+			
             window.API.postJson(
                 `/extensions/${this.id}/api/ajax`, {
                     'action': 'expand_user_partition'
@@ -2309,8 +2322,9 @@
                 if(typeof body.state != 'undefined'){
                     if(body.state == false){
                         document.getElementById("extension-power-settings-busy-expanding-user-partition").style.display = 'none';
-                        document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'block';
+                        //document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'block';
                         alert("Error, disk expansion could not be started");
+						document.getElementById('connectivity-scrim').classList.add('hidden');
                     }
                 }
         

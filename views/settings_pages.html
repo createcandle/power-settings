@@ -161,12 +161,22 @@
 				
 				<div id="extension-power-settings-disk-bar-container"  class="extension-power-settings-bar-container"><div id="extension-power-settings-disk-used-bar" class="extension-power-settings-bar"></div></div>
 				
-                Total size of user partition: <span id="extension-power-settings-total-disk">?</span>Mb<br/>
-                Available space on user partition: <span id="extension-power-settings-free-disk">?</span>Mb<br/>
+                <span id="extension-power-settings-free-disk">?</span>MB of <span id="extension-power-settings-total-disk">?</span>MB available<br/>
 				
-                <div style="text-align:right;margin-top:2rem">
-                    <button id="extension-power-settings-show-user-partition-expansion-button" class="text-button" style="display:none">Make more space</button>
+				<p>&nbsp;</p>
+				
+				<div id="extension-power-settings-user-partition-expansion-hint" class="extension-power-settings-vlak" style="display:none; text-align:left">
+					<p>Your SD card has some unused space that could be made available to Candle, increasing your available storage space. The process will automatically reboot your controller.</p>
+					<div style="text-align:right;margin-top:2rem">
+	                    <button id="extension-power-settings-user-partition-expansion-button" class="text-button">Make more space</button>
+	                </div>
+				</div>
+				
+                <div id="extension-power-settings-busy-expanding-user-partition" class="extension-power-settings-low-warning extension-power-settings-vlak" style="display:none">
+                    <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
+                    <p style="text-align:center">Increasing space</p>
                 </div>
+                
 				
             </div>
 			
