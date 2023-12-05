@@ -146,7 +146,7 @@
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-update-button">Update <span id="extension-power-settings-menu-update-button-indicator">' + this.update_available_text + '</span></a></li>';
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-reset-button">Factory reset</a></li>';
                 
-                 
+                
                 
                 // Show time page button
                 document.getElementById('extension-power-settings-menu-time-button').addEventListener('click', () => {
@@ -158,13 +158,23 @@
                     
                 });
                 
-                // Show System details page button
+                // Show System Details page button
                 document.getElementById('extension-power-settings-menu-system-button').addEventListener('click', () => {
                     this.hide_all_settings_containers();
                     document.getElementById('extension-power-settings-container-system').classList.remove('extension-power-settings-hidden');
                     document.getElementById('extension-power-settings-pages').classList.remove('hidden');
 					this.get_stats();
 				});
+				
+	            // START PARTITION EXPANSION
+	            document.getElementById("extension-power-settings-user-partition-expansion-button").addEventListener('click', () => {
+	                //document.getElementById("extension-power-settings-low-storage-warning").style.display = 'none';
+	                //document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'block';
+					if(confirm("Are you sure you want to expand to the full size of the SD card?")){
+						start_partition_expansion();
+					}
+	            });
+				
 				
 				
                 // Show backup page button
@@ -1741,15 +1751,6 @@
                 
             });
             
-            
-            
-            // Show expand user partition reveal div
-			/*
-            document.getElementById("extension-power-settings-user-partition-expansion-button").addEventListener('click', () => {
-                document.getElementById("extension-power-settings-low-storage-warning").style.display = 'none';
-                document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'block';
-            });
-			*/
             
 			const expansion_more_button_el = document.getElementById('extension-power-settings-expand-user-partition-more-button');
             // Show System details page when clicking on expand partition more button
