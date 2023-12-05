@@ -171,7 +171,7 @@
 	                //document.getElementById("extension-power-settings-low-storage-warning").style.display = 'none';
 	                //document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'block';
 					if(confirm("Are you sure you want to expand to the full size of the SD card?")){
-						start_partition_expansion();
+						this.start_partition_expansion();
 					}
 	            });
 				
