@@ -141,6 +141,7 @@
                 
                 // Add buttons to settings menu
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-time-button">Clock</a></li>';
+				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-display-button">Display</a></li>';
 				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-system-button">System Information</a></li>';
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-backup-button">Backup & Restore</a></li>';
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-update-button">Update <span id="extension-power-settings-menu-update-button-indicator">' + this.update_available_text + '</span></a></li>';
@@ -155,6 +156,16 @@
                     document.getElementById('extension-power-settings-pages').classList.remove('hidden');
                     
                     this.show_clock_page();
+                    
+                });
+				
+                // Show display page button
+                document.getElementById('extension-power-settings-menu-display-button').addEventListener('click', () => {
+                    this.hide_all_settings_containers();
+                    document.getElementById('extension-power-settings-container-display').classList.remove('extension-power-settings-hidden');
+                    document.getElementById('extension-power-settings-pages').classList.remove('hidden');
+                    
+                    //this.show_display_page();
                     
                 });
                 
@@ -636,6 +647,37 @@
                         }
                     }
                     
+					
+					
+					
+					// Display
+					
+					/*
+                                            'display_rotated':self.display_rotated,
+                                            'display_available':self.display_available,
+                                            'display_width':self.display_width,
+                                            'display_height':self.display_height,
+						
+					*/
+					
+					if(typeof body.display_rotated != 'undefined'){
+						if(body.display_rotated){
+							document.getElementById('extension-power-settings-display-rotate-checkbox').setAttribute('checked','');
+						}
+					}
+					if(typeof body.display_available != 'undefined'){
+						if(body.display_available){
+							document.getElementById('extension-power-settings-display1-info').classList.remove('extension-power-settings-hidden');
+						}
+						else{
+							document.getElementById('extension-power-settings-no-display').classList.remove('extension-power-settings-hidden');
+						}
+					}
+					if(typeof body.display_width != 'undefined' && typeof body.display_height != 'undefined'){
+						document.getElementById('extension-power-settings-display-width').innerText = body.display_width;
+						document.getElementById('extension-power-settings-display-height').innerText = body.display_height;
+					}
+					
                     
                     if(typeof body.allow_anonymous_mqtt != 'undefined'){
                         // Add MQTT checkbox
@@ -2305,8 +2347,9 @@
 		start_partition_expansion(){
 			console.log("power settings: starting partition expansion");
             document.getElementById("extension-power-settings-busy-expanding-user-partition").style.display = 'block';
-            document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'none';
+            //document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'none';
 			document.getElementById("extension-power-settings-user-partition-expansion-hint").style.display = 'none';
+			//document.getElementById("extension-power-settings-user-partition-expansion-button").style.display = 'none';
 			
             document.getElementById('connectivity-scrim').classList.remove('hidden');
 			

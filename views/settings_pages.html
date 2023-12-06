@@ -111,6 +111,46 @@
 
 
 
+    <div id="extension-power-settings-container-display" class="extension-power-settings-container">
+        <div class="section-title">
+            <div class="section-title-back-flex"></div>
+            <div class="section-title-container">
+                <img class="section-title-icon" alt="Factory reset icon" src="/extensions/power-settings/images/display.svg" />
+                <span class="section-title-name">Display</span>
+            </div>
+            <div class="section-title-right-flex"></div>
+        </div>
+		
+        <div id="extension-power-settings-no-display" class="extension-power-settings-vlak extension-power-settings-hidden">
+			<div>
+				<h2 style="text-align:center">No display detected</h2>
+			</div>
+            <!--<p class="extension-power-settings-header">Factory reset</p>-->
+		</div>
+		
+        <div id="extension-power-settings-display1-info" class="extension-power-settings-vlak extension-power-settings-hiddenx">
+			<div><img alt="Display" src="/extensions/power-settings/images/big_display.svg"/></div>
+			<div style="text-align:left;width:50%"> 
+				<h3 id="extension-power-settings-display-name"></h3>
+				<div>
+                	<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display-width">1920</span><br/>
+					<span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display-height">1080</span><br/>
+				</div>
+				<p>&nbsp;</p>
+                <div>
+                    <input type="checkbox" name="extension-power-settings-display-rotate-checkbox" id="extension-power-settings-display-rotate-checkbox" />
+                    <label for="extension-power-settings-display-rotate-checkbox">Rotate 180 degrees</label>
+                    <p class="field-description" style="opacity: 0.6; margin-top: 0.3rem;">Changing this will reboot the Candle Controller.</p>
+                </div>
+			</div>
+            <!--<p class="extension-power-settings-header">Factory reset</p>-->
+		</div>
+    </div>
+
+
+
+
+
 
     <div id="extension-power-settings-container-system" class="extension-power-settings-container">
         <div class="section-title">
@@ -182,17 +222,6 @@
 			
         </div>
     </div>
-
-
-
-
-
-
-
-
-
-
-
 
 
 

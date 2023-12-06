@@ -169,6 +169,37 @@ class PowerSettingsAPIHandler(APIHandler):
         self.do_not_use_hardware_clock = False
         self.hardware_clock_file_path = self.boot_path + '/candle_hardware_clock.txt'
         
+        # Display
+        self.display_rotated = False
+        self.rotate_display_path = self.boot_path + '/rotate180.txt'
+        if os.path.exists(self.rotate_display_path):
+            self.display_rotated = True
+        
+        self.display_available = False
+        self.display_width = 0
+        self.display_height = 0
+        fbset_output = run_command('fbset | grep \'mode "\'')
+        print("fbset_output: " + str(fbset_output))
+        
+        if 'mode "' in fbset_output and 'x' in fbset_output:
+            if self.DEBUG:
+                print("possiblly display detected")
+            self.display_available = True
+            
+            fbset_output = fbset_output.replace('mode "','')
+            fbset_output = fbset_output.replace('"','')
+            fbset_output_array = fbset_output.split('x')
+            if len(fbset_output_array) == 2:
+                self.display_width = fbset_output_array[0]
+                self.display_height = fbset_output_array[1]
+            if self.DEBUG:
+                print("display_width, display_height: ", self.display_width, self.display_height)
+        
+            
+        
+        
+        
+        
         # Low voltage
         self.low_voltage = False
         
@@ -1379,6 +1410,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'device_kernel':self.device_kernel.rstrip(),
                                             'device_linux':self.device_linux.rstrip(),
                                             'device_sd_card_size':self.device_sd_card_size,
+                                            'display_rotated':self.display_rotated,
+                                            'display_available':self.display_available,
+                                            'display_width':self.display_width,
+                                            'display_height':self.display_height,
                                             'debug':self.DEBUG
                                         }
                                         

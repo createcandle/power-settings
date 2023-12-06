@@ -427,6 +427,11 @@
 } 
 
 
+#extension-power-settings-menu-display-button{
+    cursor:pointer;
+    background-image:url('../images/display.svg');
+}
+
 
 #extension-power-settings-menu-system-button{
     cursor:pointer;
@@ -852,6 +857,18 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
     padding:2rem;
     background-color:black;
     border-radius:.5rem;
+}
+
+
+#extension-power-settings-display1-info,
+#extension-power-settings-display-info{
+	display:flex;
+}
+
+#extension-power-settings-display1-info > div{
+	width:50%;
+	box-sizing:border-box;
+	padding:2rem;
 }
 
 
