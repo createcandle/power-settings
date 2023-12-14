@@ -115,7 +115,7 @@
         <div class="section-title">
             <div class="section-title-back-flex"></div>
             <div class="section-title-container">
-                <img class="section-title-icon" alt="Factory reset icon" src="/extensions/power-settings/images/display.svg" />
+                <img class="section-title-icon" alt="Display icon" src="/extensions/power-settings/images/display.svg" />
                 <span class="section-title-name">Display</span>
             </div>
             <div class="section-title-right-flex"></div>
@@ -129,22 +129,41 @@
 		</div>
 		
         <div id="extension-power-settings-display1-info" class="extension-power-settings-vlak extension-power-settings-hidden">
-			<div><img alt="Display" src="/extensions/power-settings/images/big_display.svg"/></div>
-			<div style="text-align:left;width:50%"> 
-				<h3 id="extension-power-settings-display-name"></h3>
+			<div style="position:relative"><img alt="Display 1" src="/extensions/power-settings/images/big_display.svg"/><div class="extension-power-settings-display-number">1</div></div>
+			<div style="text-align:left"> 
+				<h3 id="extension-power-settings-display1-name">Display 1</h3>
 				<div>
-                	<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display-width">1920</span><br/>
-					<span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display-height">1080</span><br/>
+                	<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display1-width">?</span><br/>
+					<span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display1-height">?</span><br/>
 				</div>
 				<p>&nbsp;</p>
                 <div>
-                    <input type="checkbox" name="extension-power-settings-display-rotate-checkbox" id="extension-power-settings-display-rotate-checkbox" />
-                    <label for="extension-power-settings-display-rotate-checkbox">Rotate 180 degrees</label>
-                    <p class="field-description" style="opacity: 0.6; margin-top: 0.3rem;">Changing this will reboot the Candle Controller.</p>
+                    <input type="checkbox" name="extension-power-settings-display1-rotate-checkbox" id="extension-power-settings-display1-rotate-checkbox" />
+                    <label for="extension-power-settings-display1-rotate-checkbox">Rotate 180 degrees</label>
+                    <p class="field-description" style="opacity: 0.6; margin-top: 0.3rem;">This may require a reboot.</p>
                 </div>
 			</div>
             <!--<p class="extension-power-settings-header">Factory reset</p>-->
 		</div>
+		
+        <div id="extension-power-settings-display2-info" class="extension-power-settings-vlak extension-power-settings-hidden">
+			<div style="position:relative"><img alt="Display 2" src="/extensions/power-settings/images/big_display.svg"/><div class="extension-power-settings-display-number">2</div></div>
+			<div style="text-align:left"> 
+				<h3 id="extension-power-settings-display2-name">Display 2</h3>
+				<div>
+                	<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display2-width">?</span><br/>
+					<span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display2-height">?</span><br/>
+				</div>
+				<p>&nbsp;</p>
+                <div>
+                    <input type="checkbox" name="extension-power-settings-display2-rotate-checkbox" id="extension-power-settings-display2-rotate-checkbox" />
+                    <label for="extension-power-settings-display2-rotate-checkbox">Rotate 180 degrees</label>
+                    <p class="field-description" style="opacity: 0.6; margin-top: 0.3rem;">This may require a reboot.</p>
+                </div>
+			</div>
+            <!--<p class="extension-power-settings-header">Factory reset</p>-->
+		</div>
+		
     </div>
 
 
@@ -156,7 +175,7 @@
         <div class="section-title">
             <div class="section-title-back-flex"></div>
             <div class="section-title-container">
-                <img class="section-title-icon" alt="Factory reset icon" src="/extensions/power-settings/images/system.svg" />
+                <img class="section-title-icon" alt="System icon" src="/extensions/power-settings/images/system.svg" />
                 <span class="section-title-name">System Information</span>
             </div>
             <div class="section-title-right-flex"></div>
@@ -309,7 +328,7 @@
         <div class="section-title">
             <div class="section-title-back-flex"></div>
             <div class="section-title-container">
-                <img class="section-title-icon" alt="Backup icon" src="/extensions/power-settings/images/update.svg" />
+                <img class="section-title-icon" alt="Update icon" src="/extensions/power-settings/images/update.svg" />
                 <span class="section-title-name">Update</span>
             </div>
             <div class="section-title-right-flex"></div>

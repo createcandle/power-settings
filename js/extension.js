@@ -165,25 +165,30 @@
                     document.getElementById('extension-power-settings-container-display').classList.remove('extension-power-settings-hidden');
                     document.getElementById('extension-power-settings-pages').classList.remove('hidden');
                     
-                    //this.show_display_page();
+                    this.show_display_page();
                     
                 });
 				
 				
-	            document.getElementById("extension-power-settings-display-rotate-checkbox").addEventListener('change', () => {
-	                console.log("display rotation changed");
+	            document.getElementById("extension-power-settings-display1-rotate-checkbox").addEventListener('change', () => {
+	                //console.log("display1 rotation changed");
 					//document.getElementById("extension-power-settings-low-storage-warning").style.display = 'none';
 	                //document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'block';
-		            let display_rotation = 0;
-					if(document.getElementById("extension-power-settings-display-rotate-checkbox").checked){
-						display_rotation = 180;
+		            let display1_rotation = 0;
+					if(document.getElementById("extension-power-settings-display1-rotate-checkbox").checked){
+						display1_rotation = 180;
+					}
+		            let display2_rotation = 0;
+					if(document.getElementById("extension-power-settings-display2-rotate-checkbox").checked){
+						display2_rotation = 180;
 					}
 					
 					
 					window.API.postJson(
 		                `/extensions/${this.id}/api/ajax`, {
 		                    'action': 'set_display_rotation',
-							'rotation': display_rotation
+							'display1_rotation': display1_rotation,
+							'display2_rotation': display2_rotation
 		                }
 		            ).then((body) => {
 		                if(this.debug){
@@ -193,6 +198,7 @@
 		                console.error("Error sending display rotation command: ", e);
 		            });
 	            });
+				
 				
                 
                 // Show System Details page button
@@ -673,37 +679,6 @@
                         }
                     }
                     
-					
-					
-					
-					// Display
-					
-					/*
-                                            'display_rotated':self.display_rotated,
-                                            'display_available':self.display_available,
-                                            'display_width':self.display_width,
-                                            'display_height':self.display_height,
-						
-					*/
-					
-					if(typeof body.display_rotated != 'undefined'){
-						if(body.display_rotated){
-							document.getElementById('extension-power-settings-display-rotate-checkbox').setAttribute('checked','');
-						}
-					}
-					if(typeof body.display_available != 'undefined'){
-						if(body.display_available){
-							document.getElementById('extension-power-settings-display1-info').classList.remove('extension-power-settings-hidden');
-						}
-						else{
-							document.getElementById('extension-power-settings-no-display').classList.remove('extension-power-settings-hidden');
-						}
-					}
-					if(typeof body.display_width != 'undefined' && typeof body.display_height != 'undefined'){
-						document.getElementById('extension-power-settings-display-width').innerText = body.display_width;
-						document.getElementById('extension-power-settings-display-height').innerText = body.display_height;
-					}
-					
                     
                     if(typeof body.allow_anonymous_mqtt != 'undefined'){
                         // Add MQTT checkbox
@@ -2411,6 +2386,78 @@
 		
 		
 		
+		
+		show_display_page(){
+			
+			document.getElementById('extension-power-settings-no-display').classList.add('extension-power-settings-hidden');
+			document.getElementById('extension-power-settings-display1-info').classList.add('extension-power-settings-hidden');
+			document.getElementById('extension-power-settings-display2-info').classList.add('extension-power-settings-hidden');
+			
+			window.API.postJson(
+                `/extensions/${this.id}/api/ajax`, {
+                    'action': 'display_init'
+                }
+            ).then((body) => {
+                if(this.debug){
+                    console.log("display init response: ", body);
+                }
+				
+				// Display
+				
+				/*
+                                        'display_rotated':self.display_rotated,
+                                        'display_available':self.display_available,
+                                        'display_width':self.display_width,
+                                        'display_height':self.display_height,
+					
+				*/
+				
+				if(typeof body.display1_rotated != 'undefined'){
+					if(body.display1_rotated){
+						document.getElementById('extension-power-settings-display1-rotate-checkbox').checked = true; //.setAttribute('checked','');
+					}
+					else{
+						document.getElementById('extension-power-settings-display1-rotate-checkbox').checked = false;
+					}
+				}
+				if(typeof body.display1_available != 'undefined' && typeof body.display2_available != 'undefined'){
+					if(body.display1_available == false && body.display2_available == false){
+						document.getElementById('extension-power-settings-no-display').classList.remove('extension-power-settings-hidden');
+						//document.getElementById('extension-power-settings-display1-info').classList.remove('extension-power-settings-hidden');
+					}
+					else{
+						if(body.display1_available){
+							document.getElementById('extension-power-settings-display1-info').classList.remove('extension-power-settings-hidden');
+						}
+						if(body.display2_available){
+							document.getElementById('extension-power-settings-display2-info').classList.remove('extension-power-settings-hidden');
+						}
+					}
+				}
+				
+				if(typeof body.display1_width != 'undefined' && typeof body.display1_height != 'undefined'){
+					document.getElementById('extension-power-settings-display1-width').innerText = body.display1_width;
+					document.getElementById('extension-power-settings-display1-height').innerText = body.display1_height;
+				}
+				else{
+					document.getElementById('extension-power-settings-display1-width').innerText = '?';
+					document.getElementById('extension-power-settings-display1-height').innerText = '?';
+				}
+				
+				if(typeof body.display2_width != 'undefined' && typeof body.display2_height != 'undefined'){
+					document.getElementById('extension-power-settings-display2-width').innerText = body.display2_width;
+					document.getElementById('extension-power-settings-display2-height').innerText = body.display2_height;
+				}
+				else{
+					document.getElementById('extension-power-settings-display2-width').innerText = '?';
+					document.getElementById('extension-power-settings-display2-height').innerText = '?';
+				}
+				
+				
+            }).catch((e) => {
+                console.error("Error sending get_display_info command: ", e);
+            });
+		}
 		
 		
 		get_stats(){

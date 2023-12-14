@@ -170,34 +170,21 @@ class PowerSettingsAPIHandler(APIHandler):
         self.hardware_clock_file_path = self.boot_path + '/candle_hardware_clock.txt'
         
         # Display
-        self.display_rotated = False
+        self.display1_rotation = 0
+        self.display2_rotation = 0
         self.rotate_display_path = self.boot_path + '/rotate180.txt'
         if os.path.exists(self.rotate_display_path):
-            self.display_rotated = True
+            self.display1_rotation = 180
+            self.display2_rotation = 180
         
-        self.display_available = False
-        self.display_width = 0
-        self.display_height = 0
-        fbset_output = run_command('fbset | grep \'mode "\'')
-        print("fbset_output: " + str(fbset_output))
-        
-        if 'mode "' in fbset_output and 'x' in fbset_output:
-            if self.DEBUG:
-                print("possiblly display detected")
-            self.display_available = True
-            
-            fbset_output = fbset_output.replace('mode "','')
-            fbset_output = fbset_output.replace('"','')
-            fbset_output_array = fbset_output.split('x')
-            if len(fbset_output_array) == 2:
-                self.display_width = fbset_output_array[0]
-                self.display_height = fbset_output_array[1]
-            if self.DEBUG:
-                print("display_width, display_height: ", self.display_width, self.display_height)
-        
-            
-        
-        
+        self.display1_name = 'Display 1'
+        self.display2_name = 'Display 2'
+        self.display1_available = False
+        self.display2_available = False
+        self.display1_width = 0
+        self.display1_height = 0
+        self.display2_width = 0
+        self.display2_height = 0
         
         
         # Low voltage
@@ -322,7 +309,7 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("On next reboot the controller will be read-only again")
         else:
             if self.DEBUG:
-                print("no candle_rw.txt file spotted")
+                print("no candle_rw_once.txt file spotted")
         
         if os.path.isfile(self.boot_path + '/bootup_actions.sh'):
             print("bootup_actions.sh already exists. Maybe power-settings addon was restarted after preparing an update?")
@@ -694,15 +681,87 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                                 
+                            # GET DISPLAY INFO
+                                
+                            elif action == 'display_init':
+                                state = 'error'
+                                self.display1_available = False
+                                self.display2_available = False
+                                
+                                fbset_output = run_command('fbset')
+                                if self.DEBUG:
+                                    print("fbset output: " + str(fbset_output))
+                                
+                                if "No such file or directory" not in fbset_output:
+                                    xrandr_output = run_command('DISPLAY=:0 xrandr')
+                                    if ' connected primary (' in xrandr_output:
+                                        self.display1_available = True
+                                    
+                                        if ' connected (' in xrandr_output:
+                                            self.display2_available = True
+                                    
+                                    elif 'disconnected primary (' in xrandr_output and ' connected (' in xrandr_output:
+                                        self.display2_available = True
+                                
+                                
+                                
+                                    fbset_output = run_command('fbset | grep \'mode "\'')
+                                    print("fbset_output: " + str(fbset_output))
+        
+                                    if 'mode "' in fbset_output and 'x' in fbset_output:
+                                        if self.DEBUG:
+                                            print("possiblly display detected")
+                                        self.display1_available = True
+            
+                                        fbset_output = fbset_output.replace('mode "','')
+                                        fbset_output = fbset_output.replace('"','')
+                                        fbset_output_array = fbset_output.split('x')
+                                        if len(fbset_output_array) == 2:
+                                            self.display1_width = fbset_output_array[0]
+                                            self.display1_height = fbset_output_array[1]
+                                        if self.DEBUG:
+                                            print("display1_width, display1_height: ", self.display1_width, self.display1_height)
+                                
+                                
+                                    
+                               
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state,
+                                          'display1_available':self.display1_available,
+                                          'display2_available':self.display2_available,
+                                          'display1_name':self.display1_name,
+                                          'display2_name':self.display2_name,
+                                          'display1_rotated':self.display1_rotation,
+                                          'display2_rotated':self.display2_rotation,
+                                          'display1_width':self.display1_width,
+                                          'display1_height':self.display1_height,
+                                          'display2_width':self.display2_width,
+                                          'display2_height':self.display2_height
+                                          }),
+                                )
+                                
+                                
                             # DISPLAY ROTATION
                             elif action == 'set_display_rotation':
                                 state = 'error'
-                                if 'rotation' in request.body:
-                                    intended_rotation = int(request.body['rotation'])
+                                if 'display1_rotation' in request.body and 'display2_rotation' in request.body:
+                                    self.display1_rotation = int(request.body['display1_rotation'])
+                                    self.display2_rotation = int(request.body['display2_rotation'])
                                     if self.DEBUG:
-                                        print("new display rotation: " + str(intended_rotation))
+                                        print("new display1 rotation: " + str(self.display1_rotation))
+                                        print("new display2 rotation: " + str(self.display2_rotation))
+                                    
                                     state = 'ok'
-                                    if intended_rotation == 0:
+                                    if self.display1_rotation == 0 and self.display2_rotation == 0:
                                         os.system('sudo rm ' + str(self.rotate_display_path))
                                     else:
                                         os.system('sudo touch ' + str(self.rotate_display_path))
@@ -736,10 +795,32 @@ class PowerSettingsAPIHandler(APIHandler):
                                             if len(line) == 0:
                                                 continue
                                         
+                                    
+                                    # official raspberry pi touch screen: rpi-ft5406
+                                    
+                                    # backlight driver for official display:
+                                    # dtoverlay=rpi-backlight
+                                    
+                                    """
+                                    Name:   rpi-ft5406
+                                    Info:   Official Raspberry Pi display touchscreen
+                                    Load:   dtoverlay=rpi-ft5406,<param>=<val>
+                                    Params: touchscreen-size-x      Touchscreen X resolution (default 800)
+                                            touchscreen-size-y      Touchscreen Y resolution (default 600);
+                                            touchscreen-inverted-x  Invert touchscreen X coordinates (default 0);
+                                            touchscreen-inverted-y  Invert touchscreen Y coordinates (default 0);
+                                            touchscreen-swapped-x-y Swap X and Y cordinates (default 0);
+                                    
+                                    """
+                                        
+                                        
                                     if new_display_settings != "":
                                         re.sub('#candle_force_display_start.*?#candle_force_display_end',new_display_settings,self.config_txt, flags=re.DOTALL)
                                     
                                         print("self.config_txt is now: \n\n" + str(self.config_txt) + "\n\n")
+                                        
+                                        
+                                    
                                         
                                         
                                 return APIResponse(
@@ -1465,10 +1546,6 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'device_kernel':self.device_kernel.rstrip(),
                                             'device_linux':self.device_linux.rstrip(),
                                             'device_sd_card_size':self.device_sd_card_size,
-                                            'display_rotated':self.display_rotated,
-                                            'display_available':self.display_available,
-                                            'display_width':self.display_width,
-                                            'display_height':self.display_height,
                                             'debug':self.DEBUG
                                         }
                                         

@@ -861,7 +861,7 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 
 
 #extension-power-settings-display1-info,
-#extension-power-settings-display-info{
+#extension-power-settings-display2-info{
 	display:flex;
 }
 
@@ -869,6 +869,25 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 	width:50%;
 	box-sizing:border-box;
 	padding:2rem;
+}
+
+.extension-power-settings-display-number{
+	position:absolute;
+	z-index:1;
+	left:calc(50% - 1rem);
+	top:7rem;
+	font-size: 3rem;
+	font-weight: bolder;
+}
+
+@media screen and (max-width: 640px) {
+	#extension-power-settings-display1-info,
+	#extension-power-settings-display2-info{
+		flex-direction:column;
+	}
+	#extension-power-settings-display1-info > div{
+		width:100%;
+	}
 }
 
 
