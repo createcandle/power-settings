@@ -695,6 +695,25 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 
                                 
+                            elif action == 'set_display_rotation':
+                                state = 'error'
+                                if 'rotation' in request.body:
+                                    intended_rotation = int(request.body['rotation'])
+                                    if self.DEBUG:
+                                        print("new display rotation: " + str(intended_rotation))
+                                    state = 'ok'
+                                    if intended_rotation == 0:
+                                        os.system('sudo rm ' + str(self.rotate_display_path))
+                                    else:
+                                        os.system('sudo touch ' + str(self.rotate_display_path))
+                                        
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
+                                
+                            
                             # UPDATE RECOVERY PARTITION
                             elif action == 'update_recovery_partition':
                                 

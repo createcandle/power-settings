@@ -168,6 +168,32 @@
                     //this.show_display_page();
                     
                 });
+				
+				
+	            document.getElementById("extension-power-settings-display-rotate-checkbox").addEventListener('change', () => {
+	                console.log("display rotation changed");
+					//document.getElementById("extension-power-settings-low-storage-warning").style.display = 'none';
+	                //document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'block';
+		            let display_rotation = 0;
+					if(document.getElementById("extension-power-settings-display-rotate-checkbox").checked){
+						display_rotation = 180;
+					}
+					
+					
+					window.API.postJson(
+		                `/extensions/${this.id}/api/ajax`, {
+		                    'action': 'set_display_rotation',
+							'rotation': display_rotation
+		                }
+		            ).then((body) => {
+		                if(this.debug){
+		                    console.log("set_display_rotation response: ", body);
+		                }
+		            }).catch((e) => {
+		                console.error("Error sending display rotation command: ", e);
+		            });
+	            });
+				
                 
                 // Show System Details page button
                 document.getElementById('extension-power-settings-menu-system-button').addEventListener('click', () => {
@@ -2346,9 +2372,15 @@
 		
 		start_partition_expansion(){
 			console.log("power settings: starting partition expansion");
-            document.getElementById("extension-power-settings-busy-expanding-user-partition").style.display = 'block';
+			if(document.getElementById("extension-power-settings-busy-expanding-user-partition") != null){
+				document.getElementById("extension-power-settings-busy-expanding-user-partition").style.display = 'block';
+			}
+            
             //document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'none';
-			document.getElementById("extension-power-settings-user-partition-expansion-hint").style.display = 'none';
+			if(document.getElementById("extension-power-settings-user-partition-expansion-hint") != null){
+				document.getElementById("extension-power-settings-user-partition-expansion-hint").style.display = 'none';
+			}
+			
 			//document.getElementById("extension-power-settings-user-partition-expansion-button").style.display = 'none';
 			
             document.getElementById('connectivity-scrim').classList.remove('hidden');
@@ -2361,7 +2393,7 @@
                 if(this.debug){
                     console.log("expand_user_partition response: ", body);
                 }
-                console.log("expand_user_partition response: ", body);
+                //console.log("expand_user_partition response: ", body);
         
                 if(typeof body.state != 'undefined'){
                     if(body.state == false){
@@ -2434,11 +2466,13 @@
 							let free_mem = parseFloat(body['free_memory']);
 							
 							let used_mem = ( (total_mem - avail_mem) / total_mem) * 100;
-							console.log("used_mem: ", used_mem);
-							
+							if(this.debug){
+								console.log("used_mem: ", used_mem);
+							}
 							let purgeable_mem = ( (avail_mem-free_mem) / total_mem) * 100;
-							console.log("purgeable_mem: ", purgeable_mem);
-							
+							if(this.debug){
+								console.log("purgeable_mem: ", purgeable_mem);
+							}
 							document.getElementById('extension-power-settings-memory-used-bar').style.width = used_mem + '%';
 							document.getElementById('extension-power-settings-memory-purgeable-bar').style.width = purgeable_mem + '%';
 		                }
@@ -2471,8 +2505,9 @@
 					}
 					
 					let used_disk_percentage = (used_disk_space / total_disk_space) * 100;
-					console.log("used_disk_percentage: ", used_disk_percentage);
-					
+					if(this.debug){
+						console.log("used_disk_percentage: ", used_disk_percentage);
+					}
 					document.getElementById('extension-power-settings-disk-used-bar').style.width = used_disk_percentage + '%';
                     
                 }
