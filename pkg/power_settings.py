@@ -694,7 +694,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                                 
-                                
+                            # DISPLAY ROTATION
                             elif action == 'set_display_rotation':
                                 state = 'error'
                                 if 'rotation' in request.body:
@@ -713,6 +713,42 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':state}),
                                 )
                                 
+                            elif action == 'force_display_setting':
+                                state = 'error'
+                                if 'width' in request.body and 'height' in request.body:
+                                    intended_width = int(request.body['width'])
+                                    intended_height = int(request.body['height'])
+                                    if self.DEBUG:
+                                        print("forcing display: " + str(intended_width) + "x" + str(intended_height))
+                                    state = 'ok'
+                                    
+                                    if not "#candle_force_display" in self.config_txt:
+                                        self.config_txt += "\n#candle_force_display_start\n#candle_force_display_end"
+                                    
+                                    new_display_settings = ""
+                                    
+                                    
+                                    self.config_txt_lines = self.config_txt.splitlines()
+                                    if "#candle_force_display_start" in self.config_txt_lines:
+                                        for line in self.config_txt_lines:
+                                            if line.startswith('#'):
+                                                continue
+                                            if len(line) == 0:
+                                                continue
+                                        
+                                    if new_display_settings != "":
+                                        re.sub('#candle_force_display_start.*?#candle_force_display_end',new_display_settings,self.config_txt, flags=re.DOTALL)
+                                    
+                                        print("self.config_txt is now: \n\n" + str(self.config_txt) + "\n\n")
+                                        
+                                        
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
+                            
+                            
                             
                             # UPDATE RECOVERY PARTITION
                             elif action == 'update_recovery_partition':
