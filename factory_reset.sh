@@ -233,13 +233,17 @@ echo "Well hello there" >> /home/pi/.bash_history
 if [ -f "$BOOT_DIR/developer.txt" ]; then
   rm $BOOT_DIR/developer.txt
   echo "filling unused space on user partition with zeros"
+  echo "/home/pi/.webthings/zero.fill"
   echo "(this can safely be skipped)"
+  echo
+  
   cat /dev/zero > /home/pi/.webthings/zero.fill
   sync
   sleep 5
   sync
   rm -f /home/pi/.webthings/zero.fill
   echo "filling unused space on system partition with zeros"
+  echo "/zero.fill"
   cat /dev/zero > /zero.fill
   sync
   sleep 5
