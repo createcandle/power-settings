@@ -21,6 +21,7 @@ mkdir -p lib package
 # Pull down Python dependencies
 pip3 install -r requirements.txt -t lib --no-binary :all: --prefix ""
 
+# in future this command should use: --use-pep517
 
 # Put package together
 cp -r pkg lib LICENSE manifest.json *.py db.sqlite3 *.sh display_manufacturers.csv README.md css images js views package/
