@@ -2486,21 +2486,17 @@
 						document.getElementById('extension-power-settings-device-model-memory').innerText = '500MB';
 					}
 					
+					if(typeof body['sd_card_written_kbytes'] != 'undefined'){
+						document.getElementById('extension-power-settings-sd-card-written-bytes').innerText = body['sd_card_written_kbytes'];
+					}
+
+				
 					
 				
 	                // Show the available memory. This is different from "free" memory
 	                if(typeof body['available_memory'] != 'undefined'){
 	                    document.getElementById('extension-power-settings-available-memory').innerText = body['available_memory'];
-						let low_mem_el = document.getElementById('extension-power-settings-low-memory-warning');
 						
-						if(low_mem_el){
-		                    if(body['available_memory'] < 80){
-		                        low_mem_el.style.display = 'block';
-		                    }
-		                    if(body['available_memory'] < 40){
-		                        low_mem_el.style.background = 'red';
-		                    }
-						}
 	                    
 					
 		                // Show the free memory.
@@ -2511,6 +2507,18 @@
 							let total_mem = parseFloat(body['total_memory']);
 							let avail_mem = parseFloat(body['available_memory']);
 							let free_mem = parseFloat(body['free_memory']);
+							
+							let low_mem_el = document.getElementById('extension-power-settings-low-memory-warning');
+						
+							if(low_mem_el){
+			                    if(free_mem < 100){
+			                        low_mem_el.style.display = 'block';
+			                    }
+			                    if(free_mem < 50){
+			                        low_mem_el.style.background = 'red';
+			                    }
+							}
+							
 							
 							let used_mem = ( (total_mem - avail_mem) / total_mem) * 100;
 							if(this.debug){

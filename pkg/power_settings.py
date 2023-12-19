@@ -237,6 +237,10 @@ class PowerSettingsAPIHandler(APIHandler):
         self.live_update_attempted = False
         self.system_update_in_progress = False
         
+        
+        
+        self.sd_card_written_kbytes = '?'
+        
         try:
             self.user_partition_free_disk_space = int(run_command("df /home/pi/.webthings | awk 'NR==2{print $4}' | tr -d '\n'"))
             total_memory = run_command("awk '/^MemTotal:/{print $2}' /proc/meminfo | tr -d '\n'")
@@ -1358,6 +1362,15 @@ class PowerSettingsAPIHandler(APIHandler):
                                 free_memory = '?'
                                 try:
                                     
+                                    # written kbytes to sd card
+                                    #self.sd_card_written_kbytes = int(run_command("cat /sys/fs/ext4/mmcblk0p4/lifetime_write_kbytes"))
+                                    self.sd_card_written_kbytes = run_command('sudo dumpe2fs /dev/mmcblk0p4 | grep "Lifetime writes:"')
+                                    self.sd_card_written_kbytes = self.sd_card_written_kbytes.replace('Lifetime writes:','')
+                                    self.sd_card_written_kbytes = self.sd_card_written_kbytes.strip()
+                                    
+                                    if self.DEBUG:
+                                        print("sd_card_written_kbytes: " + str(self.sd_card_written_kbytes))
+                                        
                                     # check free memory
                                     free_memory = subprocess.check_output(['grep','^MemFree','/proc/meminfo'])
                                     free_memory = free_memory.decode('utf-8')
@@ -1422,7 +1435,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'total_memory':self.total_memory, 
                                                       'available_memory':available_memory, 
                                                       'free_memory':free_memory, 
-                                                      'disk_usage':self.disk_usage, 
+                                                      'disk_usage':self.disk_usage,
+                                                      'sd_card_written_kbytes':self.sd_card_written_kbytes,
                                                       'low_voltage':self.low_voltage}),
                                 )
                                 
