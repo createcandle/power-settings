@@ -865,7 +865,8 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 	display:flex;
 }
 
-#extension-power-settings-display1-info > div{
+#extension-power-settings-display1-info > div,
+#extension-power-settings-display2-info > div{
 	width:50%;
 	box-sizing:border-box;
 	padding:2rem;
@@ -885,7 +886,8 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 	#extension-power-settings-display2-info{
 		flex-direction:column;
 	}
-	#extension-power-settings-display1-info > div{
+	#extension-power-settings-display1-info > div,
+	#extension-power-settings-display2-info > div{
 		width:100%;
 	}
 }

@@ -44,7 +44,7 @@
                 })
                 .catch((e) => console.error('Failed to fetch content:', e));
                 
-                
+            
             fetch(`/extensions/${this.id}/views/settings_pages.html`)
                 .then((res) => res.text())
                 .then((text) => {
@@ -169,7 +169,7 @@
                     
                 });
 				
-				
+				// Rotate checkbox for display 1
 	            document.getElementById("extension-power-settings-display1-rotate-checkbox").addEventListener('change', () => {
 	                //console.log("display1 rotation changed");
 					//document.getElementById("extension-power-settings-low-storage-warning").style.display = 'none';
@@ -183,6 +183,34 @@
 						display2_rotation = 180;
 					}
 					
+					window.API.postJson(
+		                `/extensions/${this.id}/api/ajax`, {
+		                    'action': 'set_display_rotation',
+							'display1_rotation': display1_rotation,
+							'display2_rotation': display2_rotation
+		                }
+		            ).then((body) => {
+		                if(this.debug){
+		                    console.log("set_display_rotation response: ", body);
+		                }
+		            }).catch((e) => {
+		                console.error("Error sending display rotation command: ", e);
+		            });
+	            });
+				
+				// Rotate checkbox for display 2
+	            document.getElementById("extension-power-settings-display2-rotate-checkbox").addEventListener('change', () => {
+	                //console.log("display1 rotation changed");
+					//document.getElementById("extension-power-settings-low-storage-warning").style.display = 'none';
+	                //document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'block';
+		            let display1_rotation = 0;
+					if(document.getElementById("extension-power-settings-display1-rotate-checkbox").checked){
+						display1_rotation = 180;
+					}
+		            let display2_rotation = 0;
+					if(document.getElementById("extension-power-settings-display2-rotate-checkbox").checked){
+						display2_rotation = 180;
+					}
 					
 					window.API.postJson(
 		                `/extensions/${this.id}/api/ajax`, {
@@ -196,6 +224,50 @@
 		                }
 		            }).catch((e) => {
 		                console.error("Error sending display rotation command: ", e);
+		            });
+	            });
+				
+				// power management checkbox for display 1
+	            document.getElementById("extension-power-settings-display1-power-checkbox").addEventListener('change', () => {
+	                //console.log("display1 rotation changed");
+					//document.getElementById("extension-power-settings-low-storage-warning").style.display = 'none';
+	                //document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'block';
+		            let display1_power = document.getElementById("extension-power-settings-display1-power-checkbox").checked;
+		            let display2_power = document.getElementById("extension-power-settings-display2-power-checkbox").checked;
+					window.API.postJson(
+		                `/extensions/${this.id}/api/ajax`, {
+		                    'action': 'set_display_power',
+							'display1_power': display1_power,
+							'display2_power': display2_power
+		                }
+		            ).then((body) => {
+		                if(this.debug){
+		                    console.log("set_display_power response: ", body);
+		                }
+		            }).catch((e) => {
+		                console.error("Error sending display power command: ", e);
+		            });
+	            });
+				
+				// power management checkbox for display 2
+	            document.getElementById("extension-power-settings-display2-power-checkbox").addEventListener('change', () => {
+	                //console.log("display1 rotation changed");
+					//document.getElementById("extension-power-settings-low-storage-warning").style.display = 'none';
+	                //document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'block';
+		            let display1_power = document.getElementById("extension-power-settings-display1-power-checkbox").checked;
+		            let display2_power = document.getElementById("extension-power-settings-display2-power-checkbox").checked;
+					window.API.postJson(
+		                `/extensions/${this.id}/api/ajax`, {
+		                    'action': 'set_display_power',
+							'display1_power': display1_power,
+							'display2_power': display2_power
+		                }
+		            ).then((body) => {
+		                if(this.debug){
+		                    console.log("set_display_power response: ", body);
+		                }
+		            }).catch((e) => {
+		                console.error("Error sending display power command: ", e);
 		            });
 	            });
 				
@@ -622,7 +694,7 @@
                     minutes.value = powerSettingsCurrentTime.getMinutes();
                 });
 
-
+				
                 //console.log("doing init");
                 // Get the server time
                 window.API.postJson(
@@ -635,7 +707,7 @@
                         this.debug = body.debug;
                     }
                     else{
-                        console.error("power settings: init response: body.debug was undefined: ", body);
+                        console.error("power settings: init response: body.debug was undefined. Body: ", body);
                     }
                     
                     // If the Candle overlay was active, then it shouldn't be anymmore.
@@ -760,9 +832,6 @@
                         document.getElementById('extension-power-settings-device-sd-card-size').innerText = Math.round(body.device_sd_card_size / 1000000000) + "GB";
                     }
 					
-					
-					
-					
                     
                     if(typeof body.exhibit_mode != 'undefined'){
                         this.exhibit_mode = body.exhibit_mode;
@@ -783,6 +852,7 @@
                         }
                     }
                     
+					
                     // User partition expanded
                     if(typeof body.user_partition_expanded != 'undefined'){
                         if(body.user_partition_expanded == false){
@@ -840,7 +910,6 @@
                             });
                         }
                     }
-                    
                     
                     
                 }).catch((e) => {
@@ -2402,56 +2471,45 @@
                     console.log("display init response: ", body);
                 }
 				
-				// Display
-				
-				/*
-                                        'display_rotated':self.display_rotated,
-                                        'display_available':self.display_available,
-                                        'display_width':self.display_width,
-                                        'display_height':self.display_height,
-					
-				*/
-				
+				// rotation
 				if(typeof body.display1_rotated != 'undefined'){
-					if(body.display1_rotated){
-						document.getElementById('extension-power-settings-display1-rotate-checkbox').checked = true; //.setAttribute('checked','');
-					}
-					else{
-						document.getElementById('extension-power-settings-display1-rotate-checkbox').checked = false;
-					}
+					document.getElementById('extension-power-settings-display1-rotate-checkbox').checked = body.display1_rotated;
 				}
-				if(typeof body.display1_available != 'undefined' && typeof body.display2_available != 'undefined'){
-					if(body.display1_available == false && body.display2_available == false){
-						document.getElementById('extension-power-settings-no-display').classList.remove('extension-power-settings-hidden');
-						//document.getElementById('extension-power-settings-display1-info').classList.remove('extension-power-settings-hidden');
-					}
-					else{
-						if(body.display1_available){
-							document.getElementById('extension-power-settings-display1-info').classList.remove('extension-power-settings-hidden');
-						}
-						if(body.display2_available){
-							document.getElementById('extension-power-settings-display2-info').classList.remove('extension-power-settings-hidden');
-						}
-					}
+				if(typeof body.display2_rotated != 'undefined'){
+					document.getElementById('extension-power-settings-display2-rotate-checkbox').checked = body.display2_rotated;
 				}
 				
-				if(typeof body.display1_width != 'undefined' && typeof body.display1_height != 'undefined'){
+				// power management 
+				if(typeof body.display1_power != 'undefined'){
+					document.getElementById('extension-power-settings-display1-power-checkbox').checked = body.display1_power;
+				}
+				if(typeof body.display2_power != 'undefined'){
+					document.getElementById('extension-power-settings-display2-power-checkbox').checked = body.display2_power;
+				}
+				
+				
+				if(typeof body.display1_width != 'undefined' && typeof body.display1_height != 'undefined' && typeof body.display2_width != 'undefined' && typeof body.display2_height != 'undefined'){
 					document.getElementById('extension-power-settings-display1-width').innerText = body.display1_width;
 					document.getElementById('extension-power-settings-display1-height').innerText = body.display1_height;
-				}
-				else{
-					document.getElementById('extension-power-settings-display1-width').innerText = '?';
-					document.getElementById('extension-power-settings-display1-height').innerText = '?';
-				}
-				
-				if(typeof body.display2_width != 'undefined' && typeof body.display2_height != 'undefined'){
 					document.getElementById('extension-power-settings-display2-width').innerText = body.display2_width;
 					document.getElementById('extension-power-settings-display2-height').innerText = body.display2_height;
+					if(body.display1_width == 0 && body.display2_width == 0){
+						document.getElementById('extension-power-settings-no-display').classList.remove('extension-power-settings-hidden');
+					}
+					if(body.display1_width != 0){
+						document.getElementById('extension-power-settings-display1-info').classList.remove('extension-power-settings-hidden');
+					}
+					if(body.display2_width != 0){
+						document.getElementById('extension-power-settings-display2-info').classList.remove('extension-power-settings-hidden');
+					}
 				}
-				else{
-					document.getElementById('extension-power-settings-display2-width').innerText = '?';
-					document.getElementById('extension-power-settings-display2-height').innerText = '?';
+				
+				
+				if(typeof body.display_standby_delay != 'undefined'){
+					document.getElementById('extension-power-settings-display1-standby-delay').innerText = parseInt(body.display_standby_delay) / 60;
+					document.getElementById('extension-power-settings-display2-standby-delay').innerText = parseInt(body.display_standby_delay) / 60;
 				}
+				
 				
 				
             }).catch((e) => {
@@ -2490,7 +2548,7 @@
 						document.getElementById('extension-power-settings-sd-card-written-bytes').innerText = body['sd_card_written_kbytes'];
 					}
 
-				
+					
 					
 				
 	                // Show the available memory. This is different from "free" memory
