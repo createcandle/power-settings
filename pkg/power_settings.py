@@ -267,6 +267,37 @@ class PowerSettingsAPIHandler(APIHandler):
         if str(self.edid_available_output).startswith('/'):
             self.edid_available = True
             
+        
+        try:
+            # get HDMI port names
+            display_port_names = run_command("DISPLAY=:0 xrandr | grep 'connected' | cut -d' ' -f1")
+            if self.DEBUG:
+                print("display_port_names: \n" + str(display_port_names))
+            display_port_names = display_port_names.splitlines()
+        
+            if len(display_port_names) == 1:
+                if len(display_port_names[0]) > 2:
+                    self.display_port1_name = display_port_names[0]
+                    [ self.display1_width, self.display1_height ] = self.get_hdmi_port_resolution(self.display_port1_name)
+                    if self.DEBUG:
+                        print("self.display1_width: " + str(self.display1_width))
+                
+            if len(display_port_names) == 2:
+                if len(display_port_names[1]) > 2:
+                    self.display_port2_name = display_port_names[1]
+                    [ self.display2_width, self.display2_height ] = self.get_hdmi_port_resolution(self.display_port2_name)
+                    if self.DEBUG:
+                        print("self.display2_width: " + str(self.display2_width))
+            
+            
+            self.set_display_resolutions()
+            
+        except Exception as ex:
+            print("Error getting initial display data: " + str(ex))
+            
+        
+            
+            
         # Low voltage
         self.low_voltage = False
         
@@ -580,7 +611,33 @@ class PowerSettingsAPIHandler(APIHandler):
         
                 
         
-
+    def set_display_resolutions(self):
+        if self.DEBUG:
+            print("in set_display_resolutions")
+        
+        if 'display_resolution_' + str(self.display_port1_name) in self.persistent_data:
+            reso1 = str(self.persistent_data['display_resolution_' + str(self.display_port1_name)])
+            if self.DEBUG:
+                print("setting display port1: "  + str(self.display_port1_name) + ", to: " + reso1)
+            if reso1 == 'default':
+                os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port1_name) + ' --auto')
+            else:
+                os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port1_name) + ' --mode ' + str(reso1) + ' --rate 60')
+        
+        if 'display_resolution_' + str(self.display_port2_name) in self.persistent_data:
+            reso2 = str(self.persistent_data['display_resolution_' + str(self.display_port2_name)])
+            if self.DEBUG:
+                print("setting display port2: "  + str(self.display_port2_name) + ", to: " + reso2)
+            
+            if reso2 == 'default':
+                os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port2_name) + ' --auto')
+            else:
+                # TODO: sort out if DISPLAY=:1 is needed
+                os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port2_name) + ' --mode ' + str(reso2) + ' --rate 60')
+                os.system('DISPLAY=:1 xrandr --output ' + str(self.display_port2_name) + ' --mode ' + str(reso2) + ' --rate 60')
+            
+             
+            
     def get_hdmi_port_resolution(self, hdmi_port_name=''):
         if self.DEBUG:
             print("in get_hdmi_port_resolution. hdmi_port_name: " + str(hdmi_port_name))
@@ -815,189 +872,195 @@ class PowerSettingsAPIHandler(APIHandler):
                                 self.display_port1_name = ''
                                 self.display_port2_name = ''
                                 
-                                #fbset_output = run_command('fbset')
-                                #if self.DEBUG:
-                                #    print("fbset output: " + str(fbset_output))
+                                try:
+                                    #fbset_output = run_command('fbset')
+                                    #if self.DEBUG:
+                                    #    print("fbset output: " + str(fbset_output))
                                 
-                                """
-                                if "No such file or directory" not in fbset_output:
-                                    xrandr_output = run_command('DISPLAY=:0 xrandr')
-                                    if ' connected primary (' in xrandr_output:
-                                        self.display1_available = True
+                                    """
+                                    if "No such file or directory" not in fbset_output:
+                                        xrandr_output = run_command('DISPLAY=:0 xrandr')
+                                        if ' connected primary (' in xrandr_output:
+                                            self.display1_available = True
                                     
-                                        if ' connected (' in xrandr_output:
+                                            if ' connected (' in xrandr_output:
+                                                self.display2_available = True
+                                    
+                                        elif 'disconnected primary (' in xrandr_output and ' connected (' in xrandr_output:
                                             self.display2_available = True
-                                    
-                                    elif 'disconnected primary (' in xrandr_output and ' connected (' in xrandr_output:
-                                        self.display2_available = True
                                 
                                     
-                                    # fbset is nice and backwards compatible with older versions of Candle
-                                    fbset_output = run_command('fbset | grep \'mode "\'')
-                                    if self.DEBUG:
-                                        print("fbset_output: " + str(fbset_output))
+                                        # fbset is nice and backwards compatible with older versions of Candle
+                                        fbset_output = run_command('fbset | grep \'mode "\'')
+                                        if self.DEBUG:
+                                            print("fbset_output: " + str(fbset_output))
         
-                                    if 'mode "' in fbset_output and 'x' in fbset_output:
-                                        if self.DEBUG:
-                                            print("possibly display detected")
-                                        #self.display1_available = True
+                                        if 'mode "' in fbset_output and 'x' in fbset_output:
+                                            if self.DEBUG:
+                                                print("possibly display detected")
+                                            #self.display1_available = True
             
-                                        fbset_output = fbset_output.replace('mode "','')
-                                        fbset_output = fbset_output.replace('"','')
-                                        fbset_output_array = fbset_output.split('x')
-                                        if len(fbset_output_array) == 2:
-                                            self.display1_width = fbset_output_array[0]
-                                            self.display1_height = fbset_output_array[1]
-                                        if self.DEBUG:
-                                            print("display1_width, display1_height: ", self.display1_width, self.display1_height)
+                                            fbset_output = fbset_output.replace('mode "','')
+                                            fbset_output = fbset_output.replace('"','')
+                                            fbset_output_array = fbset_output.split('x')
+                                            if len(fbset_output_array) == 2:
+                                                self.display1_width = fbset_output_array[0]
+                                                self.display1_height = fbset_output_array[1]
+                                            if self.DEBUG:
+                                                print("display1_width, display1_height: ", self.display1_width, self.display1_height)
                                 
-                                """
-                                
-                                
+                                    """
                                 
                                 
-                                # get HDMI port names
-                                display_port_names = run_command("DISPLAY=:0 xrandr | grep 'connected' | cut -d' ' -f1")
-                                if self.DEBUG:
-                                    print("display_port_names: \n" + str(display_port_names))
-                                display_port_names = display_port_names.splitlines()
                                 
-                                if len(display_port_names) == 1:
-                                    if len(display_port_names[0]) > 2:
-                                        self.display_port1_name = display_port_names[0]
-                                        [ self.display1_width, self.display1_height ] = self.get_hdmi_port_resolution(self.display_port1_name)
-                                        if self.DEBUG:
-                                            print("self.display1_width: " + str(self.display1_width))
-                                        
-                                if len(display_port_names) == 2:
-                                    if len(display_port_names[1]) > 2:
-                                        self.display_port2_name = display_port_names[1]
-                                        [ self.display2_width, self.display2_height ] = self.get_hdmi_port_resolution(self.display_port2_name)
-                                        if self.DEBUG:
-                                            print("self.display2_width: " + str(self.display2_width))
                                 
-                                connected_port_names = run_command("DISPLAY=:0 xrandr | grep ' connected'")
-                                for connected_port in connected_port_names.splitlines():
-                                    if connected_port == self.display_port1_name:
-                                        self.display1_available = True
-                                    if connected_port == self.display_port2_name:
-                                        self.display2_available = True
-                                
-                                #subprocess.check_output
-                                edids = pyedid.get_edid_from_xrandr_verbose(run_command("DISPLAY=:0 xrandr --verbose"))
-                                if self.DEBUG:
-                                    print("edids: " + str(edids))
-                                    
-                                for x, edid in enumerate(edids):
+                                    # get HDMI port names
+                                    display_port_names = run_command("DISPLAY=:0 xrandr | grep 'connected' | cut -d' ' -f1")
                                     if self.DEBUG:
-                                        print(x, pyedid.parse_edid(edid))
-                                    if x == 0:
-                                        self.display1_details = str(pyedid.parse_edid(edid));
-                                    if x == 1:
-                                        self.display2_details = str(pyedid.parse_edid(edid));
+                                        print("display_port_names: \n" + str(display_port_names))
+                                    display_port_names = display_port_names.splitlines()
                                 
-                                
-                                
-                                """
-                                for x in range(len(edids)):
-                                for x in range(len(edids)-1):
-                                    print("x: " + str(x))
-                                    edid = pyedid.parse_edid(edids[x])
-                                    
-                                    
-                                #if len(edids) == 1:
-                                
-                                
-                                
-                                
-                                #if self.DEBUG:
-                                #    print("\nparsed edid: " + str(edid))
-                                
-                                edid_paths = run_command('find -L /sys/class/drm -maxdepth 2 | grep edid | grep -v riteback')
-                                edid_paths = edid_paths.splitlines()
-                                
-                                
-                                for x in range(len(edid_paths)-1):
-                                    if self.DEBUG:
-                                        print("checking edid #: " + str(x) + " -> " + str(edid_paths[x]))
+                                    if len(display_port_names) == 1:
+                                        if len(display_port_names[0]) > 2:
+                                            self.display_port1_name = display_port_names[0]
+                                            [ self.display1_width, self.display1_height ] = self.get_hdmi_port_resolution(self.display_port1_name)
+                                            if self.DEBUG:
+                                                print("self.display1_width: " + str(self.display1_width))
                                         
-                                    with open(edid_paths[x], 'rb') as f:
-                                        edid_data = f.read().hex()
-                                        print(str(edid_data))
-                                        # loading list with edid data
-                                        #edid_bs = EdidHelper.get_edids()[0]
-
-                                        # convert exist edid hex string from xrandr
-                                        #edid_bs = EdidHelper.hex2bytes("hex string from xrandr...")
-
-                                        #### Step 3: create instance
-
-                                        # create Edid instance for fisrt edid data
-                                        #edid = Edid(edid_data, self.edid_registry)
-                                        #print(".\nedid: " + str(edid))
-                                """
+                                    if len(display_port_names) == 2:
+                                        if len(display_port_names[1]) > 2:
+                                            self.display_port2_name = display_port_names[1]
+                                            [ self.display2_width, self.display2_height ] = self.get_hdmi_port_resolution(self.display_port2_name)
+                                            if self.DEBUG:
+                                                print("self.display2_width: " + str(self.display2_width))
                                 
-                                """
-                                # get display name from EDID data
-                                if self.edid_available:
+                                    connected_port_names = run_command("DISPLAY=:0 xrandr | grep ' connected'")
+                                    for connected_port in connected_port_names.splitlines():
+                                        if connected_port == self.display_port1_name:
+                                            self.display1_available = True
+                                        if connected_port == self.display_port2_name:
+                                            self.display2_available = True
+                                
+                                    #subprocess.check_output
+                                    edids = pyedid.get_edid_from_xrandr_verbose(run_command("DISPLAY=:0 xrandr --verbose"))
+                                    if self.DEBUG:
+                                        print("edids: " + str(edids))
+                                    
+                                    for x, edid in enumerate(edids):
+                                        if self.DEBUG:
+                                            print(x, pyedid.parse_edid(edid))
+                                        if x == 0:
+                                            self.display1_details = str(pyedid.parse_edid(edid));
+                                        if x == 1:
+                                            self.display2_details = str(pyedid.parse_edid(edid));
+                                
+                                
+                                
+                                    """
+                                    for x in range(len(edids)):
+                                    for x in range(len(edids)-1):
+                                        print("x: " + str(x))
+                                        edid = pyedid.parse_edid(edids[x])
+                                    
+                                    
+                                    #if len(edids) == 1:
+                                
+                                
+                                
+                                
+                                    #if self.DEBUG:
+                                    #    print("\nparsed edid: " + str(edid))
+                                
                                     edid_paths = run_command('find -L /sys/class/drm -maxdepth 2 | grep edid | grep -v riteback')
                                     edid_paths = edid_paths.splitlines()
-                                    
+                                
+                                
                                     for x in range(len(edid_paths)-1):
                                         if self.DEBUG:
-                                            print("checking edid #: " + str(x))
-                                        edid_data = run_command("edid-decode " + str(edid_paths[x]))
-                                        if self.DEBUG:
-                                            print("edid_data: " + str(edid_data))
-                                        if 'edid-decode (hex):' in edid_data:
-                                            manufacturer = None
-                                            display_name = ""
-                                            for line in edid_data.split('\n'):
-                                                if 'Manufacturer:' in line:
-                                                    manufacturer = line.replace('Manufacturer:','').strip()
-                                                if 'Display Product Name:' in line:
-                                                    line = line.replace('Display Product Name:','').strip()
-                                                    display_name = line + ' ' + display_name
-                                                if 'Model:' in line:
-                                                    line = line.replace('Model:','').strip()
-                                                    display_name = display_name + ' ' + line
+                                            print("checking edid #: " + str(x) + " -> " + str(edid_paths[x]))
+                                        
+                                        with open(edid_paths[x], 'rb') as f:
+                                            edid_data = f.read().hex()
+                                            print(str(edid_data))
+                                            # loading list with edid data
+                                            #edid_bs = EdidHelper.get_edids()[0]
+
+                                            # convert exist edid hex string from xrandr
+                                            #edid_bs = EdidHelper.hex2bytes("hex string from xrandr...")
+
+                                            #### Step 3: create instance
+
+                                            # create Edid instance for fisrt edid data
+                                            #edid = Edid(edid_data, self.edid_registry)
+                                            #print(".\nedid: " + str(edid))
+                                    """
+                                
+                                    """
+                                    # get display name from EDID data
+                                    if self.edid_available:
+                                        edid_paths = run_command('find -L /sys/class/drm -maxdepth 2 | grep edid | grep -v riteback')
+                                        edid_paths = edid_paths.splitlines()
+                                    
+                                        for x in range(len(edid_paths)-1):
+                                            if self.DEBUG:
+                                                print("checking edid #: " + str(x))
+                                            edid_data = run_command("edid-decode " + str(edid_paths[x]))
+                                            if self.DEBUG:
+                                                print("edid_data: " + str(edid_data))
+                                            if 'edid-decode (hex):' in edid_data:
+                                                manufacturer = None
+                                                display_name = ""
+                                                for line in edid_data.split('\n'):
+                                                    if 'Manufacturer:' in line:
+                                                        manufacturer = line.replace('Manufacturer:','').strip()
+                                                    if 'Display Product Name:' in line:
+                                                        line = line.replace('Display Product Name:','').strip()
+                                                        display_name = line + ' ' + display_name
+                                                    if 'Model:' in line:
+                                                        line = line.replace('Model:','').strip()
+                                                        display_name = display_name + ' ' + line
                                             
-                                            if manufacturer != None:
-                                                display_name = manufacturer + ' ' + display_name
+                                                if manufacturer != None:
+                                                    display_name = manufacturer + ' ' + display_name
                                             
-                                            # TODO: should have a better, mmore flexible datastructure for display data..
-                                            if x == 0:
-                                                self.display1_details = edid_data
-                                                if len(str(display_name)) > 3:
-                                                    self.display1_name = display_name
-                                            if x == 1:
-                                                self.display2_details = edid_data
-                                                if len(str(display_name)) > 3:
-                                                    self.display2_name = display_name
+                                                # TODO: should have a better, mmore flexible datastructure for display data..
+                                                if x == 0:
+                                                    self.display1_details = edid_data
+                                                    if len(str(display_name)) > 3:
+                                                        self.display1_name = display_name
+                                                if x == 1:
+                                                    self.display2_details = edid_data
+                                                    if len(str(display_name)) > 3:
+                                                        self.display2_name = display_name
                                         
                                         
                                     
-                                """
+                                    """
                                 
-                                # DISPLAY=:0 xrandr | grep ' connected' | cut -d' ' -f1
+                                    # DISPLAY=:0 xrandr | grep ' connected' | cut -d' ' -f1
                                     
                                 
-                                # Power management
-                                display1_power_management_output = run_command("DISPLAY=:0 xset -q | awk '/DPMS is/ {print $NF}'")
-                                if 'unable to open' in display1_power_management_output:
-                                    pass
-                                elif 'Disabled' in display1_power_management_output:
-                                    self.display1_power = False
-                                else:
-                                    self.display1_power = True
+                                    # Power management
+                                    display1_power_management_output = run_command("DISPLAY=:0 xset -q | awk '/DPMS is/ {print $NF}'")
+                                    if 'unable to open' in display1_power_management_output:
+                                        pass
+                                    elif 'Disabled' in display1_power_management_output:
+                                        self.display1_power = False
+                                    else:
+                                        self.display1_power = True
                                 
-                                display2_power_management_output = run_command("DISPLAY=:1 xset -q | awk '/DPMS is/ {print $NF}'")
-                                if 'unable to open' in display2_power_management_output:
-                                    pass
-                                elif 'Disabled' in display2_power_management_output:
-                                    self.display2_power = False
-                                else:
-                                    self.display2_power = True
+                                    display2_power_management_output = run_command("DISPLAY=:1 xset -q | awk '/DPMS is/ {print $NF}'")
+                                    if 'unable to open' in display2_power_management_output:
+                                        pass
+                                    elif 'Disabled' in display2_power_management_output:
+                                        self.display2_power = False
+                                    else:
+                                        self.display2_power = True
+                                
+                                    state = 'ok'
+                                except Exception as ex:
+                                    print("Error getting display info: " + str(ex))
+                                    
                                 
                                 
                                 return APIResponse(
@@ -1128,6 +1191,28 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':state}),
                                 )
+                                
+                            # DISPLAY POWER MANAGEMENT
+                            elif action == 'set_display_resolution':
+                                state = 'error'
+                                try:
+                                    if 'port' in request.body and 'resolution' in request.body:
+                                    
+                                        self.persistent_data['display_resolution_' + str(request.body['port'])] = str(request.body['resolution'])
+                                        if self.save_persistent_data():
+                                            state = 'ok'
+                                
+                                        self.set_display_resolutions()
+                                
+                                except Exception as ex:
+                                    print("Error saving/setting display power management preferences")
+                                        
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
+                                
                                 
                             elif action == 'force_display_setting':
                                 state = 'error'

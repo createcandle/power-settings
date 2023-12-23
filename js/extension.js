@@ -33,6 +33,11 @@
             const getUrl = window.location;
             this.baseUrl = getUrl.protocol + "//" + getUrl.host + "/things";
 
+			
+			this.display_port1_name = 'HDMI-1';
+			this.display_port2_name = 'HDMI-2';
+
+
             this.content = '';
             fetch(`/extensions/${this.id}/views/content.html`)
                 .then((res) => res.text())
@@ -88,6 +93,9 @@
             //console.log("power settings. menu el: ", settings_menu_element);
 
             
+	
+			
+			
                 
         }
 
@@ -2461,6 +2469,20 @@
 			document.getElementById('extension-power-settings-no-display').classList.add('extension-power-settings-hidden');
 			document.getElementById('extension-power-settings-display1-info').classList.add('extension-power-settings-hidden');
 			document.getElementById('extension-power-settings-display2-info').classList.add('extension-power-settings-hidden');
+			document.getElementById('extension-power-settings-display1-production-date').innerText = '';
+			document.getElementById('extension-power-settings-display2-production-date').innerText = '';
+			
+			function get_production_time(week, year) { 
+				//console.log("get_production_time: ", typeof week, week, typeof year, year);
+				year = '' + year;
+				if(typeof year == 'string' && year.length == 4){
+					let months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+					let month = months[ Math.floor(parseInt(week)/4.33333) ];	
+					return 'Produced in ' + month + ' ' + year;
+				}
+				return '';
+			}
+			
 			
 			window.API.postJson(
                 `/extensions/${this.id}/api/ajax`, {
@@ -2470,6 +2492,13 @@
                 if(this.debug){
                     console.log("display init response: ", body);
                 }
+				
+				if(typeof body.display_port1_name != 'undefined'){
+					this.display_port1_name = body.display_port1_name;
+				}
+				if(typeof body.display_port2_name != 'undefined'){
+					this.display_port2_name = body.display_port2_name;
+				}
 				
 				// rotation
 				if(typeof body.display1_rotated != 'undefined'){
@@ -2487,12 +2516,15 @@
 					document.getElementById('extension-power-settings-display2-power-checkbox').checked = body.display2_power;
 				}
 				
-				
+				// Show the display's width and height
 				if(typeof body.display1_width != 'undefined' && typeof body.display1_height != 'undefined' && typeof body.display2_width != 'undefined' && typeof body.display2_height != 'undefined'){
-					document.getElementById('extension-power-settings-display1-width').innerText = body.display1_width;
-					document.getElementById('extension-power-settings-display1-height').innerText = body.display1_height;
-					document.getElementById('extension-power-settings-display2-width').innerText = body.display2_width;
-					document.getElementById('extension-power-settings-display2-height').innerText = body.display2_height;
+					
+					document.getElementById('extension-power-settings-display1-resolution-container').innerHTML = '<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display1-width">' + body.display1_width + '</span><br/><span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display1-height">' + body.display1_width + '</span><br/>';
+					document.getElementById('extension-power-settings-display2-resolution-container').innerHTML = '<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display2-width">' + body.display2_width + '</span><br/><span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display2-height">' + body.display2_width + '</span><br/>';
+					//document.getElementById('extension-power-settings-display1-width').innerText = body.display1_width;
+					//document.getElementById('extension-power-settings-display1-height').innerText = body.display1_height;
+					//document.getElementById('extension-power-settings-display2-width').innerText = body.display2_width;
+					//document.getElementById('extension-power-settings-display2-height').innerText = body.display2_height;
 					if(body.display1_width == 0 && body.display2_width == 0){
 						document.getElementById('extension-power-settings-no-display').classList.remove('extension-power-settings-hidden');
 					}
@@ -2504,10 +2536,342 @@
 					}
 				}
 				
-				
+				// Show the dispay's standby delay in minutes
 				if(typeof body.display_standby_delay != 'undefined'){
 					document.getElementById('extension-power-settings-display1-standby-delay').innerText = parseInt(body.display_standby_delay) / 60;
 					document.getElementById('extension-power-settings-display2-standby-delay').innerText = parseInt(body.display_standby_delay) / 60;
+				}
+				
+				
+				// TODO: make all this less clunky. Right now it's two parts of code repeated..
+				
+				// Show EDID display details
+				if(typeof body.display1_details != 'undefined'){
+					document.getElementById('extension-power-settings-display1-details').innerHTML = '';
+					if(body.display1_details != ''){
+						try{
+							let disp_details = JSON.parse(body.display1_details);
+							if(this.debug){
+								console.log("disp_details : ", disp_details);
+							}
+							try{
+								if(typeof disp_details['week'] != 'undefined' && typeof disp_details['year'] != 'undefined'){
+									document.getElementById('extension-power-settings-display1-production-date').innerText = get_production_time(disp_details['week'], disp_details['year']);
+								}
+								
+								if(typeof disp_details['manufacturer'] != 'undefined' && typeof disp_details['name'] != 'undefined'){
+									console.log("display manufacturer and name are available");
+									
+									if(disp_details['manufacturer'].indexOf('DO NOT USE') != -1){
+										disp_details['manufacturer'] = 'Unknown manufacturer'
+									}
+									
+									document.getElementById('extension-power-settings-display1-name').innerText = disp_details['manufacturer'] + ' - ' + disp_details['name'];
+								}
+								
+								//console.log("registry: ", window.extension_power_settings_display_registry);
+								//console.log("manufacturer_pnp_id: ", disp_details['manufacturer_pnp_id']);
+								/*
+								if(typeof disp_details['manufacturer_pnp_id'] != 'undefined' && typeof window.extension_power_settings_display_registry != 'undefined'){
+									//console.log("manufacturer_pnp_id and registry exist");
+									if(typeof window.extension_power_settings_display_registry[ disp_details['manufacturer_pnp_id'].trim() ] != 'undefined'){
+										//info_value = window.extension_power_settings_display_registry[ disp_details['manufacturer_pnp_id'] ] + ' (' + info_value + ')';
+										
+										if(typeof disp_details['name'] != 'undefined' && disp_details['name'].length){
+											document.getElementById('extension-power-settings-display1-name').innerText = window.extension_power_settings_display_registry[ disp_details['manufacturer_pnp_id'] ] + ', ' + disp_details['name'];
+										}
+										else{
+											console.warn("no valid display name found in EDID data: ", typeof disp_details['name'], disp_details['name']);
+										}
+									}
+									else{
+										console.warn("manufacturer_pnp_id was not found in registry: ", disp_details['manufacturer_pnp_id'], window.extension_power_settings_display_registry);
+									}
+								}
+								*/
+								
+							}
+							catch(e){
+								console.log("Error calculating display production date / generating display name: ", e);
+							}
+							
+							
+							
+							
+							// Add info key-value pairs
+							let info_container_el = document.createElement("ul");
+							info_container_el.classList.add('extension-power-settings-list-item-info');
+							
+							
+							
+							for (const [info_key, info_value] of Object.entries(disp_details)) {
+								let info_el = document.createElement("li");
+							
+								let info_key_el = document.createElement("span");
+								info_key_el.classList.add('extension-power-settings-list-item-info-key');
+								info_key_el.innerText = info_key;
+								info_el.appendChild(info_key_el);
+								
+								let info_value_el = document.createElement("span");
+								info_value_el.classList.add('extension-power-settings-list-item-info-value');
+								
+								
+								if(info_key == 'resolutions' && typeof info_value == 'object'){
+									console.log("spotted resolutions. info_value", typeof(info_value), info_value);
+									
+									let select_container_el = document.createElement("div");
+									select_container_el.classList.add('extension-power-settings-flex-centered-spaced');
+									select_container_el.innerHTML = '<span style="padding-right: 2rem;box-sizing:border-box;display:inline-block;">Resolution: </span>';
+									
+									let select_el = document.createElement("select");
+									select_el.setAttribute('id','extension-power-settings-display1-resolution-select');
+									select_el.classList.add('localization-select');
+									
+									let choose_option_el = document.createElement("option");
+									choose_option_el.value = 'default';
+									choose_option_el.innerText = "Default";
+									select_el.appendChild(choose_option_el);
+									
+									//select_el.onChange = function(element){
+									//	console.log("changing resolution to: ", element.value);
+									//}
+									select_el.addEventListener('change', (event) => {
+										//console.log("changing resolution to: ", event.target.value);
+										if(event.target.value.indexOf('x') != -1 || event.target.value == 'default'){
+											this.set_display_resolution(this.display_port1_name,event.target.value);
+										}
+									});
+									
+									var added_resolutions = 0;
+									try{
+										for (var r = 0; r < info_value.length; r++) {
+											if(info_value[r][2] != '60'){
+												if(this.debug){
+													console.warn("power settings: skipping non-60Hz display refresh rate: ", info_value[r][2]);
+												}
+												continue
+											}
+											let option_el = document.createElement("option");
+											option_el.value = option_el.innerText = info_value[r][0] + 'x' + info_value[r][1]; // + '_' + resolution_parts[r];
+											//console.log(body.display1_width, " =?= ", info_value[r][0], "   &   ", body.display1_height, " =?= ", info_value[r][1]);
+											
+											if(body.display1_width == info_value[r][0] && body.display1_height == info_value[r][1]){
+												//console.log("at the current resolution");
+												option_el.selected = true;
+											}
+											
+											added_resolutions++; 
+											select_el.appendChild(option_el);
+											//let option_text = resolution_parts[r] + 'x' + resolution_parts[r + 1];// + ', ' + resolution_parts[r+2] +'Hz';
+
+										}
+										if(added_resolutions > 1){
+											document.getElementById('extension-power-settings-display1-resolution-container').innerHTML = '';
+											
+											select_container_el.appendChild(select_el);
+											
+											document.getElementById('extension-power-settings-display1-resolution-container').appendChild(select_container_el);
+										}
+									}
+									catch(e){
+										console.error("error parsing edid resolutions: ", e);
+									}
+									
+									
+									for (var r = 0; r < info_value.length; r++) {
+										info_value_el.innerHTML += '<span>' + info_value[r] + '</span><br/>';
+									}
+									
+									//info_el.appendChild(info_value_el);
+							
+									//info_container_el.appendChild(info_el);
+									
+									
+								}
+								else{
+									info_value_el.innerText = info_value;
+								}
+								
+								info_el.appendChild(info_value_el);
+								
+								info_container_el.appendChild(info_el);
+								
+							
+								
+							}
+							document.getElementById('extension-power-settings-display1-details').appendChild(info_container_el);
+						}
+						catch(e){
+							console.error("unable to parse display EDID data: ", e);
+						}
+					}
+					else{
+						document.getElementById('extension-power-settings-display1-details').innerHTML = '<p>No details available</p>';
+					}
+				}
+				
+				
+				// Show EDID display details
+				if(typeof body.display2_details != 'undefined'){
+					document.getElementById('extension-power-settings-display2-details').innerHTML = '';
+					if(body.display2_details != ''){
+						try{
+							let disp_details = JSON.parse(body.display2_details);
+							if(this.debug){
+								console.log("disp_details : ", disp_details);
+							}
+							try{
+								if(typeof disp_details['week'] != 'undefined' && typeof disp_details['year'] != 'undefined'){
+									document.getElementById('extension-power-settings-display2-production-date').innerText = get_production_time(disp_details['week'], disp_details['year']);
+								}
+								
+								if(typeof disp_details['manufacturer'] != 'undefined' && typeof disp_details['name'] != 'undefined'){
+									console.log("display manufacturer and name are available");
+									
+									if(disp_details['manufacturer'].indexOf('DO NOT USE') != -1){
+										disp_details['manufacturer'] = 'Unknown manufacturer'
+									}
+									
+									document.getElementById('extension-power-settings-display2-name').innerText = disp_details['manufacturer'] + ' - ' + disp_details['name'];
+								}
+								
+								//console.log("registry: ", window.extension_power_settings_display_registry);
+								//console.log("manufacturer_pnp_id: ", disp_details['manufacturer_pnp_id']);
+								/*
+								if(typeof disp_details['manufacturer_pnp_id'] != 'undefined' && typeof window.extension_power_settings_display_registry != 'undefined'){
+									//console.log("manufacturer_pnp_id and registry exist");
+									if(typeof window.extension_power_settings_display_registry[ disp_details['manufacturer_pnp_id'].trim() ] != 'undefined'){
+										//info_value = window.extension_power_settings_display_registry[ disp_details['manufacturer_pnp_id'] ] + ' (' + info_value + ')';
+										
+										if(typeof disp_details['name'] != 'undefined' && disp_details['name'].length){
+											document.getElementById('extension-power-settings-display2-name').innerText = window.extension_power_settings_display_registry[ disp_details['manufacturer_pnp_id'] ] + ', ' + disp_details['name'];
+										}
+										else{
+											console.warn("no valid display name found in EDID data: ", typeof disp_details['name'], disp_details['name']);
+										}
+									}
+									else{
+										console.warn("manufacturer_pnp_id was not found in registry: ", disp_details['manufacturer_pnp_id'], window.extension_power_settings_display_registry);
+									}
+								}
+								*/
+								
+							}
+							catch(e){
+								console.log("Error calculating display production date / generating display name: ", e);
+							}
+							
+							
+							
+							
+							// Add info key-value pairs
+							let info_container_el = document.createElement("ul");
+							info_container_el.classList.add('extension-power-settings-list-item-info');
+							
+							for (const [info_key, info_value] of Object.entries(disp_details)) {
+								let info_el = document.createElement("li");
+							
+								let info_key_el = document.createElement("span");
+								info_key_el.classList.add('extension-power-settings-list-item-info-key');
+								info_key_el.innerText = info_key;
+								info_el.appendChild(info_key_el);
+								
+								let info_value_el = document.createElement("span");
+								info_value_el.classList.add('extension-power-settings-list-item-info-value');
+								
+								
+								if(info_key == 'resolutions' && typeof info_value == 'object'){
+									console.log("spotted resolutions. info_value", typeof(info_value), info_value);
+									
+									let select_container_el = document.createElement("div");
+									select_container_el.classList.add('extension-power-settings-flex-centered-spaced');
+									select_container_el.innerHTML = '<span style="padding-right: 2rem;box-sizing:border-box;display:inline-block;">Resolution: </span>';
+									
+									let select_el = document.createElement("select");
+									select_el.setAttribute('id','extension-power-settings-display2-resolution-select');
+									select_el.classList.add('localization-select');
+									
+									let choose_option_el = document.createElement("option");
+									choose_option_el.value = 'default';
+									choose_option_el.innerText = "Default";
+									select_el.appendChild(choose_option_el);
+									
+									//select_el.onChange = function(element){
+									//	console.log("changing resolution to: ", element.value);
+									//}
+									select_el.addEventListener('change', (event) => {
+										//console.log("changing resolution to: ", event.target.value);
+										if(event.target.value.indexOf('x') != -1 || event.target.value == 'default'){
+											this.set_display_resolution(this.display_port2_name,event.target.value);
+										}
+									});
+									
+									var added_resolutions = 0;
+									try{
+										for (var r = 0; r < info_value.length; r++) {
+											if(info_value[r][2] != '60'){
+												if(this.debug){
+													console.warn("power settings: skipping non-60Hz display refresh rate: ", info_value[r][2]);
+												}
+												continue
+											}
+											let option_el = document.createElement("option");
+											option_el.value = option_el.innerText = info_value[r][0] + 'x' + info_value[r][1]; // + '_' + resolution_parts[r];
+											//console.log(body.display2_width, " =?= ", info_value[r][0], "   &   ", body.display2_height, " =?= ", info_value[r][1]);
+											
+											if(body.display2_width == info_value[r][0] && body.display2_height == info_value[r][1]){
+												//console.log("at the current resolution");
+												option_el.selected = true;
+											}
+											
+											added_resolutions++; 
+											select_el.appendChild(option_el);
+											//let option_text = resolution_parts[r] + 'x' + resolution_parts[r + 1];// + ', ' + resolution_parts[r+2] +'Hz';
+
+										}
+										if(added_resolutions > 1){
+											document.getElementById('extension-power-settings-display2-resolution-container').innerHTML = '';
+											
+											select_container_el.appendChild(select_el);
+											
+											document.getElementById('extension-power-settings-display2-resolution-container').appendChild(select_container_el);
+										}
+									}
+									catch(e){
+										console.error("error parsing edid resolutions: ", e);
+									}
+									
+									
+									for (var r = 0; r < info_value.length; r++) {
+										info_value_el.innerHTML += '<span>' + info_value[r] + '</span><br/>';
+									}
+									
+									//info_el.appendChild(info_value_el);
+							
+									//info_container_el.appendChild(info_el);
+									
+									
+								}
+								else{
+									info_value_el.innerText = info_value;
+								}
+								
+								info_el.appendChild(info_value_el);
+								
+								info_container_el.appendChild(info_el);
+								
+							
+								
+							}
+							document.getElementById('extension-power-settings-display2-details').appendChild(info_container_el);
+						}
+						catch(e){
+							console.error("unable to parse display EDID data: ", e);
+						}
+					}
+					else{
+						document.getElementById('extension-power-settings-display2-details').innerHTML = '<p>No details available</p>';
+					}
 				}
 				
 				
@@ -2516,6 +2880,27 @@
                 console.error("Error sending get_display_info command: ", e);
             });
 		}
+		
+		
+		
+		set_display_resolution(port,resolution){
+			//console.log("power settings: in set_display_resolution: ", port, resolution);
+			
+            window.API.postJson(
+                `/extensions/${this.id}/api/ajax`, {
+                    'action': 'set_display_resolution',
+					'port':port,
+					'resolution':resolution
+                }
+            ).then((body) => {
+                if(this.debug){
+                    console.log("set_display_resolution response: ", body);
+                }
+            }).catch((e) => {
+                console.error("Error changing display resolution: ", e);
+            });
+		}
+		
 		
 		
 		get_stats(){
@@ -2548,15 +2933,10 @@
 						document.getElementById('extension-power-settings-sd-card-written-bytes').innerText = body['sd_card_written_kbytes'];
 					}
 
-					
-					
-				
 	                // Show the available memory. This is different from "free" memory
 	                if(typeof body['available_memory'] != 'undefined'){
 	                    document.getElementById('extension-power-settings-available-memory').innerText = body['available_memory'];
 						
-	                    
-					
 		                // Show the free memory.
 		                if(typeof body['free_memory'] != 'undefined'){
 		                    document.getElementById('extension-power-settings-free-memory').innerText = body['free_memory'];

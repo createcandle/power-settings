@@ -159,6 +159,7 @@
 .extension-power-settings-container ul li,
 .extension-power-settings-container ol li{
     margin-bottom:.7rem;
+	display:flex;
 }
 
 
@@ -325,7 +326,7 @@
 .extension-power-settings-vlak{
     max-width:60rem;
     margin:0 auto;
-    background-color:rgba(0,0,0,.2);
+    background-color:rgba(0,0,0,.15);
     padding:2rem;
     margin: 0 2rem 2rem 2rem;
     border-radius:.5rem;
@@ -860,26 +861,103 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 }
 
 
-#extension-power-settings-display1-info,
-#extension-power-settings-display2-info{
+.extension-power-settings-display-info-flex{
 	display:flex;
 }
 
-#extension-power-settings-display1-info > div,
-#extension-power-settings-display2-info > div{
-	width:50%;
+.extension-power-settings-display-info-flex h3{
+	margin-top:0;
+	margin-bottom:.3rem;
+}
+
+.extension-power-settings-field-description{
+	opacity:.6;
+	margin-top:.4rem;
+}
+	
+
+.extension-power-settings-display-info-flex > div{
+	
 	box-sizing:border-box;
 	padding:2rem;
 }
+.extension-power-settings-display-info-flex > div:first-of-type{
+	width:40%;
+}
+.extension-power-settings-display-info-flex > div:last-of-type{
+	width:60%;
+}
+
+.extension-power-settings-display-info-flex > div > div{
+	margin-bottom:2rem;
+}
+
 
 .extension-power-settings-display-number{
 	position:absolute;
 	z-index:1;
 	left:calc(50% - 1rem);
-	top:7rem;
+	top:5rem;
 	font-size: 3rem;
 	font-weight: bolder;
 }
+/*
+#extension-power-settings-display1-resolution-container,
+#extension-power-settings-display2-resolution-container{
+	margin-bottom:2rem;
+}
+*/
+
+.extension-power-settings-show-display-details-button{
+	display:block;
+	margin-left:auto;
+}
+.extension-power-settings-show-display-details-button + div{
+	display:none;
+}
+
+.extension-power-settings-list-item-info:not(:empty){
+	background-color: rgba(0,0,0,.15);
+	border-radius: 0.5rem;
+	padding:4rem;
+}
+.extension-power-settings-list-item-info:not(:empty)::before{
+	content:'Details';
+	font-size:2rem;
+	margin:0 0 2rem 0rem;
+	display:block;
+}
+
+
+.extension-power-settings-list-item-info span{
+	word-wrap:break-word;
+	display:inline-block;
+}
+
+.extension-power-settings-list-item-info > li > span:first-of-type{
+	min-width:50%;
+	padding-right:2rem;
+	box-sizing:border-box;
+	display: inline-block;
+}
+
+#extension-power-settings-display1-resolution-select,
+#extension-power-settings-display2-resolution-select{
+	margin:1rem 0;
+	width:100%;
+}
+
+#extension-power-settings-display1-production-date:empty,
+#extension-power-settings-display2-production-date:empty{
+	display:none;
+}
+
+.extension-power-settings-flex-centered-spaced{
+	display:flex;
+	align-items:center;
+	justify-content:space-between;
+}
+
 
 @media screen and (max-width: 640px) {
 	#extension-power-settings-display1-info,

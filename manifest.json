@@ -10,7 +10,7 @@
       ]
     }
   ],
-  "description": "Adds options to shutdown or reboot your system, go fullscreen, manually set the time, create and restore backups, do a factory reset, and more.",
+  "description": "A core part of Candle. Adds options to shutdown or reboot your system, go fullscreen, manually set the time, create and restore backups, do a factory reset, change display settings, and much more.",
   "gateway_specific_settings": {
     "webthings": {
       "exec": "python3 {path}/main.py",
@@ -26,11 +26,18 @@
   "name": "Power Settings",
   "options": {
     "default": {
+	  "Display standby delay":15,
       "Do not use hardware clock": false,
       "Debug": false
     },
     "schema": {
       "properties": {
+        "Display standby delay": {
+          "description": "If display power management is enabled, after how many minutes should an attached display go to sleep? This delay may be set between 1 and 60 minutes. The default is 15.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        },
         "Do not use hardware clock": {
           "description": "If you have plugged in a ds1307 hardware clock module, then it will normally automatically be used. You can disable use of the hardware clock here. Reboot the system to complete the change.",
           "type": "boolean"
@@ -45,7 +52,7 @@
     }
   },
   "short_name": "Power",
-  "version": "3.6.1",
+  "version": "3.5.9",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",

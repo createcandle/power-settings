@@ -93,12 +93,12 @@
                 <div class="extension-power-settings-checkbox-container">
                     <input type="checkbox" name="keep-z2m" id="extension-power-settings-keep-z2m" /><label for="extension-power-settings-keep-z2m">Allow Zigbee devices to remain paired</label>
                 </div>
-                <p class="field-description" style="opacity: 0.6; margin-top: 0.3rem;">If checked, the currently paired Zigbee devices will remain paired.</p>
+                <p class="extension-power-settings-field-description">If checked, the currently paired Zigbee devices will remain paired.</p>
 
                 <div class="extension-power-settings-checkbox-container">
                     <input type="checkbox" name="keep-bluetooth" id="extension-power-settings-keep-bluetooth" /><label for="extension-power-settings-keep-bluetooth">Allow Bluetooth devices to remain paired</label>
                 </div>
-                <p class="field-description" style="opacity: 0.6; margin-top: 0.3rem;">If checked, the currently paired Bluetooth devices will remain paired.</p>
+                <p class="extension-power-settings-field-description">If checked, the currently paired Bluetooth devices will remain paired.</p>
 
                 <br />
                 <div style="text-align: right;">
@@ -129,49 +129,66 @@
 		</div>
 		
         <div id="extension-power-settings-display1-info" class="extension-power-settings-vlak extension-power-settings-hidden">
-			<div style="position:relative"><img alt="Display 1" src="/extensions/power-settings/images/big_display.svg"/><div class="extension-power-settings-display-number">1</div></div>
-			<div style="text-align:left"> 
-				<h3 id="extension-power-settings-display1-name">Display 1</h3>
-				<div>
-                	<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display1-width">?</span><br/>
-					<span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display1-height">?</span><br/>
+			<div class="extension-power-settings-display-info-flex">
+				<div style="position:relative"><img alt="Display 1" src="/extensions/power-settings/images/big_display.svg"/><div class="extension-power-settings-display-number">1</div></div>
+				<div style="text-align:left"> 
+					<h3 id="extension-power-settings-display1-name">Display 1</h3>
+					<p id="extension-power-settings-display1-production-date" class="extension-power-settings-field-description"></p>
+					
+					<div id="extension-power-settings-display1-resolution-container">
+	                	<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display1-width">?</span><br/>
+						<span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display1-height">?</span><br/>
+					</div>
+	                <div>
+	                    <input type="checkbox" name="extension-power-settings-display1-rotate-checkbox" id="extension-power-settings-display1-rotate-checkbox" />
+	                    <label for="extension-power-settings-display1-rotate-checkbox">Rotate 180 degrees</label>
+	                    <p class="extension-power-settings-field-description">This may require a reboot.</p>
+	                </div>
+	                <div>
+	                    <input type="checkbox" name="extension-power-settings-display1-power-checkbox" id="extension-power-settings-display1-power-checkbox" />
+	                    <label for="extension-power-settings-display1-power-checkbox">Enable power management</label>
+	                    <p class="extension-power-settings-field-description">This will let the display go into standby more after <span id="extension-power-settings-display1-standby-delay">a few</span> minutes of inactivity.</p>
+	                </div>
+					<p>&nbsp;</p>
+					
+			
 				</div>
-				<p>&nbsp;</p>
-                <div>
-                    <input type="checkbox" name="extension-power-settings-display1-rotate-checkbox" id="extension-power-settings-display1-rotate-checkbox" />
-                    <label for="extension-power-settings-display1-rotate-checkbox">Rotate 180 degrees</label>
-                    <p class="field-description" style="opacity: 0.6; margin-top: 0.3rem;">This may require a reboot.</p>
-                </div>
-                <div>
-                    <input type="checkbox" name="extension-power-settings-display1-power-checkbox" id="extension-power-settings-display1-power-checkbox" />
-                    <label for="extension-power-settings-display1-power-checkbox">Enable power management</label>
-                    <p class="field-description" style="opacity: 0.6; margin-top: 0.3rem;">This will let the display turn itself off to save power after <span id="extension-power-settings-display1-standby-delay">a few</span> minutes of inactivity.</p>
-                </div>
 			</div>
-            <!--<p class="extension-power-settings-header">Factory reset</p>-->
+			<div>
+				<button class="text-button extension-power-settings-show-display-details-button" onclick="this.remove();">More details</button>
+				<div id="extension-power-settings-display1-details"></div>
+			</div>
 		</div>
 		
         <div id="extension-power-settings-display2-info" class="extension-power-settings-vlak extension-power-settings-hidden">
-			<div style="position:relative"><img alt="Display 2" src="/extensions/power-settings/images/big_display.svg"/><div class="extension-power-settings-display-number">2</div></div>
-			<div style="text-align:left"> 
-				<h3 id="extension-power-settings-display2-name">Display 2</h3>
-				<div>
-                	<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display2-width">?</span><br/>
-					<span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display2-height">?</span><br/>
+			<div class="extension-power-settings-display-info-flex">
+				<div style="position:relative"><img alt="Display 2" src="/extensions/power-settings/images/big_display.svg"/><div class="extension-power-settings-display-number">2</div></div>
+				<div style="text-align:left"> 
+					<h3 id="extension-power-settings-display2-name">Display 2</h3>
+					<p id="extension-power-settings-display2-production-date"></p>
+					<div id="extension-power-settings-display2-resolution-container">
+	                	<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display2-width">?</span><br/>
+						<span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display2-height">?</span><br/>
+					</div>
+					<p>&nbsp;</p>
+	                <div>
+	                    <input type="checkbox" name="extension-power-settings-display2-rotate-checkbox" id="extension-power-settings-display2-rotate-checkbox" />
+	                    <label for="extension-power-settings-display2-rotate-checkbox">Rotate 180 degrees</label>
+	                    <p class="extension-power-settings-field-description">This may require a reboot.</p>
+	                </div>
+	                <div>
+	                    <input type="checkbox" name="extension-power-settings-display2-power-checkbox" id="extension-power-settings-display2-power-checkbox" />
+	                    <label for="extension-power-settings-display2-power-checkbox">Enable power management</label>
+	                    <p class="extension-power-settings-field-description">This will let the display go into standby more after <span id="extension-power-settings-display2-standby-delay">a few</span> minutes of inactivity.</p>
+	                </div>
+					<p>&nbsp;</p>
+					<p id="extension-power-settings-display1-production-date" class="extension-power-settings-field-description"></p>
 				</div>
-				<p>&nbsp;</p>
-                <div>
-                    <input type="checkbox" name="extension-power-settings-display2-rotate-checkbox" id="extension-power-settings-display2-rotate-checkbox" />
-                    <label for="extension-power-settings-display2-rotate-checkbox">Rotate 180 degrees</label>
-                    <p class="field-description" style="opacity: 0.6; margin-top: 0.3rem;">This may require a reboot.</p>
-                </div>
-                <div>
-                    <input type="checkbox" name="extension-power-settings-display2-power-checkbox" id="extension-power-settings-display2-power-checkbox" />
-                    <label for="extension-power-settings-display2-power-checkbox">Enable power management</label>
-                    <p class="field-description" style="opacity: 0.6; margin-top: 0.3rem;">This will let the display turn itself off to save power after <span id="extension-power-settings-display2-standby-delay">a few</span> minutes of inactivity.</p>
-                </div>
 			</div>
-            <!--<p class="extension-power-settings-header">Factory reset</p>-->
+			<div>
+				<button class="text-button extension-power-settings-show-display-details-button" onclick="this.remove();">More details</button>
+				<div id="extension-power-settings-display2-details" class="extension-power-settings-display-details" style="word-wrap:break-word;"></div>
+			</div>
 		</div>
 		
     </div>
@@ -461,14 +478,14 @@
                     <div class="extension-power-settings-developer-only">
                         <input type="checkbox" name="extension-power-settings-cutting-edge-checkbox" id="extension-power-settings-cutting-edge-checkbox" />
                         <label for="extension-power-settings-cutting-edge-checkbox">Update to the cutting edge build (RISKY!)</label>
-                        <p class="field-description" style="opacity: 0.6; margin-top: 0.3rem;">This option is available because you have enabled developer mode.</p>
+                        <p class="extension-power-settings-field-description">This option is available because you have enabled developer mode.</p>
                     </div>
 
                     <!--
                     <div id="extension-power-settings-live-update-option" class="extension-power-settings-developer-only" style="display: none;">
                         <input type="checkbox" name="extension-power-settings-live-update-checkbox" id="extension-power-settings-live-update-checkbox" />
                         <label for="extension-power-settings-live-update-checkbox">Update while the system is running</label>
-                        <p class="field-description" style="opacity: 0.6; margin-top: 0.3rem;">
+                        <p class="extension-power-settings-field-description">
                             Experimental feature! The system will automatically reboot once the process is complete. It is strongly advised to reboot before starting the live update process.
                         </p>
                     </div>
