@@ -24,7 +24,7 @@ pip3 install -r requirements.txt -t lib --no-binary :all: --prefix "" --no-cache
 # in future this command should use: --use-pep517
 
 # Put package together
-cp -r pkg lib LICENSE manifest.json *.py db.sqlite3 *.sh display_manufacturers.csv README.md css images js views package/
+cp -r pkg lib LICENSE manifest.json *.py db.sqlite3 *.sh README.md css images js views package/
 find package -type f -name '*.pyc' -delete
 find package -type f -name '._*' -delete
 find package -type d -empty -delete
