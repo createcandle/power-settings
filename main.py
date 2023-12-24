@@ -6,7 +6,7 @@ import gateway_addon
 import signal
 import sys
 import time
-#sys.path.append(path.join(path.dirname(path.abspath(__file__)), 'lib'))
+sys.path.append(path.join(path.dirname(path.abspath(__file__)), 'lib'))
 
 #from pkg.power_settings import PowerSettingsAdapter  # noqa
 from pkg.power_settings import PowerSettingsAPIHandler  # noqa
