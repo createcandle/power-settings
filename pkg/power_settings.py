@@ -7,6 +7,7 @@
 # cat /proc/mounts | grep /ro | awk '{print substr($4,1,2)}'
 
 import os
+import re
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
 import json
@@ -183,6 +184,8 @@ class PowerSettingsAPIHandler(APIHandler):
         # Ugly fix for issue with Candle 2.0.2.
         os.system('sudo chown -R pi:pi ' + str(self.user_profile['dataDir']))
             
+        #print("get_hdmi_port_resolution: " + str( self.get_hdmi_port_resolution('HDMI-1') ))
+            
             
         self.edid_test_hex = (
             '00ffffffffffff000469982401010101'
@@ -238,6 +241,19 @@ class PowerSettingsAPIHandler(APIHandler):
         self.do_not_use_hardware_clock = False
         self.hardware_clock_file_path = self.boot_path + '/candle_hardware_clock.txt'
         
+        # Printers
+        self.connected_printers = {}
+        self.printing_allowed = True
+        if os.path.exists(self.boot_path + '/candle_disable_printing.txt'):
+            self.printing_allowed = False
+        self.has_cups = False
+        if os.path.exists('/etc/cups'):
+            self.has_cups = True
+        
+        
+        
+        
+        
         # Display
         self.display1_rotation = 0
         self.display2_rotation = 0
@@ -266,7 +282,16 @@ class PowerSettingsAPIHandler(APIHandler):
         self.edid_available_output = run_command('which edid-decode')
         if str(self.edid_available_output).startswith('/'):
             self.edid_available = True
-            
+        
+        self.rpi_display_backlight = False
+        if os.path.exists('/proc/device-tree/rpi_display_backlight'):
+            self.rpi_display_backlight = True
+        
+        self.rpi_display_rotation = 0
+        
+        self.touchscreen_detected = False
+        self.detect_touchscreen()
+        
         
         try:
             # get HDMI port names
@@ -275,15 +300,15 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("display_port_names: \n" + str(display_port_names))
             display_port_names = display_port_names.splitlines()
         
-            if len(display_port_names) == 1:
-                if len(display_port_names[0]) > 2:
+            if len(display_port_names) > 0:
+                if len(str(display_port_names[0])) > 2:
                     self.display_port1_name = display_port_names[0]
                     [ self.display1_width, self.display1_height ] = self.get_hdmi_port_resolution(self.display_port1_name)
                     if self.DEBUG:
                         print("self.display1_width: " + str(self.display1_width))
                 
-            if len(display_port_names) == 2:
-                if len(display_port_names[1]) > 2:
+            if len(display_port_names) > 1:
+                if len(str(display_port_names[1])) > 2:
                     self.display_port2_name = display_port_names[1]
                     [ self.display2_width, self.display2_height ] = self.get_hdmi_port_resolution(self.display_port2_name)
                     if self.DEBUG:
@@ -296,7 +321,8 @@ class PowerSettingsAPIHandler(APIHandler):
             print("Error getting initial display data: " + str(ex))
             
         
-            
+        # Attached devices (USB)
+        self.attached_devices = []
             
         # Low voltage
         self.low_voltage = False
@@ -563,6 +589,9 @@ class PowerSettingsAPIHandler(APIHandler):
             print("self.allow_anonymous_mqtt: " + str(self.allow_anonymous_mqtt))
         
         
+        self.detect_printers()
+        
+        
         while self.running:
             time.sleep(2)
             if self.should_start_recovery_update == True:
@@ -610,6 +639,20 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("-Display standby delay preference was in config: " + str(self.display_standby_delay))
         
                 
+                
+    def detect_touchscreen(self):
+        touch_test = run_command("udevadm info -q all -n /dev/input/event* | grep 'ID_INPUT_TOUCHSCREEN=1'")
+        if touch_test == None:
+            self.touchscreen_detected = False
+            return False
+        elif 'E: ID_INPUT_TOUCHSCREEN=1' in touch_test:
+            self.touchscreen_detected = True
+            return True
+        else:
+            self.touchscreen_detected = False
+            return False
+        
+    
         
     def set_display_resolutions(self):
         if self.DEBUG:
@@ -636,15 +679,52 @@ class PowerSettingsAPIHandler(APIHandler):
                 os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port2_name) + ' --mode ' + str(reso2) + ' --rate 60')
                 os.system('DISPLAY=:1 xrandr --output ' + str(self.display_port2_name) + ' --mode ' + str(reso2) + ' --rate 60')
             
+            
+            
+    def set_display_rotation(self,display=None,rotation=0):
+        if self.DEBUG:
+            print("in set_display_rotation. Desired rotation: ", rotation);
+        
+        
+        # Display rotation
+        if int(rotation) == 0:
+            os.system('sudo rm ' + str(self.rotate_display_path))
+            if self.display1_width != 0:
+                os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port1_name) + ' --rotate normal')
+            
+            if self.display2_width != 0:
+                os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port2_name) + ' --rotate normal')
+            
+        elif int(rotation) == 180:
+            os.system('sudo touch ' + str(self.rotate_display_path))
+            if self.display1_width != 0:
+                os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port1_name) + ' --rotate inverted')
+            if self.display2_width != 0:
+                os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port2_name) + ' --rotate inverted')
+            
+            
+        # Touch input rotation
+        pointer_output = run_command("DISPLAY=:0 xinput | grep pointer | tail -n +2 | grep -v ' XTEST ' | cut -f1 -d$'\t'")
+        if pointer_output != None:
+            for line in pointer_output.splitlines():
+                input_name = line[5:].strip()
+                print("input_name: " + str(input_name))
+                if int(rotation) == 180:
+                    os.system("DISPLAY=:0 xinput --set-prop '" + str(input_name) + "' 'Coordinate Transformation Matrix' 1 0 0 0 1 0 0 0 1")
+                else:
+                    os.system("DISPLAY=:0 xinput --set-prop '" + str(input_name) + "' 'Coordinate Transformation Matrix' -1 0 1 0 -1 1 0 0 1")
+            
              
             
     def get_hdmi_port_resolution(self, hdmi_port_name=''):
         if self.DEBUG:
             print("in get_hdmi_port_resolution. hdmi_port_name: " + str(hdmi_port_name))
         try:
-            if hdmi_port_name:
+            if len(str(hdmi_port_name)) > 2:
                 connected_check = run_command('DISPLAY=:0 xrandr | grep " connected" | grep ' + str(hdmi_port_name))
-                if len(str(connected_check)) > 5 and '+' in connected_check:
+                if self.DEBUG:
+                    print("connected_check: " + str(connected_check))
+                if connected_check != None and len(str(connected_check)) > 5 and '+' in str(connected_check):
                     #connected_check = connected_check[connected_check.find(' connected'):]
                     connected_check = connected_check[:connected_check.find('+')]
                     connected_check = connected_check.split(' ')[-1]
@@ -661,7 +741,7 @@ class PowerSettingsAPIHandler(APIHandler):
             print("Error in in get_hdmi_port_resolution: " + str(ex))
         
         if self.DEBUG:
-            print("failed to extract resolution")
+            print("get_hdmi_port_resolution: failed to extract resolution. hdmi_port_name: " + str(hdmi_port_name))
         return [0,0]
         
         
@@ -872,6 +952,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                 self.display_port1_name = ''
                                 self.display_port2_name = ''
                                 
+                                
+                                # find /sys/devices -name "edid"
+                                
                                 try:
                                     #fbset_output = run_command('fbset')
                                     #if self.DEBUG:
@@ -920,20 +1003,21 @@ class PowerSettingsAPIHandler(APIHandler):
                                         print("display_port_names: \n" + str(display_port_names))
                                     display_port_names = display_port_names.splitlines()
                                 
-                                    if len(display_port_names) == 1:
-                                        if len(display_port_names[0]) > 2:
-                                            self.display_port1_name = display_port_names[0]
+                                    if len(display_port_names) > 0:
+                                        if len(str(display_port_names[0])) > 2:
+                                            self.display_port1_name = str(display_port_names[0])
                                             [ self.display1_width, self.display1_height ] = self.get_hdmi_port_resolution(self.display_port1_name)
                                             if self.DEBUG:
                                                 print("self.display1_width: " + str(self.display1_width))
                                         
-                                    if len(display_port_names) == 2:
-                                        if len(display_port_names[1]) > 2:
-                                            self.display_port2_name = display_port_names[1]
+                                    if len(display_port_names) > 1:
+                                        if len(str(display_port_names[1])) > 2:
+                                            self.display_port2_name = str(display_port_names[1])
                                             [ self.display2_width, self.display2_height ] = self.get_hdmi_port_resolution(self.display_port2_name)
                                             if self.DEBUG:
                                                 print("self.display2_width: " + str(self.display2_width))
-                                
+                                                
+                                    
                                     connected_port_names = run_command("DISPLAY=:0 xrandr | grep ' connected'")
                                     for connected_port in connected_port_names.splitlines():
                                         if connected_port == self.display_port1_name:
@@ -944,7 +1028,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                     #subprocess.check_output
                                     edids = pyedid.get_edid_from_xrandr_verbose(run_command("DISPLAY=:0 xrandr --verbose"))
                                     if self.DEBUG:
-                                        print("edids: " + str(edids))
+                                        print("edids 1: " + str(edids))
                                     
                                     for x, edid in enumerate(edids):
                                         if self.DEBUG:
@@ -953,7 +1037,6 @@ class PowerSettingsAPIHandler(APIHandler):
                                             self.display1_details = str(pyedid.parse_edid(edid));
                                         if x == 1:
                                             self.display2_details = str(pyedid.parse_edid(edid));
-                                
                                 
                                 
                                     """
@@ -1043,19 +1126,27 @@ class PowerSettingsAPIHandler(APIHandler):
                                     # Power management
                                     display1_power_management_output = run_command("DISPLAY=:0 xset -q | awk '/DPMS is/ {print $NF}'")
                                     if 'unable to open' in display1_power_management_output:
+                                        self.display1_available = False
                                         pass
                                     elif 'Disabled' in display1_power_management_output:
                                         self.display1_power = False
+                                        self.display1_available = True
                                     else:
                                         self.display1_power = True
+                                        self.display1_available = True
                                 
                                     display2_power_management_output = run_command("DISPLAY=:1 xset -q | awk '/DPMS is/ {print $NF}'")
                                     if 'unable to open' in display2_power_management_output:
+                                        self.display2_available = False
                                         pass
                                     elif 'Disabled' in display2_power_management_output:
                                         self.display2_power = False
+                                        self.display2_available = True
                                     else:
                                         self.display2_power = True
+                                        self.display2_available = True
+                                
+                                    self.detect_touchscreen()
                                 
                                     state = 'ok'
                                 except Exception as ex:
@@ -1083,7 +1174,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                           'display2_height':self.display2_height,
                                           'display1_power':self.display1_power,
                                           'display2_power':self.display2_power,
-                                          'display_standby_delay':self.display_standby_delay
+                                          'display_standby_delay':self.display_standby_delay,
+                                          'rpi_display_backlight':self.rpi_display_backlight,
+                                          'rpi_display_rotation':self.rpi_display_rotation,
+                                          'touchscreen_detected':self.touchscreen_detected
                                           }),
                                 )
                                 
@@ -1098,39 +1192,13 @@ class PowerSettingsAPIHandler(APIHandler):
                                         print("new display1 rotation: " + str(self.display1_rotation))
                                         print("new display2 rotation: " + str(self.display2_rotation))
                                     
+                                    
                                     state = 'ok'
                                     if self.display1_width != 0:
-                                        if self.display1_rotation == 0:
-                                            os.system('sudo rm ' + str(self.rotate_display_path))
-                                            os.system("DISPLAY=:0 xrandr --output HDMI-1 --rotate normal")
-                                            os.system("DISPLAY=:0 xinput --set-prop 'ILITEK ILITEK-TP' 'Coordinate Transformation Matrix' 1 0 0 0 1 0 0 0 1")
-                                            os.system("DISPLAY=:0 xinput --set-prop 'HID 222a:0001' 'Coordinate Transformation Matrix' 1 0 0 0 1 0 0 0 1")
-                                        else:
-                                            os.system('sudo touch ' + str(self.rotate_display_path))
-                                            os.system("DISPLAY=:0 xrandr --output HDMI-1 --rotate inverted")
-                                            os.system("DISPLAY=:0 xinput --set-prop 'ILITEK ILITEK-TP' 'Coordinate Transformation Matrix' -1 0 1 0 -1 1 0 0 1")
-                                            os.system("DISPLAY=:0 xinput --set-prop 'HID 222a:0001' 'Coordinate Transformation Matrix' -1 0 1 0 -1 1 0 0 1")
+                                        self.set_display_rotation(None,self.display1_rotation)
                                         
                                     if self.display2_width != 0:
-                                        if self.display2_rotation == 0:
-                                            os.system('sudo rm ' + str(self.rotate_display_path))
-                                            os.system("DISPLAY=:0 xrandr --output HDMI-2 --rotate normal")
-                                            os.system("DISPLAY=:0 xinput --set-prop 'ILITEK ILITEK-TP' 'Coordinate Transformation Matrix' 1 0 0 0 1 0 0 0 1")
-                                            os.system("DISPLAY=:0 xinput --set-prop 'HID 222a:0001' 'Coordinate Transformation Matrix' 1 0 0 0 1 0 0 0 1")
-                                            os.system("DISPLAY=:1 xrandr --output HDMI-2 --rotate normal")
-                                            os.system("DISPLAY=:1 xinput --set-prop 'ILITEK ILITEK-TP' 'Coordinate Transformation Matrix' 1 0 0 0 1 0 0 0 1")
-                                            os.system("DISPLAY=:1 xinput --set-prop 'HID 222a:0001' 'Coordinate Transformation Matrix' 1 0 0 0 1 0 0 0 1")
-                                        else:
-                                            os.system('sudo touch ' + str(self.rotate_display_path))
-                                            os.system("DISPLAY=:0 xrandr --output HDMI-2 --rotate inverted")
-                                            os.system("DISPLAY=:0 xinput --set-prop 'ILITEK ILITEK-TP' 'Coordinate Transformation Matrix' -1 0 1 0 -1 1 0 0 1")
-                                            os.system("DISPLAY=:0 xinput --set-prop 'HID 222a:0001' 'Coordinate Transformation Matrix' -1 0 1 0 -1 1 0 0 1")
-                                            os.system("DISPLAY=:1 xrandr --output HDMI-2 --rotate inverted")
-                                            os.system("DISPLAY=:1 xinput --set-prop 'ILITEK ILITEK-TP' 'Coordinate Transformation Matrix' -1 0 1 0 -1 1 0 0 1")
-                                            os.system("DISPLAY=:1 xinput --set-prop 'HID 222a:0001' 'Coordinate Transformation Matrix' -1 0 1 0 -1 1 0 0 1")
-                                    
-                                        
-                                        
+                                        self.set_display_rotation(None,self.display2_rotation)
                                         
                                         
                                 return APIResponse(
@@ -1138,6 +1206,36 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':state}),
                                 )
+                                
+                            
+                            
+                            # DISPLAY ROTATION
+                            elif action == 'set_rpi_display_rotation':
+                                state = 'error'
+                                if 'rpi_display_rotation' in request.body:
+                                    self.rpi_display_rotation = int(request.body['rpi_display_rotation'])
+                                    
+                                    
+                                    if self.DEBUG:
+                                        print("new Rpi Display rotation: " + str(self.rpi_display_rotation))
+                                    
+                                    state = 'ok'
+                                    
+                                    if self.rpi_display_rotation == 0:
+                                        os.system('sudo rm ' + str(self.rotate_display_path))
+                                    else:
+                                        os.system('sudo touch ' + str(self.rotate_display_path))
+                                        
+                                    # TODO: make changes to rotate official Rpi Display
+                                    
+                                    
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
+                                
+                                
                                 
                             
                             # DISPLAY POWER MANAGEMENT
@@ -1192,6 +1290,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':state}),
                                 )
                                 
+                                
                             # DISPLAY POWER MANAGEMENT
                             elif action == 'set_display_resolution':
                                 state = 'error'
@@ -1212,6 +1311,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':state}),
                                 )
+                                
                                 
                                 
                             elif action == 'force_display_setting':
@@ -1262,15 +1362,42 @@ class PowerSettingsAPIHandler(APIHandler):
                                         print("self.config_txt is now: \n\n" + str(self.config_txt) + "\n\n")
                                         
                                         
-                                    
-                                        
-                                        
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
                                   content=json.dumps({'state':state}),
                                 )
                             
+                            
+                            
+                            elif action == 'printer':
+                                
+                                if 'printing_allowed' in request.body:
+                                    self.printing_allowed = bool(request.body['printing_allowed'])
+                                    if self.DEBUG:
+                                        print("printing_allowed changed to: " + str(self.printing_allowed))
+                                    if self.printing_allowed == True:
+                                        os.system('sudo rm ' + self.boot_path + '/candle_disable_printing.txt')
+                                    else:
+                                        os.system('sudo touch ' + self.boot_path + '/candle_disable_printing.txt')
+                                        for printer_id in self.connected_printers:
+                                            os.system("sudo lpadmin -x " + str(printer_id))
+                                        
+                                if 'default_printer' in request.body:
+                                    if self.DEBUG:
+                                        print("Changing default printer to: " + str(request.body['default_printer']))
+                                    self.persistent_data['default_printer'] = str(request.body['default_printer'])
+                                    
+                                self.detect_printers()
+                        
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':True, 
+                                                      'connected_printers':self.connected_printers,
+                                                      'printing_allowed':self.printing_allowed
+                                                  }),
+                                )
                             
                             
                             # UPDATE RECOVERY PARTITION
@@ -1797,6 +1924,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                             elif action == 'get_stats':
                                 
+                                self.attached_devices = []
                                 free_memory = '?'
                                 try:
                                     
@@ -1865,6 +1993,18 @@ class PowerSettingsAPIHandler(APIHandler):
                                     print("Error checking low voltage: " + str(ex))
                                 
                                 
+                                try:
+                                    self.attached_devices = []
+                                    lsusb_output = run_command("lsusb | cut -d' ' -f 7,8,9,10,11,12,13,14,15")
+                                    if self.DEBUG:
+                                        print("lsusb output: " + str(lsusb_output))
+                                    
+                                    if lsusb_output  != None:
+                                        self.attached_devices = lsusb_output.splitlines()
+                                    
+                                except Exception as ex:
+                                    print("Error while checking for attached (USB) devices: " + str(ex))
+                                
                                 
                                 return APIResponse(
                                   status=200,
@@ -1875,7 +2015,12 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'free_memory':free_memory, 
                                                       'disk_usage':self.disk_usage,
                                                       'sd_card_written_kbytes':self.sd_card_written_kbytes,
-                                                      'low_voltage':self.low_voltage}),
+                                                      'low_voltage':self.low_voltage,
+                                                      'attached_devices':self.attached_devices,
+                                                      'has_cups':self.has_cups,
+                                                      'printing_allowed':self.printing_allowed,
+                                                      'connected_printers':self.connected_printers
+                                            })
                                 )
                                 
                             
@@ -1998,6 +2143,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'device_kernel':self.device_kernel.rstrip(),
                                             'device_linux':self.device_linux.rstrip(),
                                             'device_sd_card_size':self.device_sd_card_size,
+                                            'has_cups':self.has_cups,
                                             'debug':self.DEBUG
                                         }
                                         
@@ -2199,6 +2345,8 @@ class PowerSettingsAPIHandler(APIHandler):
               content=json.dumps("API Error"),
             )
         
+        
+        
     def set_time(self, hours, minutes, seconds=0):
         if self.DEBUG:
             print("Setting the new time")
@@ -2222,10 +2370,7 @@ class PowerSettingsAPIHandler(APIHandler):
             except Exception as e:
                 print("Error setting new time: " + str(e))
 
-                
-           
-
-
+            
     def set_ntp_state(self,new_state):
         if self.DEBUG:
             print("Setting NTP state to: " + str(new_state))
@@ -2240,6 +2385,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     print("Network time turned off")
         except Exception as e:
             print("Error changing NTP state: " + str(e))
+
 
 
     def shutdown(self):
@@ -2270,6 +2416,147 @@ class PowerSettingsAPIHandler(APIHandler):
 
 
     
+    
+    def get_avahi_lines(self):
+        if self.DEBUG:
+            print("in get_avahi_lines")
+        avahi_lines = []
+        avahi_browse_command = ["avahi-browse","-p","-l","-a","-r","-k","-t"] # avahi-browse -p -l -a -r -k -t
+        
+        try:
+            avahi_scan_result = subprocess.check_output(avahi_browse_command) #.decode()) # , universal_newlines=True, stdout=subprocess.PIPE
+            avahi_encoding = 'latin1'
+            try:
+                avahi_encoding = chardet.detect(avahi_scan_result)['encoding']
+                if self.DEBUG:
+                    print("detected avahi output encoding: " + str(avahi_encoding))
+            except Exception as ex:
+                print("error getting avahi output encoding: " + str(ex))
+                
+            avahi_scan_result = avahi_scan_result.decode(avahi_encoding)
+            for line in avahi_scan_result.split('\n'):
+                # replace ascii codes in the string. E.g. /032 is a space
+                for x in range(127):
+                    anomaly = "\\" + str(x).zfill(3)
+                    if anomaly in line:
+                        line = line.replace(anomaly,chr(x))
+                avahi_lines.append(line)
+        
+        except Exception as ex:
+            if self.DEBUG:
+                print("Error in get_avahi_lines: " + str(ex))
+                
+        return avahi_lines
+        
+    
+    
+    def detect_printers(self):
+        if self.DEBUG:
+            print("in detect_printers")
+
+        self.connected_printers = {}
+
+        if self.printing_allowed:
+            try:
+            
+                lpstat_output = run_command("lpstat -v")
+                if self.DEBUG:
+                    print("detect_printers: lpstat before: " + str(lpstat_output))
+            
+                cups_output = run_command("sudo lpinfo -l --timeout 10 -v | grep 'uri = lpd://' -A 5")
+                avahi_output = run_command("avahi-browse -p -l -a -r -k -t | grep '_printer._tcp' | grep IPv4")
+            
+                #print("\n\n--")
+                #print("cups_output: " + str(cups_output))
+                #print("--")
+                #print("cups_parts: " + str(cups_parts))
+                #print("--")
+                #print("avahi_output: " + str(avahi_output))
+                #print("--\n\n")
+            
+                if avahi_output != None and cups_output != None:
+                    cups_parts = cups_output.split('Device: uri = lpd://')
+                    if self.DEBUG:
+                        print("Detected number of printers: " + str(len(cups_parts)-1))
+            
+                    printer_counter = 0
+                    found_default_printer_again = False
+            
+                    for printer_info in cups_parts:
+                        printer_counter += 1
+                        if len(printer_info) > 10:
+                            if self.DEBUG:
+                                print("\nprinter_info: " + str(printer_info))
+                            printer_lines = printer_info.splitlines()
+                            for printer_line in printer_lines:
+                                if 'make-and-model =' in printer_line:
+                                    printer_name = printer_line.split('make-and-model =')[1]
+                                
+                                    if len(printer_name) > 2:
+                                        safe_printer_name = printer_name.strip()
+                                        safe_printer_name = safe_printer_name.replace(' ','_')
+                                        safe_printer_name = re.sub(r'\W+', '', safe_printer_name)
+                                        if self.DEBUG:
+                                            print("\nsafe_printer_name: " + str(safe_printer_name))
+                                        for line in avahi_output.splitlines():
+                                            if self.DEBUG:
+                                                print("avahi line: " + str(line))
+                                            ip_address_list = re.findall(r'(?:\d{1,3}\.)+(?:\d{1,3})', str(line))
+                                            if len(ip_address_list) > 0:
+                                                ip_address = str(ip_address_list[0])
+                                                if valid_ip(ip_address):
+                                                    
+                                                    self.connected_printers[safe_printer_name] = {'id':safe_printer_name,'ip':ip_address,'default':False}
+                                                    
+                                                    if self.DEBUG:
+                                                        print("avahi-browse line with valid IP: " + str(line))
+                                                        print("ADDING PRINTER: " + str(safe_printer_name) + "  ->  " + str(ip_address))
+                                                    add_printer_command = "sudo lpadmin -p " + str(safe_printer_name) + " -E -v socket://" + str(ip_address) + "  -o printer-error-policy=abort-job"
+                                                    if self.DEBUG:
+                                                        print("add_printer_command: " + str(add_printer_command))
+                                                    os.system(str(add_printer_command)) # -P # -o printer-error-policy=abort-job -u allow:all
+                                                
+                                                    if not 'default_printer' in self.persistent_data:
+                                                        if self.DEBUG:
+                                                            print("Setting initial default printer: " + str(safe_printer_name))
+                                                        self.persistent_data['default_printer'] = safe_printer_name
+                                                        found_default_printer_again = True
+                                                    else:
+                                                        if self.persistent_data['default_printer'] == safe_printer_name:
+                                                            found_default_printer_again = True
+                                            
+                                                    if printer_counter == len(cups_parts) and found_default_printer_again == False:
+                                                        if self.DEBUG:
+                                                            print("could not find the previous default printer again, setting a new one")
+                                                        self.persistent_data['default_printer'] = safe_printer_name
+        
+                    if found_default_printer_again == True and 'default_printer' in self.persistent_data:
+                        if self.DEBUG:
+                            print("Found the default printer (again): " + str(self.persistent_data['default_printer']))
+                        os.system('lpoptions -d  ' + str(self.persistent_data['default_printer']))
+                        self.connected_printers[ self.persistent_data['default_printer'] ]['default'] = True
+                
+            
+            except Exception as ex:
+                print("Error in detect_printers: " + str(ex))
+        
+        lpstat_output = run_command("lpstat -v")
+        if self.DEBUG:
+            print("lpstat -v after printer scan: " + str(lpstat_output))
+            print("\nself.connected_printers:\n")
+            print(json.dumps(self.connected_printers, indent=4, sort_keys=True))
+        #if not 'No destinations added' in lpstat_output:
+        #    for connected in lpstat_output.splitlines():
+        #        if ':' in connnected:
+        #            connected = connected.replace('device for ','')
+        #            connected = connected.replace('socket://','')
+        #            connected_parts = connected.split(':')
+                    
+            
+        return self.connected_printers
+       
+       
+    
     def update_backup_info(self, directory=None):
         if self.DEBUG:
             print("in update_backup_info")
@@ -2283,6 +2570,7 @@ class PowerSettingsAPIHandler(APIHandler):
             self.get_backup_sizes()
         except Exception as ex:
             print("error in update_backup_info: " + str(ex))
+
 
 
     # Gets the size of files and folders for the extended backup
@@ -2841,3 +3129,15 @@ def run_command(cmd, timeout_seconds=60):
         print("Error running command: "  + str(e) + ", cmd was: " + str(cmd))
         
         
+def valid_ip(ip):
+    valid = False
+    try:
+        if ip.count('.') == 3 and \
+            all(0 <= int(num) < 256 for num in ip.rstrip().split('.')) and \
+            len(ip) < 16 and \
+            all(num.isdigit() for num in ip.rstrip().split('.')):
+            valid = True
+    except Exception as ex:
+        #print("error in valid_ip: " + str(ex))
+        pass
+    return valid

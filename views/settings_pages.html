@@ -128,6 +128,17 @@
             <!--<p class="extension-power-settings-header">Factory reset</p>-->
 		</div>
 		
+		<div id="extension-power-settings-rpi-display-info" class="extension-power-settings-vlak extension-power-settings-hidden">
+			<h3>Official Raspberry Pi Display</h3>
+            <div>
+                <input type="checkbox" name="extension-power-settings-rpi-display-rotate-checkbox" id="extension-power-settings-rpi-display-rotate-checkbox" />
+                <label for="extension-power-settings-rpi-display-rotate-checkbox">Rotate 180 degrees</label>
+                <p class="extension-power-settings-field-description">This will require a reboot.</p>
+            </div>
+			
+		</div>
+		
+		
         <div id="extension-power-settings-display1-info" class="extension-power-settings-vlak extension-power-settings-hidden">
 			<div class="extension-power-settings-display-info-flex">
 				<div style="position:relative"><img alt="Display 1" src="/extensions/power-settings/images/big_display.svg"/><div class="extension-power-settings-display-number">1</div></div>
@@ -147,7 +158,7 @@
 	                <div>
 	                    <input type="checkbox" name="extension-power-settings-display1-power-checkbox" id="extension-power-settings-display1-power-checkbox" />
 	                    <label for="extension-power-settings-display1-power-checkbox">Enable power management</label>
-	                    <p class="extension-power-settings-field-description">This will let the display go into standby more after <span id="extension-power-settings-display1-standby-delay">a few</span> minutes of inactivity.</p>
+	                    <p class="extension-power-settings-field-description">This will let the display go into standby mode after <span id="extension-power-settings-display1-standby-delay">a few</span> minutes of inactivity.</p>
 	                </div>
 					<p>&nbsp;</p>
 					
@@ -179,7 +190,7 @@
 	                <div>
 	                    <input type="checkbox" name="extension-power-settings-display2-power-checkbox" id="extension-power-settings-display2-power-checkbox" />
 	                    <label for="extension-power-settings-display2-power-checkbox">Enable power management</label>
-	                    <p class="extension-power-settings-field-description">This will let the display go into standby more after <span id="extension-power-settings-display2-standby-delay">a few</span> minutes of inactivity.</p>
+	                    <p class="extension-power-settings-field-description">This will let the display go into standby mode after <span id="extension-power-settings-display2-standby-delay">a few</span> minutes of inactivity.</p>
 	                </div>
 					<p>&nbsp;</p>
 					<p id="extension-power-settings-display1-production-date" class="extension-power-settings-field-description"></p>
@@ -226,49 +237,79 @@
 			<p></p>
 
         <div class="extension-power-settings-vlak">
-            <!--<p class="extension-power-settings-header">Factory reset</p>-->
-
             <div id="extension-power-settings-available-memory-container">
-				<p class="extension-power-settings-header">Memory use</p>
-				
+				<p class="extension-power-settings-header">Memory use</p>				
 				<div id="extension-power-settings-memory-bar-container"  class="extension-power-settings-bar-container"><div id="extension-power-settings-memory-used-bar" class="extension-power-settings-bar"></div><div id="extension-power-settings-memory-purgeable-bar" class="extension-power-settings-bar"></div></div>
-				
                 Total memory: <span id="extension-power-settings-total-memory">?</span>Mb<br/>
                 Available memory: <span id="extension-power-settings-available-memory">?</span>Mb<br/>
                 Free memory: <span id="extension-power-settings-free-memory">?</span>Mb<br/>
             </div>
-			
 		</div>
-			<p></p>
+			
+		<p></p>
 			
 		<div class="extension-power-settings-vlak">
             <div id="extension-power-settings-disk-space-container" style="text-align:center">
 				<p class="extension-power-settings-header">Storage space</p>
-				
 				<div id="extension-power-settings-disk-bar-container"  class="extension-power-settings-bar-container"><div id="extension-power-settings-disk-used-bar" class="extension-power-settings-bar"></div></div>
-				
-                <span id="extension-power-settings-free-disk">?</span>MB of <span id="extension-power-settings-total-disk">?</span>MB available<br/>
-				
+                <span id="extension-power-settings-free-disk">?</span>MB of <span id="extension-power-settings-total-disk">?</span>MB available<br/>				
 				<p>&nbsp;</p>
 				<p style="font-style:italic">Over <span id="extension-power-settings-sd-card-written-bytes">...</span> has been written to the SD card</p>
 				<p>&nbsp;</p>
 				<div id="extension-power-settings-user-partition-expansion-hint" class="extension-power-settings-vlak" style="display:none; text-align:left">
-					<p>Your SD card has some unused space that could be made available to Candle, increasing your available storage space. The process will automatically reboot your controller.</p>
+					<p>Your SD card has some unused space that could be made availabl, increasing your available storage space. The process will automatically reboot your controller.</p>
 					<div style="text-align:right;margin-top:2rem">
 	                    <button id="extension-power-settings-user-partition-expansion-button" class="text-button">Make more space</button>
 	                </div>
 				</div>
-				
                 <div id="extension-power-settings-busy-expanding-user-partition" class="extension-power-settings-low-warning extension-power-settings-vlak" style="display:none">
                     <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
                     <p style="text-align:center">Increasing space</p>
                 </div>
-                
+            </div>
+        </div>
+		
+		<p></p>
+		
+		<div class="extension-power-settings-vlak">
+            <div id="extension-power-settings-attached-devices-container" style="text-align:center">
+				<p class="extension-power-settings-header">USB devices</p>
+				
+				<div id="extension-power-settings-attached-devices-list-container">
+					<div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
+				</div>
 				
             </div>
-			
+        </div>
+		
+    </div>
+
+
+
+    <div id="extension-power-settings-container-printer" class="extension-power-settings-container">
+        <div class="section-title">
+            <div class="section-title-back-flex"></div>
+            <div class="section-title-container">
+                <img class="section-title-icon" alt="Printer icon" src="/extensions/power-settings/images/printer.svg" />
+                <span class="section-title-name">Printer</span>
+            </div>
+            <div class="section-title-right-flex"></div>
+        </div>
+
+		<div id="extension-power-settings-general-printing-container" class="extension-power-settings-vlak">
+	        <div>
+	            <input type="checkbox" name="extension-power-settings-allow-printing-checkbox" id="extension-power-settings-allow-printing-checkbox" />
+	            <label for="extension-power-settings-allow-printing-checkbox">Allow printing</label>
+	            <p class="extension-power-settings-field-description">Scan for and connect to printers on the local network.</p>
+	        </div>
+		</div>
+
+        <div id="extension-power-settings-printers-list-container" class="extension-power-settings-vlak">
+            <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
         </div>
     </div>
+
+
 
 
 

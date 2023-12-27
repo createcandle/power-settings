@@ -433,6 +433,10 @@
     background-image:url('../images/display.svg');
 }
 
+#extension-power-settings-menu-printer-button{
+    cursor:pointer;
+    background-image:url('../images/printer.svg');
+}
 
 #extension-power-settings-menu-system-button{
     cursor:pointer;
@@ -889,7 +893,7 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 }
 
 .extension-power-settings-display-info-flex > div > div{
-	margin-bottom:2rem;
+	margin-bottom: 3rem;
 }
 
 
@@ -956,6 +960,65 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 	display:flex;
 	align-items:center;
 	justify-content:space-between;
+}
+
+
+
+
+
+/*  Attached USB devices  */
+
+.extension-power-settings-attached-item{
+	background-color:rgba(255,255,255,.05);
+	margin:.1rem 0;
+	text-align:left;
+	border-radius:.5rem;
+	padding:.5rem 1rem;
+}
+
+
+
+/*   PRINTERS   */
+
+#extension-power-settings-general-printing-container{
+	padding:4rem 2rem;
+}
+
+#extension-power-settings-printers-list-container:empty{
+	display:none;
+}
+
+.extension-power-settings-printer-item{
+	position:relative;
+	padding:2rem;
+	margin-bottom:1rem;
+	background-color:rgba(0,0,0,.1);
+	border-radius:.5rem;
+}
+.extension-power-settings-printer-item h4{
+	font-size:2rem;
+}
+.extension-power-settings-printer-item a{
+	color:white;
+	display:block;
+	margin-left:auto;
+	text-decoration:none;
+}
+.extension-power-settings-printer-item a:hover{
+	text-decoration:underline;
+}
+
+.extension-power-settings-printer-item-default{
+	position:absolute;
+	top:0;
+	right:0;
+	background-color:rgba(255,255,255,.2);
+	padding:1rem 2rem;
+}
+
+.extension-power-settings-printer-item .text-button{
+    display: block;
+    margin-left: auto;
 }
 
 
