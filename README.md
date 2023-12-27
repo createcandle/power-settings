@@ -1,10 +1,19 @@
 # power-settings
-A core component of the Candle smart home.
+A core component of the Candle smart home controller.
 
-- Adds buttons for shutdown and reboot
-- Enables backup and restore functionality
+![Screenshot](screenshot.png)
+
+![Screenshot](screenshot.jpg)
+
+- Adds menu buttons for shutdown and reboot
+- Adds backup and restore functionality
 - Manage system clock
 - Manages system updates
+- See system information
+- Change display settings
+- Connect a printer
+- More...
 
-learn more at:
+Learn more at:
+
 https://www.candlesmarthome.com
