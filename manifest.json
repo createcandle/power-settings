@@ -26,7 +26,7 @@
   "name": "Power Settings",
   "options": {
     "default": {
-      "Display standby delay":15,
+	  "Display standby delay":15,
       "Do not use hardware clock": false,
       "Debug": false
     },
@@ -52,7 +52,7 @@
     }
   },
   "short_name": "Power",
-  "version": "3.6.3",
+  "version": "3.6.4",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
