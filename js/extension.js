@@ -1340,7 +1340,9 @@
                         }
                     }
 					else{
-						console.log("power settings: user partition seems to be fully expanded");
+						if(this.debug){
+							console.log("power settings: user partition seems to be fully expanded");
+						}
 					}
                 }
                 

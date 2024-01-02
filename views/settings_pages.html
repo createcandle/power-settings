@@ -220,21 +220,23 @@
         </div>
 
 
-        <div class="extension-power-settings-vlak">
-            <!--<p class="extension-power-settings-header">Factory reset</p>-->
-
-            <div id="extension-power-settings-available-memory-container">
+        <div class="extension-power-settings-vlak" style="margin-bottom:1px">
+            <div id="extension-power-settings-specifications-container">
 				<p class="extension-power-settings-header">Specifications</p>
-				<div style="text-align:left">
-                	<span class="extension-power-settings-key-label">Model:</span> <span id="extension-power-settings-device-model-memory"></span><span id="extension-power-settings-device-model">?</span><br/>
-					<span class="extension-power-settings-key-label">SD card:</span> <span id="extension-power-settings-device-sd-card-size">?</span><br/>
-					<span class="extension-power-settings-key-label">Linux version:</span> <span id="extension-power-settings-device-linux">?</span><br/>
-					<span class="extension-power-settings-key-label">Linux kernel:</span> <span id="extension-power-settings-device-kernel">?</span><br/>
+				<div class="extension-power-settings-display-info-flex">
+					<div style="position:relative;width:25%"><img alt="System board" src="/extensions/power-settings/images/raspberrypi.svg"/><div class="extension-power-settings-display-number"><span id="extension-power-settings-device-board-temperature"></span></div></div>
+					<div style="text-align:left;width:75%">
+	                	<span id="extension-power-settings-device-model-memory"></span><span id="extension-power-settings-device-model">?</span><br/><br/>
+						<!--<span class="extension-power-settings-key-label">Temperature:</span> <br/>
+						<span class="extension-power-settings-key-label">SD card:</span> <span id="extension-power-settings-device-sd-card-size">?</span><br/>-->
+						<span class="extension-power-settings-key-label">Linux version:</span> <span id="extension-power-settings-device-linux">?</span><br/>
+						<span class="extension-power-settings-key-label">Linux kernel:</span> <span id="extension-power-settings-device-kernel">?</span><br/>
+					</div>
 				</div>
             </div>
 			
 		</div>
-			<p></p>
+			
 
         <div class="extension-power-settings-vlak">
             <div id="extension-power-settings-available-memory-container">
@@ -251,20 +253,29 @@
 		<div class="extension-power-settings-vlak">
             <div id="extension-power-settings-disk-space-container" style="text-align:center">
 				<p class="extension-power-settings-header">Storage space</p>
-				<div id="extension-power-settings-disk-bar-container"  class="extension-power-settings-bar-container"><div id="extension-power-settings-disk-used-bar" class="extension-power-settings-bar"></div></div>
-                <span id="extension-power-settings-free-disk">?</span>MB of <span id="extension-power-settings-total-disk">?</span>MB available<br/>				
-				<p>&nbsp;</p>
-				<p style="font-style:italic">Over <span id="extension-power-settings-sd-card-written-bytes">...</span> has been written to the SD card</p>
-				<div id="extension-power-settings-user-partition-expansion-hint" class="extension-power-settings-vlak" style="display:none; text-align:left">
-					<p>Your SD card has some unused space that could be made availabl, increasing your available storage space. The process will automatically reboot your controller.</p>
-					<div style="text-align:right;margin-top:2rem">
-	                    <button id="extension-power-settings-user-partition-expansion-button" class="text-button">Make more space</button>
-	                </div>
+				
+				<div class="extension-power-settings-display-info-flex">
+					<div style="position:relative;width:25%"><img alt="Micro SD card" src="/extensions/power-settings/images/micro_sd_card.svg"/><div class="extension-power-settings-sd-card-size"><span id="extension-power-settings-device-sd-card-size">?</span></div></div>
+					<div style="text-align:left;width:75%">
+						
+						<div id="extension-power-settings-disk-bar-container"  class="extension-power-settings-bar-container"><div id="extension-power-settings-disk-used-bar" class="extension-power-settings-bar"></div></div>
+		                <span id="extension-power-settings-free-disk">?</span>MB of <span id="extension-power-settings-total-disk">?</span>MB available<br/>				
+						<p style="font-style:italic">Over <span id="extension-power-settings-sd-card-written-bytes">...</span> has been written to the SD card</p>
+						<div id="extension-power-settings-user-partition-expansion-hint" class="extension-power-settings-vlak" style="display:none; text-align:left">
+							<p>Your SD card has some unused space that could be made available, increasing your available storage space. The process will automatically reboot your controller.</p>
+							<div style="text-align:right;margin-top:2rem">
+			                    <button id="extension-power-settings-user-partition-expansion-button" class="text-button">Make more space</button>
+			                </div>
+						</div>
+		                <div id="extension-power-settings-busy-expanding-user-partition" class="extension-power-settings-low-warning extension-power-settings-vlak" style="display:none">
+		                    <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
+		                    <p style="text-align:center">Increasing space</p>
+		                </div>
+						
+					</div>
 				</div>
-                <div id="extension-power-settings-busy-expanding-user-partition" class="extension-power-settings-low-warning extension-power-settings-vlak" style="display:none">
-                    <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
-                    <p style="text-align:center">Increasing space</p>
-                </div>
+				
+				
             </div>
         </div>
 		
@@ -274,9 +285,16 @@
             <div id="extension-power-settings-attached-devices-container" style="text-align:center">
 				<p class="extension-power-settings-header">USB devices</p>
 				
-				<div id="extension-power-settings-attached-devices-list-container">
-					<div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
+				<div class="extension-power-settings-display-info-flex">
+					<div style="position:relative;width:25%"><img alt="System board" src="/extensions/power-settings/images/usb_device.svg" style="width:100%"/></div>
+					<div style="text-align:left;width:75%">
+						<div id="extension-power-settings-attached-devices-list-container">
+							<div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
+						</div>
+					</div>
 				</div>
+				
+				
 				
             </div>
         </div>

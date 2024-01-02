@@ -544,7 +544,8 @@
 .extension-power-settings-header{
     font-size:1.8rem;
     text-align:center;
-    margin-bottom:2rem;
+    margin-bottom:3rem;
+	font-weight:bold;
 }
 
 
@@ -818,7 +819,9 @@ body:not(.developer) #extension-power-settings-expand-user-partition-explanation
 }
 
 #extension-power-settings-user-partition-expansion-hint{
-	margin-top:2rem;
+	margin-top:4rem;
+	margin-left:0;
+	margin-right:0;
 }
 
 
@@ -874,6 +877,10 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 	display:flex;
 }
 
+.extension-power-settings-display-info-flex img{
+	max-width:100%;
+}
+
 .extension-power-settings-display-info-flex h3{
 	margin-top:0;
 	margin-bottom:.3rem;
@@ -910,6 +917,17 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 	font-size: 3rem;
 	font-weight: bolder;
 }
+
+
+.extension-power-settings-sd-card-size{
+	position:absolute;
+	z-index:1;
+	left:calc(32% - 1rem);
+	top:7rem;
+	font-size: 1.8rem;
+	font-weight: bolder;
+}
+
 /*
 #extension-power-settings-display1-resolution-container,
 #extension-power-settings-display2-resolution-container{

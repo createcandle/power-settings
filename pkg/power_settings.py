@@ -264,8 +264,8 @@ class PowerSettingsAPIHandler(APIHandler):
             self.display1_rotation = 180
             self.display2_rotation = 180
         
-        self.display_port1_name = 'HDMI 1'
-        self.display_port2_name = 'HDMI 2'
+        self.display_port1_name = None #'HDMI-1'
+        self.display_port2_name = None #'HDMI-2'
         self.display1_name = 'Display 1'
         self.display2_name = 'Display 2'
         self.display1_details = ''
@@ -308,16 +308,28 @@ class PowerSettingsAPIHandler(APIHandler):
                     [ self.display1_width, self.display1_height ] = self.get_hdmi_port_resolution(self.display_port1_name)
                     if self.DEBUG:
                         print("self.display1_width: " + str(self.display1_width))
+            
                 
-            if len(display_port_names) > 1:
-                if len(str(display_port_names[1])) > 2:
-                    self.display_port2_name = display_port_names[1]
-                    [ self.display2_width, self.display2_height ] = self.get_hdmi_port_resolution(self.display_port2_name)
-                    if self.DEBUG:
-                        print("self.display2_width: " + str(self.display2_width))
+                if len(display_port_names) > 1:
+                    if len(str(display_port_names[1])) > 2:
+                        self.display_port2_name = display_port_names[1]
+                        [ self.display2_width, self.display2_height ] = self.get_hdmi_port_resolution(self.display_port2_name)
+                        if self.DEBUG:
+                            print("self.display2_width: " + str(self.display2_width))
+                else:
+                    self.display_port2_name = None
+            else:
+                self.display_port1_name = None
+                self.display_port2_name = None
             
             
-            self.set_display_resolutions()
+            self.find_display_rotation()
+            
+            if self.persistent_data['display_resolution_' + str(self.display_port1_name)] and str(self.persistent_data['display_resolution_' + str(self.display_port1_name)]) != 'default':
+                self.set_display_resolutions()
+                
+            elif self.persistent_data['display_resolution_' + str(self.display_port2_name)] and str(self.persistent_data['display_resolution_' + str(self.display_port2_name)]) != 'default':
+                self.set_display_resolutions()
             
         except Exception as ex:
             print("Error getting initial display data: " + str(ex))
@@ -660,29 +672,65 @@ class PowerSettingsAPIHandler(APIHandler):
         if self.DEBUG:
             print("in set_display_resolutions")
         
-        if 'display_resolution_' + str(self.display_port1_name) in self.persistent_data:
-            reso1 = str(self.persistent_data['display_resolution_' + str(self.display_port1_name)])
+        if self.display_port1_name:
+            [ self.display1_width, self.display1_height ] = self.get_hdmi_port_resolution(self.display_port1_name)
             if self.DEBUG:
-                print("setting display port1: "  + str(self.display_port1_name) + ", to: " + reso1)
-            if reso1 == 'default':
-                os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port1_name) + ' --auto')
-            else:
-                os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port1_name) + ' --mode ' + str(reso1) + ' --rate 60')
+                print("self.display1_width: " + str(self.display1_width))
+
+            if 'display_resolution_' + str(self.display_port1_name) in self.persistent_data:
+                reso1 = str(self.persistent_data['display_resolution_' + str(self.display_port1_name)])
+                if str(self.display1_width) + 'x' + str(self.display1_height) != reso1:
+                    if self.DEBUG:
+                        print("setting display port1: "  + str(self.display_port1_name) + ", to: " + reso1)
+                    if reso1 == 'default':
+                        os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port1_name) + ' --auto')
+                    else:
+                        os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port1_name) + ' --mode ' + str(reso1) + ' --rate 60')
+                
         
-        if 'display_resolution_' + str(self.display_port2_name) in self.persistent_data:
-            reso2 = str(self.persistent_data['display_resolution_' + str(self.display_port2_name)])
+        if self.display_port2_name:
+            [ self.display2_width, self.display2_height ] = self.get_hdmi_port_resolution(self.display_port2_name)
             if self.DEBUG:
-                print("setting display port2: "  + str(self.display_port2_name) + ", to: " + reso2)
+                print("self.display1_width: " + str(self.display2_width))
+
+            if 'display_resolution_' + str(self.display_port2_name) in self.persistent_data:
+                reso2 = str(self.persistent_data['display_resolution_' + str(self.display_port2_name)])
+                if str(self.display2_width) + 'x' + str(self.display2_height) != reso1:
+                    if self.DEBUG:
+                        print("setting display port2: "  + str(self.display_port2_name) + ", to: " + reso2)
+                    if reso2 == 'default':
+                        os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port2_name) + ' --auto')
+                    else:
+                        os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port2_name) + ' --mode ' + str(reso2) + ' --rate 60')
             
-            if reso2 == 'default':
-                os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port2_name) + ' --auto')
-            else:
-                # TODO: sort out if DISPLAY=:1 is needed
-                os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port2_name) + ' --mode ' + str(reso2) + ' --rate 60')
-                #os.system('DISPLAY=:1 xrandr --output ' + str(self.display_port2_name) + ' --mode ' + str(reso2) + ' --rate 60')
             
             
+    def find_display_rotation(self):
+        # Get rotation
+        if self.display_port1_name:
+            display1_rotation_output = run_command("DISPLAY=:0 xrandr --query --verbose | grep '" + str(self.display_port1_name) + "' | cut -d ' ' -f 6")
+            if display1_rotation_output:
+                self.display1_rotation = 0
+                if 'left' in display1_rotation_output:
+                    self.display1_rotation = 90 # NOT SURE IF THIS IS RIGHT
+                elif 'right' in display1_rotation_output:
+                    self.display1_rotation = 270 # NOT SURE IF THIS IS RIGHT
+                if 'inverted' in display1_rotation_output:
+                    self.display1_rotation = 180
+                
+        if self.display_port1_name:
+            display2_rotation_output = run_command("DISPLAY=:0 xrandr --query --verbose | grep '" + str(self.display_port2_name) + "' | cut -d ' ' -f 6")
+            if display2_rotation_output:
+                self.display2_rotation = 0
+                if 'left' in display2_rotation_output:
+                    self.display2_rotation = 90 # NOT SURE IF THIS IS RIGHT
+                elif 'right' in display2_rotation_output:
+                    self.display2_rotation = 270 # NOT SURE IF THIS IS RIGHT
+                if 'inverted' in display2_rotation_output:
+                    self.display2_rotation = 180
             
+    
+    
     def set_display_rotation(self,display=None,rotation=0):
         if self.DEBUG:
             print("in set_display_rotation. Desired rotation: ", rotation);
@@ -717,9 +765,9 @@ class PowerSettingsAPIHandler(APIHandler):
                 input_name = input_name[5:].strip()
                 
                 print("input_name again2: " + str(input_name))
+                print("int(rotation): " + str(int(rotation)))
                 
-                
-                if int(rotation) == 180:
+                if int(rotation) == 0:
                     os.system("DISPLAY=:0 xinput --set-prop '" + str(input_name) + "' 'Coordinate Transformation Matrix' 1 0 0 0 1 0 0 0 1")
                 else:
                     os.system("DISPLAY=:0 xinput --set-prop '" + str(input_name) + "' 'Coordinate Transformation Matrix' -1 0 1 0 -1 1 0 0 1")
@@ -1147,6 +1195,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                     
                                     self.detect_touchscreen()
+                                
+                                    self.find_display_rotation()
+                                    
                                 
                                     state = 'ok'
                                 except Exception as ex:
