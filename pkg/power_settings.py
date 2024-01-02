@@ -140,6 +140,8 @@ class PowerSettingsAPIHandler(APIHandler):
         if os.path.exists('/boot/firmware'):
             self.boot_path = '/boot/firmware'
         
+        self.config_txt_path = self.boot_path + '/config.txt'
+        
         self.bits = 32
         
         try:
@@ -677,7 +679,7 @@ class PowerSettingsAPIHandler(APIHandler):
             else:
                 # TODO: sort out if DISPLAY=:1 is needed
                 os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port2_name) + ' --mode ' + str(reso2) + ' --rate 60')
-                os.system('DISPLAY=:1 xrandr --output ' + str(self.display_port2_name) + ' --mode ' + str(reso2) + ' --rate 60')
+                #os.system('DISPLAY=:1 xrandr --output ' + str(self.display_port2_name) + ' --mode ' + str(reso2) + ' --rate 60')
             
             
             
@@ -704,11 +706,19 @@ class PowerSettingsAPIHandler(APIHandler):
             
             
         # Touch input rotation
-        pointer_output = run_command("DISPLAY=:0 xinput | grep pointer | tail -n +2 | grep -v ' XTEST ' | cut -f1 -d$'\t'")
+        pointer_output = run_command("DISPLAY=:0 xinput | grep pointer | tail -n +2 | grep -v ' XTEST '") #  | cut -f1 -d$'\t'     # | grep -v ' XTEST '
         if pointer_output != None:
             for line in pointer_output.splitlines():
-                input_name = line[5:].strip()
-                print("input_name: " + str(input_name))
+                print("pointer_output line: " + str(line))
+                
+                input_name = re.split(r'\t+', line)[0]
+                print("input_name again: " + str(input_name))
+                
+                input_name = input_name[5:].strip()
+                
+                print("input_name again2: " + str(input_name))
+                
+                
                 if int(rotation) == 180:
                     os.system("DISPLAY=:0 xinput --set-prop '" + str(input_name) + "' 'Coordinate Transformation Matrix' 1 0 0 0 1 0 0 0 1")
                 else:
@@ -1126,26 +1136,16 @@ class PowerSettingsAPIHandler(APIHandler):
                                     # Power management
                                     display1_power_management_output = run_command("DISPLAY=:0 xset -q | awk '/DPMS is/ {print $NF}'")
                                     if 'unable to open' in display1_power_management_output:
-                                        self.display1_available = False
+                                        #self.display1_available = False
                                         pass
                                     elif 'Disabled' in display1_power_management_output:
                                         self.display1_power = False
-                                        self.display1_available = True
+                                        self.display2_power = False
                                     else:
                                         self.display1_power = True
-                                        self.display1_available = True
-                                
-                                    display2_power_management_output = run_command("DISPLAY=:1 xset -q | awk '/DPMS is/ {print $NF}'")
-                                    if 'unable to open' in display2_power_management_output:
-                                        self.display2_available = False
-                                        pass
-                                    elif 'Disabled' in display2_power_management_output:
-                                        self.display2_power = False
-                                        self.display2_available = True
-                                    else:
                                         self.display2_power = True
-                                        self.display2_available = True
                                 
+                                    
                                     self.detect_touchscreen()
                                 
                                     state = 'ok'
@@ -1251,7 +1251,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             print("new display1 power management: " + str(self.persistent_data['display1_power']))
                                             print("new display2 power management: " + str(self.persistent_data['display2_power']))
                                     
-                                        if self.persistent_data['display1_power'] == True:
+                                        if self.persistent_data['display1_power'] == True or self.persistent_data['display2_power'] == True:
                                             # allow the screen to go into standby
                                             os.system('DISPLAY=:0 xset s on')
                                             os.system('DISPLAY=:0 xset dpms')
@@ -1264,7 +1264,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             os.system('DISPLAY=:0 xset s noblank')
                                             os.system('DISPLAY=:0 xset dpms 0 0 0')
                                             
-                                
+                                        """
                                         if self.persistent_data['display2_power'] == True:
                                             # allow the screen to go into standby
                                             os.system('DISPLAY=:1 xset s on')
@@ -1277,7 +1277,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                             os.system('DISPLAY=:1 xset -dpms')
                                             os.system('DISPLAY=:1 xset s noblank')
                                             os.system('DISPLAY=:1 xset dpms 0 0 0')
-                                
+                                        """
+                                            
                                         if self.save_persistent_data():
                                             state = 'ok'
                                 
@@ -1313,7 +1314,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                                 
-                                
+                            
                             elif action == 'force_display_setting':
                                 state = 'error'
                                 if 'width' in request.body and 'height' in request.body:
@@ -1963,9 +1964,12 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 # check if power supply is strong enough (lwo voltage)
                                 try:
-                                    
+                                    board_temperature = None
                                     if os.path.isfile('/usr/bin/vcgencmd'):
                                         voltage_output = subprocess.check_output(['/usr/bin/vcgencmd', 'get_throttled'])
+                                        board_temperature = subprocess.check_output(['/usr/bin/vcgencmd', 'measure_temp'])
+                                        board_temperature = board_temperature.decode('utf-8').split("=")[1]
+                                        board_temperature = board_temperature.rstrip("\n")
                                     else:
                                         voltage_output = subprocess.check_output(['/opt/vc/bin/vcgencmd', 'get_throttled'])
                                     
@@ -2016,6 +2020,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'disk_usage':self.disk_usage,
                                                       'sd_card_written_kbytes':self.sd_card_written_kbytes,
                                                       'low_voltage':self.low_voltage,
+                                                      'board_temperature':board_temperature,
                                                       'attached_devices':self.attached_devices,
                                                       'has_cups':self.has_cups,
                                                       'printing_allowed':self.printing_allowed,
@@ -3073,6 +3078,32 @@ class PowerSettingsAPIHandler(APIHandler):
 
         return False
         
+        
+        
+        
+    def update_config_txt(self):
+        
+        with open(self.config_txt_path) as f:
+            pass
+            #self.persistent_data = json.load(f)
+        
+        
+        power_settings_indicator = """# DO NOT PLACE ANYTHING BELOW POWER_SETTINGS_START LINE, IT MAY BE REMOVED BY THE POWER SETTINGS ADDON
+        
+        #POWER_SETTINGS_START
+        
+        """
+        
+        
+        """
+        #dtparam=pwr_led_activelow=off
+        #dtparam=act_led_trigger=none
+        #dtparam=act_led_activelow=off
+        #dtparam=eth_led0=14
+        #dtparam=eth_led1=14
+        """
+        
+        # open( self.config_txt_path, 'w+' )
         
         
     def save_persistent_data(self):

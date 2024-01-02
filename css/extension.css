@@ -817,6 +817,11 @@ body:not(.developer) #extension-power-settings-expand-user-partition-explanation
 	display:none;
 }
 
+#extension-power-settings-user-partition-expansion-hint{
+	margin-top:2rem;
+}
+
+
 /*  SWIT%CH TO RECOVERY  */
 
 body:not(.developer) #extension-power-settings-switch-to-recovery-start-container{

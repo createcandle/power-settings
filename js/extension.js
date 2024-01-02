@@ -1370,7 +1370,10 @@
 					}
 					else{
 						document.body.classList.remove('cups-printing');
-						console.log("printing via CUPS is not supported");
+						document.getElementById('extension-power-settings-main-menu-printer-item').style.display = 'none';
+						if(this.debug){
+							console.log("printing via CUPS is not supported");
+						}
 					}
 				}
 				
@@ -1421,7 +1424,7 @@
                 
                 
             }).catch((e) => {
-                console.log("power-settings init error: ", e);
+                console.error("power-settings init error: ", e);
             });
 		}
         
@@ -1446,7 +1449,7 @@
                 }
                 
             }).catch((e) => {
-               console.log("Error: clock page init: connection failed: ", e);
+               console.error("Error: clock page init: connection failed: ", e);
             });
         }
         
@@ -1881,12 +1884,12 @@
                         
     
         		        }).catch((e) => {
-        		  			console.log("Error calling /poll: ", e);
+        		  			console.error("Error calling /poll: ", e);
         		        });
     
                     }
                     catch(e){
-                        console.log("Error doing poll: ", e);
+                        console.error("Error doing poll: ", e);
                     }
                 
                     /*
@@ -3336,13 +3339,15 @@
                 if(typeof body['attached_devices'] != 'undefined'){
 					
 					this.attached_devices = body['attached_devices'];
-					console.log("this.attached_devices: ", this.attached_devices);
-					
+					if(this.debug){
+						console.log("this.attached_devices: ", this.attached_devices);
+					}
 					let attached_list_el = document.getElementById('extension-power-settings-attached-devices-list-container');
 					
-					if(attached_list_el && typeof this.attached_devices == 'object'){
+					var real_usb_devices_count = 0;
+					if(attached_list_el){
 	                    
-						if(this.attached_devices.length){
+						if(typeof this.attached_devices == 'object' && this.attached_devices.length){
 							attached_list_el.innerHTML = '';
 							for (var r = 0; r < this.attached_devices.length; r++) {
 								let attached_item_el = document.createElement('div');
@@ -3354,6 +3359,9 @@
 										attached_item_el.style.opacity = '.5';
 									}
 								}
+								else{
+									real_usb_devices_count++;
+								}
 								
 								
 								attached_item_el.classList.add('extension-power-settings-attached-item');
@@ -3361,8 +3369,11 @@
 								attached_list_el.appendChild(attached_item_el)
 							}
 						}
-						else{
-							attached_list_el.innerHTML = '<p>None</p>';
+						
+						if(real_usb_devices_count == 0){
+							if(!document.body.classList.contains('developer')){
+								attached_list_el.innerHTML = '<p>None</p>';
+							}
 						}
 						
 					}
