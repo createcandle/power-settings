@@ -226,9 +226,9 @@
 				<div class="extension-power-settings-display-info-flex">
 					<div style="position:relative;width:25%"><img alt="System board" src="/extensions/power-settings/images/raspberrypi.svg"/><div class="extension-power-settings-display-number"><span id="extension-power-settings-device-board-temperature"></span></div></div>
 					<div style="text-align:left;width:75%">
-	                	<span id="extension-power-settings-device-model-memory"></span><span id="extension-power-settings-device-model">?</span><br/><br/>
-						<!--<span class="extension-power-settings-key-label">Temperature:</span> <br/>
-						<span class="extension-power-settings-key-label">SD card:</span> <span id="extension-power-settings-device-sd-card-size">?</span><br/>-->
+	                	<span id="extension-power-settings-device-model-memory"></span><span id="extension-power-settings-device-model">?</span><br/>
+						<span class="extension-power-settings-key-label">Temperature:</span> <span id="extension-power-settings-device-temperature">?</span><br/><br/>
+						<!--<span class="extension-power-settings-key-label">SD card:</span> <span id="extension-power-settings-device-sd-card-size">?</span><br/>-->
 						<span class="extension-power-settings-key-label">Linux version:</span> <span id="extension-power-settings-device-linux">?</span><br/>
 						<span class="extension-power-settings-key-label">Linux kernel:</span> <span id="extension-power-settings-device-kernel">?</span><br/>
 					</div>
@@ -294,7 +294,21 @@
 					</div>
 				</div>
 				
+            </div>
+        </div>
+		
+		<div class="extension-power-settings-vlak">
+            <div id="extension-power-settings-attached-cameras-container" style="text-align:center">
+				<p class="extension-power-settings-header">Cameras</p>
 				
+				<div class="extension-power-settings-display-info-flex">
+					<div style="position:relative;width:25%"><img alt="System board" src="/extensions/power-settings/images/camera.svg" style="width:100%"/></div>
+					<div style="text-align:left;width:75%">
+						<div id="extension-power-settings-attached-cameras-list-container">
+							<div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
+						</div>
+					</div>
+				</div>
 				
             </div>
         </div>

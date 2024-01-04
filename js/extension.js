@@ -43,6 +43,7 @@
 			this.connected_printers = {};
 			
 			this.attached_devices = [];
+			this.attached_cameras = [];
 
 			this.get_stats_interval = null;
 			this.get_stats_fail_counter = 0;
@@ -1282,6 +1283,16 @@
                     document.getElementById('extension-power-settings-device-model').innerText = body.device_model;
                 }
 				
+				// temperature
+                if(typeof body.board_temperature != 'undefined'){
+                    if(this.debug){
+                        console.log("power settings: board_temperature: ", body.board_temperature);
+                    }
+                    document.getElementById('extension-power-settings-device-temperature').innerText = body.board_temperature;
+                }
+				
+				
+				// Linux version
                 if(typeof body.device_linux != 'undefined'){
                     if(this.debug){
                         console.log("power settings: device_linux: ", body.device_linux);
@@ -1292,6 +1303,7 @@
 					}
                 }
 				
+				// Kernel version
                 if(typeof body.device_kernel != 'undefined'){
                     if(this.debug){
                         console.log("power settings: device_kernel: ", body.device_kernel);
@@ -1301,6 +1313,7 @@
 					}
                 }
 				
+				// SD Card size
                 if(typeof body.device_sd_card_size != 'undefined'){
                     if(this.debug){
                         console.log("power settings: sd_card_size: ", body.device_sd_card_size);
@@ -1309,6 +1322,7 @@
                 }
 				
                 
+				// Exhiit mode
                 if(typeof body.exhibit_mode != 'undefined'){
                     this.exhibit_mode = body.exhibit_mode;
                     if(this.debug){
@@ -3250,6 +3264,30 @@
                 if(typeof body['total_memory'] != 'undefined'){
                     document.getElementById('extension-power-settings-total-memory').innerText = body['total_memory'];
                 
+					// temperature
+	                if(typeof body.board_temperature != 'undefined'){
+	                    if(this.debug){
+	                        console.log("power settings: board_temperature: ", body.board_temperature);
+	                    }
+	                    document.getElementById('extension-power-settings-device-temperature').innerText = body.board_temperature;
+						
+						if(body.board_temperature.endsWith("'C")){
+							const temp = parseInt(body.board_temperature.replace("'C",""));
+							console.log("board temperature: ",temp);
+							if(temp < 60){
+								document.getElementById('extension-power-settings-device-temperature').style.color = 'green';
+							}
+							else if(temp < 80){
+								document.getElementById('extension-power-settings-device-temperature').style.color = 'orange';
+							}
+							else{
+								document.getElementById('extension-power-settings-device-temperature').style.color = 'red';
+							}
+						}
+						
+						
+	                }
+				
 					let total_memory = parseInt(body['total_memory']);
 	                if(this.debug){
 	                    console.log("power settings: total_memory: ", total_memory);
@@ -3374,7 +3412,7 @@
 						
 						if(real_usb_devices_count == 0){
 							if(!document.body.classList.contains('developer')){
-								attached_list_el.innerHTML = '<p>None</p>';
+								attached_list_el.innerHTML = '<div class="extension-power-settings-attached-item"><p>None</p></div>';
 							}
 						}
 						
@@ -3384,6 +3422,56 @@
 					}
                     
                 }
+				
+				
+                // Show attached devices
+                if(typeof body['attached_cameras'] != 'undefined'){
+					
+					this.attached_cameras = body['attached_cameras'];
+					if(this.debug){
+						console.log("this.attached_cameras: ", this.attached_cameras);
+					}
+					let cameras_list_el = document.getElementById('extension-power-settings-attached-cameras-list-container');
+					
+					if(cameras_list_el){
+	                    
+						if(typeof this.attached_cameras == 'object' && this.attached_cameras.length){
+							attached_list_el.innerHTML = '<div class="extension-power-settings-attached-item"><p>A camera was detected</p></div>';
+							/*
+							for (var r = 0; r < this.attached_devices.length; r++) {
+								let attached_item_el = document.createElement('div');
+								if(this.attached_devices[r].endsWith(' Hub') || this.attached_devices[r].endsWith(' hub')){
+									if(!this.debug){
+										continue
+									}
+									else{
+										attached_item_el.style.opacity = '.5';
+									}
+								}
+								else{
+									real_usb_devices_count++;
+								}
+								
+								
+								attached_item_el.classList.add('extension-power-settings-attached-item');
+								attached_item_el.innerHTML = '<p>' + this.attached_devices[r] + '</p>';
+								attached_list_el.appendChild(attached_item_el)
+							}
+							*/
+						}
+						else{
+							cameras_list_el.innerHTML = '<div class="extension-power-settings-attached-item"><p>None</p></div>';
+						}
+						
+					}
+					else{
+						console.warn("power settings: cameras list element not found");
+					}
+                    
+                }
+				
+				
+				
 				
                 
                 // Show low voltage warning

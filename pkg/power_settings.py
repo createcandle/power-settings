@@ -325,10 +325,10 @@ class PowerSettingsAPIHandler(APIHandler):
             
             self.find_display_rotation()
             
-            if self.persistent_data['display_resolution_' + str(self.display_port1_name)] and str(self.persistent_data['display_resolution_' + str(self.display_port1_name)]) != 'default':
+            if self.display_port1_name != None and self.persistent_data['display_resolution_' + str(self.display_port1_name)] and str(self.persistent_data['display_resolution_' + str(self.display_port1_name)]) != 'default':
                 self.set_display_resolutions()
                 
-            elif self.persistent_data['display_resolution_' + str(self.display_port2_name)] and str(self.persistent_data['display_resolution_' + str(self.display_port2_name)]) != 'default':
+            elif self.display_port2_name != None and self.persistent_data['display_resolution_' + str(self.display_port2_name)] and str(self.persistent_data['display_resolution_' + str(self.display_port2_name)]) != 'default':
                 self.set_display_resolutions()
             
         except Exception as ex:
@@ -338,6 +338,9 @@ class PowerSettingsAPIHandler(APIHandler):
         # Attached devices (USB)
         self.attached_devices = []
             
+        # Attached cameras
+        self.attached_cameras = []
+        
         # Low voltage
         self.low_voltage = False
         
@@ -2057,6 +2060,19 @@ class PowerSettingsAPIHandler(APIHandler):
                                     if lsusb_output  != None:
                                         self.attached_devices = lsusb_output.splitlines()
                                     
+                                    
+                                    self.attached_cameras = []
+                                    libcamera_output = run_command('libcamera-still --list-cameras')
+                                    if 'No cameras available' in libcamera_output or 'error while loading' in libcamera_output:
+                                        if self.DEBUG:
+                                            print("no libcameras detected")
+                                    else:
+                                        if self.DEBUG:
+                                            print("libcamera(s) detected: " + str(libcamera_output))
+                                        self.attached_cameras = ['camera']
+                                        
+                                    
+                                    
                                 except Exception as ex:
                                     print("Error while checking for attached (USB) devices: " + str(ex))
                                 
@@ -2075,7 +2091,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'attached_devices':self.attached_devices,
                                                       'has_cups':self.has_cups,
                                                       'printing_allowed':self.printing_allowed,
-                                                      'connected_printers':self.connected_printers
+                                                      'connected_printers':self.connected_printers,
+                                                      'attached_cameras':self.attached_cameras
                                             })
                                 )
                                 
