@@ -3384,6 +3384,9 @@
 					}
 					let attached_list_el = document.getElementById('extension-power-settings-attached-devices-list-container');
 					
+					if(attached_list_el){
+						
+					}
 					var real_usb_devices_count = 0;
 					if(attached_list_el){
 	                    
@@ -3471,7 +3474,43 @@
                 }
 				
 				
+                // User partition expanded
+                if(typeof body.user_partition_expanded != 'undefined'){
+                    if(body.user_partition_expanded == false){
+                        if(this.debug){
+							console.log("power settings: user partition not yet expanded");
+						}
+                        if(document.getElementById('extension-power-settings-user-partition-expansion-hint') != null){
+							document.getElementById('extension-power-settings-user-partition-expansion-hint').style.display = 'block';
+                        }
+                    }
+					else{
+						if(this.debug){
+							console.log("power settings: user partition seems to be fully expanded");
+						}
+                        if(document.getElementById('extension-power-settings-user-partition-expansion-hint') != null){
+							document.getElementById('extension-power-settings-user-partition-expansion-hint').style.display = 'none';
+                        }
+					}
+                }
 				
+                // Show user_partition_expansion_failed
+                if(typeof body['user_partition_expansion_failed'] != 'undefined'){
+					let partition_expansion_failed_el = document.getElementById('extension-power-settings-partition-expansion-failed');
+					if(partition_expansion_failed_el){
+						if(body['user_partition_expansion_failed'] == true){
+							partition_expansion_failed_el.style.display = 'block';
+							document.getElementById('extension-power-settings-user-partition-expansion-hint').style.display = 'block';
+							document.getElementById('extension-power-settings-user-partition-expansion-button').style.display = 'block';
+							document.getElementById('extension-power-settings-busy-expanding-user-partition').style.display = 'none';
+						}
+						else{
+							partition_expansion_failed_el.style.display = 'none';
+						}
+					}
+                }
+				
+               
 				
                 
                 // Show low voltage warning

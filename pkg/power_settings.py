@@ -383,6 +383,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         # User partition expansion
         self.user_partition_expanded = True
+        self.user_partition_expansion_failed = False
         #if os.path.exists(self.boot_path + '/candle_user_partition_expanded.txt'):
         #    self.user_partition_expanded = True
         
@@ -1486,7 +1487,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
-                                  content=json.dumps({'state':state}),
+                                  content=json.dumps({
+                                          'state':state,
+                                          'user_partition_expansion_failed': self.user_partition_expansion_failed,
+                                      }),
                                 )
                                 
                                 
@@ -1769,7 +1773,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'dmesg':dmesg_lines, 
                                                       'system_update_in_progress':self.system_update_in_progress,
                                                       'ro_exists':self.ro_exists,
-                                                      'old_overlay_active':self.old_overlay_active
+                                                      'old_overlay_active':self.old_overlay_active,
+                                                      'user_partition_expansion_failed': self.user_partition_expansion_failed,
                                                   }),
                                 )
                                 
@@ -2092,7 +2097,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'has_cups':self.has_cups,
                                                       'printing_allowed':self.printing_allowed,
                                                       'connected_printers':self.connected_printers,
-                                                      'attached_cameras':self.attached_cameras
+                                                      'attached_cameras':self.attached_cameras,
+                                                      'user_partition_expanded': self.user_partition_expanded,
+                                                      'user_partition_expansion_failed': self.user_partition_expansion_failed
                                             })
                                 )
                                 
@@ -2217,6 +2224,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'device_linux':self.device_linux.rstrip(),
                                             'device_sd_card_size':self.device_sd_card_size,
                                             'has_cups':self.has_cups,
+                                            'user_partition_expansion_failed': self.user_partition_expansion_failed,
                                             'debug':self.DEBUG
                                         }
                                         
@@ -3103,7 +3111,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         #if not os.path.exists(self.boot_path + '/candle_user_partition_expanded.txt'):
         if self.user_partition_expanded == False:
-            self.user_partition_expanded = True
+            
             
             # save information to candle_log.txt
             date_string = run_command('date')
@@ -3132,8 +3140,16 @@ class PowerSettingsAPIHandler(APIHandler):
                     print("resize2fs_output: " + str(resize2fs_output))
                     print("rebooting...")
                     
-                os.system('sudo touch ' + str(self.boot_path) + '/candle_user_partition_expanded.txt')
-                os.system('sudo reboot')
+                
+                new_unused_space = int(run_command("sudo parted /dev/mmcblk0 unit B print free | grep 'Free Space' | tail -n1 | awk '{print $3}' | tr -d 'B\n'"))
+                #print("unused_volume_space: " + str(self.unused_volume_space))
+            
+                if new_unused_space < 1000000000:
+                    self.user_partition_expanded = True
+                    os.system('sudo touch ' + str(self.boot_path) + '/candle_user_partition_expanded.txt')
+                    os.system('sudo reboot')
+                else:
+                    self.user_partition_expansion_failed = True
                 
                 return True
                 
