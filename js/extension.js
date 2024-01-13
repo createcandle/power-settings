@@ -12,6 +12,7 @@
             //console.log(window.API);
 
             this.debug = false;
+			this.developer = false;
 			this.second_init_attempted = false;
 			
             this.kiosk = false;
@@ -3260,6 +3261,13 @@
                     console.log("power settings: get stats response: ", body);
                 }            
 
+				if(document.body.classList.contains('developer')){
+					this.developer = true;
+				}
+				else{
+					this.developer = false;
+				}
+
                 // Show the total memory
                 if(typeof body['total_memory'] != 'undefined'){
                     document.getElementById('extension-power-settings-total-memory').innerText = body['total_memory'];
@@ -3384,9 +3392,6 @@
 					}
 					let attached_list_el = document.getElementById('extension-power-settings-attached-devices-list-container');
 					
-					if(attached_list_el){
-						
-					}
 					var real_usb_devices_count = 0;
 					if(attached_list_el){
 	                    
@@ -3395,7 +3400,7 @@
 							for (var r = 0; r < this.attached_devices.length; r++) {
 								let attached_item_el = document.createElement('div');
 								if(this.attached_devices[r].endsWith(' Hub') || this.attached_devices[r].endsWith(' hub')){
-									if(!this.debug){
+									if(this.developer == false){
 										continue
 									}
 									else{
@@ -3423,12 +3428,11 @@
 					else{
 						console.warn("power settings: usb devices list element not found");
 					}
-                    
-                }
+				}
 				
 				
-                // Show attached devices
-                if(typeof body['attached_cameras'] != 'undefined'){
+				// Show attached devices
+				if(typeof body['attached_cameras'] != 'undefined'){
 					
 					this.attached_cameras = body['attached_cameras'];
 					if(this.debug){
@@ -3439,28 +3443,8 @@
 					if(cameras_list_el){
 	                    
 						if(typeof this.attached_cameras == 'object' && this.attached_cameras.length){
-							attached_list_el.innerHTML = '<div class="extension-power-settings-attached-item"><p>A camera was detected</p></div>';
-							/*
-							for (var r = 0; r < this.attached_devices.length; r++) {
-								let attached_item_el = document.createElement('div');
-								if(this.attached_devices[r].endsWith(' Hub') || this.attached_devices[r].endsWith(' hub')){
-									if(!this.debug){
-										continue
-									}
-									else{
-										attached_item_el.style.opacity = '.5';
-									}
-								}
-								else{
-									real_usb_devices_count++;
-								}
-								
-								
-								attached_item_el.classList.add('extension-power-settings-attached-item');
-								attached_item_el.innerHTML = '<p>' + this.attached_devices[r] + '</p>';
-								attached_list_el.appendChild(attached_item_el)
-							}
-							*/
+							cameras_list_el.innerHTML = '<div class="extension-power-settings-attached-item"><p>A camera was detected</p></div>';
+							
 						}
 						else{
 							cameras_list_el.innerHTML = '<div class="extension-power-settings-attached-item"><p>None</p></div>';
