@@ -158,6 +158,10 @@
                     });
                     
                 });
+				
+				
+				
+				
                 
                 
                 // Add buttons to settings menu
@@ -410,6 +414,28 @@
 						this.start_partition_expansion();
 					}
 	            });
+				
+				// test speakers button
+                document.getElementById('extension-power-settings-test-speakers-button').addEventListener('click', () => {
+                    document.getElementById('extension-power-settings-test-speakers-button').classList.add('extension-power-settings-hidden');
+                    setTimeout(() => {
+                    	document.getElementById('extension-power-settings-test-speakers-button').classList.remove('extension-power-settings-hidden');
+                    },5000);
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'speakers_test'
+                        }
+                    ).then((body) => {
+                        if(this.debug){
+                            console.log("power settings: speaker test complete: ", body);
+                        }
+                    }).catch((e) => {
+                       console.error("Error: speaker test connection failed: ", e);
+                    });
+                });
+				
+				
+				
 				
 				
 				
@@ -1380,7 +1406,7 @@
 				if(typeof body.has_cups != 'undefined'){
 					if(body.has_cups == true){
 						if(this.debug){
-							console.log("Printing via CUPS is supported");
+							console.log("power settings: printing via CUPS is supported");
 						}
 						document.body.classList.add('cups-printing');
 						document.getElementById('extension-power-settings-main-menu-printer-item').style.display = 'block';
