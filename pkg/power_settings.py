@@ -1456,6 +1456,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                             
                             
+                            # Test speakers
                             elif action == 'test_speakers':
                                 self.test_speakers()
                                 return APIResponse(
@@ -1463,6 +1464,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':'ok'}),
                                 )
+                            
                             
                             # UPDATE RECOVERY PARTITION
                             elif action == 'update_recovery_partition':

@@ -423,7 +423,7 @@
                     },5000);
                     window.API.postJson(
                         `/extensions/${this.id}/api/ajax`, {
-                            'action': 'speakers_test'
+                            'action': 'test_speakers'
                         }
                     ).then((body) => {
                         if(this.debug){
