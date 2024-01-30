@@ -431,10 +431,56 @@
                         }
                     }).catch((e) => {
                        console.error("Error: speaker test connection failed: ", e);
+					   alert("Could not connect to controller");
                     });
                 });
 				
 				
+				// reinstall candle app store button
+                document.getElementById('extension-power-settings-reinstall-candleappstore-button').addEventListener('click', () => {
+					if(confirm("Are you sure?")){
+	                    document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.add('extension-power-settings-hidden');
+						document.getElementById('extension-power-settings-reinstall-candleappstore-failed-container').classList.add('extension-power-settings-hidden');
+						document.getElementById('extension-power-settings-reinstall-candleappstore-busy-container').classList.remove('extension-power-settings-hidden');
+					
+	                    window.API.postJson(
+	                        `/extensions/${this.id}/api/ajax`, {
+	                            'action': 'reinstall_app_store'
+	                        }
+	                    ).then((body) => {
+	                        if(this.debug){
+	                            console.log("power settings: reinstall_app_store reponse: ", body);
+	                        }
+							if(typeof body.state != 'undefined'){
+								if(body.state == true){
+									if(this.debug){
+										console.log("Updating to latest version of Candle appstore seems to have been succcesfull");
+									}
+									document.getElementById('extension-power-settings-reinstall-candleappstore-container').style.background="green";
+									setTimeout(() => {
+										window.location.reload(true); 
+									},15000);
+								}
+								else{
+									document.getElementById('extension-power-settings-reinstall-candleappstore-container').style.background="red";
+									document.getElementById('extension-power-settings-reinstall-candleappstore-failed-container').classList.remove('extension-power-settings-hidden');
+									document.getElementById('extension-power-settings-reinstall-candleappstore-busy-container').classList.add('extension-power-settings-hidden');
+									document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.remove('extension-power-settings-hidden');
+								}
+							}
+							else{
+								console.error("candleappstore: reinstall_app_store: body.state was undefined? body: ", body);
+							}
+						
+						
+	                    }).catch((e) => {
+	                       console.error("Error: reinstall_app_store connection failed: ", e);
+						   document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.remove('extension-power-settings-hidden');
+						   alert("Could not connect to controller");
+	                    });
+					}
+                    
+                });
 				
 				
 				
@@ -2437,8 +2483,7 @@
                             if(this.recovery_interval == null){
                                 this.start_recovery_poll();
                             }
-                            
-                        }f
+                        }
                     }
                     
                 }

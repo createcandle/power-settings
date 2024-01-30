@@ -1464,6 +1464,16 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':'ok'}),
                                 )
+                                
+                            # Reinstall candle app store from Github
+                            elif action == 'reinstall_app_store':
+                                state = self.reinstall_app_store()
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
+                                
                             
                             
                             # UPDATE RECOVERY PARTITION
@@ -3172,10 +3182,57 @@ class PowerSettingsAPIHandler(APIHandler):
 
         return False
         
+        
     def test_speakers(self):
         if self.DEBUG:
             print("In speaker test")
         os.system('speaker-test -c4 -twav -l1')
+        
+        
+    
+    def reinstall_app_store(self):
+        if self.DEBUG:
+            print("In reinstall_app_store")
+            
+        try:
+            git_command = "git clone https://github.com/createcandle/candleappstore.git /tmp/candleappstore"
+            target_dir = os.path.join(self.user_profile['addonsDir'], 'candleappstore')
+            if self.DEBUG:
+                print(" - target_dir:" + str(target_dir))
+                print(" - git command: \n" + str(git_command))
+            
+            
+            if 'addons' in target_dir and 'candleappstore' in target_dir:
+                if os.path.isdir('/tmp/candleappstore'):
+                    os.system("rm -rf /tmp/candleappstore")
+                    if self.DEBUG:
+                        print("warning, had to clean up existing temporary dir /tmp/candleappstore")
+            
+                os.system('mkdir -p /tmp/candleappstore')
+                if os.path.isdir('/tmp/candleappstore'):
+                    if self.DEBUG:
+                        print("GIT cloning candleappstore into /tmp/candleappstore")
+                    os.system(git_command)
+            
+                    if os.path.isdir('/tmp/candleappstore/pkg') and os.path.isdir('/tmp/candleappstore/js') and os.path.isdir('/tmp/candleappstore/views'):
+                        os.system("mv /tmp/candleappstore " + str(target_dir))
+                        if self.DEBUG:
+                            print("in theory the candleappstore addon has been moved into place")
+                        run_command('sleep 1; sudo systemctl restart webthings-gateway.service')
+                        return True
+        
+            if self.DEBUG:
+                print("reinstall_app_store failed")
+                
+        except Exception as ex:
+            print("Caught error in reinstall_app_store: " + str(ex))
+            
+        return False
+                    
+                    
+                    
+                    
+
         
         
     def update_config_txt(self):
