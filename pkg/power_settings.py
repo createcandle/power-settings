@@ -3201,17 +3201,21 @@ class PowerSettingsAPIHandler(APIHandler):
                 print(" - target_dir:" + str(target_dir))
                 print(" - git command: \n" + str(git_command))
             
+            if os.path.exists('/usr/sbin/resolvconf'):
+                if self.DEBUG:
+                    print("- calling resolvconf -u first for good measure")
+                os.system('sudo /usr/sbin/resolvconf -u')
             
             if 'addons' in target_dir and 'candleappstore' in target_dir:
                 if os.path.isdir('/tmp/candleappstore'):
                     os.system("rm -rf /tmp/candleappstore")
                     if self.DEBUG:
-                        print("warning, had to clean up existing temporary dir /tmp/candleappstore")
+                        print(" - warning, had to clean up existing temporary dir /tmp/candleappstore")
             
                 os.system('mkdir -p /tmp/candleappstore')
                 if os.path.isdir('/tmp/candleappstore'):
                     if self.DEBUG:
-                        print("GIT cloning candleappstore into /tmp/candleappstore")
+                        print(" - GIT cloning candleappstore into /tmp/candleappstore")
                     os.system(git_command)
             
                     if os.path.isdir('/tmp/candleappstore/pkg') and os.path.isdir('/tmp/candleappstore/js') and os.path.isdir('/tmp/candleappstore/views'):
@@ -3220,6 +3224,10 @@ class PowerSettingsAPIHandler(APIHandler):
                             print("in theory the candleappstore addon has been moved into place")
                         run_command('sleep 1; sudo systemctl restart webthings-gateway.service')
                         return True
+                        
+                    else:
+                        if self.DEBUG:
+                            print("GIT download of candleappstore seems to have failed")
         
             if self.DEBUG:
                 print("reinstall_app_store failed")

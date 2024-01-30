@@ -474,9 +474,12 @@
 						
 						
 	                    }).catch((e) => {
-	                       console.error("Error: reinstall_app_store connection failed: ", e);
-						   document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.remove('extension-power-settings-hidden');
-						   alert("Could not connect to controller");
+	                    	console.error("Error: reinstall_app_store connection failed: ", e);
+						    //document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.remove('extension-power-settings-hidden');
+						    //alert("Could not connect to controller");
+							setTimeout(() => {
+								window.location.reload(true); 
+							},15000);
 	                    });
 					}
                     
