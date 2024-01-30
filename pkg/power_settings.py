@@ -2015,14 +2015,14 @@ class PowerSettingsAPIHandler(APIHandler):
                                     self.sd_card_written_kbytes = self.sd_card_written_kbytes.strip()
                                     
                                     if self.DEBUG:
-                                        print("sd_card_written_kbytes: " + str(self.sd_card_written_kbytes))
+                                        print("debug: sd_card_written_kbytes: " + str(self.sd_card_written_kbytes))
                                         
                                     # check free memory
                                     free_memory = subprocess.check_output(['grep','^MemFree','/proc/meminfo'])
                                     free_memory = free_memory.decode('utf-8')
                                     free_memory = int( int(''.join(filter(str.isdigit, free_memory))) / 1000)
                                     if self.DEBUG:
-                                        print("free_memory: " + str(free_memory))
+                                        print("debug: free_memory: " + str(free_memory))
                                     
                                     # Check available memory
                                     available_memory = subprocess.check_output("free | grep Mem:", shell=True)
@@ -2031,10 +2031,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                     available_memory = available_memory_parts[-1]
                                     available_memory = int( int(''.join(filter(str.isdigit, available_memory))) / 1000)
                                     if self.DEBUG:
-                                        print("available_memory: " + str(available_memory))
+                                        print("debug: available_memory: " + str(available_memory))
                                     
                                     if self.DEBUG:
-                                        print("total_memory: " + str(self.total_memory))
+                                        print("debug: total_memory: " + str(self.total_memory))
                                     
                                     self.update_backup_info()
                                     
@@ -2055,7 +2055,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                     voltage_output = voltage_output.decode('utf-8').split("=")[1]
                                     voltage_output = voltage_output.rstrip("\n")
                                     if self.DEBUG:
-                                        print("Voltage check result: " + str(voltage_output))
+                                        print("debug: voltage check result: " + str(voltage_output))
                                     voltage_output
                                     if voltage_output != '0x0':
                                         
@@ -2071,7 +2071,6 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 print("- PREVIOUSLY LOW VOLTAGE")
                                             self.low_voltage = True
                                         
-                                
                                 except Exception as ex:
                                     print("Error checking low voltage: " + str(ex))
                                 
@@ -2080,7 +2079,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                     self.attached_devices = []
                                     lsusb_output = run_command("lsusb | cut -d' ' -f 7,8,9,10,11,12,13,14,15")
                                     if self.DEBUG:
-                                        print("lsusb output: " + str(lsusb_output))
+                                        print("debug: lsusb output: " + str(lsusb_output))
                                     
                                     if lsusb_output  != None:
                                         self.attached_devices = lsusb_output.splitlines()
@@ -2090,16 +2089,16 @@ class PowerSettingsAPIHandler(APIHandler):
                                     libcamera_output = run_command('libcamera-still --list-cameras')
                                     if 'No cameras available' in libcamera_output or 'error while loading' in libcamera_output:
                                         if self.DEBUG:
-                                            print("no libcameras detected")
+                                            print("debug: no libcameras detected")
                                     else:
                                         if self.DEBUG:
                                             print("libcamera(s) detected: " + str(libcamera_output))
                                         self.attached_cameras = ['camera']
                                         
-                                    
-                                    
                                 except Exception as ex:
                                     print("Error while checking for attached (USB) devices: " + str(ex))
+                                
+                                self.check_ethernet_connected()
                                 
                                 
                                 return APIResponse(
@@ -2114,6 +2113,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'low_voltage':self.low_voltage,
                                                       'board_temperature':board_temperature,
                                                       'attached_devices':self.attached_devices,
+                                                      'ethernet_connected':self.ethernet_connected,
                                                       'has_cups':self.has_cups,
                                                       'printing_allowed':self.printing_allowed,
                                                       'connected_printers':self.connected_printers,
@@ -2660,7 +2660,7 @@ class PowerSettingsAPIHandler(APIHandler):
     
     def update_backup_info(self, directory=None):
         if self.DEBUG:
-            print("in update_backup_info")
+            print("debug: in update_backup_info")
         try:
             if directory == None:
                 directory = self.user_profile['baseDir']
