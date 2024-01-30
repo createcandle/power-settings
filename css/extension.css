@@ -988,6 +988,23 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 
 
 
+/*  connected network cable  */
+
+#extension-power-settings-attached-network-cable-container{
+	display:none;
+	background-size:cover;
+	background-repeat:no-repeat;
+	height:5rem;
+	background-position:center;
+}
+#extension-power-settings-attached-network-cable-container.extension-power-settings-network-cable-plugged{
+	display:block;
+	background-image: url('../images/network_cable_plugged.svg');
+}
+#extension-power-settings-attached-network-cable-container.extension-power-settings-network-cable-unplugged{
+	display:block;
+	background-image: url('../images/network_cable_unplugged.svg');
+}
 
 /*  Attached USB devices  */
 

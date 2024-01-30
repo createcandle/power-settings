@@ -3457,6 +3457,19 @@
                     
                 }
 				
+				
+				if(typeof body['ethernet_connected'] != 'undefined'){
+					if(body['ethernet_connected']){
+						document.getElementById('extension-power-settings-attached-network-cable-container').classList.add('extension-power-settings-network-cable-plugged');
+						document.getElementById('extension-power-settings-attached-network-cable-container').classList.remove('extension-power-settings-network-cable-unplugged');
+					}
+					else{
+						document.getElementById('extension-power-settings-attached-network-cable-container').classList.add('extension-power-settings-network-cable-unplugged');
+						document.getElementById('extension-power-settings-attached-network-cable-container').classList.remove('extension-power-settings-network-cable-plugged');
+					}
+				}
+				
+				
                 // Show attached devices
                 if(typeof body['attached_devices'] != 'undefined'){
 					
