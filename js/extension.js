@@ -2210,7 +2210,9 @@
         */
         
         check_if_back(){
-            console.log("power settigns: in check if back");
+			if(this.debug){
+				console.log("power settings: in check if back");
+			}
             setTimeout(() => {
                 
                 window.API.postJson(
@@ -2226,7 +2228,9 @@
                     //location.replace(baseUrl);
                     window.location.href = this.baseUrl;
                 }).catch((e) => {
-                    //console.log("not back yet");
+					if(this.debug){
+                    	console.log("not back yet");
+					}
                     this.check_if_back(); // the cycle continues
                 });
                 
