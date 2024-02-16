@@ -1107,7 +1107,7 @@ body:not(.has-pipewire) #extension-power-settings-main-menu-audio-item{
 
 
 .extension-power-settings-audio-item .extension-power-settings-show-if-developer{
-	color:#99f;
+	color:rgba(255,255,255,.7);
 	word-wrap:break-word;
 }
 
@@ -1160,7 +1160,7 @@ body:not(.has-pipewire) #extension-power-settings-main-menu-audio-item{
 
 
 .extension-power-settings-audio-item-volume-slider-container{
-	padding:1rem;
+	padding:1rem 1.5rem;
 	box-sizing:border-box;
 	width:100%;
 	background: linear-gradient(to right, rgba(0,128,0,.5) 80%, rgba(128,128,0,.5) 80%, rgba(128,128,0,.5) 90%, rgba(128,0,0,.5) 90%);

@@ -607,10 +607,14 @@
 				
 				// test speakers button
                 document.getElementById('extension-power-settings-test-speakers-button').addEventListener('click', () => {
-                    document.getElementById('extension-power-settings-test-speakers-button').classList.add('extension-power-settings-hidden');
-                    setTimeout(() => {
-                    	document.getElementById('extension-power-settings-test-speakers-button').classList.remove('extension-power-settings-hidden');
+					console.log("clicked on test speaker button");
+					
+                    document.getElementById('extension-power-settings-test-speakers-button').setAttribute("disabled", true); //.classList.add('extension-power-settings-hidden');
+                    /*
+					setTimeout(() => {
+                    	document.getElementById('extension-power-settings-test-speakers-button').removeAttribute("disabled"); //.classList.remove('extension-power-settings-hidden');
                     },5000);
+					*/
                     window.API.postJson(
                         `/extensions/${this.id}/api/ajax`, {
                             'action': 'test_speakers'
@@ -619,8 +623,10 @@
                         if(this.debug){
                             console.log("power settings: speaker test complete: ", body);
                         }
+						document.getElementById('extension-power-settings-test-speakers-button').removeAttribute("disabled");
                     }).catch((e) => {
                        console.error("Error: speaker test connection failed: ", e);
+					   document.getElementById('extension-power-settings-test-speakers-button').removeAttribute("disabled");
 					   alert("Could not connect to controller");
                     });
                 });
@@ -2618,6 +2624,10 @@
             } catch (e) {
 				console.error("Error hiding all settings containers: ", e);
             }
+			
+			let background_color = window.getComputedStyle( document.body, null).getPropertyValue('background-color');
+			document.getElementById('extension-power-settings-pages').style.backgroundColor = background_color;
+			
         }
         
         
@@ -2841,6 +2851,7 @@
 				*/
 				
 				
+				let found_an_audio_device = false;
 				
 				const audio_device_types = ['source','sink'];
 				for (var a = 0; a < audio_device_types.length; a++){
@@ -3005,10 +3016,20 @@
 						if(dev_type == 'sink'){
 							document.getElementById('extension-power-settings-test-speakers-button').style.display = 'inline-block';
 						}
+						found_an_audio_device = true;
 				
 					}
 					
 					
+				}
+				
+				
+				if(found_an_audio_device == false){
+					document.getElementById('extension-power-settings-audio-no-devices').classList.remove('extension-power-settings-hidden');
+					document.getElementById('extension-power-settings-test-speakers-button').style.display = 'none';
+				}
+				else{
+					document.getElementById('extension-power-settings-audio-no-devices').classList.add('extension-power-settings-hidden');
 				}
 				
 				
