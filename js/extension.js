@@ -49,6 +49,11 @@
 			this.get_stats_interval = null;
 			this.get_stats_fail_counter = 0;
 
+
+			this.pipewire_enabled = false;
+			this.pipewire_data = {};
+			
+
             this.content = '';
             fetch(`/extensions/${this.id}/views/content.html`)
                 .then((res) => res.text())
@@ -60,7 +65,6 @@
                 })
                 .catch((e) => console.error('Failed to fetch content:', e));
                 
-            
             fetch(`/extensions/${this.id}/views/settings_pages.html`)
                 .then((res) => res.text())
                 .then((text) => {
@@ -84,36 +88,209 @@
                 .catch((e) => {
                     console.error('Failed to fetch settings pages content:', e);
                 });
-            
-            /*
-            var pages = document.createElement('div');
-            pages.setAttribute('id','extension-power-settings-pages-clone-container');
-            pages.innerHTML = 
-            const node = document.getElementById("extension-power-settings-pages")
-            const clone = node.cloneNode(true);
-            console.log("clone: ",clone);
-            document.body.appendChild(clone);
-            */
-            
-            
-            
-            //const settings_menu_element = document.getElementById('settings-menu');
-            
-            
-            
-            //console.log("power settings. menu el: ", settings_menu_element);
-
-            
-	
-			
-			
                 
         }
 
 
+        show() {
+            if (this.content == '') {
+                return;
+            }
+            this.view.innerHTML = this.content;
+            
+            const content = document.getElementById('extension-power-settings-content');
+
+            const shutdown = document.getElementById('extension-power-settings-shutdown');
+            const reboot = document.getElementById('extension-power-settings-reboot');
+            const restart = document.getElementById('extension-power-settings-restart');
+
+            const content_container = document.getElementById('extension-power-settings-content-container');
+            
+            const waiting = document.getElementById('extension-power-settings-waiting');
+            const waiting_message = document.getElementById('extension-power-settings-waiting-message');
+
+            //pre.innerText = "";
+
+            
+            
+            
+            // Hide fullscreen button on iOS devices
+            var isIOS = (function () {
+                var iosQuirkPresent = function () {
+                    var audio = new Audio();
+
+                    audio.volume = 0.5;
+                    return audio.volume === 1;   // volume cannot be changed from "1" on iOS 12 and below
+                };
+
+                var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                var isAppleDevice = navigator.userAgent.includes('Macintosh');
+                var isTouchScreen = navigator.maxTouchPoints >= 1;   // true for iOS 13 (and hopefully beyond)
+
+                return isIOS || (isAppleDevice && (isTouchScreen || iosQuirkPresent()));
+            })();
+            
+            if(isIOS){
+                document.getElementById('extension-power-settings-fullscreen-button-container').style.display = 'none';
+            }
+            
+            
+            // Switch full screen
+            document.getElementById('extension-power-settings-fullscreen-button').addEventListener('click', () => {
+
+                var elem = document.documentElement;
+                if (!document.fullscreenElement && !document.mozFullScreenElement &&
+                    !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                    if (elem.requestFullscreen) {
+                        elem.requestFullscreen();
+                    } else if (elem.msRequestFullscreen) {
+                        elem.msRequestFullscreen();
+                    } else if (elem.mozRequestFullScreen) {
+                        elem.mozRequestFullScreen();
+                    } else if (elem.webkitRequestFullscreen) {
+                        elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                        document.mozCancelFullScreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    }
+                }
+
+            });
+
+
+            document.getElementById('extension-power-settings-logout').addEventListener('click', () => {
+                /*
+                content_container.style.display = 'none';
+                waiting.style.display = 'block';
+                waiting_message.innerHTML = '<h2>Shutting down...</h2><p>Please wait at least 15 seconds before unplugging the controller.</p>';
+                */
+                window.API.logout()
+                .then((body) => {
+                    console.log("log out done");
+                    window.location.reload(true);
+                }).catch((e) => {
+          			console.log("Error saving token: ", e);
+                });
+                
+            });
+
+            shutdown.addEventListener('click', () => {
+                content_container.style.display = 'none';
+                waiting.style.display = 'block';
+                waiting_message.innerHTML = '<h2>Shutting down...</h2><p>Please wait at least 15 seconds before unplugging the controller.</p>';
+                window.API.postJson(
+                    `/extensions/${this.id}/api/shutdown`, {}
+                )
+            });
+
+            reboot.addEventListener('click', () => {
+                content_container.style.display = 'none';
+                waiting.style.display = 'block';
+                waiting_message.innerHTML = '<h2>Rebooting...</h2><p>This should take a minute or two.</p>';
+                window.API.postJson('/settings/system/actions', {
+                    action: 'restartSystem'
+                }).catch(console.error);
+
+
+                this.check_if_back();
+                //window.API.postJson(
+                //  `/extensions/${this.id}/api/reboot`,
+                //  {}
+                //)
+            });
+
+            restart.addEventListener('click', () => {
+                content_container.style.display = 'none';
+                waiting.style.display = 'block';
+                waiting_message.innerHTML = '<h2>Restarting...</h2><p>The controller software is being restarted.</p>';
+                window.API.postJson(
+                    `/extensions/${this.id}/api/restart`, {}
+                )
+                
+                this.check_if_back();
+                
+            });
+            
+            
+			const expansion_more_button_el = document.getElementById('extension-power-settings-expand-user-partition-more-button');
+            // Show System details page when clicking on expand partition more button
+            if(expansion_more_button_el){
+				expansion_more_button_el.addEventListener('click', () => {
+                	this.hide_all_settings_containers();
+                	document.getElementById('extension-power-settings-container-system').classList.remove('extension-power-settings-hidden');
+                	document.getElementById('extension-power-settings-pages').classList.remove('hidden');
+					this.get_stats();
+				});
+			}
+            
+			
+			
+            // Start expand user partition button
+			/*
+            document.getElementById("extension-power-settings-expand-user-partition-start-button").addEventListener('click', () => {
+                this.start_partition_expansion();
+            });
+            */
+            
+            this.get_stats();
+            
+            
+            // Hide the shutdown and reboot buttons if a system update is in progress
+            if(this.system_update_in_progress == true){
+                if(document.getElementById('extension-power-settings-main-buttons') != null){
+                    document.getElementById('extension-power-settings-main-buttons').style.display = 'none';
+                    document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'block';
+                }
+            }
+            
+            
+            /*
+            // Show the time settings
+            document.getElementById('extension-power-settings-show-time-settings-button').addEventListener('click', () => {
+                //console.log("time button clicked");
+                this.hide_all_settings_containers();
+                document.getElementById('extension-power-settings-container-time').style.display = 'block';
+                //document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'none';
+            });
+            
+            // Show the factory reset settings
+            document.getElementById('extension-power-settings-show-reset-settings-button').addEventListener('click', () => {
+                //console.log("reset button clicked");
+                this.hide_all_settings_containers();
+                document.getElementById('extension-power-settings-container-reset').style.display = 'block';
+               // document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'none';
+            });
+            */
+            
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		//
+		//  CREATE EXTRA SETTINGS BUTTONS IN SETTINGS MENU
+		//
+
+
         // Mostly adds event listeners once settings_page.html has loaded in
         create_extra_settings(){
-            
             
             if(document.querySelector('#settings-menu > ul') != null){
                 
@@ -162,11 +339,14 @@
 				
 				
 				
-                
+                //
+				//  EXTRA BUTTONS
+				//
                 
                 // Add buttons to settings menu
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-time-button">Clock</a></li>';
 				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-display-button">Display</a></li>';
+				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item" id="extension-power-settings-main-menu-audio-item"><a id="extension-power-settings-menu-audio-button">Audio</a></li>';
 				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item" id="extension-power-settings-main-menu-printer-item" style="display:none"><a id="extension-power-settings-menu-printer-button">Printer</a></li>';
 				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-system-button">System Information</a></li>';
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-backup-button">Backup & Restore</a></li>';
@@ -195,6 +375,18 @@
                     this.show_display_page();
                     
                 });
+				
+				
+                // Show audio page button
+                document.getElementById('extension-power-settings-menu-audio-button').addEventListener('click', () => {
+                    this.hide_all_settings_containers();
+                    document.getElementById('extension-power-settings-container-audio').classList.remove('extension-power-settings-hidden');
+                    document.getElementById('extension-power-settings-pages').classList.remove('hidden');
+                    
+                    this.show_audio_page();
+                    
+                });
+				
 				
 				
                 // Show printer page button
@@ -245,8 +437,6 @@
 		                console.log("Error, changing printing_allowed setting (connection) error: ", e);
 		            });
 				});
-				
-				
 				
 				
 				
@@ -502,7 +692,7 @@
                         }
                     ).then((body) => {
                         if(this.debug){
-                            console.log("backup init response: ", body);
+                            console.log("power settings debug: backup init response: ", body);
                         }
                         
                         if(typeof body.log_size != 'undefined'){
@@ -837,7 +1027,6 @@
                     }).catch((e) => {
                         console.error("sync time error: ", e);
                     });
-                
                 });
 
                 // Submits the manual time
@@ -1230,6 +1419,22 @@
 
         
 		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		//
+		//   INIT
+		//
+		
 		get_init(){
 			
             const hours = document.getElementById('extension-power-settings-form-hours');
@@ -1254,14 +1459,13 @@
                 else{
                     console.error("power settings: init response: body.debug was undefined. Body: ", body);
 					if(this.second_init_attempted == false){
-						console.log("trying power settings init again in 10 seconds");
+						console.warn("power settings: will attempt power settings init again in 10 seconds");
 						setTimeout(() => {
 							this.second_init_attempted = true
 							this.get_init();
 						},10000);
 						return
 					}
-					
                 }
                 
                 
@@ -1362,7 +1566,7 @@
 				// temperature
                 if(typeof body.board_temperature != 'undefined'){
                     if(this.debug){
-                        console.log("power settings: board_temperature: ", body.board_temperature);
+                        console.log("power settings debug: board_temperature: ", body.board_temperature);
                     }
                     document.getElementById('extension-power-settings-device-temperature').innerText = body.board_temperature;
                 }
@@ -1371,7 +1575,7 @@
 				// Linux version
                 if(typeof body.device_linux != 'undefined'){
                     if(this.debug){
-                        console.log("power settings: device_linux: ", body.device_linux);
+                        console.log("power settings debug: device_linux: ", body.device_linux);
                     }
                     document.getElementById('extension-power-settings-device-linux').innerText = body.device_linux;
 					if(body.device_kernel != ''){
@@ -1423,7 +1627,7 @@
                 if(typeof body.user_partition_expanded != 'undefined'){
                     if(body.user_partition_expanded == false){
                         if(this.debug){
-							console.log("power settings: user partition not yet expanded");
+							console.log("power settings debug: user partition not yet expanded");
 						}
                         if(document.getElementById('extension-power-settings-user-partition-expansion-hint') != null){
 							document.getElementById('extension-power-settings-user-partition-expansion-hint').style.display = 'block';
@@ -1508,12 +1712,20 @@
                         modal_html += '<div style="text-align:right"><button id="extension-power-settings-just_updated-via-recovery-ok-button" class="text-button">OK</button></div></div>';
                         div.innerHTML = modal_html;
                         document.body.appendChild(div);
+						  
                         document.getElementById('extension-power-settings-just_updated-via-recovery-ok-button').addEventListener('click', () => {
                             document.getElementById('extension-power-settings-just_updated-via-recovery-container').style.display = 'none';
                         });
                     }
                 }
-                
+				
+                if(typeof body.pipewire_enabled != 'undefined'){
+					console.log("body.pipewire_enabled: ", body.pipewire_enabled);
+					if(body.pipewire_enabled){
+						document.body.classList.add('has-pipewire');
+					}
+					this.pipewire_enabled = body.pipewire_enabled;
+                }
                 
             }).catch((e) => {
                 console.error("power-settings init error: ", e);
@@ -1531,7 +1743,7 @@
                 }
             ).then((body) => {
                 if(this.debug){
-                    console.log("clock page init response: ", body);
+                    console.log("power settings debug: clock page init response: ", body);
                 }
                 if(typeof body.shell_date != 'undefined'){
                     document.getElementById('extension-power-settings-shell-date').innerText = body.shell_date;
@@ -1648,7 +1860,7 @@
 				clearInterval(this.recovery_interval);
                 this.recovery_interval = null;
                 if(this.debug){
-                    console.log("cleared old recovery_interval for /poll");
+                    console.log("power settings debug: cleared old recovery_interval for /poll");
                 }
 			}
 			catch(e){
@@ -1671,7 +1883,7 @@
                             
                             try{
                                 if(this.debug){
-                                    console.log("recovery update poll response: ", body);
+                                    console.log("power settings debug: recovery update poll response: ", body);
                                 }
                                 
                                 if(typeof body.busy_updating_recovery != 'undefined'){
@@ -1768,14 +1980,14 @@
         
         start_poll(){
             if(this.debug){
-                console.log("in start_poll");
+                console.log("power settings debug: in start_poll");
             }
             // reset process output, just in case
             
             
             if( this.overlay_exists == false ){
                 if(this.debug){
-                    console.log("start_poll: overlay does not exist");
+                    console.log("power settings debug: start_poll: overlay does not exist");
                 }
                 document.getElementById('extension-power-settings-update-process-output').innerHTML = "";
                 //document.getElementById('extension-power-settings-system-update').style.display = 'none';
@@ -1800,7 +2012,7 @@
             }
             else{
                 if(this.debug){
-                    console.log("start_poll: overlay still exist");
+                    console.log("power settings debug: start_poll: overlay still exist");
                 }
             }
 
@@ -1809,7 +2021,7 @@
 				clearInterval(this.interval);
                 this.interval = null;
                 if(this.debug){
-                    console.log("cleared old interval for /poll");
+                    console.log("power settings debug: cleared old interval for /poll");
                 }
 			}
 			catch(e){
@@ -1819,7 +2031,7 @@
             if(this.interval == null){
     			this.interval = setInterval(() => {
                     if(this.debug){
-                        console.log("in interval for /poll");
+                        console.log("power settings debug: in interval for /poll");
                     }
                     /*
                     if(document.getElementById('connectivity-scrim').classList.contains('hidden')){
@@ -2002,184 +2214,7 @@
 
 
 
-        show() {
-            if (this.content == '') {
-                return;
-            }
-            this.view.innerHTML = this.content;
-            
-            const content = document.getElementById('extension-power-settings-content');
-
-            const shutdown = document.getElementById('extension-power-settings-shutdown');
-            const reboot = document.getElementById('extension-power-settings-reboot');
-            const restart = document.getElementById('extension-power-settings-restart');
-
-            const content_container = document.getElementById('extension-power-settings-content-container');
-            
-            const waiting = document.getElementById('extension-power-settings-waiting');
-            const waiting_message = document.getElementById('extension-power-settings-waiting-message');
-
-            //pre.innerText = "";
-
-            
-            
-            
-            // Hide fullscreen button on iOS devices
-            var isIOS = (function () {
-                var iosQuirkPresent = function () {
-                    var audio = new Audio();
-
-                    audio.volume = 0.5;
-                    return audio.volume === 1;   // volume cannot be changed from "1" on iOS 12 and below
-                };
-
-                var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                var isAppleDevice = navigator.userAgent.includes('Macintosh');
-                var isTouchScreen = navigator.maxTouchPoints >= 1;   // true for iOS 13 (and hopefully beyond)
-
-                return isIOS || (isAppleDevice && (isTouchScreen || iosQuirkPresent()));
-            })();
-            
-            if(isIOS){
-                document.getElementById('extension-power-settings-fullscreen-button-container').style.display = 'none';
-            }
-            
-            
-            // Switch full screen
-            document.getElementById('extension-power-settings-fullscreen-button').addEventListener('click', () => {
-
-                var elem = document.documentElement;
-                if (!document.fullscreenElement && !document.mozFullScreenElement &&
-                    !document.webkitFullscreenElement && !document.msFullscreenElement) {
-                    if (elem.requestFullscreen) {
-                        elem.requestFullscreen();
-                    } else if (elem.msRequestFullscreen) {
-                        elem.msRequestFullscreen();
-                    } else if (elem.mozRequestFullScreen) {
-                        elem.mozRequestFullScreen();
-                    } else if (elem.webkitRequestFullscreen) {
-                        elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-                    }
-                } else {
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen();
-                    } else if (document.msExitFullscreen) {
-                        document.msExitFullscreen();
-                    } else if (document.mozCancelFullScreen) {
-                        document.mozCancelFullScreen();
-                    } else if (document.webkitExitFullscreen) {
-                        document.webkitExitFullscreen();
-                    }
-                }
-
-            });
-
-
-            document.getElementById('extension-power-settings-logout').addEventListener('click', () => {
-                /*
-                content_container.style.display = 'none';
-                waiting.style.display = 'block';
-                waiting_message.innerHTML = '<h2>Shutting down...</h2><p>Please wait at least 15 seconds before unplugging the controller.</p>';
-                */
-                window.API.logout()
-                .then((body) => {
-                    console.log("log out done");
-                    window.location.reload(true);
-                }).catch((e) => {
-          			console.log("Error saving token: ", e);
-                });
-                
-            });
-
-            shutdown.addEventListener('click', () => {
-                content_container.style.display = 'none';
-                waiting.style.display = 'block';
-                waiting_message.innerHTML = '<h2>Shutting down...</h2><p>Please wait at least 15 seconds before unplugging the controller.</p>';
-                window.API.postJson(
-                    `/extensions/${this.id}/api/shutdown`, {}
-                )
-            });
-
-            reboot.addEventListener('click', () => {
-                content_container.style.display = 'none';
-                waiting.style.display = 'block';
-                waiting_message.innerHTML = '<h2>Rebooting...</h2><p>This should take a minute or two.</p>';
-                window.API.postJson('/settings/system/actions', {
-                    action: 'restartSystem'
-                }).catch(console.error);
-
-
-                this.check_if_back();
-                //window.API.postJson(
-                //  `/extensions/${this.id}/api/reboot`,
-                //  {}
-                //)
-            });
-
-            restart.addEventListener('click', () => {
-                content_container.style.display = 'none';
-                waiting.style.display = 'block';
-                waiting_message.innerHTML = '<h2>Restarting...</h2><p>The controller software is being restarted.</p>';
-                window.API.postJson(
-                    `/extensions/${this.id}/api/restart`, {}
-                )
-                
-                this.check_if_back();
-                
-            });
-            
-            
-			const expansion_more_button_el = document.getElementById('extension-power-settings-expand-user-partition-more-button');
-            // Show System details page when clicking on expand partition more button
-            if(expansion_more_button_el){
-				expansion_more_button_el.addEventListener('click', () => {
-                	this.hide_all_settings_containers();
-                	document.getElementById('extension-power-settings-container-system').classList.remove('extension-power-settings-hidden');
-                	document.getElementById('extension-power-settings-pages').classList.remove('hidden');
-					this.get_stats();
-				});
-			}
-            
-			
-			
-            // Start expand user partition button
-			/*
-            document.getElementById("extension-power-settings-expand-user-partition-start-button").addEventListener('click', () => {
-                this.start_partition_expansion();
-            });
-            */
-            
-            this.get_stats();
-            
-            
-            // Hide the shutdown and reboot buttons if a system update is in progress
-            if(this.system_update_in_progress == true){
-                if(document.getElementById('extension-power-settings-main-buttons') != null){
-                    document.getElementById('extension-power-settings-main-buttons').style.display = 'none';
-                    document.getElementById('extension-power-settings-update-in-progress-warning').style.display = 'block';
-                }
-            }
-            
-            
-            /*
-            // Show the time settings
-            document.getElementById('extension-power-settings-show-time-settings-button').addEventListener('click', () => {
-                //console.log("time button clicked");
-                this.hide_all_settings_containers();
-                document.getElementById('extension-power-settings-container-time').style.display = 'block';
-                //document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'none';
-            });
-            
-            // Show the factory reset settings
-            document.getElementById('extension-power-settings-show-reset-settings-button').addEventListener('click', () => {
-                //console.log("reset button clicked");
-                this.hide_all_settings_containers();
-                document.getElementById('extension-power-settings-container-reset').style.display = 'block';
-               // document.getElementById('extension-power-settings-show-time-settings-button').style.display = 'none';
-            });
-            */
-            
-        }
+        
         
         /*
         check_for_usb_stick(){
@@ -2295,32 +2330,32 @@
                     
                     if(body.candle_original_version == 'unknown'){
                         if(this.debug){
-                            console.log("power settings: running on early release candidate");
+                            console.log("power settings debug: running on early release candidate");
                         }
                         this.update_available_text = "available";
                     }
                     else if(body.candle_original_version == '2.0.0'){
                         this.update_available_text = "available";
                         if(this.debug){
-                            console.log("power settings: running on RC4");
+                            console.log("power settings debug: running on RC4");
                         }
                     }
                     else if(body.candle_original_version == '2.0.0-beta'){
                         this.update_available_text = "available"
                         if(this.debug){
-                            console.log("power settings: running on updated release candidate, nice");
+                            console.log("power settings debug: running on updated release candidate, nice");
                         }
                     }
                     else if(body.candle_original_version == '2.0.1'){
                         this.update_available_text = "available"
                         if(this.debug){
-                            console.log("power settings: running on 2.0.1");
+                            console.log("power settings debug: running on 2.0.1");
                         }
                     }
                     else if(body.candle_original_version == '2.0.2'){
                         this.update_available_text = ""
                         if(this.debug){
-                            console.log("power settings: running on 2.0.2, brilliant");
+                            console.log("power settings debug: running on 2.0.2, brilliant");
                         }
                     }
                     
@@ -2581,7 +2616,7 @@
                 window.clearInterval(this.get_stats_interval);
 				this.get_stats_interval = null;
             } catch (e) {
-				
+				console.error("Error hiding all settings containers: ", e);
             }
         }
         
@@ -2712,7 +2747,7 @@
                 }
             ).then((body) => {
                 if(this.debug){
-                    console.log("expand_user_partition response: ", body);
+                    console.log("power settings: expand_user_partition response: ", body);
                 }
                 //console.log("expand_user_partition response: ", body);
         
@@ -2729,6 +2764,268 @@
                 console.error("Error requesting expand user partition: ", e);
             });
 		}
+		
+		
+		
+		
+		//
+		//   AUDIO
+		//  
+		
+		
+        show_audio_page(){
+			
+			this.debug = true; // TODO: REMOVE THIS
+			
+            if(this.debug){
+				console.log("power settings debug: in show_audio_page");
+			}
+            
+			window.API.postJson(
+                `/extensions/${this.id}/api/ajax`, {
+                    'action': 'audio_init'
+                }
+            ).then((body) => {
+                if(this.debug){
+                    console.log("power settings: audio page init response: ", body);
+                }
+				
+				// This should never happen if pipewire isn't enabled in the first place..
+                if(typeof body.pipewire_enabled != 'undefined'){
+					if(body.pipewire_enabled){
+						if(this.debug){
+							console.log("pipewire is enabled");
+						}
+					}
+					this.pipewire_enabled = body.pipewire_enabled;
+                    
+                }
+				
+				if(typeof body.pipewire_data != 'undefined'){
+					if(this.debug){
+						console.log("power settings debug: got pipewire data: ", body.pipewire_data);
+					}
+					this.pipewire_data = body.pipewire_data;
+					this.generate_audio_lists();
+				}
+				
+				
+				//extension-power-settings-audio-sink-list-container
+				
+                
+            }).catch((e) => {
+               console.error("Error: audio page init: connection failed: ", e);
+            });
+        }
+		
+		
+		generate_audio_lists(){
+            if(this.debug){
+				console.log("in generate_audio_lists");
+			}
+			try{
+				
+				// not used?
+				//const sink_list_el = document.getElementById('extension-power-settings-audio-sink-list-container');
+				//const source_list_el = document.getElementById('extension-power-settings-audio-source-list-container');
+				//const audio_device_els = [source_list_el, sink_list_el];
+				
+				
+				/*
+				if( Object.keys(this.connected_printers).length == 0 ){
+					printer_list_el.innerHTML = '<p style="text-align:center">No printers detected</p>';
+				}
+				else{
+					printer_list_el.innerHTML = '';
+				}
+				*/
+				
+				
+				
+				const audio_device_types = ['source','sink'];
+				for (var a = 0; a < audio_device_types.length; a++){
+					const dev_type = audio_device_types[a];
+					
+					if(this.pipewire_data['default_audio_' + dev_type + '_nice_name'] == 'undefined'){
+						if(this.debug){
+							console.error("power settings: audio: dev_type: default device undefined: ", this.pipewire_data);
+						}
+						continue
+					}
+					if(this.pipewire_data['default_audio_' + dev_type + '_nice_name'] == null){
+						if(this.debug){
+							console.error("power settings: audio: dev_type: default device not set: ", this.pipewire_data);
+						}
+						continue
+					}
+					
+					if(this.debug){
+						console.log("power settings debug: generating audio devices list for: ", dev_type);
+					}
+					
+					const list_el = document.getElementById('extension-power-settings-audio-' + dev_type + '-list-container');
+					if(list_el == null){
+						console.error("could not find audio device list container");
+						continue
+					}
+					
+					if(typeof this.pipewire_data[dev_type + 's'] == 'undefined'){
+						console.error("very strange, missing audio device type data in pipewire data.")
+						continue
+					}
+					
+					if(this.pipewire_data[dev_type + 's'] == null){
+						list_el.innerHTML = 'No device found';
+						continue
+					}
+					
+					list_el.innerHTML = '';
+					
+					
+					
+					
+					for (const [device, details] of Object.entries(this.pipewire_data[dev_type + 's'])) {
+						if(this.debug){
+							console.log("power settings debug: pipewire device and details: ", device, details);
+						}
+						
+						let alsa_path = 'Not an ALSA device';
+						if(typeof details.object_path != 'undefined'){
+							alsa_path = details.object_path;
+						}
+						
+						let node_name = 'None';
+						if(typeof details.node_name != 'undefined'){
+							node_name = details.node_name;
+						}
+						
+						let audio_item_el = document.createElement('div');
+						audio_item_el.classList.add('extension-power-settings-audio-item');
+						audio_item_el.classList.add('extension-power-settings-vlak');
+						audio_item_el.classList.add('extension-power-settings-audio-item-' + dev_type);
+						audio_item_el.innerHTML = '<div class="extension-power-settings-audio-item-icon"></div><h2>' + details.nice_name + ' </h2><p>' + details.node_description + '</p><p class="extension-power-settings-show-if-developer">Pipewire ID: ' + details.id + '<br/>' + alsa_path + '</p><p class="extension-power-settings-show-if-developer">' + node_name  + '</p>';
+						
+						let radio_el = document.createElement('input');
+						radio_el.type = 'radio';
+						radio_el.id = 'extension-power-settings-audio-' + dev_type + '-' + details.id + '-radio-input';
+						radio_el.name = 'extension-power-settings-audio-' + dev_type + '-radio-button';
+						radio_el.classList.add('extension-power-settings-audio-item-radio-button');
+						radio_el.setAttribute('data-pipewire-id',details.id);
+						
+						if(this.pipewire_data['default_audio_' + dev_type + '_nice_name'] == details.nice_name){
+							radio_el.checked = true;
+							audio_item_el.classList.add('extension-power-settings-audio-item-selected');
+						}
+						
+						const pipewire_id = details.id;
+						const my_dev_type = dev_type;
+						
+						radio_el.addEventListener('change', () => {
+							if(this.debug){
+								console.log("audio radio input changed to: ", pipewire_id);
+							}
+							let action_dict = {'action':'set_audio'};
+							//action_dict['default_' + my_dev_type] = pipewire_id;
+							action_dict['default_id'] = pipewire_id;
+							if(this.debug){
+								console.log("power settings: set_audio: action_dict: ", action_dict);
+					        }
+							window.API.postJson(
+					          `/extensions/${this.id}/api/ajax`,action_dict
+
+					        ).then((body) => {
+								if(this.debug){
+				                    console.log('Power settings: set_audio default device response: ', body);
+				                }
+								if(typeof body.pipewire_data != 'undefined'){
+									this.pipewire_data = body.pipewire_data;
+									this.generate_audio_lists();
+								}
+
+					        }).catch((e) => {
+					  			console.error('Power settings: error during set_audio api call: ', e);
+								alert("Could not connect with controller, your audio device preference may not have been saved");
+					        });	
+						
+						});
+						
+						
+						audio_item_el.appendChild(radio_el);
+						
+						
+						// Volume slider
+						
+						// <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
+						if(typeof details.volume != 'undefined' && details.volume != null && details.volume != NaN){
+							let volume_container_el = document.createElement('div');
+							volume_container_el.classList.add('extension-power-settings-audio-item-volume-slider-container');
+							
+							let volume_slider_el = document.createElement('input');
+							volume_slider_el.classList.add('extension-power-settings-audio-item-volume-slider');
+							volume_slider_el.setAttribute('type','range');
+							volume_slider_el.setAttribute('min','0');
+							volume_slider_el.setAttribute('max','100');
+							volume_slider_el.setAttribute('step','1');
+							volume_slider_el.setAttribute('value',details.volume);
+							volume_slider_el.addEventListener('change', () => {
+								if(this.debug){
+									console.log("audio volume slider changed to: ", volume_slider_el.value);
+								}
+								let action_dict = {'action':'set_audio'};
+								action_dict['pipewire_id'] = pipewire_id;
+								if(this.debug){
+									console.log("power settings: set_audio volume: action_dict: ", action_dict);
+								}
+								window.API.postJson(
+						          `/extensions/${this.id}/api/ajax`,action_dict
+
+						        ).then((body) => {
+									if(this.debug){
+					                    console.log('Power settings: set_audio volume response: ', body);
+					                }
+									if(typeof body.pipewire_data != 'undefined'){
+										this.pipewire_data = body.pipewire_data;
+										//this.generate_audio_lists();
+									}
+
+						        }).catch((e) => {
+						  			console.error('Power settings: error during set_audio api call: ', e);
+									alert("Could not connect with controller, your audio device preference may not have been saved");
+						        });	
+							});
+							
+							volume_container_el.appendChild(volume_slider_el);
+							audio_item_el.appendChild(volume_container_el);
+						
+						
+						}
+						
+						list_el.appendChild(audio_item_el);
+				
+						if(dev_type == 'sink'){
+							document.getElementById('extension-power-settings-test-speakers-button').style.display = 'inline-block';
+						}
+				
+					}
+					
+					
+				}
+				
+				
+				
+			}
+			catch(e){
+				console.error("power settings: error generating audio devices list: ", e);
+			}
+		}
+		
+		
+		
+		
+		
+		
+		
+		
 		
 		
 		
@@ -3221,7 +3518,7 @@
 	                }
 	            ).then((body) => {
 	                if(this.debug){
-	                    console.log("printer init response: ", body);
+	                    console.log("power settings debug: printer init response: ", body);
 	                }
 				
 					// Printing
@@ -3247,18 +3544,25 @@
 		
 		generate_connected_printers_list(){
 			if(this.debug){
-				console.log("power settings: in generate_connected_printers_list. this.connected_printers: ", this.connected_printers);
+				console.log("power settings debug: in generate_connected_printers_list. this.connected_printers: ", this.connected_printers);
 			}
 			try{
 				
 				const printer_list_el = document.getElementById('extension-power-settings-printers-list-container');
-				printer_list_el.innerHTML = '';
+				
+				if( Object.keys(this.connected_printers).length == 0 ){
+					printer_list_el.innerHTML = '<p style="text-align:center">No printers detected</p>';
+				}
+				else{
+					printer_list_el.innerHTML = '';
+				}
+				
 				
 				for (const [key, printer] of Object.entries(this.connected_printers)) {
 				
 					const printer_name = printer.id;
 					if(this.debug){
-						console.log("power settings: adding printer to list: ", printer_name);
+						console.log("power settings debug: adding printer to list: ", printer_name);
 					}
 					var default_printer_html = '';
 				

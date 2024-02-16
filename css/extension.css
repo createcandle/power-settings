@@ -330,6 +330,7 @@
     padding:2rem;
     margin: 0 2rem 2rem 2rem;
     border-radius:.5rem;
+	position:relative;
 }
 
 .kiosk #extension-power-settings-scroll-container > div{
@@ -431,6 +432,11 @@
 #extension-power-settings-menu-display-button{
     cursor:pointer;
     background-image:url('../images/display.svg');
+}
+
+#extension-power-settings-menu-audio-button{
+    cursor:pointer;
+    background-image:url('../images/audio.svg');
 }
 
 #extension-power-settings-menu-printer-button{
@@ -1060,6 +1066,123 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
     display: block;
     margin-left: auto;
 }
+
+
+
+
+
+/*   AUDIO   */
+
+body:not(.has-pipewire) #extension-power-settings-main-menu-audio-item{
+	display:none;
+}
+
+
+#extension-power-settings-audio-sink-list-container:not(:empty):before{
+	content:"Output";
+	display:block;
+	margin-bottom:2rem;
+    padding: 1rem 2rem;
+    font-size: 2rem;
+}
+
+#extension-power-settings-audio-source-list-container:not(:empty):before{
+	content:"Input";
+	display:block;
+	margin-bottom:2rem;
+    padding: 1rem 2rem;
+    font-size: 2rem;
+}
+
+
+.extension-power-settings-audio-item{
+	padding-left:10rem;
+	box-sizing:border-box;
+	overflow:hidden;
+	opacity:.6;
+}
+.extension-power-settings-audio-item.extension-power-settings-audio-item-selected{
+	opacity:1;
+}
+
+
+.extension-power-settings-audio-item .extension-power-settings-show-if-developer{
+	color:#99f;
+	word-wrap:break-word;
+}
+
+
+.extension-power-settings-audio-item-sink .extension-power-settings-audio-item-icon{
+	background-image:url('../images/audio.svg');
+}
+.extension-power-settings-audio-item-source .extension-power-settings-audio-item-icon{
+	background-image:url('../images/microphone.svg');
+}
+
+
+.extension-power-settings-audio-item-icon{
+	opacity: .3;
+    position: absolute;
+    top: 3rem;
+    left: 2rem;
+    font-size: 15rem;
+    height: 6rem;
+    width: 6rem;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+.extension-power-settings-audio-item.extension-power-settings-audio-item-selected .extension-power-settings-audio-item-icon{
+	opacity:.7;
+}
+
+.extension-power-settings-audio-item h2{
+	max-width:calc(100% - 5rem);
+}
+
+/*
+.extension-power-settings-audio-item-pipewire-id{
+    opacity: .05;
+    position: absolute;
+    bottom: -1rem;
+    right: -0.5rem;
+    font-size: 25rem;
+    pointer-events: none;
+}
+*/
+
+.extension-power-settings-audio-item-radio-button{
+	position:absolute;
+	top: 4rem;
+	right: 4rem;
+	transform: scale(3);
+}
+
+
+
+.extension-power-settings-audio-item-volume-slider-container{
+	padding:1rem;
+	box-sizing:border-box;
+	width:100%;
+	background: linear-gradient(to right, rgba(0,128,0,.5) 80%, rgba(128,128,0,.5) 80%, rgba(128,128,0,.5) 90%, rgba(128,0,0,.5) 90%);
+	border-radius:.5rem;
+}
+
+.extension-power-settings-audio-item-volume-slider{
+	width:100%;
+}
+
+.extension-power-settings-audio-item-volume-slider::-webkit-slider-thumb {
+   -webkit-appearance: none;
+   border: none;
+   height: 16px;
+   width: 16px;
+   border-radius: 50%;
+   transform:scale(2);
+   cursor:pointer;
+}
+
+
+
 
 
 @media screen and (max-width: 640px) {

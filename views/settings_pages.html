@@ -321,17 +321,64 @@
             </div>
         </div>
 		
+		<!--
 		<div class="extension-power-settings-vlak">
             <div id="extension-power-settings-other-container" style="text-align:center">
 				<p class="extension-power-settings-header">Other</p>
 				
-				<button id="extension-power-settings-test-speakers-button" class="text-button">🔈 Test speakers</button>
-				
             </div>
         </div>
-		
-		
+		// -->
+				
     </div>
+
+
+
+
+    <div id="extension-power-settings-container-audio" class="extension-power-settings-container">
+        <div class="section-title">
+            <div class="section-title-back-flex"></div>
+            <div class="section-title-container">
+                <img class="section-title-icon" alt="Audio icon" src="/extensions/power-settings/images/audio.svg" />
+                <span class="section-title-name">Audio</span>
+            </div>
+            <div class="section-title-right-flex"></div>
+        </div>
+
+		<div id="extension-power-settings-general-audio-container" class="extension-power-settings-vlak">
+	        
+			<!--
+			<div>
+	            <input type="checkbox" name="extension-power-settings-allow-audio-checkbox" id="extension-power-settings-allow-audio-checkbox" />
+	            <label for="extension-power-settings-allow-audio-checkbox">Allow audio..?</label>
+	            <p class="extension-power-settings-field-description">bla.</p>
+	        </div>
+			// -->
+			
+			<p>Select your prefered default audio devices. You can set the main volume of speakers, or adjust the sensitivity of microphones.</p><p>Note that individual addons or devices may still adjust their volume level independently.<p>
+			<div style="text-align:right">
+				<button id="extension-power-settings-test-speakers-button" class="text-button" style="display:none">🔈 Test speakers</button>
+			</div>
+			
+		</div>
+
+        <div id="extension-power-settings-audio-sink-list-container" class="extension-power-settings-vlak">
+            <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
+        </div>
+		
+        <div id="extension-power-settings-audio-source-list-container" class="extension-power-settings-vlak">
+            <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
 
 
 

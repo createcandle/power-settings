@@ -19,6 +19,8 @@ import urllib.request
 import functools
 import subprocess
 
+from .utils import *
+
 #import requests
 
 try:
@@ -58,7 +60,7 @@ class PowerSettingsAPIHandler(APIHandler):
         #print("INSIDE API HANDLER INIT")
         
         self.addon_id = "power-settings"
-        self.DEBUG = False
+        self.DEBUG = True
         self.running = True
         
         
@@ -101,7 +103,8 @@ class PowerSettingsAPIHandler(APIHandler):
         # or loading from local csv file
         #self.edid_registry = pyedid.helpers.registry.from_csv(self.display_manufacturers_csv_path)
         
-        
+        self.pipewire_data = {'sinks':{},'sources':{},'default_audio_sink_name':None,'default_audio_sink_nice_name':None,'default_audio_sink_id':None,'default_audio_source_name':None,'default_audio_source_nice_name':None,'default_audio_source_id':None}
+        self.pipewire_enabled = False
         
         
         
@@ -143,7 +146,6 @@ class PowerSettingsAPIHandler(APIHandler):
         self.config_txt_path = self.boot_path + '/config.txt'
         
         self.bits = 32
-        
         try:
             bits_check = run_command('getconf LONG_BIT')
             self.bits = int(bits_check)
@@ -251,9 +253,6 @@ class PowerSettingsAPIHandler(APIHandler):
         self.has_cups = False
         if os.path.exists('/etc/cups'):
             self.has_cups = True
-        
-        
-        
         
         
         # Display
@@ -434,10 +433,15 @@ class PowerSettingsAPIHandler(APIHandler):
         except Exception as ex:
             print("Error loading config: " + str(ex))
             
+        self.check_pipewire()
         
         if self.DEBUG:
             print("System bits: " + str(self.bits))
             print("unused volume space: " + str(self.unused_volume_space))
+            print("self.pipewire_enabled: " + str(self.pipewire_enabled))
+       
+       
+       
        
         # Remove hardware clock file if it exists and it should not be enabled
         if self.do_not_use_hardware_clock:
@@ -996,6 +1000,69 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':'ok'}),
                                 )
+                                
+                                
+                                
+                            # GET AUDIO INFO
+                            
+                            elif action == 'audio_init':
+                                state = True
+                                self.check_pipewire()
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state,
+                                          'pipewire_enabled':self.pipewire_enabled,
+                                          'pipewire_data':self.pipewire_data,
+                                          }),
+                                )
+                            
+                                
+                            elif action == 'set_audio':
+                                state = False
+                                response = ''
+                                if self.pipewire_enabled:
+                                    state = True
+                                
+                                    if 'default_id' in request.body:
+                                        response = run_command('wpctl set-default ' + str(request.body['default_id']))
+                                        self.check_pipewire()
+                                        return APIResponse(
+                                          status=200,
+                                          content_type='application/json',
+                                          content=json.dumps({
+                                                  'state':state,
+                                                  'pipewire_enabled':self.pipewire_enabled,
+                                                  'pipewire_data':self.pipewire_data,
+                                                  'response':response
+                                                  }),
+                                        )
+                                        #pass
+                                    #if 'default_source' in request.body:
+                                    #    response = run_command('wpctl set-default ' + str(request.body['default_source']))
+                                
+                                    if 'pipewire_id' in request.body and 'volume' in request.body:
+                                        response = run_command('wpctl set-volume ' + str(request.body['pipewire_id']) + ' ' + str(request.body['volume']) + '%')
+                                        state = True
+                                    
+                                    #if 'sink_volume' in request.body and :
+                                    #    pass
+                                    #if 'source_volume' in request.body:
+                                    #    pass
+                                        
+                                
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({
+                                          'state':state,
+                                          'response':response
+                                          }),
+                                )
+                                
+                                
                                 
                                 
                             # GET DISPLAY INFO
@@ -2244,6 +2311,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'device_linux':self.device_linux.rstrip(),
                                             'device_sd_card_size':self.device_sd_card_size,
                                             'has_cups':self.has_cups,
+                                            'pipewire_enabled':self.pipewire_enabled,
                                             'user_partition_expansion_failed': self.user_partition_expansion_failed,
                                             'debug':self.DEBUG
                                         }
@@ -2562,7 +2630,7 @@ class PowerSettingsAPIHandler(APIHandler):
             
                 lpstat_output = run_command("lpstat -v")
                 if self.DEBUG:
-                    print("detect_printers: lpstat before: " + str(lpstat_output))
+                    print("detect_printers: 'lpstat -v' before: " + str(lpstat_output))
             
                 cups_output = run_command("sudo lpinfo -l --timeout 10 -v | grep 'uri = lpd://' -A 5")
                 avahi_output = run_command("avahi-browse -p -l -a -r -k -t | grep '_printer._tcp' | grep IPv4")
@@ -3236,19 +3304,46 @@ class PowerSettingsAPIHandler(APIHandler):
             print("Caught error in reinstall_app_store: " + str(ex))
             
         return False
+    
+    
+    
+    
+    
                     
-                    
+
+    #               
+    # Audio - Pipewire
+    #
+    
+    def check_pipewire(self):
+        if self.DEBUG:
+            print("in check_pipewire")
+        self.pipewire_data = {'sinks':{},'sources':{},'default_audio_sink_name':None,'default_audio_sink_nice_name':None,'default_audio_sink_id':None,'default_audio_source_name':None,'default_audio_source_nice_name':None,'default_audio_source_id':None}
+        self.pipewire_enabled = False
+        #print("\n\n\n\n\nwhoami? " + str(run_command('whoami')))
+        pipewire_test = run_command('ps aux | grep pipewire')
+        #pipewire_test = subprocess.check_output(['amixer','info'])
+        
+        if self.DEBUG:
+            print("pipewire_test: " + str(pipewire_test))
+        if pipewire_test != None and 'bin/pipewire' in pipewire_test.lower():
+            if self.DEBUG:
+                print("pipewire is enabled")
+            self.pipewire_enabled = True
+            self.pipewire_data = get_pipewire_audio_controls(self.DEBUG) # True = debug    
+            if self.DEBUG:
+                print("pipewire data: " + str(self.pipewire_data))
+        return self.pipewire_data
                     
                     
 
         
-        
+    # Not currently used
     def update_config_txt(self):
         
         with open(self.config_txt_path) as f:
             pass
             #self.persistent_data = json.load(f)
-        
         
         power_settings_indicator = """# DO NOT PLACE ANYTHING BELOW POWER_SETTINGS_START LINE, IT MAY BE REMOVED BY THE POWER SETTINGS ADDON
         
@@ -3292,45 +3387,3 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("removing backup download symlink")
             os.system('unlink ' + self.backup_download_dir) # remove symlink, so the backup files can not longer be downloaded
 
-
-
-def run_command(cmd, timeout_seconds=60):
-    try:
-        p = subprocess.run(cmd, timeout=timeout_seconds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, universal_newlines=True)
-
-        if p.returncode == 0:
-            result_string = p.stdout;
-            if type(result_string) == 'bytes':
-                #print("result string was bytes: ", result_string)
-                result_string = result_string.split(b'\x00')
-                result_string = result_string.decode('UTF-8')
-                
-                #result_string = result_string.replace(b'\x00','')
-            #result_string = result_string.replace('\x00','')
-            #print("result_string: ", type(result_string))
-            
-            #if type(result_string) != 'str':
-            #    result_string = result_string.decode('UTF-8')
-            #print("command ran succesfully")
-            return result_string #p.stdout.decode('UTF-8') #.decode('utf-8')
-            #yield("Command success")
-        else:
-            if p.stderr:
-                return str(p.stderr) # + '\n' + "Command failed"   #.decode('utf-8'))
-
-    except Exception as e:
-        print("Error running command: "  + str(e) + ", cmd was: " + str(cmd))
-        
-        
-def valid_ip(ip):
-    valid = False
-    try:
-        if ip.count('.') == 3 and \
-            all(0 <= int(num) < 256 for num in ip.rstrip().split('.')) and \
-            len(ip) < 16 and \
-            all(num.isdigit() for num in ip.rstrip().split('.')):
-            valid = True
-    except Exception as ex:
-        #print("error in valid_ip: " + str(ex))
-        pass
-    return valid
