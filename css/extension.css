@@ -1073,7 +1073,7 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 
 /*   AUDIO   */
 
-body:not(.has-pipewire) #extension-power-settings-main-menu-audio-item{
+body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 	display:none;
 }
 

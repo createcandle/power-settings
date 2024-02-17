@@ -1728,7 +1728,7 @@
                 if(typeof body.pipewire_enabled != 'undefined'){
 					console.log("body.pipewire_enabled: ", body.pipewire_enabled);
 					if(body.pipewire_enabled){
-						document.body.classList.add('has-pipewire');
+						document.body.classList.add('pipewire');
 					}
 					this.pipewire_enabled = body.pipewire_enabled;
                 }
