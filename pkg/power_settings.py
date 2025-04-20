@@ -157,13 +157,20 @@ class PowerSettingsAPIHandler(APIHandler):
             self.bits_extension = "64"
         
         
-        #self.device_model = run_command("tr -d '\0' < /proc/device-tree/model")
-        self.device_model = run_command("cat /proc/device-tree/model")
-        self.device_kernel = run_command("uname -r")
-        self.device_linux = run_command("lsb_release -a | grep Description")
-        self.device_linux = self.device_linux.replace('Description:	', '')
+        self.device_model = 'unknown'
+        self.device_kernel = 'unknown'
+        self.device_linux = 'unknown'
         
-        self.device_sd_card_size = int(run_command("sudo blockdev --getsize64 /dev/mmcblk0"))
+        #self.device_model = run_command("tr -d '\0' < /proc/device-tree/model")
+        if os.path.isdir('/proc'):
+            self.device_model = run_command("cat /proc/device-tree/model")
+            self.device_kernel = run_command("uname -r")
+            self.device_linux = run_command("lsb_release -a | grep Description")
+            self.device_linux = self.device_linux.replace('Description:	', '')
+        
+        self.device_sd_card_size = None
+        if os.path.isfile('/dev/mmcblk0'):
+            self.device_sd_card_size = int(run_command("sudo blockdev --getsize64 /dev/mmcblk0"))
         
         
 
@@ -186,7 +193,10 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
         # Ugly fix for issue with Candle 2.0.2.
-        os.system('sudo chown -R pi:pi ' + str(self.user_profile['dataDir']))
+        if sys.platform == 'darwin':
+            print("RUNNING ON MAC OS")
+        else:
+            os.system('sudo chown -R pi:pi ' + str(self.user_profile['dataDir']))
             
         #print("get_hdmi_port_resolution: " + str( self.get_hdmi_port_resolution('HDMI-1') ))
             
@@ -295,40 +305,41 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
         try:
-            # get HDMI port names
-            display_port_names = run_command("DISPLAY=:0 xrandr | grep 'connected' | cut -d' ' -f1")
-            if self.DEBUG:
-                print("display_port_names: \n" + str(display_port_names))
-            display_port_names = display_port_names.splitlines()
+            if os.path.isdir('/sys'):
+                # get HDMI port names
+                display_port_names = run_command("DISPLAY=:0 xrandr | grep 'connected' | cut -d' ' -f1")
+                if self.DEBUG:
+                    print("display_port_names: \n" + str(display_port_names))
+                display_port_names = display_port_names.splitlines()
         
-            if len(display_port_names) > 0:
-                if len(str(display_port_names[0])) > 2:
-                    self.display_port1_name = display_port_names[0]
-                    [ self.display1_width, self.display1_height ] = self.get_hdmi_port_resolution(self.display_port1_name)
-                    if self.DEBUG:
-                        print("self.display1_width: " + str(self.display1_width))
-            
-                
-                if len(display_port_names) > 1:
-                    if len(str(display_port_names[1])) > 2:
-                        self.display_port2_name = display_port_names[1]
-                        [ self.display2_width, self.display2_height ] = self.get_hdmi_port_resolution(self.display_port2_name)
+                if len(display_port_names) > 0:
+                    if len(str(display_port_names[0])) > 2:
+                        self.display_port1_name = display_port_names[0]
+                        [ self.display1_width, self.display1_height ] = self.get_hdmi_port_resolution(self.display_port1_name)
                         if self.DEBUG:
-                            print("self.display2_width: " + str(self.display2_width))
-                else:
-                    self.display_port2_name = None
-            else:
-                self.display_port1_name = None
-                self.display_port2_name = None
+                            print("self.display1_width: " + str(self.display1_width))
             
-            
-            self.find_display_rotation()
-            
-            if self.display_port1_name != None and self.persistent_data['display_resolution_' + str(self.display_port1_name)] and str(self.persistent_data['display_resolution_' + str(self.display_port1_name)]) != 'default':
-                self.set_display_resolutions()
                 
-            elif self.display_port2_name != None and self.persistent_data['display_resolution_' + str(self.display_port2_name)] and str(self.persistent_data['display_resolution_' + str(self.display_port2_name)]) != 'default':
-                self.set_display_resolutions()
+                    if len(display_port_names) > 1:
+                        if len(str(display_port_names[1])) > 2:
+                            self.display_port2_name = display_port_names[1]
+                            [ self.display2_width, self.display2_height ] = self.get_hdmi_port_resolution(self.display_port2_name)
+                            if self.DEBUG:
+                                print("self.display2_width: " + str(self.display2_width))
+                    else:
+                        self.display_port2_name = None
+                else:
+                    self.display_port1_name = None
+                    self.display_port2_name = None
+            
+            
+                self.find_display_rotation()
+            
+                if self.display_port1_name != None and self.persistent_data['display_resolution_' + str(self.display_port1_name)] and str(self.persistent_data['display_resolution_' + str(self.display_port1_name)]) != 'default':
+                    self.set_display_resolutions()
+                
+                elif self.display_port2_name != None and self.persistent_data['display_resolution_' + str(self.display_port2_name)] and str(self.persistent_data['display_resolution_' + str(self.display_port2_name)]) != 'default':
+                    self.set_display_resolutions()
             
         except Exception as ex:
             print("Error getting initial display data: " + str(ex))
@@ -396,21 +407,22 @@ class PowerSettingsAPIHandler(APIHandler):
         self.sd_card_written_kbytes = '?'
         
         try:
-            self.user_partition_free_disk_space = int(run_command("df /home/pi/.webthings | awk 'NR==2{print $4}' | tr -d '\n'"))
-            total_memory = run_command("awk '/^MemTotal:/{print $2}' /proc/meminfo | tr -d '\n'")
-            self.total_memory = int( int(''.join(filter(str.isdigit, total_memory))) / 1000)
+            if os.path.isdir('/home/pi/.webthings'):
+                self.user_partition_free_disk_space = int(run_command("df /home/pi/.webthings | awk 'NR==2{print $4}' | tr -d '\n'"))
+                total_memory = run_command("awk '/^MemTotal:/{print $2}' /proc/meminfo | tr -d '\n'")
+                self.total_memory = int( int(''.join(filter(str.isdigit, total_memory))) / 1000)
             
-            # How much space is there at the end of the SD card that isn't used?
-            self.unused_volume_space = int(run_command("sudo parted /dev/mmcblk0 unit B print free | grep 'Free Space' | tail -n1 | awk '{print $3}' | tr -d 'B\n'"))
-            #print("unused_volume_space: " + str(self.unused_volume_space))
+                # How much space is there at the end of the SD card that isn't used?
+                self.unused_volume_space = int(run_command("sudo parted /dev/mmcblk0 unit B print free | grep 'Free Space' | tail -n1 | awk '{print $3}' | tr -d 'B\n'"))
+                #print("unused_volume_space: " + str(self.unused_volume_space))
             
-            if self.unused_volume_space > 1000000000:
-                self.user_partition_expanded = False
+                if self.unused_volume_space > 1000000000:
+                    self.user_partition_expanded = False
             
-            # Check total memory in system
-            #total_memory = subprocess.check_output("awk '/^MemTotal:/{print $2}' /proc/meminfo", shell=True)
-            #total_memory = total_memory.decode('utf-8')
-            #
+                # Check total memory in system
+                #total_memory = subprocess.check_output("awk '/^MemTotal:/{print $2}' /proc/meminfo", shell=True)
+                #total_memory = total_memory.decode('utf-8')
+                #
             
         except Exception as ex:
             print("Error getting total memory or free user partition disk space: " + str(ex))
@@ -743,42 +755,42 @@ class PowerSettingsAPIHandler(APIHandler):
         if self.DEBUG:
             print("in set_display_rotation. Desired rotation: ", rotation);
         
-        
-        # Display rotation
-        if int(rotation) == 0:
-            os.system('sudo rm ' + str(self.rotate_display_path))
-            if self.display1_width != 0:
-                os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port1_name) + ' --rotate normal')
+        if os.path.isdir('/sys'):
+            # Display rotation
+            if int(rotation) == 0:
+                os.system('sudo rm ' + str(self.rotate_display_path))
+                if self.display1_width != 0:
+                    os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port1_name) + ' --rotate normal')
             
-            if self.display2_width != 0:
-                os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port2_name) + ' --rotate normal')
+                if self.display2_width != 0:
+                    os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port2_name) + ' --rotate normal')
             
-        elif int(rotation) == 180:
-            os.system('sudo touch ' + str(self.rotate_display_path))
-            if self.display1_width != 0:
-                os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port1_name) + ' --rotate inverted')
-            if self.display2_width != 0:
-                os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port2_name) + ' --rotate inverted')
+            elif int(rotation) == 180:
+                os.system('sudo touch ' + str(self.rotate_display_path))
+                if self.display1_width != 0:
+                    os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port1_name) + ' --rotate inverted')
+                if self.display2_width != 0:
+                    os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port2_name) + ' --rotate inverted')
             
             
-        # Touch input rotation
-        pointer_output = run_command("DISPLAY=:0 xinput | grep pointer | tail -n +2 | grep -v ' XTEST '") #  | cut -f1 -d$'\t'     # | grep -v ' XTEST '
-        if pointer_output != None:
-            for line in pointer_output.splitlines():
-                print("pointer_output line: " + str(line))
+            # Touch input rotation
+            pointer_output = run_command("DISPLAY=:0 xinput | grep pointer | tail -n +2 | grep -v ' XTEST '") #  | cut -f1 -d$'\t'     # | grep -v ' XTEST '
+            if pointer_output != None:
+                for line in pointer_output.splitlines():
+                    print("pointer_output line: " + str(line))
                 
-                input_name = re.split(r'\t+', line)[0]
-                print("input_name again: " + str(input_name))
+                    input_name = re.split(r'\t+', line)[0]
+                    print("input_name again: " + str(input_name))
                 
-                input_name = input_name[5:].strip()
+                    input_name = input_name[5:].strip()
                 
-                print("input_name again2: " + str(input_name))
-                print("int(rotation): " + str(int(rotation)))
+                    print("input_name again2: " + str(input_name))
+                    print("int(rotation): " + str(int(rotation)))
                 
-                if int(rotation) == 0:
-                    os.system("DISPLAY=:0 xinput --set-prop '" + str(input_name) + "' 'Coordinate Transformation Matrix' 1 0 0 0 1 0 0 0 1")
-                else:
-                    os.system("DISPLAY=:0 xinput --set-prop '" + str(input_name) + "' 'Coordinate Transformation Matrix' -1 0 1 0 -1 1 0 0 1")
+                    if int(rotation) == 0:
+                        os.system("DISPLAY=:0 xinput --set-prop '" + str(input_name) + "' 'Coordinate Transformation Matrix' 1 0 0 0 1 0 0 0 1")
+                    else:
+                        os.system("DISPLAY=:0 xinput --set-prop '" + str(input_name) + "' 'Coordinate Transformation Matrix' -1 0 1 0 -1 1 0 0 1")
             
              
             
@@ -786,23 +798,24 @@ class PowerSettingsAPIHandler(APIHandler):
         if self.DEBUG:
             print("in get_hdmi_port_resolution. hdmi_port_name: " + str(hdmi_port_name))
         try:
-            if len(str(hdmi_port_name)) > 2:
-                connected_check = run_command('DISPLAY=:0 xrandr | grep " connected" | grep ' + str(hdmi_port_name))
-                if self.DEBUG:
-                    print("connected_check: " + str(connected_check))
-                if connected_check != None and len(str(connected_check)) > 5 and '+' in str(connected_check):
-                    #connected_check = connected_check[connected_check.find(' connected'):]
-                    connected_check = connected_check[:connected_check.find('+')]
-                    connected_check = connected_check.split(' ')[-1]
-                    connected_check = connected_check.strip()
+            if os.path.isdir('/sys'):
+                if len(str(hdmi_port_name)) > 2:
+                    connected_check = run_command('DISPLAY=:0 xrandr | grep " connected" | grep ' + str(hdmi_port_name))
                     if self.DEBUG:
-                        print("stripped connected_check: " + str(connected_check))
-                    if 'x' in connected_check:
-                        connected_check_parts = connected_check.split('x')
-                        if connected_check_parts[0] == str(int(connected_check_parts[0])) and connected_check_parts[1] == str(int(connected_check_parts[1])):
-                            if self.DEBUG:
-                                print("resolution: " + str(connected_check_parts))
-                            return connected_check_parts
+                        print("connected_check: " + str(connected_check))
+                    if connected_check != None and len(str(connected_check)) > 5 and '+' in str(connected_check):
+                        #connected_check = connected_check[connected_check.find(' connected'):]
+                        connected_check = connected_check[:connected_check.find('+')]
+                        connected_check = connected_check.split(' ')[-1]
+                        connected_check = connected_check.strip()
+                        if self.DEBUG:
+                            print("stripped connected_check: " + str(connected_check))
+                        if 'x' in connected_check:
+                            connected_check_parts = connected_check.split('x')
+                            if connected_check_parts[0] == str(int(connected_check_parts[0])) and connected_check_parts[1] == str(int(connected_check_parts[1])):
+                                if self.DEBUG:
+                                    print("resolution: " + str(connected_check_parts))
+                                return connected_check_parts
         except Exception as ex:
             print("Error in in get_hdmi_port_resolution: " + str(ex))
         
@@ -813,85 +826,88 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
     def check_update_processes(self):
-        check_bootup_actions_running = run_command("sudo ps aux | grep bootup_action")
-        if self.DEBUG:
-            print("checking for bootup_actions in ps aux output: " + str(check_bootup_actions_running))
-        if os.path.exists(self.boot_path + '/bootup_actions_failed.sh'):
-            if self.boot_path + "/bootup_actions" in check_bootup_actions_running:
-                if self.DEBUG:
-                    print("BOOTUP ACTIONS SEEMS TO BE RUNNING!")
-                self.system_update_in_progress = True
-            elif self.boot_path + "/post_bootup_actions" in check_bootup_actions_running:
-                if self.DEBUG:
-                    print("POST BOOTUP ACTIONS SEEMS TO BE RUNNING!")
-                self.system_update_in_progress = True
+        if os.path.isdir(self.boot_path):
+            check_bootup_actions_running = run_command("sudo ps aux | grep bootup_action")
+            if self.DEBUG:
+                print("checking for bootup_actions in ps aux output: " + str(check_bootup_actions_running))
+            if os.path.exists(self.boot_path + '/bootup_actions_failed.sh'):
+                if self.boot_path + "/bootup_actions" in check_bootup_actions_running:
+                    if self.DEBUG:
+                        print("BOOTUP ACTIONS SEEMS TO BE RUNNING!")
+                    self.system_update_in_progress = True
+                elif self.boot_path + "/post_bootup_actions" in check_bootup_actions_running:
+                    if self.DEBUG:
+                        print("POST BOOTUP ACTIONS SEEMS TO BE RUNNING!")
+                    self.system_update_in_progress = True
+                else:
+                    self.system_update_in_progress = False
             else:
                 self.system_update_in_progress = False
-        else:
-            self.system_update_in_progress = False
         
-        if self.DEBUG:
-            if self.system_update_in_progress == False:
-                print("no system update in progress")
+            if self.DEBUG:
+                if self.system_update_in_progress == False:
+                    print("no system update in progress")
         
         
         
     # Check if an i2c hardware clock module is installed
     def hardware_clock_check(self):
         try:
-            init_hardware_clock = False
-            for line in run_command("sudo i2cdetect -y 1").splitlines():
-                if self.DEBUG:
-                    print(line)
-                if line.startswith( '60:' ):
-                    if '-- 68 --' in line or '-- UU --' in line:
-                        self.hardware_clock_detected = True
-                        if self.DEBUG:
-                            print("Hardware clock detected")
+            if os.path.isdir('/sys'):
+                init_hardware_clock = False
+                for line in run_command("sudo i2cdetect -y 1").splitlines():
+                    if self.DEBUG:
+                        print(line)
+                    if line.startswith( '60:' ):
+                        if '-- 68 --' in line or '-- UU --' in line:
+                            self.hardware_clock_detected = True
+                            if self.DEBUG:
+                                print("Hardware clock detected")
                             
-                    if '-- 68 --' in line:
-                        init_hardware_clock = True
+                        if '-- 68 --' in line:
+                            init_hardware_clock = True
             
-            if init_hardware_clock:
-                if self.DEBUG:
-                    print("Initializing hardware clock")
-                os.system('sudo modprobe rtc-ds1307')
-                os.system('echo "ds1307 0x68" | sudo tee /sys/class/i2c-adapter/i2c-1/new_device')
-
-                if os.path.isfile(self.hardware_clock_file_path):
-                    # The hardware clock has already been set
-                    
-                    # Check if the hardware clock date is newer?
-                    hardware_clock_time = run_command("sudo hwclock -r")
+                if init_hardware_clock:
                     if self.DEBUG:
-                        print("hardware_clock_time: " + str(hardware_clock_time))
-                        
-                    hardware_clock_time = hardware_clock_time.rstrip()
-                    #hardware_clock_date = datetime.strptime(hardware_clock_time, '%Y-%m-%d')
-                    #hardware_clock_date = datetime.datetime.fromisoformat(hardware_clock_time)
-                    
-                    # "2021-08-08"
-                    # 2022-05-24 00:06:26.623920+02:00
-                    
-                    hardware_clock_date = datetime.datetime.strptime(hardware_clock_time, "%Y-%m-%d %H:%M:%S.%f%z") 
-                    if hardware_clock_date.timestamp() > (datetime.datetime.now().timestamp() - 86400):
-                        if self.DEBUG:
-                            print("SETTING LOCAL CLOCK FROM HARDWARE CLOCK")
-                        # Set the system clock based on the hardware clock
-                        os.system('sudo hwclock -s')
-                    
-                else:
-                    # The hardware clock should be set
-                    if self.DEBUG:
-                        print("Setting initial hardware clock, creating " + str(self.hardware_clock_file_path))
-                    os.system('sudo hwclock -w')
-                    os.system('sudo touch ' + self.hardware_clock_file_path)
+                        print("Initializing hardware clock")
                 
-            else:
-                if self.DEBUG:
-                    print("No need to init hardware clock module (does not exist, or has already been initialised). hardware_clock_detected: " + str(self.hardware_clock_detected))
-                if os.path.isfile(self.hardware_clock_file_path):
-                    os.system('sudo rm ' + str(self.hardware_clock_file_path))
+                        os.system('sudo modprobe rtc-ds1307')
+                        os.system('echo "ds1307 0x68" | sudo tee /sys/class/i2c-adapter/i2c-1/new_device')
+
+                    if os.path.isfile(self.hardware_clock_file_path):
+                        # The hardware clock has already been set
+                    
+                        # Check if the hardware clock date is newer?
+                        hardware_clock_time = run_command("sudo hwclock -r")
+                        if self.DEBUG:
+                            print("hardware_clock_time: " + str(hardware_clock_time))
+                        
+                        hardware_clock_time = hardware_clock_time.rstrip()
+                        #hardware_clock_date = datetime.strptime(hardware_clock_time, '%Y-%m-%d')
+                        #hardware_clock_date = datetime.datetime.fromisoformat(hardware_clock_time)
+                    
+                        # "2021-08-08"
+                        # 2022-05-24 00:06:26.623920+02:00
+                    
+                        hardware_clock_date = datetime.datetime.strptime(hardware_clock_time, "%Y-%m-%d %H:%M:%S.%f%z") 
+                        if hardware_clock_date.timestamp() > (datetime.datetime.now().timestamp() - 86400):
+                            if self.DEBUG:
+                                print("SETTING LOCAL CLOCK FROM HARDWARE CLOCK")
+                            # Set the system clock based on the hardware clock
+                            os.system('sudo hwclock -s')
+                    
+                    else:
+                        # The hardware clock should be set
+                        if self.DEBUG:
+                            print("Setting initial hardware clock, creating " + str(self.hardware_clock_file_path))
+                        os.system('sudo hwclock -w')
+                        os.system('sudo touch ' + self.hardware_clock_file_path)
+                
+                else:
+                    if self.DEBUG:
+                        print("No need to init hardware clock module (does not exist, or has already been initialised). hardware_clock_detected: " + str(self.hardware_clock_detected))
+                    if os.path.isfile(self.hardware_clock_file_path):
+                        os.system('sudo rm ' + str(self.hardware_clock_file_path))
             
         except Exception as ex:
             if self.DEBUG:
@@ -901,18 +917,19 @@ class PowerSettingsAPIHandler(APIHandler):
         
     def check_ethernet_connected(self):
         try:
-            ethernet_state = run_command('cat /sys/class/net/eth0/operstate')
-            if self.DEBUG:
-                print("ethernet_state: " + str(ethernet_state))
-            cable_needed = False
-            if 'down' in ethernet_state:
+            if os.path.isdir('/sys'):
+                ethernet_state = run_command('cat /sys/class/net/eth0/operstate')
                 if self.DEBUG:
-                    print("No ethernet cable connected")
-                cable_needed = True
-            else:
-                if self.DEBUG:
-                    print("Ethernet cable seems connected")
-            self.ethernet_connected = not cable_needed
+                    print("ethernet_state: " + str(ethernet_state))
+                cable_needed = False
+                if 'down' in ethernet_state:
+                    if self.DEBUG:
+                        print("No ethernet cable connected")
+                    cable_needed = True
+                else:
+                    if self.DEBUG:
+                        print("Ethernet cable seems connected")
+                self.ethernet_connected = not cable_needed
         except Exception as ex:
             print("Error in check_ethernet_connection: " + str(ex))
 
@@ -1124,150 +1141,150 @@ class PowerSettingsAPIHandler(APIHandler):
                                     """
                                 
                                 
+                                    if os.path.isdir('/sys'):
                                 
+                                        # get HDMI port names
+                                        display_port_names = run_command("DISPLAY=:0 xrandr | grep 'connected' | cut -d' ' -f1")
+                                        if self.DEBUG:
+                                            print("display_port_names: \n" + str(display_port_names))
+                                        display_port_names = display_port_names.splitlines()
                                 
-                                    # get HDMI port names
-                                    display_port_names = run_command("DISPLAY=:0 xrandr | grep 'connected' | cut -d' ' -f1")
-                                    if self.DEBUG:
-                                        print("display_port_names: \n" + str(display_port_names))
-                                    display_port_names = display_port_names.splitlines()
-                                
-                                    if len(display_port_names) > 0:
-                                        if len(str(display_port_names[0])) > 2:
-                                            self.display_port1_name = str(display_port_names[0])
-                                            [ self.display1_width, self.display1_height ] = self.get_hdmi_port_resolution(self.display_port1_name)
-                                            if self.DEBUG:
-                                                print("self.display1_width: " + str(self.display1_width))
+                                        if len(display_port_names) > 0:
+                                            if len(str(display_port_names[0])) > 2:
+                                                self.display_port1_name = str(display_port_names[0])
+                                                [ self.display1_width, self.display1_height ] = self.get_hdmi_port_resolution(self.display_port1_name)
+                                                if self.DEBUG:
+                                                    print("self.display1_width: " + str(self.display1_width))
                                         
-                                    if len(display_port_names) > 1:
-                                        if len(str(display_port_names[1])) > 2:
-                                            self.display_port2_name = str(display_port_names[1])
-                                            [ self.display2_width, self.display2_height ] = self.get_hdmi_port_resolution(self.display_port2_name)
-                                            if self.DEBUG:
-                                                print("self.display2_width: " + str(self.display2_width))
+                                        if len(display_port_names) > 1:
+                                            if len(str(display_port_names[1])) > 2:
+                                                self.display_port2_name = str(display_port_names[1])
+                                                [ self.display2_width, self.display2_height ] = self.get_hdmi_port_resolution(self.display_port2_name)
+                                                if self.DEBUG:
+                                                    print("self.display2_width: " + str(self.display2_width))
                                                 
                                     
-                                    connected_port_names = run_command("DISPLAY=:0 xrandr | grep ' connected'")
-                                    for connected_port in connected_port_names.splitlines():
-                                        if connected_port == self.display_port1_name:
-                                            self.display1_available = True
-                                        if connected_port == self.display_port2_name:
-                                            self.display2_available = True
+                                        connected_port_names = run_command("DISPLAY=:0 xrandr | grep ' connected'")
+                                        for connected_port in connected_port_names.splitlines():
+                                            if connected_port == self.display_port1_name:
+                                                self.display1_available = True
+                                            if connected_port == self.display_port2_name:
+                                                self.display2_available = True
                                 
-                                    #subprocess.check_output
-                                    edids = pyedid.get_edid_from_xrandr_verbose(run_command("DISPLAY=:0 xrandr --verbose"))
-                                    if self.DEBUG:
-                                        print("edids 1: " + str(edids))
-                                    
-                                    for x, edid in enumerate(edids):
+                                        #subprocess.check_output
+                                        edids = pyedid.get_edid_from_xrandr_verbose(run_command("DISPLAY=:0 xrandr --verbose"))
                                         if self.DEBUG:
-                                            print(x, pyedid.parse_edid(edid))
-                                        if x == 0:
-                                            self.display1_details = str(pyedid.parse_edid(edid));
-                                        if x == 1:
-                                            self.display2_details = str(pyedid.parse_edid(edid));
+                                            print("edids 1: " + str(edids))
+                                    
+                                        for x, edid in enumerate(edids):
+                                            if self.DEBUG:
+                                                print(x, pyedid.parse_edid(edid))
+                                            if x == 0:
+                                                self.display1_details = str(pyedid.parse_edid(edid));
+                                            if x == 1:
+                                                self.display2_details = str(pyedid.parse_edid(edid));
                                 
                                 
-                                    """
-                                    for x in range(len(edids)):
-                                    for x in range(len(edids)-1):
-                                        print("x: " + str(x))
-                                        edid = pyedid.parse_edid(edids[x])
+                                        """
+                                        for x in range(len(edids)):
+                                        for x in range(len(edids)-1):
+                                            print("x: " + str(x))
+                                            edid = pyedid.parse_edid(edids[x])
                                     
                                     
-                                    #if len(edids) == 1:
+                                        #if len(edids) == 1:
                                 
                                 
                                 
                                 
-                                    #if self.DEBUG:
-                                    #    print("\nparsed edid: " + str(edid))
+                                        #if self.DEBUG:
+                                        #    print("\nparsed edid: " + str(edid))
                                 
-                                    edid_paths = run_command('find -L /sys/class/drm -maxdepth 2 | grep edid | grep -v riteback')
-                                    edid_paths = edid_paths.splitlines()
-                                
-                                
-                                    for x in range(len(edid_paths)-1):
-                                        if self.DEBUG:
-                                            print("checking edid #: " + str(x) + " -> " + str(edid_paths[x]))
-                                        
-                                        with open(edid_paths[x], 'rb') as f:
-                                            edid_data = f.read().hex()
-                                            print(str(edid_data))
-                                            # loading list with edid data
-                                            #edid_bs = EdidHelper.get_edids()[0]
-
-                                            # convert exist edid hex string from xrandr
-                                            #edid_bs = EdidHelper.hex2bytes("hex string from xrandr...")
-
-                                            #### Step 3: create instance
-
-                                            # create Edid instance for fisrt edid data
-                                            #edid = Edid(edid_data, self.edid_registry)
-                                            #print(".\nedid: " + str(edid))
-                                    """
-                                
-                                    """
-                                    # get display name from EDID data
-                                    if self.edid_available:
                                         edid_paths = run_command('find -L /sys/class/drm -maxdepth 2 | grep edid | grep -v riteback')
                                         edid_paths = edid_paths.splitlines()
-                                    
+                                
+                                
                                         for x in range(len(edid_paths)-1):
                                             if self.DEBUG:
-                                                print("checking edid #: " + str(x))
-                                            edid_data = run_command("edid-decode " + str(edid_paths[x]))
-                                            if self.DEBUG:
-                                                print("edid_data: " + str(edid_data))
-                                            if 'edid-decode (hex):' in edid_data:
-                                                manufacturer = None
-                                                display_name = ""
-                                                for line in edid_data.split('\n'):
-                                                    if 'Manufacturer:' in line:
-                                                        manufacturer = line.replace('Manufacturer:','').strip()
-                                                    if 'Display Product Name:' in line:
-                                                        line = line.replace('Display Product Name:','').strip()
-                                                        display_name = line + ' ' + display_name
-                                                    if 'Model:' in line:
-                                                        line = line.replace('Model:','').strip()
-                                                        display_name = display_name + ' ' + line
+                                                print("checking edid #: " + str(x) + " -> " + str(edid_paths[x]))
+                                        
+                                            with open(edid_paths[x], 'rb') as f:
+                                                edid_data = f.read().hex()
+                                                print(str(edid_data))
+                                                # loading list with edid data
+                                                #edid_bs = EdidHelper.get_edids()[0]
+
+                                                # convert exist edid hex string from xrandr
+                                                #edid_bs = EdidHelper.hex2bytes("hex string from xrandr...")
+
+                                                #### Step 3: create instance
+
+                                                # create Edid instance for fisrt edid data
+                                                #edid = Edid(edid_data, self.edid_registry)
+                                                #print(".\nedid: " + str(edid))
+                                        """
+                                
+                                        """
+                                        # get display name from EDID data
+                                        if self.edid_available:
+                                            edid_paths = run_command('find -L /sys/class/drm -maxdepth 2 | grep edid | grep -v riteback')
+                                            edid_paths = edid_paths.splitlines()
+                                    
+                                            for x in range(len(edid_paths)-1):
+                                                if self.DEBUG:
+                                                    print("checking edid #: " + str(x))
+                                                edid_data = run_command("edid-decode " + str(edid_paths[x]))
+                                                if self.DEBUG:
+                                                    print("edid_data: " + str(edid_data))
+                                                if 'edid-decode (hex):' in edid_data:
+                                                    manufacturer = None
+                                                    display_name = ""
+                                                    for line in edid_data.split('\n'):
+                                                        if 'Manufacturer:' in line:
+                                                            manufacturer = line.replace('Manufacturer:','').strip()
+                                                        if 'Display Product Name:' in line:
+                                                            line = line.replace('Display Product Name:','').strip()
+                                                            display_name = line + ' ' + display_name
+                                                        if 'Model:' in line:
+                                                            line = line.replace('Model:','').strip()
+                                                            display_name = display_name + ' ' + line
                                             
-                                                if manufacturer != None:
-                                                    display_name = manufacturer + ' ' + display_name
+                                                    if manufacturer != None:
+                                                        display_name = manufacturer + ' ' + display_name
                                             
-                                                # TODO: should have a better, mmore flexible datastructure for display data..
-                                                if x == 0:
-                                                    self.display1_details = edid_data
-                                                    if len(str(display_name)) > 3:
-                                                        self.display1_name = display_name
-                                                if x == 1:
-                                                    self.display2_details = edid_data
-                                                    if len(str(display_name)) > 3:
-                                                        self.display2_name = display_name
+                                                    # TODO: should have a better, mmore flexible datastructure for display data..
+                                                    if x == 0:
+                                                        self.display1_details = edid_data
+                                                        if len(str(display_name)) > 3:
+                                                            self.display1_name = display_name
+                                                    if x == 1:
+                                                        self.display2_details = edid_data
+                                                        if len(str(display_name)) > 3:
+                                                            self.display2_name = display_name
                                         
                                         
                                     
-                                    """
+                                        """
                                 
-                                    # DISPLAY=:0 xrandr | grep ' connected' | cut -d' ' -f1
+                                        # DISPLAY=:0 xrandr | grep ' connected' | cut -d' ' -f1
                                     
                                 
-                                    # Power management
-                                    display1_power_management_output = run_command("DISPLAY=:0 xset -q | awk '/DPMS is/ {print $NF}'")
-                                    if 'unable to open' in display1_power_management_output:
-                                        #self.display1_available = False
-                                        pass
-                                    elif 'Disabled' in display1_power_management_output:
-                                        self.display1_power = False
-                                        self.display2_power = False
-                                    else:
-                                        self.display1_power = True
-                                        self.display2_power = True
+                                        # Power management
+                                        display1_power_management_output = run_command("DISPLAY=:0 xset -q | awk '/DPMS is/ {print $NF}'")
+                                        if 'unable to open' in display1_power_management_output:
+                                            #self.display1_available = False
+                                            pass
+                                        elif 'Disabled' in display1_power_management_output:
+                                            self.display1_power = False
+                                            self.display2_power = False
+                                        else:
+                                            self.display1_power = True
+                                            self.display2_power = True
                                 
                                     
-                                    self.detect_touchscreen()
+                                        self.detect_touchscreen()
                                 
-                                    self.find_display_rotation()
+                                        self.find_display_rotation()
                                     
                                 
                                     state = 'ok'
@@ -1335,20 +1352,21 @@ class PowerSettingsAPIHandler(APIHandler):
                             elif action == 'set_rpi_display_rotation':
                                 state = 'error'
                                 if 'rpi_display_rotation' in request.body:
-                                    self.rpi_display_rotation = int(request.body['rpi_display_rotation'])
+                                    if os.path.isdir('/sys'):
+                                        self.rpi_display_rotation = int(request.body['rpi_display_rotation'])
                                     
                                     
-                                    if self.DEBUG:
-                                        print("new Rpi Display rotation: " + str(self.rpi_display_rotation))
+                                        if self.DEBUG:
+                                            print("new Rpi Display rotation: " + str(self.rpi_display_rotation))
                                     
-                                    state = 'ok'
+                                        state = 'ok'
                                     
-                                    if self.rpi_display_rotation == 0:
-                                        os.system('sudo rm ' + str(self.rotate_display_path))
-                                    else:
-                                        os.system('sudo touch ' + str(self.rotate_display_path))
+                                        if self.rpi_display_rotation == 0:
+                                            os.system('sudo rm ' + str(self.rotate_display_path))
+                                        else:
+                                            os.system('sudo touch ' + str(self.rotate_display_path))
                                         
-                                    # TODO: make changes to rotate official Rpi Display
+                                        # TODO: make changes to rotate official Rpi Display
                                     
                                     
                                 return APIResponse(
@@ -1364,45 +1382,46 @@ class PowerSettingsAPIHandler(APIHandler):
                             elif action == 'set_display_power':
                                 state = 'error'
                                 try:
-                                    if 'display1_power' in request.body and 'display2_power' in request.body:
+                                    if os.path.isdir('/sys'):
+                                        if 'display1_power' in request.body and 'display2_power' in request.body:
                                     
-                                        self.persistent_data['display1_power'] = bool(request.body['display1_power'])
-                                        self.persistent_data['display2_power'] = bool(request.body['display2_power'])
+                                            self.persistent_data['display1_power'] = bool(request.body['display1_power'])
+                                            self.persistent_data['display2_power'] = bool(request.body['display2_power'])
                                         
-                                        if self.DEBUG:
-                                            print("new display1 power management: " + str(self.persistent_data['display1_power']))
-                                            print("new display2 power management: " + str(self.persistent_data['display2_power']))
+                                            if self.DEBUG:
+                                                print("new display1 power management: " + str(self.persistent_data['display1_power']))
+                                                print("new display2 power management: " + str(self.persistent_data['display2_power']))
                                     
-                                        if self.persistent_data['display1_power'] == True or self.persistent_data['display2_power'] == True:
-                                            # allow the screen to go into standby
-                                            os.system('DISPLAY=:0 xset s on')
-                                            os.system('DISPLAY=:0 xset dpms')
-                                            os.system('DISPLAY=:0 xset s blank')
-                                            os.system('DISPLAY=:0 xset dpms ' + str(self.display_standby_delay) + ' 0 0')
-                                        else:
-                                            # stay on
-                                            os.system('DISPLAY=:0 xset s off')
-                                            os.system('DISPLAY=:0 xset -dpms')
-                                            os.system('DISPLAY=:0 xset s noblank')
-                                            os.system('DISPLAY=:0 xset dpms 0 0 0')
+                                            if self.persistent_data['display1_power'] == True or self.persistent_data['display2_power'] == True:
+                                                # allow the screen to go into standby
+                                                os.system('DISPLAY=:0 xset s on')
+                                                os.system('DISPLAY=:0 xset dpms')
+                                                os.system('DISPLAY=:0 xset s blank')
+                                                os.system('DISPLAY=:0 xset dpms ' + str(self.display_standby_delay) + ' 0 0')
+                                            else:
+                                                # stay on
+                                                os.system('DISPLAY=:0 xset s off')
+                                                os.system('DISPLAY=:0 xset -dpms')
+                                                os.system('DISPLAY=:0 xset s noblank')
+                                                os.system('DISPLAY=:0 xset dpms 0 0 0')
                                             
-                                        """
-                                        if self.persistent_data['display2_power'] == True:
-                                            # allow the screen to go into standby
-                                            os.system('DISPLAY=:1 xset s on')
-                                            os.system('DISPLAY=:1 xset dpms')
-                                            os.system('DISPLAY=:1 xset s blank')
-                                            os.system('DISPLAY=:1 xset dpms ' + str(self.display_standby_delay) + ' 0 0')
-                                        else:
-                                            # stay on
-                                            os.system('DISPLAY=:1 xset s off')
-                                            os.system('DISPLAY=:1 xset -dpms')
-                                            os.system('DISPLAY=:1 xset s noblank')
-                                            os.system('DISPLAY=:1 xset dpms 0 0 0')
-                                        """
+                                            """
+                                            if self.persistent_data['display2_power'] == True:
+                                                # allow the screen to go into standby
+                                                os.system('DISPLAY=:1 xset s on')
+                                                os.system('DISPLAY=:1 xset dpms')
+                                                os.system('DISPLAY=:1 xset s blank')
+                                                os.system('DISPLAY=:1 xset dpms ' + str(self.display_standby_delay) + ' 0 0')
+                                            else:
+                                                # stay on
+                                                os.system('DISPLAY=:1 xset s off')
+                                                os.system('DISPLAY=:1 xset -dpms')
+                                                os.system('DISPLAY=:1 xset s noblank')
+                                                os.system('DISPLAY=:1 xset dpms 0 0 0')
+                                            """
                                             
-                                        if self.save_persistent_data():
-                                            state = 'ok'
+                                            if self.save_persistent_data():
+                                                state = 'ok'
                                 
                                 except Exception as ex:
                                     print("Error saving/setting display power management preferences")
@@ -1419,12 +1438,12 @@ class PowerSettingsAPIHandler(APIHandler):
                                 state = 'error'
                                 try:
                                     if 'port' in request.body and 'resolution' in request.body:
-                                    
-                                        self.persistent_data['display_resolution_' + str(request.body['port'])] = str(request.body['resolution'])
-                                        if self.save_persistent_data():
-                                            state = 'ok'
+                                        if os.path.isdir('/sys'):
+                                            self.persistent_data['display_resolution_' + str(request.body['port'])] = str(request.body['resolution'])
+                                            if self.save_persistent_data():
+                                                state = 'ok'
                                 
-                                        self.set_display_resolutions()
+                                            self.set_display_resolutions()
                                 
                                 except Exception as ex:
                                     print("Error saving/setting display power management preferences")
@@ -1440,49 +1459,50 @@ class PowerSettingsAPIHandler(APIHandler):
                             elif action == 'force_display_setting':
                                 state = 'error'
                                 if 'width' in request.body and 'height' in request.body:
-                                    intended_width = int(request.body['width'])
-                                    intended_height = int(request.body['height'])
-                                    if self.DEBUG:
-                                        print("forcing display: " + str(intended_width) + "x" + str(intended_height))
-                                    state = 'ok'
+                                    if os.path.isdir('/sys'):
+                                        intended_width = int(request.body['width'])
+                                        intended_height = int(request.body['height'])
+                                        if self.DEBUG:
+                                            print("forcing display: " + str(intended_width) + "x" + str(intended_height))
+                                        state = 'ok'
                                     
-                                    if not "#candle_force_display" in self.config_txt:
-                                        self.config_txt += "\n#candle_force_display_start\n#candle_force_display_end"
+                                        if not "#candle_force_display" in self.config_txt:
+                                            self.config_txt += "\n#candle_force_display_start\n#candle_force_display_end"
                                     
-                                    new_display_settings = ""
+                                        new_display_settings = ""
                                     
                                     
-                                    self.config_txt_lines = self.config_txt.splitlines()
-                                    if "#candle_force_display_start" in self.config_txt_lines:
-                                        for line in self.config_txt_lines:
-                                            if line.startswith('#'):
-                                                continue
-                                            if len(line) == 0:
-                                                continue
+                                        self.config_txt_lines = self.config_txt.splitlines()
+                                        if "#candle_force_display_start" in self.config_txt_lines:
+                                            for line in self.config_txt_lines:
+                                                if line.startswith('#'):
+                                                    continue
+                                                if len(line) == 0:
+                                                    continue
                                         
                                     
-                                    # official raspberry pi touch screen: rpi-ft5406
+                                        # official raspberry pi touch screen: rpi-ft5406
                                     
-                                    # backlight driver for official display:
-                                    # dtoverlay=rpi-backlight
+                                        # backlight driver for official display:
+                                        # dtoverlay=rpi-backlight
                                     
-                                    """
-                                    Name:   rpi-ft5406
-                                    Info:   Official Raspberry Pi display touchscreen
-                                    Load:   dtoverlay=rpi-ft5406,<param>=<val>
-                                    Params: touchscreen-size-x      Touchscreen X resolution (default 800)
-                                            touchscreen-size-y      Touchscreen Y resolution (default 600);
-                                            touchscreen-inverted-x  Invert touchscreen X coordinates (default 0);
-                                            touchscreen-inverted-y  Invert touchscreen Y coordinates (default 0);
-                                            touchscreen-swapped-x-y Swap X and Y cordinates (default 0);
+                                        """
+                                        Name:   rpi-ft5406
+                                        Info:   Official Raspberry Pi display touchscreen
+                                        Load:   dtoverlay=rpi-ft5406,<param>=<val>
+                                        Params: touchscreen-size-x      Touchscreen X resolution (default 800)
+                                                touchscreen-size-y      Touchscreen Y resolution (default 600);
+                                                touchscreen-inverted-x  Invert touchscreen X coordinates (default 0);
+                                                touchscreen-inverted-y  Invert touchscreen Y coordinates (default 0);
+                                                touchscreen-swapped-x-y Swap X and Y cordinates (default 0);
                                     
-                                    """
+                                        """
                                         
                                         
-                                    if new_display_settings != "":
-                                        re.sub('#candle_force_display_start.*?#candle_force_display_end',new_display_settings,self.config_txt, flags=re.DOTALL)
+                                        if new_display_settings != "":
+                                            re.sub('#candle_force_display_start.*?#candle_force_display_end',new_display_settings,self.config_txt, flags=re.DOTALL)
                                     
-                                        print("self.config_txt is now: \n\n" + str(self.config_txt) + "\n\n")
+                                            print("self.config_txt is now: \n\n" + str(self.config_txt) + "\n\n")
                                         
                                         
                                 return APIResponse(
@@ -1495,23 +1515,25 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                             elif action == 'printer':
                                 
-                                if 'printing_allowed' in request.body:
-                                    self.printing_allowed = bool(request.body['printing_allowed'])
-                                    if self.DEBUG:
-                                        print("printing_allowed changed to: " + str(self.printing_allowed))
-                                    if self.printing_allowed == True:
-                                        os.system('sudo rm ' + self.boot_path + '/candle_disable_printing.txt')
-                                    else:
-                                        os.system('sudo touch ' + self.boot_path + '/candle_disable_printing.txt')
-                                        for printer_id in self.connected_printers:
-                                            os.system("sudo lpadmin -x " + str(printer_id))
-                                        
-                                if 'default_printer' in request.body:
-                                    if self.DEBUG:
-                                        print("Changing default printer to: " + str(request.body['default_printer']))
-                                    self.persistent_data['default_printer'] = str(request.body['default_printer'])
+                                if os.path.isdir(self.boot_path):
+                                    if 'printing_allowed' in request.body:
                                     
-                                self.detect_printers()
+                                        self.printing_allowed = bool(request.body['printing_allowed'])
+                                        if self.DEBUG:
+                                            print("printing_allowed changed to: " + str(self.printing_allowed))
+                                        if self.printing_allowed == True:
+                                            os.system('sudo rm ' + self.boot_path + '/candle_disable_printing.txt')
+                                        else:
+                                            os.system('sudo touch ' + self.boot_path + '/candle_disable_printing.txt')
+                                            for printer_id in self.connected_printers:
+                                                os.system("sudo lpadmin -x " + str(printer_id))
+                                        
+                                    if 'default_printer' in request.body:
+                                        if self.DEBUG:
+                                            print("Changing default printer to: " + str(request.body['default_printer']))
+                                        self.persistent_data['default_printer'] = str(request.body['default_printer'])
+                                    
+                                    self.detect_printers()
                         
                                 return APIResponse(
                                   status=200,
@@ -1584,14 +1606,16 @@ class PowerSettingsAPIHandler(APIHandler):
                             # MANUAL UPDATE
                             elif action == 'manual_update':
                                 
-                                if self.DEBUG:
-                                    print("copying manual update script into position")
+                                if os.path.isdir(self.boot_path):
+                                    
+                                    if self.DEBUG:
+                                        print("copying manual update script into position")
                                 
-                                # Place the factory reset file in the correct location so that it will be activated at boot.
-                                #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
-                                os.system('sudo touch ' + str(self.boot_path) + '/candle_rw_once.txt')
-                                os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
-                                
+                                    # Place the factory reset file in the correct location so that it will be activated at boot.
+                                    #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
+                                    os.system('sudo touch ' + str(self.boot_path) + '/candle_rw_once.txt')
+                                    os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
+                                    
                                 
                                 return APIResponse(
                                   status=200,
@@ -1610,28 +1634,29 @@ class PowerSettingsAPIHandler(APIHandler):
                                 state = True
                                 
                                 try:
-                                    if os.path.isdir('/ro') or os.path.isfile('/bin/ro-root.sh'):
-                                        os.system('sudo touch ' + str(self.boot_path) + '/candle_rw_once.txt')
-                                        if not os.path.isfile(self.boot_path + '/candle_rw_once.txt'):
-                                            state = False
+                                    if os.path.isdir(self.boot_path):
+                                        if os.path.isdir('/ro') or os.path.isfile('/bin/ro-root.sh'):
+                                            os.system('sudo touch ' + str(self.boot_path) + '/candle_rw_once.txt')
+                                            if not os.path.isfile(self.boot_path + '/candle_rw_once.txt'):
+                                                state = False
                                             
-                                    if self.old_overlay_active:
-                                        if self.DEBUG:
-                                            print("disabling old raspi-config overlay system")
-                                        os.system('sudo raspi-config nonint disable_bootro')
-                                        os.system('sudo raspi-config nonint disable_overlayfs')
+                                        if self.old_overlay_active:
+                                            if self.DEBUG:
+                                                print("disabling old raspi-config overlay system")
+                                            os.system('sudo raspi-config nonint disable_bootro')
+                                            os.system('sudo raspi-config nonint disable_overlayfs')
                                 
-                                    if os.path.isfile(self.boot_path + '/cmdline.txt'):
-                                        with open(self.boot_path + '/cmdline.txt') as f:
-                                            #self.candle_version = f.readlines()
-                                            cmdline = f.read()
-                                            if "boot=overlay" in cmdline:
-                                                if self.DEBUG:
-                                                    print("Error, old overlay still active")
-                                                state == False
-                                            else:
-                                                if self.DEBUG:
-                                                    print("Old overlay is gone from cmdline.txt")
+                                        if os.path.isfile(self.boot_path + '/cmdline.txt'):
+                                            with open(self.boot_path + '/cmdline.txt') as f:
+                                                #self.candle_version = f.readlines()
+                                                cmdline = f.read()
+                                                if "boot=overlay" in cmdline:
+                                                    if self.DEBUG:
+                                                        print("Error, old overlay still active")
+                                                    state == False
+                                                else:
+                                                    if self.DEBUG:
+                                                        print("Old overlay is gone from cmdline.txt")
                                         
                                 except Exception as ex:
                                     if self.DEBUG:
@@ -1657,161 +1682,162 @@ class PowerSettingsAPIHandler(APIHandler):
                             # OLD SCHOOL SYSTEM UPDATE 
                             elif action == 'start_system_update':
                                 self.system_update_in_progress = False
-                                if self.system_update_error_detected:
-                                    os.system('sudo pkill -f create_latest_candle')
-                                    self.system_update_error_detected = False
+                                if os.path.isdir(self.boot_path):
+                                    if self.system_update_error_detected:
+                                        os.system('sudo pkill -f create_latest_candle')
+                                        self.system_update_error_detected = False
                                 
-                                try:
-                                    state = False
+                                    try:
+                                        state = False
                                 
-                                    # TODO: check if there is enough disk space. This could actually be done client side
+                                        # TODO: check if there is enough disk space. This could actually be done client side
                                 
-                                    if 'cutting_edge' in request.body:
-                                        if request.body['cutting_edge'] == True:
-                                            os.system('sudo touch ' + str(self.boot_path) + '/candle_cutting_edge.txt')
-                                            if self.DEBUG:
-                                                print("created /boot/firmware/candle_cutting_edge.txt file")
-                                        else:
-                                            if os.path.isfile(self.boot_path + '/candle_cutting_edge.txt'):
-                                                os.system('sudo rm ' + str(self.boot_path) + '/candle_cutting_edge.txt')
+                                        if 'cutting_edge' in request.body:
+                                            if request.body['cutting_edge'] == True:
+                                                os.system('sudo touch ' + str(self.boot_path) + '/candle_cutting_edge.txt')
                                                 if self.DEBUG:
-                                                    print("removed candle_cutting_edge.txt file from boot partition")
-                                
-                                
-                                    if self.DEBUG:
-                                        print("copying system update script into position")
-                                
-                                    live_update = False
-                                    if 'live_update' in request.body:
-                                        if request.body['live_update'] == True:
-                                            live_update = True
-                                
-                                    if live_update and os.path.isdir('/ro'):
-                                    
-                                        # Check if script isn't already running
-                                        already_running_check = run_command('ps aux | grep -q live_system_update')
-                                        if not "live_system_update.sh" in already_running_check:
-                                    
-                                    
-                                            if os.path.isfile( str(self.live_system_update_script_path) ):
-                                                if self.DEBUG:
-                                                    print("removing old live update script first")
-                                                os.system('rm ' + str(self.live_system_update_script_path))    
-                                    
-                                            os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/live_system_update.sh -O ' + str(self.live_system_update_script_path))
-                                    
-                                            if os.path.isfile( str(self.live_system_update_script_path) ):
-                                                if self.live_update_attempted == False:
-                                                    if self.DEBUG:
-                                                        print("Attempting a live update")
-                                                    state = True
-                                                    self.system_update_in_progress = True
-                                                    os.system('cat ' + str(self.live_system_update_script_path) + ' | sudo REBOOT_WHEN_DONE=yes bash &')
-                                                else:
-                                                    if self.DEBUG:
-                                                        print("Error. cannot run two live updates in a row.")
-                                        
-                                                self.live_update_attempted = True
-                                        
+                                                    print("created /boot/firmware/candle_cutting_edge.txt file")
                                             else:
-                                                if self.DEBUG:
-                                                    print("ERROR, live update script failed to download")
-                                        else:
-                                            if self.DEBUG:
-                                                print("Scripts seems to be running already, aborting")
+                                                if os.path.isfile(self.boot_path + '/candle_cutting_edge.txt'):
+                                                    os.system('sudo rm ' + str(self.boot_path) + '/candle_cutting_edge.txt')
+                                                    if self.DEBUG:
+                                                        print("removed candle_cutting_edge.txt file from boot partition")
                                 
-                                    else:
+                                
                                         if self.DEBUG:
-                                            print("Attempting a reboot-update")
-                                        # Place the factory reset file in the correct location so that it will be activated at boot.
-                                        #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
-                                        if not os.path.isdir('/ro') and self.old_overlay_active == False:
-                                            
-                                            if os.path.isfile(self.boot_path + '/candle_cutting_edge.txt'):
-                                                os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle_dev.sh -O ' + str(self.system_update_script_path))
-                                            else:
-                                                os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh -O ' + str(self.system_update_script_path))
-                                            
-                                            if os.path.isfile(self.system_update_script_path):
-                                                if self.DEBUG:
-                                                    print("system update script succesfully downloaded to data dir")
-                                                
-                                                use_post_bootup = False # temporarily disabling this; how to get environment variables in there?
-                                                if self.post_bootup_actions_supported and use_post_bootup == True:
-                                                
-                                                    # After the reboot, start the script automatically by the system. This is preferable to python running the script.
-                                                    
-                                                    if os.path.isfile(str(self.post_actions_file_path)):
-                                                        if self.DEBUG:
-                                                            print("warning, a post bootup actions script was already in place. Deleting it first.")
-                                                        os.system('sudo rm ' + str(self.post_actions_file_path) )
-                                                
-                                                    move_command = 'sudo mv -f ' + str(self.system_update_script_path) + ' ' + str(self.post_actions_file_path)
+                                            print("copying system update script into position")
+                                
+                                        live_update = False
+                                        if 'live_update' in request.body:
+                                            if request.body['live_update'] == True:
+                                                live_update = True
+                                
+                                        if live_update and os.path.isdir('/ro'):
+                                    
+                                            # Check if script isn't already running
+                                            already_running_check = run_command('ps aux | grep -q live_system_update')
+                                            if not "live_system_update.sh" in already_running_check:
+                                    
+                                    
+                                                if os.path.isfile( str(self.live_system_update_script_path) ):
                                                     if self.DEBUG:
-                                                        print("post actions move command: " + str(move_command))
-                                                    os.system(move_command)
-                                        
-                                                    if os.path.isfile( str(self.post_actions_file_path)):
-                                                        
-                                                        os.system('sudo touch ' + str(self.boot_path) + '/candle_rw_once.txt')
-                                                        
-                                                        if self.old_overlay_active:
-                                                            if self.DEBUG:
-                                                                print("disabling old raspi-config overlay system")
-                                                            os.system('sudo raspi-config nonint disable_bootro')
-                                                            os.system('sudo raspi-config nonint disable_overlayfs')
-                                                        
-                                                        #os.system('sudo reboot')
-                                            
-                                                        #raspi-config nonint disable_bootro
-                                                        #raspi-config nonint enable_overlayfs
-                                                        #raspi-config nonint disable_bootro
-                                            
-                                                        #os.system('sudo touch /boot/bootup_actions_non_blocking.txt')
-                                                        
-                                                        
+                                                        print("removing old live update script first")
+                                                    os.system('rm ' + str(self.live_system_update_script_path))    
+                                    
+                                                os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/live_system_update.sh -O ' + str(self.live_system_update_script_path))
+                                    
+                                                if os.path.isfile( str(self.live_system_update_script_path) ):
+                                                    if self.live_update_attempted == False:
+                                                        if self.DEBUG:
+                                                            print("Attempting a live update")
                                                         state = True
-                                                        #os.system('( sleep 5 ; sudo reboot ) & ')
+                                                        self.system_update_in_progress = True
+                                                        os.system('cat ' + str(self.live_system_update_script_path) + ' | sudo REBOOT_WHEN_DONE=yes bash &')
                                                     else:
                                                         if self.DEBUG:
-                                                            print("Error, move command failed")
-                                                
-                                                
-                                                # If the system does not support post-bootup actions, then we need to get creative.
-                                                # - user must disable read-only FS first
-                                                # - after a reboot Python will run the script. Not optimal, since if python/gateway stops, the update scripts stops too.
+                                                            print("Error. cannot run two live updates in a row.")
+                                        
+                                                    self.live_update_attempted = True
+                                        
                                                 else:
-                                                    
-                                                    os.system('sudo chmod +x ' + str(self.system_update_script_path))
-                                                
-                                                    self.system_update_in_progress = True
-                                                    state = True
-                                                
-                                                    env = {
-                                                        **os.environ,
-                                                        "SKIP_PARTITIONS": "yes",
-                                                        "STOP_EARLY":"yes",
-                                                        "REBOOT_WHEN_DONE":"yes"
-                                                    }
-                                                    
-                                                    subprocess.Popen('cat ' + str(self.system_update_script_path) + ' | sudo SKIP_PARTITIONS=yes STOP_EARLY=yes REBOOT_WHEN_DONE=yes bash', shell=True, env=env)
-                                                
-                                                #start_command = 'cat ' + str(self.system_update_script_path) + ' | sudo SKIP_PARTITIONS=yes STOP_EARLY=yes REBOOT_WHEN_DONE=yes bash &'
-                                                #curl -sSl https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh | sudo SKIP_PARTITIONS=yes STOP_EARLY=yes REBOOT_WHEN_DONE=yes bash
-                                                
-                                                    
+                                                    if self.DEBUG:
+                                                        print("ERROR, live update script failed to download")
                                             else:
                                                 if self.DEBUG:
-                                                    print("ERROR, download of update script failed")
-                                                
+                                                    print("Scripts seems to be running already, aborting")
+                                
                                         else:
                                             if self.DEBUG:
-                                                print("ERROR, overlay is still active?")
+                                                print("Attempting a reboot-update")
+                                            # Place the factory reset file in the correct location so that it will be activated at boot.
+                                            #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
+                                            if not os.path.isdir('/ro') and self.old_overlay_active == False:
+                                            
+                                                if os.path.isfile(self.boot_path + '/candle_cutting_edge.txt'):
+                                                    os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle_dev.sh -O ' + str(self.system_update_script_path))
+                                                else:
+                                                    os.system('wget https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh -O ' + str(self.system_update_script_path))
+                                            
+                                                if os.path.isfile(self.system_update_script_path):
+                                                    if self.DEBUG:
+                                                        print("system update script succesfully downloaded to data dir")
+                                                
+                                                    use_post_bootup = False # temporarily disabling this; how to get environment variables in there?
+                                                    if self.post_bootup_actions_supported and use_post_bootup == True:
+                                                
+                                                        # After the reboot, start the script automatically by the system. This is preferable to python running the script.
+                                                    
+                                                        if os.path.isfile(str(self.post_actions_file_path)):
+                                                            if self.DEBUG:
+                                                                print("warning, a post bootup actions script was already in place. Deleting it first.")
+                                                            os.system('sudo rm ' + str(self.post_actions_file_path) )
+                                                
+                                                        move_command = 'sudo mv -f ' + str(self.system_update_script_path) + ' ' + str(self.post_actions_file_path)
+                                                        if self.DEBUG:
+                                                            print("post actions move command: " + str(move_command))
+                                                        os.system(move_command)
+                                        
+                                                        if os.path.isfile( str(self.post_actions_file_path)):
+                                                        
+                                                            os.system('sudo touch ' + str(self.boot_path) + '/candle_rw_once.txt')
+                                                        
+                                                            if self.old_overlay_active:
+                                                                if self.DEBUG:
+                                                                    print("disabling old raspi-config overlay system")
+                                                                os.system('sudo raspi-config nonint disable_bootro')
+                                                                os.system('sudo raspi-config nonint disable_overlayfs')
+                                                        
+                                                            #os.system('sudo reboot')
+                                            
+                                                            #raspi-config nonint disable_bootro
+                                                            #raspi-config nonint enable_overlayfs
+                                                            #raspi-config nonint disable_bootro
+                                            
+                                                            #os.system('sudo touch /boot/bootup_actions_non_blocking.txt')
+                                                        
+                                                        
+                                                            state = True
+                                                            #os.system('( sleep 5 ; sudo reboot ) & ')
+                                                        else:
+                                                            if self.DEBUG:
+                                                                print("Error, move command failed")
+                                                
+                                                
+                                                    # If the system does not support post-bootup actions, then we need to get creative.
+                                                    # - user must disable read-only FS first
+                                                    # - after a reboot Python will run the script. Not optimal, since if python/gateway stops, the update scripts stops too.
+                                                    else:
+                                                    
+                                                        os.system('sudo chmod +x ' + str(self.system_update_script_path))
+                                                
+                                                        self.system_update_in_progress = True
+                                                        state = True
+                                                
+                                                        env = {
+                                                            **os.environ,
+                                                            "SKIP_PARTITIONS": "yes",
+                                                            "STOP_EARLY":"yes",
+                                                            "REBOOT_WHEN_DONE":"yes"
+                                                        }
+                                                    
+                                                        subprocess.Popen('cat ' + str(self.system_update_script_path) + ' | sudo SKIP_PARTITIONS=yes STOP_EARLY=yes REBOOT_WHEN_DONE=yes bash', shell=True, env=env)
+                                                
+                                                    #start_command = 'cat ' + str(self.system_update_script_path) + ' | sudo SKIP_PARTITIONS=yes STOP_EARLY=yes REBOOT_WHEN_DONE=yes bash &'
+                                                    #curl -sSl https://raw.githubusercontent.com/createcandle/install-scripts/main/create_latest_candle.sh | sudo SKIP_PARTITIONS=yes STOP_EARLY=yes REBOOT_WHEN_DONE=yes bash
+                                                
+                                                    
+                                                else:
+                                                    if self.DEBUG:
+                                                        print("ERROR, download of update script failed")
+                                                
+                                            else:
+                                                if self.DEBUG:
+                                                    print("ERROR, overlay is still active?")
                                                 
                                             
-                                except Exception as ex:
-                                    print("Api: error in handling start_system_upate: " + str(ex))
-                                
+                                    except Exception as ex:
+                                        print("Api: error in handling start_system_upate: " + str(ex))
+                                    
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
@@ -2043,21 +2069,24 @@ class PowerSettingsAPIHandler(APIHandler):
                             elif action == 'anonymous_mqtt':
                                 
                                 allow_anonymous_mqtt = False
-                                if 'allow_anonymous_mqtt' in request.body:
-                                     if request.body['allow_anonymous_mqtt'] == True:
-                                         allow_anonymous_mqtt = "true"
-                                         if self.DEBUG:
-                                             print("set allow_anonymous_mqtt to true")
                                 
-                                # sed -i 's/allow_anonymous false/allow_anonymous true/' /home/pi/.webthings/etc/mosquitto/mosquitto.conf
-                                if allow_anonymous_mqtt:
-                                    os.system("sudo sed -i 's/allow_anonymous false/allow_anonymous true/' " + str(self.mosquitto_conf_file_path))
-                                else:
-                                    os.system("sudo sed -i 's/allow_anonymous true/allow_anonymous false/' " + str(self.mosquitto_conf_file_path))
+                                if os.path.isfile(str(self.mosquitto_conf_file_path)):
                                     
-                                if self.DEBUG:
-                                    print("restarting mosquitto")
-                                os.system('sudo systemctl restart mosquitto.service')
+                                    if 'allow_anonymous_mqtt' in request.body:
+                                         if request.body['allow_anonymous_mqtt'] == True:
+                                             allow_anonymous_mqtt = "true"
+                                             if self.DEBUG:
+                                                 print("set allow_anonymous_mqtt to true")
+                                
+                                    # sed -i 's/allow_anonymous false/allow_anonymous true/' /home/pi/.webthings/etc/mosquitto/mosquitto.conf
+                                    if allow_anonymous_mqtt:
+                                        os.system("sudo sed -i 's/allow_anonymous false/allow_anonymous true/' " + str(self.mosquitto_conf_file_path))
+                                    else:
+                                        os.system("sudo sed -i 's/allow_anonymous true/allow_anonymous false/' " + str(self.mosquitto_conf_file_path))
+                                    
+                                    if self.DEBUG:
+                                        print("restarting mosquitto")
+                                    os.system('sudo systemctl restart mosquitto.service')
                                     
                                 self.allow_anonymous_mqtt = allow_anonymous_mqtt
                             
@@ -2073,99 +2102,103 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 self.attached_devices = []
                                 free_memory = '?'
-                                try:
-                                    
-                                    # written kbytes to sd card
-                                    #self.sd_card_written_kbytes = int(run_command("cat /sys/fs/ext4/mmcblk0p4/lifetime_write_kbytes"))
-                                    self.sd_card_written_kbytes = run_command('sudo dumpe2fs /dev/mmcblk0p4 | grep "Lifetime writes:"')
-                                    self.sd_card_written_kbytes = self.sd_card_written_kbytes.replace('Lifetime writes:','')
-                                    self.sd_card_written_kbytes = self.sd_card_written_kbytes.strip()
-                                    
-                                    if self.DEBUG:
-                                        print("debug: sd_card_written_kbytes: " + str(self.sd_card_written_kbytes))
-                                        
-                                    # check free memory
-                                    free_memory = subprocess.check_output(['grep','^MemFree','/proc/meminfo'])
-                                    free_memory = free_memory.decode('utf-8')
-                                    free_memory = int( int(''.join(filter(str.isdigit, free_memory))) / 1000)
-                                    if self.DEBUG:
-                                        print("debug: free_memory: " + str(free_memory))
-                                    
-                                    # Check available memory
-                                    available_memory = subprocess.check_output("free | grep Mem:", shell=True)
-                                    available_memory = available_memory.decode('utf-8')
-                                    available_memory_parts = available_memory.split()
-                                    available_memory = available_memory_parts[-1]
-                                    available_memory = int( int(''.join(filter(str.isdigit, available_memory))) / 1000)
-                                    if self.DEBUG:
-                                        print("debug: available_memory: " + str(available_memory))
-                                    
-                                    if self.DEBUG:
-                                        print("debug: total_memory: " + str(self.total_memory))
-                                    
-                                    self.update_backup_info()
-                                    
-                                except Exception as ex:
-                                    print("Error checking free memory: " + str(ex))
                                 
-                                # check if power supply is strong enough (lwo voltage)
-                                try:
-                                    board_temperature = None
-                                    if os.path.isfile('/usr/bin/vcgencmd'):
-                                        voltage_output = subprocess.check_output(['/usr/bin/vcgencmd', 'get_throttled'])
-                                        board_temperature = subprocess.check_output(['/usr/bin/vcgencmd', 'measure_temp'])
-                                        board_temperature = board_temperature.decode('utf-8').split("=")[1]
-                                        board_temperature = board_temperature.rstrip("\n")
-                                    else:
-                                        voltage_output = subprocess.check_output(['/opt/vc/bin/vcgencmd', 'get_throttled'])
+                                if os.path.isdir('/sys'):
                                     
-                                    voltage_output = voltage_output.decode('utf-8').split("=")[1]
-                                    voltage_output = voltage_output.rstrip("\n")
-                                    if self.DEBUG:
-                                        print("debug: voltage check result: " + str(voltage_output))
-                                    voltage_output
-                                    if voltage_output != '0x0':
-                                        
+                                    try:
+                                    
+                                    
+                                        # written kbytes to sd card
+                                        #self.sd_card_written_kbytes = int(run_command("cat /sys/fs/ext4/mmcblk0p4/lifetime_write_kbytes"))
+                                        self.sd_card_written_kbytes = run_command('sudo dumpe2fs /dev/mmcblk0p4 | grep "Lifetime writes:"')
+                                        self.sd_card_written_kbytes = self.sd_card_written_kbytes.replace('Lifetime writes:','')
+                                        self.sd_card_written_kbytes = self.sd_card_written_kbytes.strip()
+                                    
                                         if self.DEBUG:
-                                            print("\nWARNING, POSSIBLE LOW VOLTAGE ISSUE DETECTED!")
+                                            print("debug: sd_card_written_kbytes: " + str(self.sd_card_written_kbytes))
+                                        
+                                        # check free memory
+                                        free_memory = subprocess.check_output(['grep','^MemFree','/proc/meminfo'])
+                                        free_memory = free_memory.decode('utf-8')
+                                        free_memory = int( int(''.join(filter(str.isdigit, free_memory))) / 1000)
+                                        if self.DEBUG:
+                                            print("debug: free_memory: " + str(free_memory))
+                                    
+                                        # Check available memory
+                                        available_memory = subprocess.check_output("free | grep Mem:", shell=True)
+                                        available_memory = available_memory.decode('utf-8')
+                                        available_memory_parts = available_memory.split()
+                                        available_memory = available_memory_parts[-1]
+                                        available_memory = int( int(''.join(filter(str.isdigit, available_memory))) / 1000)
+                                        if self.DEBUG:
+                                            print("debug: available_memory: " + str(available_memory))
+                                    
+                                        if self.DEBUG:
+                                            print("debug: total_memory: " + str(self.total_memory))
+                                    
+                                        self.update_backup_info()
+                                    
+                                    except Exception as ex:
+                                        print("Error checking free memory: " + str(ex))
+                                
+                                    # check if power supply is strong enough (lwo voltage)
+                                    try:
+                                        board_temperature = None
+                                        if os.path.isfile('/usr/bin/vcgencmd'):
+                                            voltage_output = subprocess.check_output(['/usr/bin/vcgencmd', 'get_throttled'])
+                                            board_temperature = subprocess.check_output(['/usr/bin/vcgencmd', 'measure_temp'])
+                                            board_temperature = board_temperature.decode('utf-8').split("=")[1]
+                                            board_temperature = board_temperature.rstrip("\n")
+                                        else:
+                                            voltage_output = subprocess.check_output(['/opt/vc/bin/vcgencmd', 'get_throttled'])
+                                    
+                                        voltage_output = voltage_output.decode('utf-8').split("=")[1]
+                                        voltage_output = voltage_output.rstrip("\n")
+                                        if self.DEBUG:
+                                            print("debug: voltage check result: " + str(voltage_output))
+                                        voltage_output
+                                        if voltage_output != '0x0':
+                                        
+                                            if self.DEBUG:
+                                                print("\nWARNING, POSSIBLE LOW VOLTAGE ISSUE DETECTED!")
                                             
-                                        if (int(voltage_output,0) & 0x01) == 0x01:
-                                            if self.DEBUG:
-                                                print("- CURRENTLY LOW VOLTAGE")
-                                            self.low_voltage = True
-                                        elif (int(voltage_output,0) & 0x50000) == 0x50000:
-                                            if self.DEBUG:
-                                                print("- PREVIOUSLY LOW VOLTAGE")
-                                            self.low_voltage = True
+                                            if (int(voltage_output,0) & 0x01) == 0x01:
+                                                if self.DEBUG:
+                                                    print("- CURRENTLY LOW VOLTAGE")
+                                                self.low_voltage = True
+                                            elif (int(voltage_output,0) & 0x50000) == 0x50000:
+                                                if self.DEBUG:
+                                                    print("- PREVIOUSLY LOW VOLTAGE")
+                                                self.low_voltage = True
                                         
-                                except Exception as ex:
-                                    print("Error checking low voltage: " + str(ex))
+                                    except Exception as ex:
+                                        print("Error checking low voltage: " + str(ex))
                                 
                                 
-                                try:
-                                    self.attached_devices = []
-                                    lsusb_output = run_command("lsusb | cut -d' ' -f 7,8,9,10,11,12,13,14,15")
-                                    if self.DEBUG:
-                                        print("debug: lsusb output: " + str(lsusb_output))
-                                    
-                                    if lsusb_output  != None:
-                                        self.attached_devices = lsusb_output.splitlines()
-                                    
-                                    
-                                    self.attached_cameras = []
-                                    libcamera_output = run_command('libcamera-still --list-cameras')
-                                    if 'No cameras available' in libcamera_output or 'error while loading' in libcamera_output:
+                                    try:
+                                        self.attached_devices = []
+                                        lsusb_output = run_command("lsusb | cut -d' ' -f 7,8,9,10,11,12,13,14,15")
                                         if self.DEBUG:
-                                            print("debug: no libcameras detected")
-                                    else:
-                                        if self.DEBUG:
-                                            print("libcamera(s) detected: " + str(libcamera_output))
-                                        self.attached_cameras = ['camera']
+                                            print("debug: lsusb output: " + str(lsusb_output))
+                                    
+                                        if lsusb_output  != None:
+                                            self.attached_devices = lsusb_output.splitlines()
+                                    
+                                    
+                                        self.attached_cameras = []
+                                        libcamera_output = run_command('libcamera-still --list-cameras')
+                                        if 'No cameras available' in libcamera_output or 'error while loading' in libcamera_output:
+                                            if self.DEBUG:
+                                                print("debug: no libcameras detected")
+                                        else:
+                                            if self.DEBUG:
+                                                print("libcamera(s) detected: " + str(libcamera_output))
+                                            self.attached_cameras = ['camera']
                                         
-                                except Exception as ex:
-                                    print("Error while checking for attached (USB) devices: " + str(ex))
+                                    except Exception as ex:
+                                        print("Error while checking for attached (USB) devices: " + str(ex))
                                 
-                                self.check_ethernet_connected()
+                                    self.check_ethernet_connected()
                                 
                                 
                                 return APIResponse(
@@ -2218,11 +2251,13 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if self.DEBUG:
                                     print("sync_time requested")
                                 
-                                # Place the factory reset file in the correct location so that it will be activated at boot.
-                                #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
-                                os.system('sudo rm ' + str(self.hardware_clock_file_path))
-                                os.system('sudo systemctl start systemd-timesyncd.service && sudo hwclock -w')
+                                if os.path.isdir(self.boot_path):
                                 
+                                    # Place the factory reset file in the correct location so that it will be activated at boot.
+                                    #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
+                                    os.system('sudo rm ' + str(self.hardware_clock_file_path))
+                                    os.system('sudo systemctl start systemd-timesyncd.service && sudo hwclock -w')
+                                    
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
@@ -2254,26 +2289,28 @@ class PowerSettingsAPIHandler(APIHandler):
                             current_ntp_state = True
                         
                             try:
-                                
-                                self.check_update_processes()
-                                self.update_backup_info()
-                                
-                                for line in run_command("timedatectl show").splitlines():
-                                    if self.DEBUG:
-                                        print(line)
-                                    if line.startswith( 'NTP=no' ):
-                                        current_ntp_state = False
-                                        
-                                shell_date = run_command("date")
-                                        
-                                #just_updated_via_recovery = self.just_updated_via_recovery
-                                #self.just_updated_via_recovery = False
-                                
                                 local_update_via_recovery_aborted = self.update_via_recovery_aborted
                                 self.update_via_recovery_aborted = False
-                                
+                            
                                 local_update_via_recovery_interupted = self.update_via_recovery_interupted
                                 self.update_via_recovery_interupted = False
+                                
+                                if os.path.isdir(self.boot_path):
+                                    self.check_update_processes()
+                                    self.update_backup_info()
+                                
+                                    for line in run_command("timedatectl show").splitlines():
+                                        if self.DEBUG:
+                                            print(line)
+                                        if line.startswith( 'NTP=no' ):
+                                            current_ntp_state = False
+                                        
+                                    shell_date = run_command("date")
+                                        
+                                    #just_updated_via_recovery = self.just_updated_via_recovery
+                                    #self.just_updated_via_recovery = False
+                                
+                                    
                                 
                                 response = {'hours':now.hour,
                                             'minutes':now.minute,
@@ -2520,40 +2557,42 @@ class PowerSettingsAPIHandler(APIHandler):
         if self.DEBUG:
             print("Setting the new time")
         
-        if hours.isdigit() and minutes.isdigit():
+        if os.path.isdir('/sys'):
+            if hours.isdigit() and minutes.isdigit():
             
-            the_date = str(datetime.datetime.now().strftime('%Y-%m-%d'))
+                the_date = str(datetime.datetime.now().strftime('%Y-%m-%d'))
         
-            time_command = "sudo date --set '" + the_date + " "  + str(hours) + ":" + str(minutes) + ":00'"
-            if self.DEBUG:
-                print("new set date command: " + str(time_command))
+                time_command = "sudo date --set '" + the_date + " "  + str(hours) + ":" + str(minutes) + ":00'"
+                if self.DEBUG:
+                    print("new set date command: " + str(time_command))
         
-            try:
-                os.system(time_command)
+                try:
+                    os.system(time_command)
                 
-                # If hardware clock module exists, set its time too.
-                if self.hardware_clock_detected:
-                    print('also setting hardware clock time')
-                    os.system('sudo hwclock -w')
+                    # If hardware clock module exists, set its time too.
+                    if self.hardware_clock_detected:
+                        print('also setting hardware clock time')
+                        os.system('sudo hwclock -w')
                     
-            except Exception as e:
-                print("Error setting new time: " + str(e))
-
+                except Exception as e:
+                    print("Error setting new time: " + str(e))
+            
             
     def set_ntp_state(self,new_state):
         if self.DEBUG:
             print("Setting NTP state to: " + str(new_state))
-        try:
-            if new_state:
-                os.system('sudo timedatectl set-ntp true') 
-                if self.DEBUG:
-                    print("Network time turned on")
-            else:
-                os.system('sudo timedatectl set-ntp false') 
-                if self.DEBUG:
-                    print("Network time turned off")
-        except Exception as e:
-            print("Error changing NTP state: " + str(e))
+        if os.path.isdir('/sys'):
+            try:
+                if new_state:
+                    os.system('sudo timedatectl set-ntp true') 
+                    if self.DEBUG:
+                        print("Network time turned on")
+                else:
+                    os.system('sudo timedatectl set-ntp false') 
+                    if self.DEBUG:
+                        print("Network time turned off")
+            except Exception as e:
+                print("Error changing NTP state: " + str(e))
 
 
 
@@ -2625,102 +2664,107 @@ class PowerSettingsAPIHandler(APIHandler):
 
         self.connected_printers = {}
 
-        if self.printing_allowed:
-            try:
+        if os.path.isdir('/sys'):
+            if self.printing_allowed:
             
-                lpstat_output = run_command("lpstat -v")
-                if self.DEBUG:
-                    print("detect_printers: 'lpstat -v' before: " + str(lpstat_output))
+                try:
             
-                cups_output = run_command("sudo lpinfo -l --timeout 10 -v | grep 'uri = lpd://' -A 5")
-                avahi_output = run_command("avahi-browse -p -l -a -r -k -t | grep '_printer._tcp' | grep IPv4")
-            
-                #print("\n\n--")
-                #print("cups_output: " + str(cups_output))
-                #print("--")
-                #print("cups_parts: " + str(cups_parts))
-                #print("--")
-                #print("avahi_output: " + str(avahi_output))
-                #print("--\n\n")
-            
-                if avahi_output != None and cups_output != None:
-                    cups_parts = cups_output.split('Device: uri = lpd://')
+                    lpstat_output = run_command("lpstat -v")
                     if self.DEBUG:
-                        print("Detected number of printers: " + str(len(cups_parts)-1))
+                        print("detect_printers: 'lpstat -v' before: " + str(lpstat_output))
             
-                    printer_counter = 0
-                    found_default_printer_again = False
+                    cups_output = run_command("sudo lpinfo -l --timeout 10 -v | grep 'uri = lpd://' -A 5")
+                    avahi_output = run_command("avahi-browse -p -l -a -r -k -t | grep '_printer._tcp' | grep IPv4")
             
-                    for printer_info in cups_parts:
-                        printer_counter += 1
-                        if len(printer_info) > 10:
-                            if self.DEBUG:
-                                print("\nprinter_info: " + str(printer_info))
-                            printer_lines = printer_info.splitlines()
-                            for printer_line in printer_lines:
-                                if 'make-and-model =' in printer_line:
-                                    printer_name = printer_line.split('make-and-model =')[1]
-                                
-                                    if len(printer_name) > 2:
-                                        safe_printer_name = printer_name.strip()
-                                        safe_printer_name = safe_printer_name.replace(' ','_')
-                                        safe_printer_name = re.sub(r'\W+', '', safe_printer_name)
-                                        if self.DEBUG:
-                                            print("\nsafe_printer_name: " + str(safe_printer_name))
-                                        for line in avahi_output.splitlines():
-                                            if self.DEBUG:
-                                                print("avahi line: " + str(line))
-                                            ip_address_list = re.findall(r'(?:\d{1,3}\.)+(?:\d{1,3})', str(line))
-                                            if len(ip_address_list) > 0:
-                                                ip_address = str(ip_address_list[0])
-                                                if valid_ip(ip_address):
-                                                    
-                                                    self.connected_printers[safe_printer_name] = {'id':safe_printer_name,'ip':ip_address,'default':False}
-                                                    
-                                                    if self.DEBUG:
-                                                        print("avahi-browse line with valid IP: " + str(line))
-                                                        print("ADDING PRINTER: " + str(safe_printer_name) + "  ->  " + str(ip_address))
-                                                    add_printer_command = "sudo lpadmin -p " + str(safe_printer_name) + " -E -v socket://" + str(ip_address) + "  -o printer-error-policy=abort-job"
-                                                    if self.DEBUG:
-                                                        print("add_printer_command: " + str(add_printer_command))
-                                                    os.system(str(add_printer_command)) # -P # -o printer-error-policy=abort-job -u allow:all
-                                                
-                                                    if not 'default_printer' in self.persistent_data:
-                                                        if self.DEBUG:
-                                                            print("Setting initial default printer: " + str(safe_printer_name))
-                                                        self.persistent_data['default_printer'] = safe_printer_name
-                                                        found_default_printer_again = True
-                                                    else:
-                                                        if self.persistent_data['default_printer'] == safe_printer_name:
-                                                            found_default_printer_again = True
-                                            
-                                                    if printer_counter == len(cups_parts) and found_default_printer_again == False:
-                                                        if self.DEBUG:
-                                                            print("could not find the previous default printer again, setting a new one")
-                                                        self.persistent_data['default_printer'] = safe_printer_name
-        
-                    if found_default_printer_again == True and 'default_printer' in self.persistent_data:
+                    #print("\n\n--")
+                    #print("cups_output: " + str(cups_output))
+                    #print("--")
+                    #print("cups_parts: " + str(cups_parts))
+                    #print("--")
+                    #print("avahi_output: " + str(avahi_output))
+                    #print("--\n\n")
+            
+                    if avahi_output != None and cups_output != None:
+                        cups_parts = cups_output.split('Device: uri = lpd://')
                         if self.DEBUG:
-                            print("Found the default printer (again): " + str(self.persistent_data['default_printer']))
-                        os.system('lpoptions -d  ' + str(self.persistent_data['default_printer']))
-                        self.connected_printers[ self.persistent_data['default_printer'] ]['default'] = True
+                            print("Detected number of printers: " + str(len(cups_parts)-1))
+            
+                        printer_counter = 0
+                        found_default_printer_again = False
+            
+                        for printer_info in cups_parts:
+                            printer_counter += 1
+                            if len(printer_info) > 10:
+                                if self.DEBUG:
+                                    print("\nprinter_info: " + str(printer_info))
+                                printer_lines = printer_info.splitlines()
+                                for printer_line in printer_lines:
+                                    if 'make-and-model =' in printer_line:
+                                        printer_name = printer_line.split('make-and-model =')[1]
+                                
+                                        if len(printer_name) > 2:
+                                            safe_printer_name = printer_name.strip()
+                                            safe_printer_name = safe_printer_name.replace(' ','_')
+                                            safe_printer_name = re.sub(r'\W+', '', safe_printer_name)
+                                            if self.DEBUG:
+                                                print("\nsafe_printer_name: " + str(safe_printer_name))
+                                            for line in avahi_output.splitlines():
+                                                if self.DEBUG:
+                                                    print("avahi line: " + str(line))
+                                                ip_address_list = re.findall(r'(?:\d{1,3}\.)+(?:\d{1,3})', str(line))
+                                                if len(ip_address_list) > 0:
+                                                    ip_address = str(ip_address_list[0])
+                                                    if valid_ip(ip_address):
+                                                    
+                                                        self.connected_printers[safe_printer_name] = {'id':safe_printer_name,'ip':ip_address,'default':False}
+                                                    
+                                                        if self.DEBUG:
+                                                            print("avahi-browse line with valid IP: " + str(line))
+                                                            print("ADDING PRINTER: " + str(safe_printer_name) + "  ->  " + str(ip_address))
+                                                        add_printer_command = "sudo lpadmin -p " + str(safe_printer_name) + " -E -v socket://" + str(ip_address) + "  -o printer-error-policy=abort-job"
+                                                        if self.DEBUG:
+                                                            print("add_printer_command: " + str(add_printer_command))
+                                                        os.system(str(add_printer_command)) # -P # -o printer-error-policy=abort-job -u allow:all
+                                                
+                                                        if not 'default_printer' in self.persistent_data:
+                                                            if self.DEBUG:
+                                                                print("Setting initial default printer: " + str(safe_printer_name))
+                                                            self.persistent_data['default_printer'] = safe_printer_name
+                                                            found_default_printer_again = True
+                                                        else:
+                                                            if self.persistent_data['default_printer'] == safe_printer_name:
+                                                                found_default_printer_again = True
+                                            
+                                                        if printer_counter == len(cups_parts) and found_default_printer_again == False:
+                                                            if self.DEBUG:
+                                                                print("could not find the previous default printer again, setting a new one")
+                                                            self.persistent_data['default_printer'] = safe_printer_name
+        
+                        if found_default_printer_again == True and 'default_printer' in self.persistent_data:
+                            if self.DEBUG:
+                                print("Found the default printer (again): " + str(self.persistent_data['default_printer']))
+                            os.system('lpoptions -d  ' + str(self.persistent_data['default_printer']))
+                            self.connected_printers[ self.persistent_data['default_printer'] ]['default'] = True
                 
             
-            except Exception as ex:
-                print("Error in detect_printers: " + str(ex))
+                except Exception as ex:
+                    print("Error in detect_printers: " + str(ex))
         
-        lpstat_output = run_command("lpstat -v")
-        if self.DEBUG:
-            print("lpstat -v after printer scan: " + str(lpstat_output))
-            print("\nself.connected_printers:\n")
-            print(json.dumps(self.connected_printers, indent=4, sort_keys=True))
-        #if not 'No destinations added' in lpstat_output:
-        #    for connected in lpstat_output.splitlines():
-        #        if ':' in connnected:
-        #            connected = connected.replace('device for ','')
-        #            connected = connected.replace('socket://','')
-        #            connected_parts = connected.split(':')
+            lpstat_output = run_command("lpstat -v")
+            if self.DEBUG:
+                print("lpstat -v after printer scan: " + str(lpstat_output))
+                print("\nself.connected_printers:\n")
+                print(json.dumps(self.connected_printers, indent=4, sort_keys=True))
+        
+        
+            #if not 'No destinations added' in lpstat_output:
+            #    for connected in lpstat_output.splitlines():
+            #        if ':' in connnected:
+            #            connected = connected.replace('device for ','')
+            #            connected = connected.replace('socket://','')
+            #            connected_parts = connected.split(':')
                     
+            
             
         return self.connected_printers
        
@@ -3002,150 +3046,151 @@ class PowerSettingsAPIHandler(APIHandler):
     def update_recovery_partition(self):
         if self.DEBUG:
             print("in update_recovery_partition")
-        try:
-            
-            # this should never be needed... but just in case.
-            lsblk_output = run_command('lsblk')
-            if not 'mmcblk0p4' in lsblk_output:
-                if self.DEBUG:
-                    print("Error, updating recovery partition was called, but system does not have four partitions. Aborting!")
-                return
-            
-            if self.busy_updating_recovery > 0:
-                if self.DEBUG:
-                    print("Warning, already busy update_recovery_partition. Aborting.")
-                return
-                
-            self.updating_recovery_failed = False
-            self.busy_updating_recovery = 1
-            
-            if os.path.exists('/home/pi/.webthings/recovery.fs.tar.gz'):
-                if self.DEBUG:
-                    print("Warning, recovery.fs.tar.gz already exists. Deleting")
-                os.system('sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
-                
-            if os.path.exists('/home/pi/.webthings/recovery.fs'):
-                if self.DEBUG:
-                    print("Warning, recovery.fs.tar.gz already exists. Deleting")
-                os.system('sudo rm /home/pi/.webthings/recovery.fs')
-                
-            
-            recovery_checksum = None
+        if os.path.isdir(self.boot_path):
             try:
-                with urllib.request.urlopen('http://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz.checksum') as f:
-                    recovery_checksum = f.read().decode('utf-8')
-                    recovery_checksum = recovery_checksum.strip()
+            
+                # this should never be needed... but just in case.
+                lsblk_output = run_command('lsblk')
+                if not 'mmcblk0p4' in lsblk_output:
                     if self.DEBUG:
-                        print("recovery checksum should be: ->" + str(recovery_checksum) + "<-")
-            except Exception as ex:
-                if self.DEBUG:
-                    print("Aborting recovery partition update, error trying to download image checksum: " + str(ex))
-                self.updating_recovery_failed = True
-                return
+                        print("Error, updating recovery partition was called, but system does not have four partitions. Aborting!")
+                    return
             
-            if recovery_checksum == None:
-                if self.DEBUG:
-                    print("Aborting recovery partition update, desired recovery checksum was still None")
-                self.updating_recovery_failed = True
-                return
-            
-            
-            if os.path.exists(os.path.join(self.recovery_partition_mount_point,'bin')):
-                if self.DEBUG:
-                    print("Warning, recovery partition seemed to already be mounted! Will attempts to unmount it first")
-                os.system('sudo umount ' + str(self.recovery_partition_mount_point))
-                if os.path.exists(os.path.join(self.recovery_partition_mount_point,'bin')):
+                if self.busy_updating_recovery > 0:
                     if self.DEBUG:
-                        print("Error, unmounting recovery partition (that shouldn't have been mounted in the first place) failed")
+                        print("Warning, already busy update_recovery_partition. Aborting.")
+                    return
+                
+                self.updating_recovery_failed = False
+                self.busy_updating_recovery = 1
+            
+                if os.path.exists('/home/pi/.webthings/recovery.fs.tar.gz'):
+                    if self.DEBUG:
+                        print("Warning, recovery.fs.tar.gz already exists. Deleting")
+                    os.system('sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
+                
+                if os.path.exists('/home/pi/.webthings/recovery.fs'):
+                    if self.DEBUG:
+                        print("Warning, recovery.fs.tar.gz already exists. Deleting")
+                    os.system('sudo rm /home/pi/.webthings/recovery.fs')
+                
+            
+                recovery_checksum = None
+                try:
+                    with urllib.request.urlopen('http://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz.checksum') as f:
+                        recovery_checksum = f.read().decode('utf-8')
+                        recovery_checksum = recovery_checksum.strip()
+                        if self.DEBUG:
+                            print("recovery checksum should be: ->" + str(recovery_checksum) + "<-")
+                except Exception as ex:
+                    if self.DEBUG:
+                        print("Aborting recovery partition update, error trying to download image checksum: " + str(ex))
                     self.updating_recovery_failed = True
                     return
             
-            os.system('wget https://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz -O /home/pi/.webthings/recovery.fs.tar.gz')
+                if recovery_checksum == None:
+                    if self.DEBUG:
+                        print("Aborting recovery partition update, desired recovery checksum was still None")
+                    self.updating_recovery_failed = True
+                    return
             
-            if not os.path.exists('/home/pi/.webthings/recovery.fs.tar.gz'):
-                if self.DEBUG:
-                    print("recovery image failed to download, waiting a few seconds and then trying once more")
-                time.sleep(10)
+            
+                if os.path.exists(os.path.join(self.recovery_partition_mount_point,'bin')):
+                    if self.DEBUG:
+                        print("Warning, recovery partition seemed to already be mounted! Will attempts to unmount it first")
+                    os.system('sudo umount ' + str(self.recovery_partition_mount_point))
+                    if os.path.exists(os.path.join(self.recovery_partition_mount_point,'bin')):
+                        if self.DEBUG:
+                            print("Error, unmounting recovery partition (that shouldn't have been mounted in the first place) failed")
+                        self.updating_recovery_failed = True
+                        return
+            
                 os.system('wget https://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz -O /home/pi/.webthings/recovery.fs.tar.gz')
-                #os.system('cd /home/pi/.webthings; rm recovery.fs; wget https://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz -O recovery.fs.tar.gz') #; tar -xf recovery.fs.tar.gz
             
-            if not os.path.exists('/home/pi/.webthings/recovery.fs.tar.gz'):
+                if not os.path.exists('/home/pi/.webthings/recovery.fs.tar.gz'):
+                    if self.DEBUG:
+                        print("recovery image failed to download, waiting a few seconds and then trying once more")
+                    time.sleep(10)
+                    os.system('wget https://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz -O /home/pi/.webthings/recovery.fs.tar.gz')
+                    #os.system('cd /home/pi/.webthings; rm recovery.fs; wget https://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz -O recovery.fs.tar.gz') #; tar -xf recovery.fs.tar.gz
+            
+                if not os.path.exists('/home/pi/.webthings/recovery.fs.tar.gz'):
+                    if self.DEBUG:
+                        print("Recovery partition file failed to download")
+                    self.updating_recovery_failed = True
+                    return
+            
                 if self.DEBUG:
-                    print("Recovery partition file failed to download")
-                self.updating_recovery_failed = True
-                return
+                    print("recovery partition file downloaded OK")
             
-            if self.DEBUG:
-                print("recovery partition file downloaded OK")
-            
-            downloaded_recovery_file_checksum = run_command("md5sum /home/pi/.webthings/recovery.fs.tar.gz | awk '{print $1}'")
-            downloaded_recovery_file_checksum = downloaded_recovery_file_checksum.strip()
-            if self.DEBUG:
-                print("file checksum    : ->" + str(downloaded_recovery_file_checksum) + "<-")
-                print("desired checksum : ->" + str(recovery_checksum) + "<-")
-                print("downloaded_recovery_file_checksum length should be 32: " + str(len(downloaded_recovery_file_checksum)))
-                print("recovery_checksum length should be 32: " + str(len(recovery_checksum)))
-            if len(recovery_checksum) == 32 and len(downloaded_recovery_file_checksum) == 32 and str(recovery_checksum) == str(downloaded_recovery_file_checksum):
+                downloaded_recovery_file_checksum = run_command("md5sum /home/pi/.webthings/recovery.fs.tar.gz | awk '{print $1}'")
+                downloaded_recovery_file_checksum = downloaded_recovery_file_checksum.strip()
                 if self.DEBUG:
-                    print("checksums matched")
+                    print("file checksum    : ->" + str(downloaded_recovery_file_checksum) + "<-")
+                    print("desired checksum : ->" + str(recovery_checksum) + "<-")
+                    print("downloaded_recovery_file_checksum length should be 32: " + str(len(downloaded_recovery_file_checksum)))
+                    print("recovery_checksum length should be 32: " + str(len(recovery_checksum)))
+                if len(recovery_checksum) == 32 and len(downloaded_recovery_file_checksum) == 32 and str(recovery_checksum) == str(downloaded_recovery_file_checksum):
+                    if self.DEBUG:
+                        print("checksums matched")
+                    self.busy_updating_recovery = 2
+                
+                else:
+                    if self.DEBUG:
+                        print("Aborting, downloaded recovery img file checksums did not match")
+                    self.updating_recovery_failed = True
+                    os.system('sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
+                    return
+            
                 self.busy_updating_recovery = 2
-                
-            else:
-                if self.DEBUG:
-                    print("Aborting, downloaded recovery img file checksums did not match")
-                self.updating_recovery_failed = True
-                os.system('sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
-                return
             
-            self.busy_updating_recovery = 2
-            
-            os.system('cd /home/pi/.webthings; tar -xf recovery.fs.tar.gz')
+                os.system('cd /home/pi/.webthings; tar -xf recovery.fs.tar.gz')
             
             
-            # Recovery image failed to download/extract
-            if os.path.exists('/home/pi/.webthings/recovery.fs') == False:
-                if self.DEBUG:
-                    print("recovery image failed to download or extract!")
-                os.system('sudo rm /home/pi/.webthings/recovery.fs; sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
-                self.updating_recovery_failed = True
+                # Recovery image failed to download/extract
+                if os.path.exists('/home/pi/.webthings/recovery.fs') == False:
+                    if self.DEBUG:
+                        print("recovery image failed to download or extract!")
+                    os.system('sudo rm /home/pi/.webthings/recovery.fs; sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
+                    self.updating_recovery_failed = True
                 
-            # Good to go!
-            else:
-                if self.DEBUG:
-                    print("recovery image file was downloaded and extracted succesfully")
-                self.busy_updating_recovery = 3
+                # Good to go!
+                else:
+                    if self.DEBUG:
+                        print("recovery image file was downloaded and extracted succesfully")
+                    self.busy_updating_recovery = 3
                 
-                #os.system('sudo mkfs -g -t ext4 /dev/mmcblk0p3 -F') # format the partition first
-                os.system('sudo dd if=/dev/zero of=/dev/mmcblk0p3 bs=1M') # empty
+                    #os.system('sudo mkfs -g -t ext4 /dev/mmcblk0p3 -F') # format the partition first
+                    os.system('sudo dd if=/dev/zero of=/dev/mmcblk0p3 bs=1M') # empty
                 
-                self.busy_updating_recovery = 4
+                    self.busy_updating_recovery = 4
                 
-                os.system('sudo dd if=/home/pi/.webthings/recovery.fs of=/dev/mmcblk0p3 bs=1M; sudo rm /home/pi/.webthings/recovery.fs; sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
+                    os.system('sudo dd if=/home/pi/.webthings/recovery.fs of=/dev/mmcblk0p3 bs=1M; sudo rm /home/pi/.webthings/recovery.fs; sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
 
-                self.check_recovery_partition()
+                    self.check_recovery_partition()
                 
-                if self.recovery_version >= self.latest_recovery_version:
-                    self.busy_updating_recovery = 5
+                    if self.recovery_version >= self.latest_recovery_version:
+                        self.busy_updating_recovery = 5
                 
-            # clean up any downloaded files
-            if os.path.exists('/home/pi/.webthings/recovery.fs.tar.gz'):
-                if self.DEBUG:
-                    print("Warning, recovery.fs.tar.gz already exists. Deleting")
-                os.system('sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
+                # clean up any downloaded files
+                if os.path.exists('/home/pi/.webthings/recovery.fs.tar.gz'):
+                    if self.DEBUG:
+                        print("Warning, recovery.fs.tar.gz already exists. Deleting")
+                    os.system('sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
                 
-            if os.path.exists('/home/pi/.webthings/recovery.fs'):
-                if self.DEBUG:
-                    print("Warning, recovery.fs.tar.gz already exists. Deleting")
-                os.system('sudo rm /home/pi/.webthings/recovery.fs')
+                if os.path.exists('/home/pi/.webthings/recovery.fs'):
+                    if self.DEBUG:
+                        print("Warning, recovery.fs.tar.gz already exists. Deleting")
+                    os.system('sudo rm /home/pi/.webthings/recovery.fs')
                     
                 
-        except Exception as ex:
-            print("Error in update_recovery_partition: " + str(ex))
+            except Exception as ex:
+                print("Error in update_recovery_partition: " + str(ex))
         
-        # old method of mounting the entire disk image
-        #sudo losetup --partscan /dev/loop0 recovery.fs
-        #sudo dd if=/dev/loop0p2 of=/dev/mmcblk0p3 bs=1M
-        #losetup --detach /dev/loop0 
+            # old method of mounting the entire disk image
+            #sudo losetup --partscan /dev/loop0 recovery.fs
+            #sudo dd if=/dev/loop0p2 of=/dev/mmcblk0p3 bs=1M
+            #losetup --detach /dev/loop0
         
     
 
@@ -3200,50 +3245,51 @@ class PowerSettingsAPIHandler(APIHandler):
         #if not os.path.exists(self.boot_path + '/candle_user_partition_expanded.txt'):
         if self.user_partition_expanded == False:
             
+            if os.path.isdir(self.boot_path):
             
-            # save information to candle_log.txt
-            date_string = run_command('date')
-            if self.DEBUG:
-                print("date: " + str(date))    
-            os.system('echo "' + str(date_string) + ' expanding user partition" | sudo tee -a ' + str(self.boot_path) + '/candle_log.txt')
-            os.system('sudo fdisk -l | sudo tee -a ' + str(self.boot_path) + '/candle_log.txt')
-            if os.path.exists('/home/pi/.webthings/candle.log'):
-                os.system('echo "' + str(date_string) + ' expanding user partition" | sudo tee -a /home/pi/.webthings/candle.log')
+                # save information to candle_log.txt
+                date_string = run_command('date')
+                if self.DEBUG:
+                    print("date: " + str(date))    
+                os.system('echo "' + str(date_string) + ' expanding user partition" | sudo tee -a ' + str(self.boot_path) + '/candle_log.txt')
+                os.system('sudo fdisk -l | sudo tee -a ' + str(self.boot_path) + '/candle_log.txt')
+                if os.path.exists('/home/pi/.webthings/candle.log'):
+                    os.system('echo "' + str(date_string) + ' expanding user partition" | sudo tee -a /home/pi/.webthings/candle.log')
             
-            start_sector = run_command("sudo fdisk -l | grep mmcblk0p4 | awk '{print $2}' | tr -d '\n'")
-            if start_sector.isdigit() and len(start_sector) > 4:
-                if self.DEBUG:
-                    print("start sector: " + str(start_sector))
+                start_sector = run_command("sudo fdisk -l | grep mmcblk0p4 | awk '{print $2}' | tr -d '\n'")
+                if start_sector.isdigit() and len(start_sector) > 4:
+                    if self.DEBUG:
+                        print("start sector: " + str(start_sector))
             
-                #expand_command = 'echo -e "d\n4\nn\np\n' + str(start_sector) + '\n\nN\np\nq" | sudo fdisk /dev/mmcblk0'
-                expand_command = 'echo -e "d\n4\nn\np\n' + str(start_sector) + '\n\nN\nw\nq" | sudo fdisk /dev/mmcblk0'
-                #expand_string = "d\n4\nn\np\n" + str(start_sector) + "\n\nN\nw\nq"
-                if self.DEBUG:
-                    print("expand_command: " + str(expand_command))
-                expand_output = run_command(expand_command)
-                if self.DEBUG:
-                    print("expand output: " + str(expand_output))
-                resize2fs_output = run_command('sudo resize2fs /dev/mmcblk0p4')
-                if self.DEBUG:
-                    print("resize2fs_output: " + str(resize2fs_output))
-                    print("rebooting...")
+                    #expand_command = 'echo -e "d\n4\nn\np\n' + str(start_sector) + '\n\nN\np\nq" | sudo fdisk /dev/mmcblk0'
+                    expand_command = 'echo -e "d\n4\nn\np\n' + str(start_sector) + '\n\nN\nw\nq" | sudo fdisk /dev/mmcblk0'
+                    #expand_string = "d\n4\nn\np\n" + str(start_sector) + "\n\nN\nw\nq"
+                    if self.DEBUG:
+                        print("expand_command: " + str(expand_command))
+                    expand_output = run_command(expand_command)
+                    if self.DEBUG:
+                        print("expand output: " + str(expand_output))
+                    resize2fs_output = run_command('sudo resize2fs /dev/mmcblk0p4')
+                    if self.DEBUG:
+                        print("resize2fs_output: " + str(resize2fs_output))
+                        print("rebooting...")
                     
                 
-                new_unused_space = int(run_command("sudo parted /dev/mmcblk0 unit B print free | grep 'Free Space' | tail -n1 | awk '{print $3}' | tr -d 'B\n'"))
-                #print("unused_volume_space: " + str(self.unused_volume_space))
+                    new_unused_space = int(run_command("sudo parted /dev/mmcblk0 unit B print free | grep 'Free Space' | tail -n1 | awk '{print $3}' | tr -d 'B\n'"))
+                    #print("unused_volume_space: " + str(self.unused_volume_space))
             
-                if new_unused_space < 1000000000:
-                    self.user_partition_expanded = True
-                    os.system('sudo touch ' + str(self.boot_path) + '/candle_user_partition_expanded.txt')
-                    os.system('sudo reboot')
+                    if new_unused_space < 1000000000:
+                        self.user_partition_expanded = True
+                        os.system('sudo touch ' + str(self.boot_path) + '/candle_user_partition_expanded.txt')
+                        os.system('sudo reboot')
+                    else:
+                        self.user_partition_expansion_failed = True
+                
+                    return True
+                
                 else:
-                    self.user_partition_expansion_failed = True
-                
-                return True
-                
-            else:
-                if self.DEBUG:
-                    print("start_sector was not a (long) digit")
+                    if self.DEBUG:
+                        print("start_sector was not a (long) digit")
         else:
             if self.DEBUG:
                 print("spotted file indicating file_system was already expanded?")
