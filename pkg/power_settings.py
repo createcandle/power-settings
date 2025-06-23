@@ -3300,7 +3300,12 @@ class PowerSettingsAPIHandler(APIHandler):
     def test_speakers(self):
         if self.DEBUG:
             print("In speaker test")
+        os.system('speaker-test -c1 -twav -l1')
+        os.system('speaker-test -c2 -twav -l1')
         os.system('speaker-test -c4 -twav -l1')
+        
+        
+        
         
         
     
