@@ -315,7 +315,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
                 if len(display_port_names) > 0:
                     if len(str(display_port_names[0])) > 2:
-                        self.display_port1_name = display_port_names[0]
+                        self.display_port1_name = str(display_port_names[0])
                         [ self.display1_width, self.display1_height ] = self.get_hdmi_port_resolution(self.display_port1_name)
                         if self.DEBUG:
                             print("self.display1_width: " + str(self.display1_width))
@@ -323,7 +323,7 @@ class PowerSettingsAPIHandler(APIHandler):
                 
                     if len(display_port_names) > 1:
                         if len(str(display_port_names[1])) > 2:
-                            self.display_port2_name = display_port_names[1]
+                            self.display_port2_name = str(display_port_names[1])
                             [ self.display2_width, self.display2_height ] = self.get_hdmi_port_resolution(self.display_port2_name)
                             if self.DEBUG:
                                 print("self.display2_width: " + str(self.display2_width))
@@ -333,13 +333,19 @@ class PowerSettingsAPIHandler(APIHandler):
                     self.display_port1_name = None
                     self.display_port2_name = None
             
-            
+                if self.DEBUG:
+                    print("self.display_port1_name: " + str(self.display_port1_name))
+                    print("self.display_port2_name: " + str(self.display_port2_name))
+                
                 self.find_display_rotation()
-            
-                if self.display_port1_name != None and self.persistent_data['display_resolution_' + str(self.display_port1_name)] and str(self.persistent_data['display_resolution_' + str(self.display_port1_name)]) != 'default':
+
+                display_resolution_key1 = 'display_resolution_' + str(self.display_port1_name)
+                display_resolution_key2 = 'display_resolution_' + str(self.display_port2_name)
+                
+                if self.display_port1_name != None and display_resolution_key1 in self.persistent_data and str(self.persistent_data[display_resolution_key1]) != 'default':
                     self.set_display_resolutions()
                 
-                elif self.display_port2_name != None and self.persistent_data['display_resolution_' + str(self.display_port2_name)] and str(self.persistent_data['display_resolution_' + str(self.display_port2_name)]) != 'default':
+                elif self.display_port2_name != None and display_resolution_key2 in self.persistent_data and str(self.persistent_data[display_resolution_key2]) != 'default':
                     self.set_display_resolutions()
             
         except Exception as ex:
