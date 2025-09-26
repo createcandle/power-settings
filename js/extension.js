@@ -3676,7 +3676,7 @@
                     document.getElementById('extension-power-settings-total-memory').innerText = body['total_memory'];
                 
 					// temperature
-	                if(typeof body.board_temperature != 'undefined'){
+	                if(typeof body['board_temperature'] == 'string' ){
 	                    if(this.debug){
 	                        console.log("power settings: board_temperature: ", body.board_temperature);
 	                    }
