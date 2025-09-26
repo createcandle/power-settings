@@ -105,9 +105,10 @@ class PowerSettingsAPIHandler(APIHandler):
         
         self.pipewire_data = {'sinks':{},'sources':{},'default_audio_sink_name':None,'default_audio_sink_nice_name':None,'default_audio_sink_id':None,'default_audio_source_name':None,'default_audio_source_nice_name':None,'default_audio_source_id':None}
         self.pipewire_enabled = False
-        
-        
-        
+
+        self.just_updated_via_recovery = False
+        self.update_via_recovery_aborted = False
+        self.update_via_recovery_interupted = False
         
         
         # Get persistent data
