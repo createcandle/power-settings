@@ -727,28 +727,32 @@ class PowerSettingsAPIHandler(APIHandler):
             
             
     def find_display_rotation(self):
-        # Get rotation
-        if self.display_port1_name:
-            display1_rotation_output = run_command("DISPLAY=:0 xrandr --query --verbose | grep '" + str(self.display_port1_name) + "' | cut -d ' ' -f 6")
-            if display1_rotation_output:
-                self.display1_rotation = 0
-                if 'left' in display1_rotation_output:
-                    self.display1_rotation = 90 # NOT SURE IF THIS IS RIGHT
-                elif 'right' in display1_rotation_output:
-                    self.display1_rotation = 270 # NOT SURE IF THIS IS RIGHT
-                if 'inverted' in display1_rotation_output:
-                    self.display1_rotation = 180
-                
-        if self.display_port1_name:
-            display2_rotation_output = run_command("DISPLAY=:0 xrandr --query --verbose | grep '" + str(self.display_port2_name) + "' | cut -d ' ' -f 6")
-            if display2_rotation_output:
-                self.display2_rotation = 0
-                if 'left' in display2_rotation_output:
-                    self.display2_rotation = 90 # NOT SURE IF THIS IS RIGHT
-                elif 'right' in display2_rotation_output:
-                    self.display2_rotation = 270 # NOT SURE IF THIS IS RIGHT
-                if 'inverted' in display2_rotation_output:
-                    self.display2_rotation = 180
+        try:
+            # Get rotation
+            if self.display_port1_name:
+                display1_rotation_output = run_command("DISPLAY=:0 xrandr --query --verbose | grep '" + str(self.display_port1_name) + "' | cut -d ' ' -f 6")
+                if display1_rotation_output:
+                    self.display1_rotation = 0
+                    if 'left' in display1_rotation_output:
+                        self.display1_rotation = 90 # NOT SURE IF THIS IS RIGHT
+                    elif 'right' in display1_rotation_output:
+                        self.display1_rotation = 270 # NOT SURE IF THIS IS RIGHT
+                    if 'inverted' in display1_rotation_output:
+                        self.display1_rotation = 180
+                    
+            if self.display_port1_name:
+                display2_rotation_output = run_command("DISPLAY=:0 xrandr --query --verbose | grep '" + str(self.display_port2_name) + "' | cut -d ' ' -f 6")
+                if display2_rotation_output:
+                    self.display2_rotation = 0
+                    if 'left' in display2_rotation_output:
+                        self.display2_rotation = 90 # NOT SURE IF THIS IS RIGHT
+                    elif 'right' in display2_rotation_output:
+                        self.display2_rotation = 270 # NOT SURE IF THIS IS RIGHT
+                    if 'inverted' in display2_rotation_output:
+                        self.display2_rotation = 180
+        except Exception as ex:
+            print("caught exception in find_display_rotation: ", ex)
+       
             
     
     
