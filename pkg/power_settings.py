@@ -958,7 +958,7 @@ class PowerSettingsAPIHandler(APIHandler):
             if request.method != 'POST':
                 return APIResponse(status=404)
             
-            if request.path == '/init' or request.path == '/set-time' or request.path == '/set-ntp' or request.path == '/shutdown' or request.path == '/reboot' or request.path == '/restart' or request.path == '/ajax' or request.path == '/save':
+            if request.path == '/init' or request.path == '/set-time' or request.path == '/set-ntp' or request.path == '/shutdown' or request.path == '/reboot' or request.path == '/restart' or request.path == '/close_browser' or request.path == '/ajax' or request.path == '/save':
 
                 if self.DEBUG:
                     print("-API request at: " + str(request.path))
@@ -2437,7 +2437,14 @@ class PowerSettingsAPIHandler(APIHandler):
                           content=json.dumps("Restarting"),
                         )
                         
-                        
+                    elif request.path == '/close_browser':
+                        os.system("pkill chromium")
+                        os.system("pkill chromium-browser")
+                        return APIResponse(
+                          status=200,
+                          content_type='application/json',
+                          content=json.dumps("Closing browser"),
+                        )
                         
                     # Restore backup
                     elif request.path == '/save':

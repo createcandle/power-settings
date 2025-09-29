@@ -38,12 +38,12 @@
 
 
 #extension-power-settings-restart,
-#extension-power-settings-exit-fullscreen{
+#extension-power-settings-close-browser{
     display:none;
 }
 
 .developer #extension-power-settings-restart,
-.developer #extension-power-settings-exit-fullscreen{
+.developer #extension-power-settings-close-browser{
     display:inline-block;
 }
 

@@ -103,7 +103,7 @@
             const shutdown = document.getElementById('extension-power-settings-shutdown');
             const reboot = document.getElementById('extension-power-settings-reboot');
             const restart = document.getElementById('extension-power-settings-restart');
-			const exit_fullscreen = document.getElementById('extension-power-settings-exit-fullscreen');
+			const close_browser = document.getElementById('extension-power-settings-close-browser');
 			
             const content_container = document.getElementById('extension-power-settings-content-container');
             
@@ -219,14 +219,15 @@
                 
             });
             
-            exit_fullscreen.addEventListener('click', () => {
-				console.log("exiting fullscreen");
-                document.exitFullscreen().then(() => {
-        			console.log("Exited fullscreen mode");
-    			}).catch((err) => {
-        			console.error("Error exiting fullscreen: ", err);
-    			});
-            });
+			if(close_browser){
+	            close_browser.addEventListener('click', () => {
+					console.log("closing browser");
+	                window.API.postJson(
+	                    `/extensions/${this.id}/api/close_browser`, {}
+	                )
+	            });
+			}
+			
 			
             
 			const expansion_more_button_el = document.getElementById('extension-power-settings-expand-user-partition-more-button');
