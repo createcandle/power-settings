@@ -2438,7 +2438,9 @@ class PowerSettingsAPIHandler(APIHandler):
                         )
                         
                     elif request.path == '/close_browser':
+                        os.system("pkill chrome")
                         os.system("pkill chromium")
+                        os.system("pkill chrome-browser")
                         os.system("pkill chromium-browser")
                         return APIResponse(
                           status=200,
