@@ -103,7 +103,8 @@
             const shutdown = document.getElementById('extension-power-settings-shutdown');
             const reboot = document.getElementById('extension-power-settings-reboot');
             const restart = document.getElementById('extension-power-settings-restart');
-
+			const exit_fullscreen = document.getElementById('extension-power-settings-exit-fullscreen');
+			
             const content_container = document.getElementById('extension-power-settings-content-container');
             
             const waiting = document.getElementById('extension-power-settings-waiting');
@@ -218,6 +219,15 @@
                 
             });
             
+            exit_fullscreen.addEventListener('click', () => {
+				console.log("exiting fullscreen");
+                document.exitFullscreen().then(() => {
+        			console.log("Exited fullscreen mode");
+    			}).catch((err) => {
+        			console.error("Error exiting fullscreen: ", err);
+    			});
+            });
+			
             
 			const expansion_more_button_el = document.getElementById('extension-power-settings-expand-user-partition-more-button');
             // Show System details page when clicking on expand partition more button

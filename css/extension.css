@@ -37,11 +37,13 @@
 }
 
 
-#extension-power-settings-restart{
+#extension-power-settings-restart,
+#extension-power-settings-exit-fullscreen{
     display:none;
 }
 
-.developer #extension-power-settings-restart{
+.developer #extension-power-settings-restart,
+.developer #extension-power-settings-exit-fullscreen{
     display:inline-block;
 }
 
