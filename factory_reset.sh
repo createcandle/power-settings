@@ -137,9 +137,10 @@ fi
 
 
 # Try to create the hostname symbolic links
-echo "candle" > /home/pi/.webthings/etc/hostname
-cp /home/pi/.webthings/etc/hosts-bak /home/pi/.webthings/etc/hosts
-
+if [ -f /home/pi/.webthings/etc/hosts-bak ]; then
+  echo "candle" > /home/pi/.webthings/etc/hostname
+  cp /home/pi/.webthings/etc/hosts-bak /home/pi/.webthings/etc/hosts
+fi
 #echo "127.0.0.1	localhost\n::1		localhost ip6-localhost ip6-loopback\nff02::1		ip6-allnodes\nff02::2		ip6-allrouters\n\n127.0.1.1	candle" > /home/pi/.webthings/etc/hosts
 #rm /etc/hostname
 #rm /etc/hosts
@@ -155,7 +156,9 @@ rm -rf /var/cache/apt
 
 if [ -f "/home/pi/.webthings/swap" ]; then
   echo "Warning! Detected a swap file! Disabling swap and removing it."
-  dphys-swapfile swapoff
+  if [ -f /usr/sbin/dphys-swapfile ]; then
+    dphys-swapfile swapoff
+  fi
   rm /home/pi/.webthings/swap
 fi
 
