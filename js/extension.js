@@ -1613,9 +1613,12 @@
 				// SD Card size
                 if(typeof body.device_sd_card_size != 'undefined'){
                     if(this.debug){
-                        console.log("power settings: sd_card_size: ", body.device_sd_card_size);
+                        console.log("power settings: device_sd_card_size: ", body.device_sd_card_size);
                     }
-                    document.getElementById('extension-power-settings-device-sd-card-size').innerText = Math.round(body.device_sd_card_size / 1000000000) + "GB";
+					if(body.device_sd_card_size != null && parseInt(body.device_sd_card_size) > 1000000){
+						document.getElementById('extension-power-settings-device-sd-card-size').textContent = Math.round(parseInt(body.device_sd_card_size) / 1000000000) + "GB";
+					}
+                    
                 }
 				
                 

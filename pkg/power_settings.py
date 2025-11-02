@@ -170,8 +170,10 @@ class PowerSettingsAPIHandler(APIHandler):
             self.device_linux = self.device_linux.replace('Description:	', '')
         
         self.device_sd_card_size = None
-        if os.path.isfile('/dev/mmcblk0'):
-            self.device_sd_card_size = int(run_command("sudo blockdev --getsize64 /dev/mmcblk0"))
+        if os.path.exists('/dev/mmcblk0'):
+            #self.device_sd_card_size = int(run_command("sudo blockdev --getsize64 /dev/mmcblk0"))
+            self.device_sd_card_size = int(run_command("lsblk -b --output SIZE -n -d /dev/mmcblk0"))
+            
         
         
 
