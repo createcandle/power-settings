@@ -270,6 +270,8 @@ if [ -f "$BOOT_DIR/developer.txt" ]; then
   echo "filling with zeros done"
 fi
 
+shutdown -P +1
+
 echo "Deleting all NetworkManager connections"
 nmcli -f name connection show | sed -e 's/[[:space:]]*$//' | tr '\n' '\0' | xargs -0 -n1 nmcli connection delete
 echo "prepare_for_disk_image: DONE"
