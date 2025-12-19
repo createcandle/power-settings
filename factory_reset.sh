@@ -274,9 +274,7 @@ shutdown -P +1
 
 echo "Deleting NetworkManager Wifi connections"
 #nmcli -f name connection show | sed -e 's/[[:space:]]*$//' | tr '\n' '\0' | xargs -0 -n1 nmcli connection delete
-if nmcli --terse connection show | grep -q 802-11-wireless; then
-    nmcli --terse connection show | grep 802-11-wireless | cut -d : -f 1 | while read name; do nmcli connection delete "$name"; done
-fi
+nmcli --terse connection show | grep 802-11-wireless | cut -d : -f 1 | while read name; do nmcli connection delete "$name"; done
 
 echo "prepare_for_disk_image: DONE"
 
