@@ -96,11 +96,12 @@ rm -rf /home/pi/.webthings/data/internet-radio/*
 rm -rf /home/pi/.webthings/data/scenes/*
 rm -rf /home/pi/.webthings/data/dashboard/*
 if [ -f /home/pi/.webthings/addons/dashboard/persistence.json ]; then
-    mkdir -p home/pi/.webthings/data/dashboard
+    mkdir -p /home/pi/.webthings/data/dashboard
     cp /home/pi/.webthings/addons/dashboard/persistence.json /home/pi/.webthings/data/dashboard/persistence.json
+    chown -R pi:pi /home/pi/.webthings/data/dashboard
 fi
 
-chown -R pi:pi /home/pi/.webthings/data
+
 
 echo "smarthome" > $BOOT_DIR/candle_hotspot.txt
 
