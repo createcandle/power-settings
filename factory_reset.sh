@@ -77,8 +77,8 @@ cp /home/pi/.webthings/floorplan.svg /home/pi/.webthings/uploads/floorplan.svg
 chown pi:pi /home/pi/.webthings/uploads/floorplan.svg
 
 # remove any addons that are not the originals
-cd /home/pi/.webthings/addons && find -not -path "./candleappstore*" -not -path "./candle-theme*" -not -path "./power-settings*" -not -path "./webinterface*" -not -path "./zigbee2mqtt-adapter*" -not -path "./followers*" -not -path "./privacy-manager*" -not -path "./photo-frame*" -not -path "./tutorial*" -not -path "./internet-radio*"  -not -path "./bluetoothpairing*" -delete
-cd /home/pi/.webthings/data && find -not -path "./candleappstore*" -not -path "./candle-theme*" -not -path "./power-settings*" -not -path "./webinterface*" -not -path "./zigbee2mqtt-adapter*" -not -path "./followers*" -not -path "./privacy-manager*" -not -path "./photo-frame*" -not -path "./tutorial*" -not -path "./internet-radio*"  -not -path "./bluetoothpairing*" -delete
+cd /home/pi/.webthings/addons && find -not -path "./candleappstore*" -not -path "./candle-theme*" -not -path "./power-settings*" -not -path "./webinterface*" -not -path "./zigbee2mqtt-adapter*" -not -path "./followers*" -not -path "./privacy-manager*" -not -path "./photo-frame*" -not -path "./tutorial*" -not -path "./internet-radio*" -not -path "./bluetoothpairing*" -not -path "./scenes*" -not -path "./dashboard*"  -not -path "./hotspot*" -delete
+cd /home/pi/.webthings/data && find -not -path "./candleappstore*" -not -path "./candle-theme*" -not -path "./power-settings*" -not -path "./webinterface*" -not -path "./zigbee2mqtt-adapter*" -not -path "./followers*" -not -path "./privacy-manager*" -not -path "./photo-frame*" -not -path "./tutorial*" -not -path "./internet-radio*" -not -path "./bluetoothpairing*" -not -path "./scenes*" -not -path "./dashboard*" -not -path "./hotspot*" -delete
 
 # make sure data is removed from addons that remain
 rm -rf /home/pi/.webthings/data/candleappstore/*
@@ -94,9 +94,15 @@ rm -rf /home/pi/.webthings/data/tutorial/*
 rm -rf /home/pi/.webthings/data/network-presence-detection-adapter/*
 rm -rf /home/pi/.webthings/data/internet-radio/*
 rm -rf /home/pi/.webthings/data/scenes/*
+rm -rf /home/pi/.webthings/data/dashboard/*
+if [ -f /home/pi/.webthings/addons/dashboard/persistence.json ]; then
+    mkdir -p home/pi/.webthings/data/dashboard
+    cp /home/pi/.webthings/addons/dashboard/persistence.json /home/pi/.webthings/data/dashboard/persistence.json
+fi
 
+chown -R pi:pi /home/pi/.webthings/data
 
-
+echo "smarthome" > $BOOT_DIR/candle_hotspot.txt
 
 # clear logs
 systemd-tmpfiles --clean
