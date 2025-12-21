@@ -1215,6 +1215,36 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 }
 
 
+.extension-power-settings-hotspot-connected-devices-container{
+	display:flex;
+	flex-direction:column;
+}
+
+.extension-power-settings-hotspot-connected-devices-container span,
+.extension-power-settings-hotspot-connected-devices-container a{
+	display:block;
+	padding:2rem;
+	color:white;
+	font-size:2rem;
+	text-align:center;
+	border-top:1px solid rgba(255,255,255,.1);
+}
+.extension-power-settings-hotspot-connected-devices-container a{
+	text-decoration:none;
+	cursor:pointer;
+}
+body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a:hover{
+	background-color:rgba(255,255,255,.1);
+}
+
+/*
+body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a::after{
+	content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAQElEQVR42qXKwQkAIAxDUUdxtO6/RBQkQZvSi8I/pL4BoGw/XPkh4XigPmsUgh0626AjRsgxHTkUThsG2T/sIlzdTsp52kSS1wAAAABJRU5ErkJggg==);
+	margin: 0 1rem
+}
+*/
+
+
 @media screen and (max-width: 640px) {
 	#extension-power-settings-display1-info,
 	#extension-power-settings-display2-info{

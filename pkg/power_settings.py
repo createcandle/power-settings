@@ -700,7 +700,21 @@ class PowerSettingsAPIHandler(APIHandler):
                 print("-Display standby delay preference was in config: " + str(self.display_standby_delay))
         
                 
-                
+    
+    def get_hotspot_arp(self):
+        result = []
+        hotspot_arp_list = run_command("cat /proc/net/arp | tail -n +2 | grep '192.168.12.'")
+        for line in hotspot_arp_list.splitlines():
+            if "192.168.12." in line:
+                if "192.168.12.1 " in line:
+                    pass
+                else:
+                    result.append(line.split(' ')[0])
+        return result
+        
+        
+    
+    
     def detect_touchscreen(self):
         touch_test = run_command("udevadm info -q all -n /dev/input/event* | grep 'ID_INPUT_TOUCHSCREEN=1'")
         if touch_test == None:
@@ -1718,6 +1732,18 @@ class PowerSettingsAPIHandler(APIHandler):
                                     'hotspot_enabled':self.hotspot_enabled,
                                     'hotspot_ssid':self.hotspot_ssid,
                                     'hotspot_password':self.hotspot_password,
+                                    'hotspot_connected_devices':self.get_hotspot_arp(),
+                                }
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps(result),
+                                )
+                                
+                            elif action == 'get_hotspot_connected_devices':
+                                result = {
+                                    'state':True,
+                                    'hotspot_connected_devices':self.get_hotspot_arp(),
                                 }
                                 return APIResponse(
                                   status=200,

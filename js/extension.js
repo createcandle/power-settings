@@ -67,9 +67,7 @@
 			}
 			
 			document.getElementById('settings-menu').addEventListener('click', (event) => {
-				console.warn("clicked on settings menu. event.target: ", event.target);
 				if(event.target.getAttribute('id') == 'network-settings-link'){
-	            	console.log("requesting hotspot settings");
 					
 		            window.API.postJson(
 		                `/extensions/${this.id}/api/ajax`, {
@@ -1814,6 +1812,7 @@
 				this.hotspot_enabled = body.hotspot_enabled;
 				this.hotspot_ssid = body.hotspot_ssid;
 				this.hotspot_password = body.hotspot_password;
+				this.hotspot_connected_devices = body.hotspot_connected_devices;
 				
 				if(body.hotspot_enabled){
 					document.body.classList.add('hotspot');
@@ -1858,7 +1857,7 @@
 							hotspot_details_password_el.value = hotspot_details_password_el.value.replaceAll(' ','-');
 							if((hotspot_details_password_el.value.length == 0 || hotspot_details_password_el.value.length > 7) && hotspot_details_password_el.value != this.hotspot_password){
 								this.hotspot_password = hotspot_details_password_el.value;
-								console.log("changing hotspot password to: ", this.hotspot_password);
+								//console.log("changing hotspot password to: ", this.hotspot_password);
 								
 					            window.API.postJson(
 					                `/extensions/${this.id}/api/ajax`, {
@@ -1866,7 +1865,7 @@
 					                }
 					            ).then((body) => {
 					                if(this.debug){
-					                    console.log("set_hotspot_password response: ", body);
+					                    console.log("power-settings debug: set_hotspot_password response: ", body);
 					                }
 					                if (body.state === true){
 										hotspot_details_password_el.classList.add('extension-power-settings-hotspot-password-changed');
@@ -1881,16 +1880,16 @@
 								
 							}
 							else if(hotspot_details_password_el.value.length == 0){
-								console.warn("user changed hotspot password. It's not empty.");
+								//console.warn("user changed hotspot password. It's not empty.");
 								hotspot_details_password_el.setAttribute('placeholder','No password required');
 							}
 							else if(hotspot_details_password_el.value.length < 8){
-								console.warn("user changed hotspot password, but it's too short");
+								//console.warn("user changed hotspot password, but it's too short");
 								hotspot_details_password_el.value = '';
 								hotspot_details_password_el.setAttribute('placeholder','Too short');
 							}
 							else{
-								console.log("hotspot password is unchanged");
+								//console.log("hotspot password is unchanged");
 							}
 							
 						});
@@ -1949,8 +1948,6 @@
 						
 						hotspot_settings_container_el.appendChild(hotspot_enabled_container_el);
 						
-						
-						
 						/*
 						const hotspot_addon_view_el = document.getElementById('extension-candleappstore-view');
 						if(hotspot_addon_view_el){
@@ -1967,8 +1964,66 @@
 						*/
 						
 						
+						const hotspot_connected_devices_container_el = document.createElement('div');
+						hotspot_connected_devices_container_el.classList.add('extension-power-settings-hotspot-connected-devices-container');
+						
+						const update_connected_devices_list = () => {
+							//console.log("in update_connected_devices_list. this.hotspot_connected_devices: ", this.hotspot_connected_devices);
+							if(Array.isArray(this.hotspot_connected_devices)){
+								
+								hotspot_connected_devices_container_el.innerHTML = '';
+								
+								this.hotspot_connected_devices.sort();
+							
+								for(let cd = 0; cd < this.hotspot_connected_devices.length; cd++){
+									const hotspot_connected_device_container_el = document.createElement('div');
+									if(this.kiosk){
+										const hotspot_connected_device_span_el = document.createElement('span');
+										hotspot_connected_device_span_el.textContent = this.hotspot_connected_devices[cd];
+										hotspot_connected_device_container_el.appendChild(hotspot_connected_device_span_el);
+									}
+									else{
+										const hotspot_connected_device_link_el = document.createElement('a');
+										hotspot_connected_device_link_el.setAttribute('href','http://' + this.hotspot_connected_devices[cd]);
+										hotspot_connected_device_link_el.setAttribute('target','_blank');
+										hotspot_connected_device_link_el.textContent = this.hotspot_connected_devices[cd];
+										hotspot_connected_device_container_el.appendChild(hotspot_connected_device_link_el);
+									}
+									hotspot_connected_devices_container_el.appendChild(hotspot_connected_device_container_el);
+								}
+							}
+							
+							
+							setTimeout(() => {
+								if(document.location.href.endsWith('/settings/network')){
+									//console.log("calling get_hotspot_connected_devices for an updated list");
+						            window.API.postJson(
+						                `/extensions/${this.id}/api/ajax`, {
+						                    'action': 'get_hotspot_connected_devices'
+						                }
+						            ).then((body) => {
+										if(typeof body.hotspot_connected_devices != 'undefined'){
+											
+											this.hotspot_connected_devices = body.hotspot_connected_devices;
+											//console.log("calling get_hotspot_connected_devices returned: ", this.hotspot_connected_devices);
+											update_connected_devices_list();
+										}
+						            }).catch((err) => {
+						                console.error("power-settings get_hotspot_connected_devices error: ", err);
+						            });
+								}
+							},10000);
+							
+						
+						}
+						
+						update_connected_devices_list();
+						
+						//hotspot_settings_container_el.appendChild(hotspot_connected_devices_container_el);
+						
 						
 						hotspot_settings_list_item_el.appendChild(hotspot_settings_container_el);
+						hotspot_settings_list_item_el.appendChild(hotspot_connected_devices_container_el);
 						
 						
 						network_settings_list_el.appendChild(hotspot_settings_list_item_el);
