@@ -53,6 +53,55 @@
 			this.pipewire_enabled = false;
 			this.pipewire_data = {};
 			
+			if(document.location.href.endsWith('/settings/network')){
+	            window.API.postJson(
+	                `/extensions/${this.id}/api/ajax`, {
+	                    'action': 'get_hotspot_settings'
+	                }
+	            ).then((body) => {
+	                this.render_hotspot_settings(body);
+        
+	            }).catch((err) => {
+	                console.error("power-settings get_hotspot_details error: ", err);
+	            });
+			}
+			
+			document.getElementById('settings-menu').addEventListener('click', (event) => {
+				console.warn("clicked on settings menu. event.target: ", event.target);
+				if(event.target.getAttribute('id') == 'network-settings-link'){
+	            	console.log("requesting hotspot settings");
+					
+		            window.API.postJson(
+		                `/extensions/${this.id}/api/ajax`, {
+		                    'action': 'get_hotspot_settings'
+		                }
+		            ).then((body) => {
+		                this.render_hotspot_settings(body);
+            
+		            }).catch((err) => {
+		                console.error("power-settings get_hotspot_details error: ", err);
+		            });
+				}
+			});
+			
+			/*
+			const network_settings_link_el = document.getElementById('network-settings-link');
+			if(network_settings_link_el){
+				console.log("power-settings: adding listener to network_settings_link_el");
+				
+				network_settings_link_el.addEventListener('click', () => {
+	            	
+				});
+			}
+			else{
+				console.error("power-settings: network_settings_link_el does not exist (yet)");
+			}
+			*/
+			
+			
+			
+			
+			
 
             this.content = '';
             fetch(`/extensions/${this.id}/views/content.html`)
@@ -1453,299 +1502,12 @@
 		//
 		
 		get_init(){
-			
-            const hours = document.getElementById('extension-power-settings-form-hours');
-            const minutes = document.getElementById('extension-power-settings-form-minutes');
-            const ntp = document.getElementById('extension-power-settings-form-ntp');
-            
             window.API.postJson(
                 `/extensions/${this.id}/api/init`, {
                     'init': 1
                 }
             ).then((body) => {
-                
-                // If the Candle overlay was active, then it shouldn't be anymmore.
-                document.getElementById('candle-tools').style.display = 'none';
-				
-                if(typeof body.debug != 'undefined'){
-                    this.debug = body.debug;
-					if(this.debug){
-						console.log("power settings: debugging enabled. init response: ", body);
-					}
-                }
-                else{
-                    console.error("power settings: init response: body.debug was undefined. Body: ", body);
-					if(this.second_init_attempted == false){
-						console.warn("power settings: will attempt power settings init again in 10 seconds");
-						setTimeout(() => {
-							this.second_init_attempted = true
-							this.get_init();
-						},10000);
-						return
-					}
-                }
-                
-                
-                
-                if(this.debug){
-                    console.log('power settings debug: init response: ', body);
-                }
-                
-                // Does the recovery partition exist?
-                if(typeof body.recovery_partition_exists != 'undefined'){
-                    this.recovery_partition_exists = body.recovery_partition_exists;
-                    if(this.debug){
-                        console.log('power settings debug: this.recovery_partition_exists: ', this.recovery_partition_exists);
-                    }
-                    if(this.recovery_partition_exists == false){
-                        if(this.debug){
-                            console.log('power settings: there is no recovery partition');
-                        }
-                        document.getElementById('extension-power-settings-update-recovery-not-supported').style.display = 'block';
-                        document.getElementById('extension-power-settings-update-recovery-container').style.display = 'none';
-                        document.getElementById('extension-power-settings-switch-to-recovery-container').style.display = 'none';
-                    }
-                    else{
-                        if(this.debug){
-                            console.log('power settings: recovery partition exists');
-                        }
-                        document.getElementById('extension-power-settings-system-update-available-container').style.display = 'none';
-                    }
-                }
-                
-                // show server time in input fields
-                if(typeof body.hours != 'undefined'){
-                    hours.placeholder = body['hours'];
-                    minutes.placeholder = body['minutes'];
-                }
-                if(typeof body.ntp != 'undefined'){
-                    ntp.checked = body['ntp'];
-                    if(body['ntp'] == false){
-                        document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'block';
-                    }
-                }
-                
-                
-                if(typeof body.allow_anonymous_mqtt != 'undefined'){
-                    // Add MQTT checkbox
-                    var mqtt_element = document.createElement('li');
-                    mqtt_element.setAttribute('id','allow-anonymous-mqtt-item');
-                    mqtt_element.setAttribute('class','developer-checkbox-item');
-                    document.querySelector('#developer-settings > ul').prepend(mqtt_element);
-                	
-                    var mqtt_checked = "";
-                    if(body.allow_anonymous_mqtt){
-                        mqtt_checked = "checked";
-                    }
-                
-                    document.getElementById('allow-anonymous-mqtt-item').innerHTML = '<input id="allow-anonymous-mqtt-checkbox" class="developer-checkbox" type="checkbox" '  + mqtt_checked + '> <label for="allow-anonymous-mqtt-checkbox" title="This can pose a security risk, so only enable this if you really need to.">Allow anonymous MQTT</label>';
-           
-                    document.getElementById('allow-anonymous-mqtt-checkbox').addEventListener('change', () => {
-                        if(this.debug){
-                            console.log('allow anonymous MQTT checkbox value changed');
-                        }
-                
-                        const checkbox_state = document.getElementById('allow-anonymous-mqtt-checkbox').checked;
-                        window.API.postJson(
-                            `/extensions/${this.id}/api/ajax`, {
-                                'action': 'anonymous_mqtt','allow_anonymous_mqtt': checkbox_state
-                            }
-                        ).then((body) => {
-                            if(this.debug){
-                                console.log("allow_anonymous MQTT response: ", body);
-                            }                                    
-                    
-                        }).catch((e) => {
-                            alert("Error, allow_anonymous MQTT setting was not changed: could not connect to controller: ", e);
-                        });
-                    });
-                }
-                
-                
-                // 32 or 64 bits
-                if(typeof body.bits != 'undefined'){
-                    this.bits = parseInt(body.bits);
-                    if(this.debug){
-                        console.log("power settings: system bits: ", this.bits);
-                    }
-                    document.getElementById('extension-power-settings-bits').innerText = this.bits + 'bit';
-                    //document.getElementById('extension-power-settings-bits2').innerText = this.bits + 'bit';
-                }
-				
-                // Device model
-                if(typeof body.device_model != 'undefined'){
-                    if(this.debug){
-                        console.log("power settings: device_model: ", body.device_model);
-                    }
-                    document.getElementById('extension-power-settings-device-model').innerText = body.device_model;
-                }
-				
-				// temperature
-                if(typeof body.board_temperature != 'undefined'){
-                    if(this.debug){
-                        console.log("power settings debug: board_temperature: ", body.board_temperature);
-                    }
-                    document.getElementById('extension-power-settings-device-temperature').innerText = body.board_temperature;
-                }
-				
-				
-				// Linux version
-                if(typeof body.device_linux != 'undefined'){
-                    if(this.debug){
-                        console.log("power settings debug: device_linux: ", body.device_linux);
-                    }
-                    document.getElementById('extension-power-settings-device-linux').innerText = body.device_linux;
-					if(body.device_kernel != ''){
-						document.getElementById('extension-power-settings-device-kernel').innerText = body.device_kernel;
-					}
-                }
-				
-				// Kernel version
-                if(typeof body.device_kernel != 'undefined'){
-                    if(this.debug){
-                        console.log("power settings: device_kernel: ", body.device_kernel);
-                    }
-					if(body.device_kernel != ''){
-						document.getElementById('extension-power-settings-device-kernel').innerText = body.device_kernel;
-					}
-                }
-				
-				// SD Card size
-                if(typeof body.device_sd_card_size != 'undefined'){
-                    if(this.debug){
-                        console.log("power settings: device_sd_card_size: ", body.device_sd_card_size);
-                    }
-					if(body.device_sd_card_size != null && parseInt(body.device_sd_card_size) > 1000000){
-						document.getElementById('extension-power-settings-device-sd-card-size').textContent = Math.round(parseInt(body.device_sd_card_size) / 1000000000) + "GB";
-					}
-                    
-                }
-				
-                
-				// Exhiit mode
-                if(typeof body.exhibit_mode != 'undefined'){
-                    this.exhibit_mode = body.exhibit_mode;
-                    if(this.debug){
-                        console.log("power settings: exhibit mode: ", this.exhibit_mode);
-                    }
-                    if(this.exhibit_mode){
-                        document.body.classList.add('exhibit-mode');
-                    }
-                }
-                
-                
-                // Hardware clock detected
-                if(typeof body.hardware_clock_detected != 'undefined'){
-                    if(body.hardware_clock_detected){
-                        document.body.classList.add('hardware-clock');
-                        document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'block';
-                    }
-                }
-                
-				
-                // User partition expanded
-                if(typeof body.user_partition_expanded != 'undefined'){
-                    if(body.user_partition_expanded == false){
-                        if(this.debug){
-							console.log("power settings debug: user partition not yet expanded");
-						}
-                        if(document.getElementById('extension-power-settings-user-partition-expansion-hint') != null){
-							document.getElementById('extension-power-settings-user-partition-expansion-hint').style.display = 'block';
-                        }
-                    }
-					else{
-						if(this.debug){
-							console.log("power settings: user partition seems to be fully expanded");
-						}
-					}
-                }
-                
-                
-				// Printing
-				if(typeof body.printing_allowed != 'undefined'){
-					this.printing_allowed = body.printing_allowed;
-					if(document.getElementById('extension-power-settings-allow-printing-checkbox') != null){
-						document.getElementById('extension-power-settings-allow-printing-checkbox').checked = this.printing_allowed;
-					}
-					
-					if (this.printing_allowed){
-						document.body.classList.add('cups-printing');
-					}
-					else{
-						document.body.classList.remove('cups-printing');
-					}
-				}
-				
-				if(typeof body.has_cups != 'undefined'){
-					if(body.has_cups == true){
-						if(this.debug){
-							console.log("power settings: printing via CUPS is supported");
-						}
-						document.body.classList.add('cups-printing');
-						document.getElementById('extension-power-settings-main-menu-printer-item').style.display = 'block';
-					}
-					else{
-						document.body.classList.remove('cups-printing');
-						document.getElementById('extension-power-settings-main-menu-printer-item').style.display = 'none';
-						if(this.debug){
-							console.log("printing via CUPS is not supported");
-						}
-					}
-				}
-				
-				
-                // Show Candle version
-                if(typeof body.candle_version != 'undefined'){
-                    document.getElementById('extension-power-settings-candle-version').innerText = body.candle_version;
-                    //document.getElementById('extension-power-settings-candle-version2').innerText = body.candle_version;
-                }
-                
-                if(typeof body.bootup_actions_failed != 'undefined'){
-                    if(body.bootup_actions_failed == true){
-                        document.getElementById('extension-power-settings-update-failed').style.display = 'block';
-                    }
-                }
-                
-                // Show a pop-up modal message after a system update
-                if(typeof body.just_updated_via_recovery != 'undefined' && typeof body.updated_via_recovery_aborted != 'undefined' && typeof body.updated_via_recovery_interupted != 'undefined'){
-                    if(body.just_updated_via_recovery || body.update_via_recovery_aborted || body.update_via_recovery_interupted){
-                        var div = document.createElement('div');
-                        div.setAttribute('id','extension-power-settings-just_updated-via-recovery-container');
-                        var modal_html = '<div id="extension-power-settings-just_updated-via-recovery">'
-                        if(body.just_updated_via_recovery){
-                            modal_html += '<h1>Your controller has been updated</h1>';
-                            div.style.background="green";
-                            
-                            // Extra warning after switch to 64 bit
-                            if(body.candle_original_version == '2.0.1' || body.candle_original_version == '2.0.0' || body.candle_original_version == '2.0.0-beta'){
-                                modal_html += '<p>If any addons are not working properly, try re-installing them.</p>';
-                            }
-                        }
-                        else if(body.update_via_recovery_aborted){
-                            modal_html += '<h1>The controller update process failed</h1><p>Please try again</p>';
-                            div.style.background="red";
-                        }
-                        else if(body.update_via_recovery_interupted){
-                            modal_html += '<h1>The controller update process was interupted</h1><p>Frankly it is amazing you are even seeing this message. You should probably run the update process again.</p>';
-                            div.style.background="red";
-                        }
-                        modal_html += '<div style="text-align:right"><button id="extension-power-settings-just_updated-via-recovery-ok-button" class="text-button">OK</button></div></div>';
-                        div.innerHTML = modal_html;
-                        document.body.appendChild(div);
-						  
-                        document.getElementById('extension-power-settings-just_updated-via-recovery-ok-button').addEventListener('click', () => {
-                            document.getElementById('extension-power-settings-just_updated-via-recovery-container').style.display = 'none';
-                        });
-                    }
-                }
-				
-                if(typeof body.pipewire_enabled != 'undefined'){
-					console.log("body.pipewire_enabled: ", body.pipewire_enabled);
-					if(body.pipewire_enabled){
-						document.body.classList.add('pipewire');
-					}
-					this.pipewire_enabled = body.pipewire_enabled;
-                }
+                this.handle_init(body);
                 
             }).catch((e) => {
                 console.error("power-settings init error: ", e);
@@ -1753,7 +1515,469 @@
 		}
         
         
+		handle_init(body){
+			
+            const hours = document.getElementById('extension-power-settings-form-hours');
+            const minutes = document.getElementById('extension-power-settings-form-minutes');
+            const ntp = document.getElementById('extension-power-settings-form-ntp');
+			
+            // If the Candle overlay was active, then it shouldn't be anymmore.
+            document.getElementById('candle-tools').style.display = 'none';
+			
+            if(typeof body.debug != 'undefined'){
+                this.debug = body.debug;
+				if(this.debug){
+					console.log("power settings: debugging enabled. init response: ", body);
+				}
+            }
+            else{
+                console.error("power settings: init response: body.debug was undefined. Body: ", body);
+				if(this.second_init_attempted == false){
+					console.warn("power settings: will attempt power settings init again in 10 seconds");
+					setTimeout(() => {
+						this.second_init_attempted = true
+						this.get_init();
+					},10000);
+					return
+				}
+            }
+            
+            
+            
+            if(this.debug){
+                console.log('power settings debug: init response: ', body);
+            }
+            
+            // Does the recovery partition exist?
+            if(typeof body.recovery_partition_exists != 'undefined'){
+                this.recovery_partition_exists = body.recovery_partition_exists;
+                if(this.debug){
+                    console.log('power settings debug: this.recovery_partition_exists: ', this.recovery_partition_exists);
+                }
+                if(this.recovery_partition_exists == false){
+                    if(this.debug){
+                        console.log('power settings: there is no recovery partition');
+                    }
+                    document.getElementById('extension-power-settings-update-recovery-not-supported').style.display = 'block';
+                    document.getElementById('extension-power-settings-update-recovery-container').style.display = 'none';
+                    document.getElementById('extension-power-settings-switch-to-recovery-container').style.display = 'none';
+                }
+                else{
+                    if(this.debug){
+                        console.log('power settings: recovery partition exists');
+                    }
+                    document.getElementById('extension-power-settings-system-update-available-container').style.display = 'none';
+                }
+            }
+            
+            // show server time in input fields
+            if(typeof body.hours != 'undefined'){
+                hours.placeholder = body['hours'];
+                minutes.placeholder = body['minutes'];
+            }
+            if(typeof body.ntp != 'undefined'){
+                ntp.checked = body['ntp'];
+                if(body['ntp'] == false){
+                    document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'block';
+                }
+            }
+            
+            
+            if(typeof body.allow_anonymous_mqtt != 'undefined'){
+                // Add MQTT checkbox
+                var mqtt_element = document.createElement('li');
+                mqtt_element.setAttribute('id','allow-anonymous-mqtt-item');
+                mqtt_element.setAttribute('class','developer-checkbox-item');
+                document.querySelector('#developer-settings > ul').prepend(mqtt_element);
+            	
+                var mqtt_checked = "";
+                if(body.allow_anonymous_mqtt){
+                    mqtt_checked = "checked";
+                }
+            
+                document.getElementById('allow-anonymous-mqtt-item').innerHTML = '<input id="allow-anonymous-mqtt-checkbox" class="developer-checkbox" type="checkbox" '  + mqtt_checked + '> <label for="allow-anonymous-mqtt-checkbox" title="This can pose a security risk, so only enable this if you really need to.">Allow anonymous MQTT</label>';
+       
+                document.getElementById('allow-anonymous-mqtt-checkbox').addEventListener('change', () => {
+                    if(this.debug){
+                        console.log('allow anonymous MQTT checkbox value changed');
+                    }
+            
+                    const checkbox_state = document.getElementById('allow-anonymous-mqtt-checkbox').checked;
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'anonymous_mqtt','allow_anonymous_mqtt': checkbox_state
+                        }
+                    ).then((body) => {
+                        if(this.debug){
+                            console.log("allow_anonymous MQTT response: ", body);
+                        }                                    
+                
+                    }).catch((e) => {
+                        alert("Error, allow_anonymous MQTT setting was not changed: could not connect to controller: ", e);
+                    });
+                });
+            }
+            
+            
+            // 32 or 64 bits
+            if(typeof body.bits != 'undefined'){
+                this.bits = parseInt(body.bits);
+                if(this.debug){
+                    console.log("power settings: system bits: ", this.bits);
+                }
+                document.getElementById('extension-power-settings-bits').innerText = this.bits + 'bit';
+                //document.getElementById('extension-power-settings-bits2').innerText = this.bits + 'bit';
+            }
+			
+            // Device model
+            if(typeof body.device_model != 'undefined'){
+                if(this.debug){
+                    console.log("power settings: device_model: ", body.device_model);
+                }
+                document.getElementById('extension-power-settings-device-model').innerText = body.device_model;
+            }
+			
+			// temperature
+            if(typeof body.board_temperature != 'undefined'){
+                if(this.debug){
+                    console.log("power settings debug: board_temperature: ", body.board_temperature);
+                }
+                document.getElementById('extension-power-settings-device-temperature').innerText = body.board_temperature;
+            }
+			
+			
+			// Linux version
+            if(typeof body.device_linux != 'undefined'){
+                if(this.debug){
+                    console.log("power settings debug: device_linux: ", body.device_linux);
+                }
+                document.getElementById('extension-power-settings-device-linux').innerText = body.device_linux;
+				if(body.device_kernel != ''){
+					document.getElementById('extension-power-settings-device-kernel').innerText = body.device_kernel;
+				}
+            }
+			
+			// Kernel version
+            if(typeof body.device_kernel != 'undefined'){
+                if(this.debug){
+                    console.log("power settings: device_kernel: ", body.device_kernel);
+                }
+				if(body.device_kernel != ''){
+					document.getElementById('extension-power-settings-device-kernel').innerText = body.device_kernel;
+				}
+            }
+			
+			// SD Card size
+            if(typeof body.device_sd_card_size != 'undefined'){
+                if(this.debug){
+                    console.log("power settings: device_sd_card_size: ", body.device_sd_card_size);
+                }
+				if(body.device_sd_card_size != null && parseInt(body.device_sd_card_size) > 1000000){
+					if(document.getElementById('extension-power-settings-device-sd-card-size')){
+						document.getElementById('extension-power-settings-device-sd-card-size').textContent = Math.round(parseInt(body.device_sd_card_size) / 1000000000) + "GB";
+					}
+				}
+            }
+			
+            
+			// Exhiit mode
+            if(typeof body.exhibit_mode != 'undefined'){
+                this.exhibit_mode = body.exhibit_mode;
+                if(this.debug){
+                    console.log("power settings: exhibit mode: ", this.exhibit_mode);
+                }
+                if(this.exhibit_mode){
+                    document.body.classList.add('exhibit-mode');
+                }
+            }
+            
+            
+            // Hardware clock detected
+            if(typeof body.hardware_clock_detected != 'undefined'){
+                if(body.hardware_clock_detected){
+                    document.body.classList.add('hardware-clock');
+                    document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'block';
+                }
+            }
+            
+			
+            // User partition expanded
+            if(typeof body.user_partition_expanded != 'undefined'){
+                if(body.user_partition_expanded == false){
+                    if(this.debug){
+						console.log("power settings debug: user partition not yet expanded");
+					}
+                    if(document.getElementById('extension-power-settings-user-partition-expansion-hint') != null){
+						document.getElementById('extension-power-settings-user-partition-expansion-hint').style.display = 'block';
+                    }
+                }
+				else{
+					if(this.debug){
+						console.log("power settings: user partition seems to be fully expanded");
+					}
+				}
+            }
+            
+            
+			// Printing
+			if(typeof body.printing_allowed != 'undefined'){
+				this.printing_allowed = body.printing_allowed;
+				if(document.getElementById('extension-power-settings-allow-printing-checkbox') != null){
+					document.getElementById('extension-power-settings-allow-printing-checkbox').checked = this.printing_allowed;
+				}
+				
+				if (this.printing_allowed){
+					document.body.classList.add('cups-printing');
+				}
+				else{
+					document.body.classList.remove('cups-printing');
+				}
+			}
+			
+			if(typeof body.has_cups != 'undefined'){
+				if(body.has_cups == true){
+					if(this.debug){
+						console.log("power settings: printing via CUPS is supported");
+					}
+					document.body.classList.add('cups-printing');
+					document.getElementById('extension-power-settings-main-menu-printer-item').style.display = 'block';
+				}
+				else{
+					document.body.classList.remove('cups-printing');
+					document.getElementById('extension-power-settings-main-menu-printer-item').style.display = 'none';
+					if(this.debug){
+						console.log("printing via CUPS is not supported");
+					}
+				}
+			}
+			
+			
+            // Show Candle version
+            if(typeof body.candle_version != 'undefined'){
+                document.getElementById('extension-power-settings-candle-version').innerText = body.candle_version;
+                //document.getElementById('extension-power-settings-candle-version2').innerText = body.candle_version;
+            }
+            
+            if(typeof body.bootup_actions_failed != 'undefined'){
+                if(body.bootup_actions_failed == true){
+                    document.getElementById('extension-power-settings-update-failed').style.display = 'block';
+                }
+            }
+            
+            // Show a pop-up modal message after a system update
+            if(typeof body.just_updated_via_recovery != 'undefined' && typeof body.updated_via_recovery_aborted != 'undefined' && typeof body.updated_via_recovery_interupted != 'undefined'){
+                if(body.just_updated_via_recovery || body.update_via_recovery_aborted || body.update_via_recovery_interupted){
+                    var div = document.createElement('div');
+                    div.setAttribute('id','extension-power-settings-just_updated-via-recovery-container');
+                    var modal_html = '<div id="extension-power-settings-just_updated-via-recovery">'
+                    if(body.just_updated_via_recovery){
+                        modal_html += '<h1>Your controller has been updated</h1>';
+                        div.style.background="green";
+                        
+                        // Extra warning after switch to 64 bit
+                        if(body.candle_original_version == '2.0.1' || body.candle_original_version == '2.0.0' || body.candle_original_version == '2.0.0-beta'){
+                            modal_html += '<p>If any addons are not working properly, try re-installing them.</p>';
+                        }
+                    }
+                    else if(body.update_via_recovery_aborted){
+                        modal_html += '<h1>The controller update process failed</h1><p>Please try again</p>';
+                        div.style.background="red";
+                    }
+                    else if(body.update_via_recovery_interupted){
+                        modal_html += '<h1>The controller update process was interupted</h1><p>Frankly it is amazing you are even seeing this message. You should probably run the update process again.</p>';
+                        div.style.background="red";
+                    }
+                    modal_html += '<div style="text-align:right"><button id="extension-power-settings-just_updated-via-recovery-ok-button" class="text-button">OK</button></div></div>';
+                    div.innerHTML = modal_html;
+                    document.body.appendChild(div);
+					  
+                    document.getElementById('extension-power-settings-just_updated-via-recovery-ok-button').addEventListener('click', () => {
+                        document.getElementById('extension-power-settings-just_updated-via-recovery-container').style.display = 'none';
+                    });
+                }
+            }
+			
+            if(typeof body.pipewire_enabled != 'undefined'){
+				if(body.pipewire_enabled){
+					document.body.classList.add('pipewire');
+				}
+				this.pipewire_enabled = body.pipewire_enabled;
+            }
+			
+			
+		}
+		
+		
+        render_hotspot_settings(body){
+            if(typeof body.hotspot_enabled == 'boolean' && typeof body.hotspot_ssid == 'string' && typeof body.hotspot_password == 'string'){
+
+				this.hotspot_enabled = body.hotspot_enabled;
+				this.hotspot_ssid = body.hotspot_ssid;
+				this.hotspot_password = body.hotspot_password;
+				
+				if(body.hotspot_enabled){
+					document.body.classList.add('hotspot');
+				}
+				
+				const network_settings_list_el = document.querySelector('#network-settings-client > ul.network-settings-list');
+				if(network_settings_list_el){
+					let hotspot_settings_container_el = network_settings_list_el.querySelector('#extension-power-settings-hotspot-container');
+					if(hotspot_settings_container_el == null){
+						let hotspot_settings_list_item_el = document.createElement('li');
+						hotspot_settings_list_item_el.setAttribute('id','extension-power-settings-hotspot-container');
+						hotspot_settings_list_item_el.classList.add('network-item');
+						
+						let hotspot_settings_container_el = document.createElement('div');
+						
+						const hotspot_image_el = document.createElement('img');
+						hotspot_image_el.classList.add('network-settings-list-item-icon');
+						hotspot_image_el.setAttribute('src','/extensions/power-settings/images/hotspot_shield.svg');
+						hotspot_image_el.setAttribute('alt','Candle hotspot');
+						
+						hotspot_settings_container_el.appendChild(hotspot_image_el);
+						
+						const hotspot_details_el = document.createElement('div');
+						hotspot_details_el.classList.add('network-settings-list-item-container-4');
+						
+						const hotspot_details_header_el = document.createElement('div');
+						hotspot_details_header_el.classList.add('network-settings-list-item-header');
+						hotspot_details_header_el.textContent = 'Hotspot';
+						hotspot_details_el.appendChild(hotspot_details_header_el);
+						
+						const hotspot_details_ssid_el = document.createElement('div');
+						hotspot_details_ssid_el.classList.add('network-settings-list-item-detail');
+						hotspot_details_ssid_el.textContent = '' + body.hotspot_ssid;
+						hotspot_details_el.appendChild(hotspot_details_ssid_el);
+						
+						const hotspot_details_password_el = document.createElement('input');
+						hotspot_details_password_el.classList.add('network-settings-list-item-detail');
+						hotspot_details_password_el.setAttribute('type','text');
+						hotspot_details_password_el.setAttribute('placeholder','Password');
+						hotspot_details_password_el.value = '' + body.hotspot_password;
+						hotspot_details_password_el.addEventListener('change', () => {
+							hotspot_details_password_el.value = hotspot_details_password_el.value.replaceAll(' ','-');
+							if((hotspot_details_password_el.value.length == 0 || hotspot_details_password_el.value.length > 7) && hotspot_details_password_el.value != this.hotspot_password){
+								this.hotspot_password = hotspot_details_password_el.value;
+								console.log("changing hotspot password to: ", this.hotspot_password);
+								
+					            window.API.postJson(
+					                `/extensions/${this.id}/api/ajax`, {
+					                    'action': 'set_hotspot_password', 'password':hotspot_details_password_el.value
+					                }
+					            ).then((body) => {
+					                if(this.debug){
+					                    console.log("set_hotspot_password response: ", body);
+					                }
+					                if (body.state === true){
+										hotspot_details_password_el.classList.add('extension-power-settings-hotspot-password-changed');
+					                    setTimeout(() => {
+					                    	hotspot_details_password_el.classList.remove('extension-power-settings-hotspot-password-changed');
+					                    },1000);
+					                }
         
+					            }).catch((err) => {
+					                console.log("caught error updating hotspot password via API: ", err);
+					            });
+								
+							}
+							else if(hotspot_details_password_el.value.length == 0){
+								console.warn("user changed hotspot password. It's not empty.");
+								hotspot_details_password_el.setAttribute('placeholder','No password required');
+							}
+							else if(hotspot_details_password_el.value.length < 8){
+								console.warn("user changed hotspot password, but it's too short");
+								hotspot_details_password_el.value = '';
+								hotspot_details_password_el.setAttribute('placeholder','Too short');
+							}
+							else{
+								console.log("hotspot password is unchanged");
+							}
+							
+						});
+						hotspot_details_el.appendChild(hotspot_details_password_el);
+						
+						
+						hotspot_settings_container_el.appendChild(hotspot_details_el);
+						
+						
+						let hotspot_enabled_container_el = document.createElement('div');
+						hotspot_enabled_container_el.classList.add('extension-power-settings-hotspot-enabled-checkbox-container');
+						hotspot_enabled_container_el.classList.add('extension-power-settings-form-content');
+						
+						
+						let hotspot_enabled_checkbox_el = document.createElement('input');
+						hotspot_enabled_checkbox_el.setAttribute('type','checkbox');
+						hotspot_enabled_checkbox_el.setAttribute('id','extension-power-settings-hotspot-enabled-checkbox');
+						hotspot_enabled_checkbox_el.setAttribute('name','extension-power-settings-hotspot-enabled-checkbox');
+						
+						if(this.hotspot_enabled === true){
+							hotspot_enabled_checkbox_el.setAttribute('checked',true);
+						}
+						
+						hotspot_enabled_checkbox_el.addEventListener('change',() => {
+							this.hotspot_enabled = hotspot_enabled_checkbox_el.checked;
+							
+				            window.API.postJson(
+				                `/extensions/${this.id}/api/ajax`, {
+				                    'action': 'set_hotspot_enabled', 'enabled':this.hotspot_enabled
+				                }
+				            ).then((body) => {
+				                if(this.debug){
+				                    console.log("set_hotspot_enabled response: ", body);
+				                }
+				                if (body.state === true){
+									hotspot_enabled_checkbox_el.classList.add('extension-power-settings-hotspot-password-changed');
+				                    setTimeout(() => {
+				                    	hotspot_enabled_checkbox_el.classList.remove('extension-power-settings-hotspot-password-changed');
+				                    },1000);
+				                }
+    
+				            }).catch((err) => {
+				                console.log("caught error updating hotspot password via API: ", err);
+				            });
+							
+						});
+						
+						hotspot_enabled_container_el.appendChild(hotspot_enabled_checkbox_el);
+						
+						
+						let hotspot_enabled_label_el = document.createElement('label');
+						//hotspot_enabled_label_el.classList.add('extension-power-settings-hotspot-enabled-checkbox-container');
+						hotspot_enabled_label_el.setAttribute('for','extension-power-settings-hotspot-enabled-checkbox');
+						hotspot_enabled_container_el.appendChild(hotspot_enabled_label_el);
+						
+						
+						hotspot_settings_container_el.appendChild(hotspot_enabled_container_el);
+						
+						
+						
+						/*
+						const hotspot_addon_view_el = document.getElementById('extension-candleappstore-view');
+						if(hotspot_addon_view_el){
+							let hotspot_addon_button_el = document.createElement('button');
+							hotspot_addon_button_el.classList.add('network-settings-list-item-button');
+							hotspot_addon_button_el.classList.add('text-button');
+							hotspot_addon_button_el.setAttribute('data-l10n-id','network-settings-configure');
+							hotspot_addon_button_el.textContent = 'Configure';
+							hotspot_addon_button_el.addEventListener('click',() => {
+								window.location.href = window.location.origin + "/extensions/hotspot";
+							});
+							hotspot_settings_container_el.appendChild(hotspot_addon_button_el);
+						}
+						*/
+						
+						
+						
+						hotspot_settings_list_item_el.appendChild(hotspot_settings_container_el);
+						
+						
+						network_settings_list_el.appendChild(hotspot_settings_list_item_el);
+						
+					}
+				}
+				
+            }
+        }
         
         show_clock_page(){
             //console.log("in show_clock_page");

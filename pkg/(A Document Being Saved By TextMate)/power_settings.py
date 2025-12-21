@@ -1739,7 +1739,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         state = True
                                     else:
                                         # don't disable the hotspot if there are no remaining network connections
-                                        # TODO could also check if a thatouch screne is connected, in which case that can still be used to keep access.
+                                        # TODO could also check if a touch screne is connected, in which case that can still be used to keep access.
                                         active_connections = run_command("nmcli connection show --active | tail -n +2 | grep -v 'candle_hotspot' | grep -v 'loopback  lo'")
                                         if len(active_connections.strip()) > 10:
                                             os.system('sudo rm /boot/firmware/candle_hotspot.txt')
