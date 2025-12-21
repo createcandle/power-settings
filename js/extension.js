@@ -53,6 +53,8 @@
 			this.pipewire_enabled = false;
 			this.pipewire_data = {};
 			
+			this.mouse_pointer_enabled = false;
+			
 			if(document.location.href.endsWith('/settings/network')){
 	            window.API.postJson(
 	                `/extensions/${this.id}/api/ajax`, {
@@ -1433,11 +1435,30 @@
                 });
                 
                 
-                
+				
+				// Show or hide mouse pointer
+				const mouse_pointer_checkbox_el = document.getElementById('extension-power-settings-show-mouse-pointer');
+                mouse_pointer_checkbox_el.addEventListener('change', () => {
+                    
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'set_mouse_pointer', 'mouse_pointer_enabled': mouse_pointer_checkbox_el.checked
+                        }
+                    ).then((body) => {
+                        if(this.debug){
+                            console.log("set_mouse_pointer response: ", body);
+                        }
+						//console.log("set_mouse_pointer response: ", body);
+						document.getElementById('extension-power-settings-show-mouse-pointer-hint').classList.remove('extension-power-settings-hidden');
+                        
+                    }).catch((err) => {
+                        console.error("caught error while trying to set mouse pointer preference: ", err);
+                    });
+                    
+                });
                 
                 
                 //  Change hostname
-                
     			document.getElementById("domain-settings-local-update").addEventListener('click', () => {
     				//console.log("change hostname button clicked");
                     
@@ -1802,6 +1823,9 @@
 				this.pipewire_enabled = body.pipewire_enabled;
             }
 			
+			if(typeof body.mouse_pointer_enabled == 'boolean'){
+				this.mouse_pointer_enabled = body.mouse_pointer_enabled;
+			}
 			
 		}
 		
@@ -3364,6 +3388,8 @@
 			}
 			
 			
+			
+			
 			window.API.postJson(
                 `/extensions/${this.id}/api/ajax`, {
                     'action': 'display_init'
@@ -3372,6 +3398,8 @@
                 if(this.debug){
                     console.log("display init response: ", body);
                 }
+				
+				let got_display_details = false;
 				
 				if(typeof body.display_port1_name != 'undefined'){
 					this.display_port1_name = body.display_port1_name;
@@ -3469,6 +3497,8 @@
 							if(this.debug){
 								console.log("disp_details : ", disp_details);
 							}
+							got_display_details = true;
+							
 							try{
 								if(typeof disp_details['week'] != 'undefined' && typeof disp_details['year'] != 'undefined'){
 									document.getElementById('extension-power-settings-display1-production-date').innerHTML += get_production_time(disp_details['week'], disp_details['year']);
@@ -3532,7 +3562,7 @@
 								
 								
 								if(info_key == 'resolutions' && typeof info_value == 'object'){
-									console.log("spotted resolutions. info_value", typeof(info_value), info_value);
+									//console.log("spotted resolutions. info_value", typeof(info_value), info_value);
 									
 									let select_container_el = document.createElement("div");
 									select_container_el.classList.add('extension-power-settings-flex-centered-spaced');
@@ -3562,7 +3592,7 @@
 										for (var r = 0; r < info_value.length; r++) {
 											if(info_value[r][2] != '60'){
 												if(this.debug){
-													console.warn("power settings: skipping non-60Hz display refresh rate: ", info_value[r][2]);
+													console.warn("power settings debug: skipping non-60Hz display refresh rate: ", info_value[r][2]);
 												}
 												continue
 											}
@@ -3589,7 +3619,7 @@
 										}
 									}
 									catch(e){
-										console.error("error parsing edid resolutions: ", e);
+										console.error("power settings: error parsing edid resolutions: ", e);
 									}
 									
 									
@@ -3617,7 +3647,7 @@
 							document.getElementById('extension-power-settings-display1-details').appendChild(info_container_el);
 						}
 						catch(e){
-							console.error("unable to parse display EDID data: ", e);
+							console.error("power settings: unable to parse display EDID data: ", e);
 						}
 					}
 					else{
@@ -3633,15 +3663,16 @@
 						try{
 							let disp_details = JSON.parse(body.display2_details);
 							if(this.debug){
-								console.log("disp_details : ", disp_details);
+								console.log("power settings debug: disp_details : ", disp_details);
 							}
+							got_display_details = true;
 							try{
 								if(typeof disp_details['week'] != 'undefined' && typeof disp_details['year'] != 'undefined'){
 									document.getElementById('extension-power-settings-display2-production-date').innerText = get_production_time(disp_details['week'], disp_details['year']);
 								}
 								
 								if(typeof disp_details['manufacturer'] != 'undefined' && typeof disp_details['name'] != 'undefined'){
-									console.log("display manufacturer and name are available");
+									//console.log("display manufacturer and name are available");
 									
 									if(disp_details['manufacturer'].indexOf('DO NOT USE') != -1){
 										disp_details['manufacturer'] = 'Unknown manufacturer'
@@ -3673,7 +3704,7 @@
 								
 							}
 							catch(e){
-								console.log("Error calculating display production date / generating display name: ", e);
+								console.log("power settings: caught error calculating display production date / generating display name: ", e);
 							}
 							
 							
@@ -3753,8 +3784,8 @@
 											document.getElementById('extension-power-settings-display2-resolution-container').appendChild(select_container_el);
 										}
 									}
-									catch(e){
-										console.error("error parsing edid resolutions: ", e);
+									catch(err){
+										console.error("power settings: caught error parsing edid resolutions: ", err);
 									}
 									
 									
@@ -3782,7 +3813,7 @@
 							document.getElementById('extension-power-settings-display2-details').appendChild(info_container_el);
 						}
 						catch(e){
-							console.error("unable to parse display EDID data: ", e);
+							console.error("power settings: caught error attempting to parse display EDID data: ", e);
 						}
 					}
 					else{
@@ -3790,10 +3821,31 @@
 					}
 				}
 				
+				// fallback in case there was an issue with getting display details
+				if(typeof body.has_a_display == 'boolean'){
+					if(body.has_a_display == true){
+						document.getElementById('extension-power-settings-no-display').classList.add('extension-power-settings-hidden');
+						if(got_display_details == false && document.getElementById('extension-power-settings-display1-details').innerHTML == ''){
+							document.getElementById('extension-power-settings-display1-details').innerHTML = '<p>A display is connected, but no details are available</p>';
+						}
+					}
+				}
+				
+				if(typeof body.mouse_pointer_enabled == 'boolean'){
+					this.mouse_pointer_enabled = body.mouse_pointer_enabled;
+					const mouse_pointer_checkbox_el = document.getElementById('extension-power-settings-show-mouse-pointer');
+					if(mouse_pointer_checkbox_el){
+						mouse_pointer_checkbox_el.setAttribute('checked', this.mouse_pointer_enabled);
+						document.getElementById('extension-power-settings-mouse-pointer').classList.remove('extension-power-settings-hidden');
+					}
+				}
+				
+				
+				
 				
 				
             }).catch((e) => {
-                console.error("Error sending get_display_info command: ", e);
+                console.error("power settings: caught error sending get_display_info command: ", e);
             });
 		}
 		
@@ -3849,7 +3901,7 @@
 					}
 				
 	            }).catch((e) => {
-	                console.error("power settings error:  show printer page: ", e);
+	                console.error("power settings: caught error in show printer page: ", e);
 	            });
 			}
 		}
@@ -4151,9 +4203,8 @@
 					
 					if(cameras_list_el){
 	                    
-						if(typeof this.attached_cameras == 'object' && this.attached_cameras.length){
+						if(typeof this.attached_cameras == 'object' && Array.isArray(this.attached_cameras) && this.attached_cameras.length){
 							cameras_list_el.innerHTML = '<div class="extension-power-settings-attached-item"><p>A camera was detected</p></div>';
-							
 						}
 						else{
 							cameras_list_el.innerHTML = '<div class="extension-power-settings-attached-item"><p>None</p></div>';

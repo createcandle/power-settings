@@ -415,6 +415,7 @@ class PowerSettingsAPIHandler(APIHandler):
         # Hotspot
         self.candle_hotspot_file_path = os.path.join(self.boot_path, 'candle_hotspot.txt')
         self.candle_hotspot_password_file_path = os.path.join(self.boot_path, 'candle_hotspot_password.txt')
+        self.performed_initial_wifi_scan = False
         self.hotspot_enabled = os.path.exists(self.candle_hotspot_file_path)
         self.hotspot_password = ""
         if os.path.exists(self.candle_hotspot_password_file_path):
@@ -1185,6 +1186,19 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                     """
                                 
+                                    has_a_display = False
+                                    fb_result = run_command('ls /dev/fb*')
+                                    if 'No such file or directory' in fb_result:
+                                        pass
+                                    elif fb_result.startswith('/dev/fb'):
+                                        has_a_display = True
+                                        
+                                        
+                                    if os.path.exists('/boot/firmware/hide_mouse_pointer.txt'):
+                                        self.mouse_pointer_enabled = False
+                                    else:
+                                        self.mouse_pointer_enabled = True
+                                    
                                 
                                     if os.path.isdir('/sys'):
                                 
@@ -1342,6 +1356,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                   status=200,
                                   content_type='application/json',
                                   content=json.dumps({'state':state,
+                                          'has_a_display':has_a_display,
+                                          'mouse_pointer_enabled':self.mouse_pointer_enabled,
                                           'display_port1_name':self.display_port1_name,
                                           'display_port2_name':self.display_port2_name,
                                           'display1_available':self.display1_available,
@@ -1364,7 +1380,29 @@ class PowerSettingsAPIHandler(APIHandler):
                                           'touchscreen_detected':self.touchscreen_detected
                                           }),
                                 )
+                            
+                            
+                            
+                            # SHOW OR HIDE MOUSE POINTER
+                            elif action == 'set_mouse_pointer':
                                 
+                                state = False
+                                if 'mouse_pointer_enabled' in request.body:
+                                    self.mouse_pointer_enabled = bool(request.body['mouse_pointer_enabled'])
+                                    if self.mouse_pointer_enabled == True:
+                                        os.system('sudo rm /boot/firmware/hide_mouse_pointer.txt')
+                                    else:
+                                        os.system('sudo touch /boot/firmware/hide_mouse_pointer.txt')
+                                    
+                                    state = True
+                                    
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
+                            
+                            
                                 
                             # DISPLAY ROTATION
                             elif action == 'set_display_rotation':
@@ -1727,6 +1765,11 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                             # get current hotspot settings
                             elif action == 'get_hotspot_settings':
+                                
+                                if self.performed_initial_wifi_scan == False:
+                                    self.performed_initial_wifi_scan = True
+                                    os.system('nmcli dev wifi list &')
+                                
                                 result = {
                                     'state':True,
                                     'hotspot_enabled':self.hotspot_enabled,
@@ -2306,10 +2349,13 @@ class PowerSettingsAPIHandler(APIHandler):
                                     
                                     
                                         self.attached_cameras = []
-                                        libcamera_output = run_command('libcamera-still --list-cameras')
-                                        if 'No cameras available' in libcamera_output or 'error while loading' in libcamera_output:
+                                        camera_binary = 'libcamera-still'
+                                        if os.path.exists('/usr/bin/rpicam-still'):
+                                            camera_binary = 'rpicam-still'
+                                        libcamera_output = run_command(camera_binary + ' --list-cameras')
+                                        if 'No cameras available' in libcamera_output or 'error while loading' in libcamera_output or 'command not found' in libcamera_output:
                                             if self.DEBUG:
-                                                print("debug: no libcameras detected")
+                                                print("debug: no libcameras detected.  libcamera_output: " + str(libcamera_output))
                                         else:
                                             if self.DEBUG:
                                                 print("libcamera(s) detected: " + str(libcamera_output))

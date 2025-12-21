@@ -767,6 +767,7 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-button{
     font-size: 1.8rem;
 }
 
+#extension-power-settings-show-mouse-pointer-hint,
 #extension-power-settings-low-memory-hint{
     font-style:italic;
 }
