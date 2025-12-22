@@ -1801,7 +1801,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if 'enabled' in request.body:
                                     self.hotspot_enabled = bool(request.body['enabled'])
                                     if self.hotspot_enabled:
-                                        os.system('sudo touch /boot/firmware/candle_hotspot.txt')
+                                        os.system('sudo touch ' + str(self.candle_hotspot_file_path))
                                         os.system('nmcli connection up candle_hotspot')
                                         os.system('nmcli connection modify candle_hotspot autoconnect yes')
                                         
@@ -1811,7 +1811,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         # TODO could also check if a thatouch screne is connected, in which case that can still be used to keep access.
                                         active_connections = run_command("nmcli connection show --active | tail -n +2 | grep -v 'candle_hotspot' | grep -v 'loopback  lo'")
                                         if len(active_connections.strip()) > 10:
-                                            os.system('sudo rm /boot/firmware/candle_hotspot.txt')
+                                            os.system('sudo rm ' + str(self.candle_hotspot_file_path))
                                             os.system('nmcli connection down candle_hotspot')
                                             os.system('nmcli connection modify candle_hotspot autoconnect no')
                                             os.system('sudo pkill dnsmasq')
