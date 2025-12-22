@@ -13,6 +13,7 @@ fi
 
 #raspi-config nonint disable_bootro
 echo "factory reset: stopping browser and Candle Controller"
+pkill -f chromium
 pkill -f chromium-browse
 pkill -f chromium-browser
 systemctl stop webthings-gateway.service
@@ -102,7 +103,7 @@ if [ -f /home/pi/.webthings/addons/dashboard/persistence.json ]; then
 fi
 
 
-touch $BOOT_DIR/candle_hotspo.txt
+touch $BOOT_DIR/candle_hotspot.txt
 echo "smarthome" > $BOOT_DIR/candle_hotspot_password.txt
 
 # clear logs
