@@ -102,8 +102,8 @@ if [ -f /home/pi/.webthings/addons/dashboard/persistence.json ]; then
 fi
 
 
-
-echo "smarthome" > $BOOT_DIR/candle_hotspot.txt
+touch $BOOT_DIR/candle_hotspo.txt
+echo "smarthome" > $BOOT_DIR/candle_hotspot_password.txt
 
 # clear logs
 systemd-tmpfiles --clean
