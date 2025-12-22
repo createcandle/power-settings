@@ -9,7 +9,7 @@
 import os
 import re
 import sys
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
+sys.path.append(os.path.join(os.pathg.dirname(os.path.abspath(__file__)), 'lib'))
 import json
 import time
 import base64
@@ -1194,7 +1194,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         has_a_display = True
                                         
                                         
-                                    if os.path.exists('/boot/firmware/hide_mouse_pointer.txt'):
+                                    if os.path.exists('/boot/firmware/candle_hide_mouse_pointer.txt'):
                                         self.mouse_pointer_enabled = False
                                     else:
                                         self.mouse_pointer_enabled = True
@@ -1390,9 +1390,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if 'mouse_pointer_enabled' in request.body:
                                     self.mouse_pointer_enabled = bool(request.body['mouse_pointer_enabled'])
                                     if self.mouse_pointer_enabled == True:
-                                        os.system('sudo rm /boot/firmware/hide_mouse_pointer.txt')
+                                        os.system('sudo rm /boot/firmware/candle_hide_mouse_pointer.txt')
                                     else:
-                                        os.system('sudo touch /boot/firmware/hide_mouse_pointer.txt')
+                                        os.system('sudo touch /boot/firmware/candle_hide_mouse_pointer.txt')
                                     
                                     state = True
                                     
