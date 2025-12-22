@@ -212,7 +212,7 @@ rm $BOOT_DIR/debug.txt
 rm $BOOT_DIR/raspinfo.txt
 rm $BOOT_DIR/candle_hardware_clock.txt
 rm $BOOT_DIR/candle_cutting_edge.txt
-touch $BOOT_DIR/hide_mouse_pointer.txt
+touch $BOOT_DIR/candle_hide_mouse_pointer.txt
 rm $BOOT_DIR/bootup_actions.sh
 rm $BOOT_DIR/bootup_actions_failed.sh
 
