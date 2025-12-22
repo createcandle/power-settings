@@ -9,7 +9,7 @@
 import os
 import re
 import sys
-sys.path.append(os.path.join(os.pathg.dirname(os.path.abspath(__file__)), 'lib'))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
 import json
 import time
 import base64
