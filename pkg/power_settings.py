@@ -3042,9 +3042,8 @@ class PowerSettingsAPIHandler(APIHandler):
                 if self.DEBUG:
                     print("running command to touch al data folders: \n" + str(touch_all_data_folder_command))
                 
-                
-                
                 run_command(touch_all_data_folder_command)
+                os.system('rm ' + str(os.path.join(str(self.user_profile['dataDir']),'backuped.txt')))
                 
                 # backup the logs metadata to a file in data/power-settings, so that it will also be backuped and can be restored later.
                 log_meta = run_command("sqlite3 " + str(self.log_db_file_path) + " 'SELECT id, descr, maxAge FROM metricIds'")
