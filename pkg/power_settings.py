@@ -3041,9 +3041,9 @@ class PowerSettingsAPIHandler(APIHandler):
                         if self.DEBUG:
                             print("had to delete an old logs meta file first")
                         os.unlink(str(self.log_meta_file_path))
-                         if os.path.exists(str(self.log_meta_file_path)):
-                             if self.DEBUG:
-                                 print("Error, failed to delete old logs meta file: " + str(self.log_meta_file_path))
+                        if os.path.exists(str(self.log_meta_file_path)):
+                            if self.DEBUG:
+                                print("Error, failed to delete old logs meta file: " + str(self.log_meta_file_path))
                         
                     with open(str(self.log_meta_file_path) , "w") as log_meta_file:
                         if self.DEBUG:
@@ -3132,9 +3132,9 @@ class PowerSettingsAPIHandler(APIHandler):
                 if self.DEBUG:
                     print("Backup should now be created, so deleting logs meta file")
                 os.unlink(str(self.log_meta_file_path))
-                 if os.path.exists(str(self.log_meta_file_path)):
-                     if self.DEBUG:
-                         print("Error, failed to delete logs meta file: " + str(self.log_meta_file_path))
+                if os.path.exists(str(self.log_meta_file_path)):
+                    if self.DEBUG:
+                        print("Error, failed to delete logs meta file: " + str(self.log_meta_file_path))
             
             return True
         except Exception as ex:
