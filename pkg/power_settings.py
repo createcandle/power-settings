@@ -481,9 +481,7 @@ class PowerSettingsAPIHandler(APIHandler):
             print("unused volume space: " + str(self.unused_volume_space))
             print("self.pipewire_enabled: " + str(self.pipewire_enabled))
        
-       
-       
-       
+        
         # Remove hardware clock file if it exists and it should not be enabled
         if self.do_not_use_hardware_clock:
             if os.path.isfile(self.hardware_clock_file_path):
@@ -3031,6 +3029,12 @@ class PowerSettingsAPIHandler(APIHandler):
                 #photos_option = ""
                 #uploads_option = ""
                 
+                touch_all_data_folder_command = "find .  -maxdepth 1 -type d -exec sh -c 'echo \"$(date)\" > \"$1\"/backuped.txt' _ {} \;"
+                if self.DEBUG:
+                    print("running command to touch al data folders: \n" + str('cd ' + str(self.user_profile['dataDir']) + '; ' + str(touch_all_data_folder_command)))
+                os.system('cd ' + str(self.user_profile['dataDir']) + '; ' + str(touch_all_data_folder_command))
+                
+                
                 # backup the logs metadata to a file in data/power-settings, so that it will also be backuped and can be restored later.
                 log_meta = run_command("sqlite3 " + str(self.log_db_file_path) + " 'SELECT id, descr, maxAge FROM metricIds'")
                 if str(log_meta).startswith('Error'):
@@ -3107,8 +3111,6 @@ class PowerSettingsAPIHandler(APIHandler):
                 backup_command = 'cd ' + str(self.user_profile['baseDir']) + '; find ./config ./data -maxdepth 2 -name "*.json" -o -name "*.xtt" -o -name "*.yaml" -o -name "*.xml" -o -name "*.sqlite3" -o -name "*.blacklisted_devices" -o -name "*.trusted_devices" -o -name "*.ignored_devices" -o -name "*.db" -o -name "*.txt" | tar -cf ' + str(self.backup_file_path) + ' -T -' 
                 backup_command += extra_tar_commands
                 
-                touch_all_data_folder_command = "find .  -maxdepth 1 -type d -exec sh -c 'echo \"$(date)\" > \"$1\"/backuped.txt' _ {} \;"
-                os.system('cd ' + str(self.user_profile['dataDir']) + '; ' + str(touch_all_data_folder_command))
                 
                 
                 if self.DEBUG:
