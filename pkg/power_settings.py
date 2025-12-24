@@ -88,11 +88,16 @@ class PowerSettingsAPIHandler(APIHandler):
         except Exception as ex:
             print('Power settings: error adding api handler to manager_proxy: ' + str(ex))
         
+        #print("\n\n\n")
+        #print("self.user_profile: ", self.user_profile)
         
         self.addon_dir = os.path.join(self.user_profile['addonsDir'], self.addon_id)
         self.data_dir = os.path.join(self.user_profile['dataDir'], self.addon_id)
         # baseDir is another useful option in user_profile
 
+        self.mosquitto_conf_file_path = os.path.join(self.user_profile['baseDir'], 'etc','mosquitto','mosquitto.conf')
+        self.late_sh_path = os.path.join(self.user_profile['baseDir'].replace('/.webthings',''), 'candle','late.sh')
+        #print("self.late_sh_path: ", self.late_sh_path)
         self.display_manufacturers_csv_path = os.path.join(self.addon_dir, 'display_manufacturers.csv')
         
         self.persistence_file_path = os.path.join(self.data_dir, 'persistence.json')
@@ -138,7 +143,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         # MQTT
         self.allow_anonymous_mqtt = False
-        self.mosquitto_conf_file_path = '/home/pi/.webthings/etc/mosquitto/mosquitto.conf'
+        
         
         self.boot_path = '/boot'
         if os.path.exists('/boot/firmware'):
@@ -194,10 +199,11 @@ class PowerSettingsAPIHandler(APIHandler):
         if os.path.isdir(self.photos_dir_path):
             self.photo_frame_installed = True
         
-        
+        self.is_mac = False
         # Ugly fix for issue with Candle 2.0.2.
         if sys.platform == 'darwin':
             print("RUNNING ON MAC OS")
+            self.is_mac = True
         else:
             os.system('sudo chown -R pi:pi ' + str(self.user_profile['dataDir']))
             
@@ -223,7 +229,7 @@ class PowerSettingsAPIHandler(APIHandler):
         #self.early_actions_file_path = self.boot_path + '/bootup_actions_early.sh' # run before the gateway starts
         self.actions_file_path = self.boot_path + '/bootup_actions.sh' # run before the gateway starts
         self.post_actions_file_path = self.boot_path + '/post_bootup_actions.sh' # run 'after' the gateway starts
-        self.late_sh_path = '/home/pi/candle/late.sh'
+        
         self.system_update_error_detected = False
         
         # Factory reset
@@ -436,13 +442,14 @@ class PowerSettingsAPIHandler(APIHandler):
         self.sd_card_written_kbytes = '?'
         
         try:
-            if os.path.isdir('/home/pi/.webthings'):
-                self.user_partition_free_disk_space = int(run_command("df /home/pi/.webthings | awk 'NR==2{print $4}' | tr -d '\n'"))
+            if os.path.isdir(str(user_profile['baseDir'])):
+                self.user_partition_free_disk_space = int(run_command("df " + str(user_profile['baseDir']) + " | awk 'NR==2{print $4}' | tr -d '\n'"))
                 total_memory = run_command("awk '/^MemTotal:/{print $2}' /proc/meminfo | tr -d '\n'")
                 self.total_memory = int( int(''.join(filter(str.isdigit, total_memory))) / 1000)
-            
+                
                 # How much space is there at the end of the SD card that isn't used?
-                self.unused_volume_space = int(run_command("sudo parted /dev/mmcblk0 unit B print free | grep 'Free Space' | tail -n1 | awk '{print $3}' | tr -d 'B\n'"))
+                if not self.is_mac:
+                    self.unused_volume_space = int(run_command("sudo parted /dev/mmcblk0 unit B print free | grep 'Free Space' | tail -n1 | awk '{print $3}' | tr -d 'B\n'"))
                 #print("unused_volume_space: " + str(self.unused_volume_space))
             
                 if self.unused_volume_space > 1000000000:
@@ -3030,10 +3037,14 @@ class PowerSettingsAPIHandler(APIHandler):
                 #uploads_option = ""
                 
                 touch_all_data_folder_command = "find .  -maxdepth 1 -type d -exec sh -c 'echo \"$(date)\" > \"$1\"/backuped.txt' _ {} \;"
-                if self.DEBUG:
-                    print("running command to touch al data folders: \n" + str('cd ' + str(self.user_profile['dataDir']) + '; ' + str(touch_all_data_folder_command)))
-                os.system('cd ' + str(self.user_profile['dataDir']) + '; ' + str(touch_all_data_folder_command))
                 
+                touch_all_data_folder_command = 'cd ' + str(self.user_profile['dataDir']) + '; ' + str(touch_all_data_folder_command)
+                if self.DEBUG:
+                    print("running command to touch al data folders: \n" + str(touch_all_data_folder_command))
+                
+                
+                
+                run_command(touch_all_data_folder_command)
                 
                 # backup the logs metadata to a file in data/power-settings, so that it will also be backuped and can be restored later.
                 log_meta = run_command("sqlite3 " + str(self.log_db_file_path) + " 'SELECT id, descr, maxAge FROM metricIds'")
@@ -3267,6 +3278,9 @@ class PowerSettingsAPIHandler(APIHandler):
         if os.path.isdir(self.boot_path):
             try:
             
+                if self.is_mac:
+                    print("not updating recovery partition on a Mac")
+                    return
                 # this should never be needed... but just in case.
                 lsblk_output = run_command('lsblk')
                 if not 'mmcblk0p4' in lsblk_output:
@@ -3282,15 +3296,17 @@ class PowerSettingsAPIHandler(APIHandler):
                 self.updating_recovery_failed = False
                 self.busy_updating_recovery = 1
             
-                if os.path.exists('/home/pi/.webthings/recovery.fs.tar.gz'):
+                recovery_partition_file_path = os.path.join(self.user_profile['baseDir'],'recovery.fs.tar.gz')
+                if os.path.exists(str(recovery_partition_file_path)):
                     if self.DEBUG:
                         print("Warning, recovery.fs.tar.gz already exists. Deleting")
-                    os.system('sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
+                    os.system('sudo rm ' + str(recovery_partition_file_path))
                 
-                if os.path.exists('/home/pi/.webthings/recovery.fs'):
+                recovery_fs_file_path = os.path.join(self.user_profile['baseDir'],'recovery.fs')
+                if os.path.exists(str(recovery_fs_file_path)):
                     if self.DEBUG:
                         print("Warning, recovery.fs.tar.gz already exists. Deleting")
-                    os.system('sudo rm /home/pi/.webthings/recovery.fs')
+                    os.system('sudo rm ' + str(recovery_fs_file_path))
                 
             
                 recovery_checksum = None
@@ -3323,16 +3339,16 @@ class PowerSettingsAPIHandler(APIHandler):
                         self.updating_recovery_failed = True
                         return
             
-                os.system('wget https://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz -O /home/pi/.webthings/recovery.fs.tar.gz')
+                os.system('wget https://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz -O ' + str(recovery_partition_file_path))
             
-                if not os.path.exists('/home/pi/.webthings/recovery.fs.tar.gz'):
+                if not os.path.exists(str(recovery_partition_file_path)):
                     if self.DEBUG:
                         print("recovery image failed to download, waiting a few seconds and then trying once more")
                     time.sleep(10)
-                    os.system('wget https://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz -O /home/pi/.webthings/recovery.fs.tar.gz')
+                    os.system('wget https://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz -O ' + str(recovery_partition_file_path))
                     #os.system('cd /home/pi/.webthings; rm recovery.fs; wget https://www.candlesmarthome.com/img/recovery/recovery.fs.tar.gz -O recovery.fs.tar.gz') #; tar -xf recovery.fs.tar.gz
             
-                if not os.path.exists('/home/pi/.webthings/recovery.fs.tar.gz'):
+                if not os.path.exists(str(recovery_partition_file_path)):
                     if self.DEBUG:
                         print("Recovery partition file failed to download")
                     self.updating_recovery_failed = True
@@ -3341,7 +3357,7 @@ class PowerSettingsAPIHandler(APIHandler):
                 if self.DEBUG:
                     print("recovery partition file downloaded OK")
             
-                downloaded_recovery_file_checksum = run_command("md5sum /home/pi/.webthings/recovery.fs.tar.gz | awk '{print $1}'")
+                downloaded_recovery_file_checksum = run_command("md5sum " + str(recovery_partition_file_path) + " | awk '{print $1}'")
                 downloaded_recovery_file_checksum = downloaded_recovery_file_checksum.strip()
                 if self.DEBUG:
                     print("file checksum    : ->" + str(downloaded_recovery_file_checksum) + "<-")
@@ -3357,19 +3373,19 @@ class PowerSettingsAPIHandler(APIHandler):
                     if self.DEBUG:
                         print("Aborting, downloaded recovery img file checksums did not match")
                     self.updating_recovery_failed = True
-                    os.system('sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
+                    os.system('sudo rm ' + str(recovery_partition_file_path))
                     return
             
                 self.busy_updating_recovery = 2
             
-                os.system('cd /home/pi/.webthings; tar -xf recovery.fs.tar.gz')
+                os.system('cd ' + str(user_profile['baseDir']) + '; tar -xf recovery.fs.tar.gz')
             
             
                 # Recovery image failed to download/extract
-                if os.path.exists('/home/pi/.webthings/recovery.fs') == False:
+                if os.path.exists(str(recovery_fs_file_path)) == False:
                     if self.DEBUG:
                         print("recovery image failed to download or extract!")
-                    os.system('sudo rm /home/pi/.webthings/recovery.fs; sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
+                    os.system('sudo rm ' + str(recovery_fs_file_path) + '; sudo rm ' + str(recovery_partition_file_path))
                     self.updating_recovery_failed = True
                 
                 # Good to go!
@@ -3383,7 +3399,7 @@ class PowerSettingsAPIHandler(APIHandler):
                 
                     self.busy_updating_recovery = 4
                 
-                    os.system('sudo dd if=/home/pi/.webthings/recovery.fs of=/dev/mmcblk0p3 bs=1M; sudo rm /home/pi/.webthings/recovery.fs; sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
+                    os.system('sudo dd if=' + str(recovery_fs_file_path) + ' of=/dev/mmcblk0p3 bs=1M; sudo rm ' + str(recovery_fs_file_path) + '; sudo rm ' + str(recovery_partition_file_path))
 
                     self.check_recovery_partition()
                 
@@ -3391,15 +3407,15 @@ class PowerSettingsAPIHandler(APIHandler):
                         self.busy_updating_recovery = 5
                 
                 # clean up any downloaded files
-                if os.path.exists('/home/pi/.webthings/recovery.fs.tar.gz'):
+                if os.path.exists(str(recovery_partition_file_path)):
                     if self.DEBUG:
                         print("Warning, recovery.fs.tar.gz already exists. Deleting")
-                    os.system('sudo rm /home/pi/.webthings/recovery.fs.tar.gz')
+                    os.system('sudo rm ' + str(recovery_partition_file_path))
                 
-                if os.path.exists('/home/pi/.webthings/recovery.fs'):
+                if os.path.exists(str(recovery_fs_file_path)):
                     if self.DEBUG:
                         print("Warning, recovery.fs.tar.gz already exists. Deleting")
-                    os.system('sudo rm /home/pi/.webthings/recovery.fs')
+                    os.system('sudo rm ' + str(recovery_fs_file_path))
                     
                 
             except Exception as ex:
@@ -3451,6 +3467,10 @@ class PowerSettingsAPIHandler(APIHandler):
         if self.DEBUG:
             print("in expand_user_partition")
             
+            
+        if self.is_mac:
+            print("not expanding user partition on a Mac")
+            return
         # List unused disk space: 
         # echo -e "F\nq" | sudo fdisk /dev/mmcblk0
         
