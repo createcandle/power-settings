@@ -2657,18 +2657,25 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 if self.DEBUG:
                                                     print("untar test of backup file resulted in error: " + str(tar_test))
                                             else:
-                                                restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.actions_file_path)
-                                                if self.DEBUG:
-                                                    print("restore backup copy command: " + str(restore_command))
-                                                os.system(restore_command)
+                                                
+                                                os.system('cp ' + str(self.restore_backup_script_path) + ' /home/pi/.webthings/run_once.sh')
+                                                os.system('sudo systemctl start candle_run_script.service &')
+                                                
+                                                
+                                                #self.restore_results = run_command(str(self.restore_backup_script_path))
+                                                
+                                                #restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.actions_file_path)
+                                                #if self.DEBUG:
+                                                #    print("restore backup copy command: " + str(restore_command))
+                                                #os.system(restore_command)
                                             
                                                 # clean up the non-blocking file if it exists. TODO: is this still used?
-                                                if os.path.isfile(self.boot_path + '/bootup_actions_non_blocking.txt'):
-                                                    if self.DEBUG:
-                                                        print("/boot/firmware/bootup_actions_non_blocking.txt still existed")
-                                                    os.system('sudo rm ' + str(self.boot_path) + '/bootup_actions_non_blocking.txt')
+                                                #if os.path.isfile(self.boot_path + '/bootup_actions_non_blocking.txt'):
+                                                #    if self.DEBUG:
+                                                #        print("/boot/firmware/bootup_actions_non_blocking.txt still existed")
+                                                #    os.system('sudo rm ' + str(self.boot_path) + '/bootup_actions_non_blocking.txt')
                                             
-                                                state = 'ok'
+                                                #state = 'ok'
                                             
                                         else:
                                             if self.DEBUG:
