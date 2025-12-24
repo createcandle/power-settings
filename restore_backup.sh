@@ -3,69 +3,17 @@
 # This script tries to restore a backup
 # It doesn't care about the RO system, since if only acts on the user data partition
 
-# Restore the data directories
-echo "" >> /boot/candle_log.txt
-echo "$(date) - restoring Candle backup" >> /boot/candle_log.txt
-echo "$(date) - restoring Candle backup" >> /home/pi/.webthings/candle.log
-echo "$(date) - restoring Candle backup" >> /dev/kmsg
-
-
-
-# all this may get overwritten by a complete log file later
-if [ -f /home/pi/.webthings/data/power-settings/logs_meta.sqlite3 ] && [ -f /home/pi/.webthings/log/logs.sqlite3 ]; then
-	
-	#log_meta = run_command("sqlite3 " + str(self.log_db_file_path) + " 'SELECT id, descr, maxAge FROM metricIds'")
-	echo "restoring logs"
-	
-	sqlite3 /home/pi/.webthings/log/logs.sqlite3 'DELETE FROM metricIds;'
-	sqlite3 /home/pi/.webthings/log/logs.sqlite3 'DELETE FROM metricsBoolean;'
-	sqlite3 /home/pi/.webthings/log/logs.sqlite3 'DELETE FROM metricsNumber;'
-	sqlite3 /home/pi/.webthings/log/logs.sqlite3 'DELETE FROM metricsOther;'
-	
-	LINES=$(cat /home/pi/.webthings/data/power-settings/logs_meta.sqlite3)
-	echo
-	echo "LINES: "
-	echo $LINES
-	echo
-
-	IFS='
-	'
-	COUNT=0
-	for LINE in $LINES
-	do
-		COUNT=$((COUNT+1))
-		echo "$COUNT  -> $LINE"
-	  
-		if [[ "$LINE" == *\|* ]]; then
-  	    	echo "Line seems valid"
-			
-			ID=$(echo $LINE | cut -d '|' -f 1)
-			DESCR=$(echo $LINE | cut -d '|' -f 2)
-			MAXAGE=$(echo $LINE | cut -d '|' -f 3)
-			echo "ID: $ID"
-			echo "DESCR: $DESCR"
-			echo "MAXAGE: $MAXAGE"
-			
-			if [ -n "$ID" ] && [ -n "$DESCR" ] && [ -n "MAXAGE" ]; then
-				#sqlite3 /home/pi/.webthings/log/logs.sqlite3 'INSERT INTO metricIds (id, descr, maxAge) VALUES ($ID, $DESCR, $MAXAGE);'
-				
-				echo "Candle: restore_backup.sh: adding log: $DESCR" >> /dev/kmsg
-				
-				(printf "INSERT INTO metricIds VALUES ('%s', '%s', '%s');" $ID $DESCR $MAXAGE) | sqlite3 /home/pi/.webthings/log/logs.sqlite3
-				
-			else
-				echo "A VALUE WAS EMPTY, NOT WRITING TO LOGS DB!"
-			fi
-			
-		else
-	  	    	echo "Log meta line did not seem valid!"
-		fi
-	  
-	done
-	
+BOOT_DIR="/boot"
+if lsblk | grep -q $BOOT_DIR/firmware; then
+    #echo "firmware partition is mounted at $BOOT_DIR/firmware"
+    BOOT_DIR="$BOOT_DIR/firmware"
 fi
 
-
+# Restore the data directories
+echo "" >> $BOOT_DIR/candle_log.txt
+echo "$(date) - restoring Candle backup" >> $BOOT_DIR/candle_log.txt
+echo "$(date) - restoring Candle backup" >> /home/pi/.webthings/candle.log
+echo "$(date) - restoring Candle backup" >> /dev/kmsg
 
 
 
@@ -82,23 +30,23 @@ COUNTER=0
 
 if [ ! -f /home/pi/.webthings/data/power-settings/candle_restore.tar ]; then
     echo "Error, backup file to restore from is missing. Aborting."
-    echo "Error, backup file to restore from is missing. Aborting." >> /boot/candle_log.txt
+    echo "Error, backup file to restore from is missing. Aborting." >> $BOOT_DIR/candle_log.txt
     
     echo "Candle: Backup restored, but downloading latest addons list failed. Did not restore addons." >> /dev/kmsg
-    echo "$(date) - Backup restored, but downloading latest addons list failed. Did not restore addons." >> /boot/candle_log.txt
+    echo "$(date) - Backup restored, but downloading latest addons list failed. Did not restore addons." >> $BOOT_DIR/candle_log.txt
 
-    if [ -e "/bin/ply-image" ] && [ -e /dev/fb0 ] && [ -f "/boot/error.png" ]; then
-        /bin/ply-image /boot/error.png
+    if [ -e "/bin/ply-image" ] && [ -e /dev/fb0 ] && [ -f "$BOOT_DIR/error.png" ]; then
+        /bin/ply-image $BOOT_DIR/error.png
     fi
     sleep 7
     
 else
     
-    if [ -e "/bin/ply-image" ] && [ -e /dev/fb0 ] && [ -f "/boot/splash_updating-0.png" ] && [ -f "/boot/splash_updating180-0.png" ]; then
-        if [ -e "/boot/rotate180.txt" ]; then
-            /bin/ply-image /boot/splash_updating180-0.png
+    if [ -e "/bin/ply-image" ] && [ -e /dev/fb0 ] && [ -f "$BOOT_DIR/splash_updating-0.png" ] && [ -f "$BOOT_DIR/splash_updating180-0.png" ]; then
+        if [ -e "$BOOT_DIR/rotate180.txt" ]; then
+            /bin/ply-image $BOOT_DIR/splash_updating180-0.png
         else
-            /bin/ply-image /boot/splash_updating-0.png
+            /bin/ply-image $BOOT_DIR/splash_updating-0.png
         fi
     fi
     sleep 1
@@ -112,11 +60,11 @@ else
     tar -xf /home/pi/.webthings/data/power-settings/candle_restore.tar -C /home/pi/.webthings/
 
 
-    if [ -e "/bin/ply-image" ] && [ -e /dev/fb0 ] && [ -f "/boot/splash_updating-1.png" ] && [ -f "/boot/splash_updating180-1.png" ]; then
-        if [ -e "/boot/rotate180.txt" ]; then
-            /bin/ply-image /boot/splash_updating180-1.png
+    if [ -e "/bin/ply-image" ] && [ -e /dev/fb0 ] && [ -f "$BOOT_DIR/splash_updating-1.png" ] && [ -f "$BOOT_DIR/splash_updating180-1.png" ]; then
+        if [ -e "$BOOT_DIR/rotate180.txt" ]; then
+            /bin/ply-image $BOOT_DIR/splash_updating180-1.png
         else
-            /bin/ply-image /boot/splash_updating-1.png
+            /bin/ply-image $BOOT_DIR/splash_updating-1.png
         fi
     fi
     sleep 1
@@ -138,22 +86,25 @@ else
 	    fi
 	done
 
+	if [ -f /home/pi/.webthings/log/logs.sqlite3 ]; then
+		mv /home/pi/.webthings/log/logs.sqlite3 /home/pi/.webthings/log/logs.sqlite3_bak
+	fi
 
 
      #download additional splash images if they don't exist already
-     if [ ! -f "/boot/splash_updating-0.png" ] && [ -d /boot ]; then
+     if [ ! -f "$BOOT_DIR/splash_updating-0.png" ] && [ -d $BOOT_DIR ]; then
          echo "Downloading progress bar images"
-         wget https://www.candlesmarthome.com/tools/splash_updating-0.png -O /boot/splash_updating-0.png
-         wget https://www.candlesmarthome.com/tools/splash_updating-1.png -O /boot/splash_updating-1.png
-         wget https://www.candlesmarthome.com/tools/splash_updating-2.png -O /boot/splash_updating-2.png
-         wget https://www.candlesmarthome.com/tools/splash_updating-3.png -O /boot/splash_updating-3.png
-         wget https://www.candlesmarthome.com/tools/splash_updating-4.png -O /boot/splash_updating-4.png
-         wget https://www.candlesmarthome.com/tools/splash_updating180-0.png -O /boot/splash_updating180-0.png
-         wget https://www.candlesmarthome.com/tools/splash_updating180-1.png -O /boot/splash_updating180-1.png
-         wget https://www.candlesmarthome.com/tools/splash_updating180-2.png -O /boot/splash_updating180-2.png
-         wget https://www.candlesmarthome.com/tools/splash_updating180-3.png -O /boot/splash_updating180-3.png
-         wget https://www.candlesmarthome.com/tools/splash_updating180-4.png -O /boot/splash_updating180-4.png
-         wget -c https://www.candlesmarthome.com/tools/error.png -O /boot/error.png
+         wget https://www.candlesmarthome.com/tools/splash_updating-0.png -O $BOOT_DIR/splash_updating-0.png
+         wget https://www.candlesmarthome.com/tools/splash_updating-1.png -O $BOOT_DIR/splash_updating-1.png
+         wget https://www.candlesmarthome.com/tools/splash_updating-2.png -O $BOOT_DIR/splash_updating-2.png
+         wget https://www.candlesmarthome.com/tools/splash_updating-3.png -O $BOOT_DIR/splash_updating-3.png
+         wget https://www.candlesmarthome.com/tools/splash_updating-4.png -O $BOOT_DIR/splash_updating-4.png
+         wget https://www.candlesmarthome.com/tools/splash_updating180-0.png -O $BOOT_DIR/splash_updating180-0.png
+         wget https://www.candlesmarthome.com/tools/splash_updating180-1.png -O $BOOT_DIR/splash_updating180-1.png
+         wget https://www.candlesmarthome.com/tools/splash_updating180-2.png -O $BOOT_DIR/splash_updating180-2.png
+         wget https://www.candlesmarthome.com/tools/splash_updating180-3.png -O $BOOT_DIR/splash_updating180-3.png
+         wget https://www.candlesmarthome.com/tools/splash_updating180-4.png -O $BOOT_DIR/splash_updating180-4.png
+         wget -c https://www.candlesmarthome.com/tools/error.png -O $BOOT_DIR/error.png
          echo "Downloading progress bar images done"
      fi
 
@@ -230,31 +181,31 @@ else
                         mv ./package "/home/pi/.webthings/addons/$directory"
                         chown -R pi:pi "/home/pi/.webthings/addons/$directory"
                         echo "Candle: succesfully downloaded missing addon: $directory" >> /dev/kmsg
-                        echo "Candle: restoring backup: succesfully downloaded addon: $directory" >> /boot/candle_log.txt
+                        echo "Candle: restoring backup: succesfully downloaded addon: $directory" >> $BOOT_DIR/candle_log.txt
                     fi
                     rm missing.tar
                 else
                     echo "Candle: restoring backup: download of missing addon failed: $directory" >> /dev/kmsg
-                    echo "Candle: restoring backup: download of missing addon failed: $directory" >> /boot/candle_log.txt
+                    echo "Candle: restoring backup: download of missing addon failed: $directory" >> $BOOT_DIR/candle_log.txt
                 fi
             
                 if [ "$COUNTER" == 3 ]; then
-                    if [ -e "/bin/ply-image" ] && [ -e /dev/fb0 ] && [ -f "/boot/splash_updating-2.png" ] && [ -f "/boot/splash_updating180-2.png" ]; then
-                        if [ -e "/boot/rotate180.txt" ]; then
-                            /bin/ply-image /boot/splash_updating180-2.png
+                    if [ -e "/bin/ply-image" ] && [ -e /dev/fb0 ] && [ -f "$BOOT_DIR/splash_updating-2.png" ] && [ -f "$BOOT_DIR/splash_updating180-2.png" ]; then
+                        if [ -e "$BOOT_DIR/rotate180.txt" ]; then
+                            /bin/ply-image $BOOT_DIR/splash_updating180-2.png
                         else
-                            /bin/ply-image /boot/splash_updating-2.png
+                            /bin/ply-image $BOOT_DIR/splash_updating-2.png
                         fi
                     fi
                     sleep 1
                 fi
             
                 if [ "$COUNTER" == 7 ]; then
-                    if [ -e "/bin/ply-image" ] && [ -e /dev/fb0 ] && [ -f "/boot/splash_updating-3.png" ] && [ -f "/boot/splash_updating180-3.png" ]; then
-                        if [ -e "/boot/rotate180.txt" ]; then
-                            /bin/ply-image /boot/splash_updating180-3.png
+                    if [ -e "/bin/ply-image" ] && [ -e /dev/fb0 ] && [ -f "$BOOT_DIR/splash_updating-3.png" ] && [ -f "$BOOT_DIR/splash_updating180-3.png" ]; then
+                        if [ -e "$BOOT_DIR/rotate180.txt" ]; then
+                            /bin/ply-image $BOOT_DIR/splash_updating180-3.png
                         else
-                            /bin/ply-image /boot/splash_updating-3.png
+                            /bin/ply-image $BOOT_DIR/splash_updating-3.png
                         fi
                     fi
                     sleep 1
@@ -264,12 +215,15 @@ else
 
         done < <(ls /home/pi/.webthings/data)
     
+		# clean up the candle_backuped.txt files, which were necessary to make sure that all /data folders were added to the backup file, even if they were empty before
+		find /home/pi/.webthings/data -maxdepth 1 -type d -exec sh -c 'rm $1/candle_backuped.txt' _ {} \;
+	
     
-        if [ -e "/bin/ply-image" ] && [ -e /dev/fb0 ] && [ -f "/boot/splash_updating-4.png" ] && [ -f "/boot/splash_updating180-4.png" ]; then
-            if [ -e "/boot/rotate180.txt" ]; then
-                /bin/ply-image /boot/splash_updating180-4.png
+        if [ -e "/bin/ply-image" ] && [ -e /dev/fb0 ] && [ -f "$BOOT_DIR/splash_updating-4.png" ] && [ -f "$BOOT_DIR/splash_updating180-4.png" ]; then
+            if [ -e "$BOOT_DIR/rotate180.txt" ]; then
+                /bin/ply-image $BOOT_DIR/splash_updating180-4.png
             else
-                /bin/ply-image /boot/splash_updating-4.png
+                /bin/ply-image $BOOT_DIR/splash_updating-4.png
             fi
         fi
         sleep 1
@@ -277,10 +231,10 @@ else
     
     else
         echo "Candle: Backup restored, but downloading latest addons list failed. Did not restore addons." >> /dev/kmsg
-        echo "$(date) - Backup restored, but downloading latest addons list failed. Did not restore addons." >> /boot/candle_log.txt
+        echo "$(date) - Backup restored, but downloading latest addons list failed. Did not restore addons." >> $BOOT_DIR/candle_log.txt
     
-        if [ -e "/bin/ply-image" ] && [ -e /dev/fb0 ] && [ -f "/boot/error.png" ]; then
-            /bin/ply-image /boot/error.png
+        if [ -e "/bin/ply-image" ] && [ -e /dev/fb0 ] && [ -f "$BOOT_DIR/error.png" ]; then
+            /bin/ply-image $BOOT_DIR/error.png
         fi
         sleep 7
         
@@ -289,10 +243,86 @@ else
 fi
 
 
+# if the backup didn't restore an entire log file, then put the initial version back, and see if there is logs_meta data to use instead
+if [ ! -f /home/pi/.webthings/log/logs.sqlite3 ]; then
+	if [ -f /home/pi/.webthings/log/logs.sqlite3_bak ]; then
+		mv /home/pi/.webthings/log/logs.sqlite3_bak /home/pi/.webthings/log/logs.sqlite3
+		
+		if [ -f /home/pi/.webthings/data/power-settings/logs_meta.sqlite3 ]; then
+	
+			#log_meta = run_command("sqlite3 " + str(self.log_db_file_path) + " 'SELECT id, descr, maxAge FROM metricIds'")
+			echo "restoring logs from meta data"
+	
+			sqlite3 /home/pi/.webthings/log/logs.sqlite3 'DELETE FROM metricIds;'
+			sqlite3 /home/pi/.webthings/log/logs.sqlite3 'DELETE FROM metricsBoolean;'
+			sqlite3 /home/pi/.webthings/log/logs.sqlite3 'DELETE FROM metricsNumber;'
+			sqlite3 /home/pi/.webthings/log/logs.sqlite3 'DELETE FROM metricsOther;'
+	
+			LINES=$(cat /home/pi/.webthings/data/power-settings/logs_meta.sqlite3)
+			echo
+			echo "LINES: "
+			echo $LINES
+			echo
+
+			IFS='
+			'
+			COUNT=0
+			for LINE in $LINES
+			do
+				COUNT=$((COUNT+1))
+				echo "$COUNT  -> $LINE"
+	  
+				if [[ "$LINE" == *\|* ]]; then
+		  	    	echo "Line seems valid"
+			
+					ID=$(echo $LINE | cut -d '|' -f 1)
+					DESCR=$(echo $LINE | cut -d '|' -f 2)
+					MAXAGE=$(echo $LINE | cut -d '|' -f 3)
+					echo "ID: $ID"
+					echo "DESCR: $DESCR"
+					echo "MAXAGE: $MAXAGE"
+			
+					if [ -n "$ID" ] && [ -n "$DESCR" ] && [ -n "MAXAGE" ]; then
+						#sqlite3 /home/pi/.webthings/log/logs.sqlite3 'INSERT INTO metricIds (id, descr, maxAge) VALUES ($ID, $DESCR, $MAXAGE);'
+				
+						echo "Candle: restore_backup.sh: adding log: $DESCR" >> /dev/kmsg
+				
+						(printf "INSERT INTO metricIds VALUES ('%s', '%s', '%s');" $ID $DESCR $MAXAGE) | sqlite3 /home/pi/.webthings/log/logs.sqlite3
+				
+					else
+						echo "A VALUE WAS EMPTY, NOT WRITING TO LOGS DB!"
+					fi
+			
+				else
+			  	    	echo "Log meta line did not seem valid!"
+				fi
+	  
+			done
+	
+		fi
+	else
+		echo "Candle: ERROR, /home/pi/.webthings/log/logs.sqlite3 file seems to be missing!"
+		echo "Candle: ERROR, /home/pi/.webthings/log/logs.sqlite3 file seems to be missing!" >> /dev/kmsg
+	fi
+	
+else
+	if [ -f /home/pi/.webthings/log/logs.sqlite3_bak ]; then
+		rm /home/pi/.webthings/log/logs.sqlite3_bak
+	fi
+	
+	if [ -f /home/pi/.webthings/data/power-settings/logs_meta.sqlite3 ]; then
+		rm /home/pi/.webthings/data/power-settings/logs_meta.sqlite3
+	fi
+fi
+
+
+
+
+
 
 
 # Clean up
-rm /boot/bootup_actions.sh
-rm /boot/bootup_actions_failed.sh
+rm $BOOT_DIR/bootup_actions.sh
+rm $BOOT_DIR/bootup_actions_failed.sh
 #sudo systemctl start webthings-gateway.service
 exit 1
