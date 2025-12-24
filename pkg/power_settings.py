@@ -2675,7 +2675,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 #        print("/boot/firmware/bootup_actions_non_blocking.txt still existed")
                                                 #    os.system('sudo rm ' + str(self.boot_path) + '/bootup_actions_non_blocking.txt')
                                             
-                                                #state = 'ok'
+                                                state = 'ok'
                                             
                                         else:
                                             if self.DEBUG:
