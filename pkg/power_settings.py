@@ -60,7 +60,7 @@ class PowerSettingsAPIHandler(APIHandler):
         #print("INSIDE API HANDLER INIT")
         
         self.addon_id = "power-settings"
-        self.DEBUG = True
+        self.DEBUG = False
         self.running = True
         
         
@@ -117,7 +117,7 @@ class PowerSettingsAPIHandler(APIHandler):
             with open(self.persistence_file_path) as f:
                 self.persistent_data = json.load(f)
                 if self.DEBUG:
-                    print('self.persistent_data loaded from file: ' + str(self.persistent_data))
+                    print('power-settings debug: self.persistent_data loaded from file: ' + str(self.persistent_data))
         except Exception as ex:
             print("ERROR: Could not load persistent data (if you just installed the add-on then this is normal): " + str(ex))
             
@@ -245,6 +245,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         # Backup data logs path
         self.log_db_file_path = os.path.join(self.user_profile['baseDir'], 'log','logs.sqlite3')
+        self.log_meta_file_path = os.path.join(self.data_dir, "logs_meta.sqlite3")
         
         # Restore
         self.restore_file_path = os.path.join(self.data_dir, "candle_restore.tar")
@@ -3030,6 +3031,30 @@ class PowerSettingsAPIHandler(APIHandler):
                 #photos_option = ""
                 #uploads_option = ""
                 
+                # backup the logs metadata to a file in data/power-settings, so that it will also be backuped and can be restored later.
+                log_meta = run_command("sqlite3 " + str(self.log_db_file_path) + " 'SELECT id, descr, maxAge FROM metricIds'")
+                if str(log_meta).startswith('Error'):
+                    if self.DEBUG:
+                        print("power settings debug: backup: got error. probably because no logs have been created yet?: " + str(log_meta))
+                else:
+                    if os.path.exists(str(self.log_meta_file_path)):
+                        if self.DEBUG:
+                            print("had to delete an old logs meta file first")
+                        os.unlink(str(self.log_meta_file_path))
+                         if os.path.exists(str(self.log_meta_file_path)):
+                             if self.DEBUG:
+                                 print("Error, failed to delete old logs meta file: " + str(self.log_meta_file_path))
+                        
+                    with open(str(self.log_meta_file_path) , "w") as log_meta_file:
+                        if self.DEBUG:
+                            print("writing logs meta data to logs_meta.sqlite3 file: \n" + str(log_meta) + "\n")
+                        log_meta_file.write(str(log_meta))
+                    if self.DEBUG:
+                        if os.path.exists(str(self.log_meta_file_path)):
+                            print("log meta file saved succesfully")
+                        else:
+                            print("log meta file failed to save: " + str(self.log_meta_file_path))
+                
                 if self.backup_more == True:
                     
                     self.get_backup_sizes()
@@ -3050,7 +3075,15 @@ class PowerSettingsAPIHandler(APIHandler):
                             extra_tar_commands += '; tar -rf ' + str(self.backup_file_path)  + ' ' + os.path.join('.','uploads')
                         
                         
-                    # if together they are too big, then prioritize the logs
+                    
+                    # if together they are too big, then prioritize the photos
+                    elif self.photos_size < 90000000 and self.photos_size != 0:
+                        self.backup_logs_failed = True
+                        extra_tar_commands += '; tar -rf ' + str(self.backup_file_path)  + ' ' + os.path.join('.','addons','photo-frame','photos')
+                        if self.DEBUG:
+                            print("adding photos to backup command, but logs were too big")
+                        
+                    # If the photos are too big, perhaps the logs can be backuped in their entirety
                     elif self.log_size < 90000000 and self.log_size != 0:
                         if self.DEBUG:
                             print("adding big log to backup command, at the cost of photos")
@@ -3058,12 +3091,7 @@ class PowerSettingsAPIHandler(APIHandler):
                         extra_tar_commands += '; tar -rf ' + str(self.backup_file_path)  + ' ' + os.path.join('.','log','logs.sqlite3') #'self.log_db_file_path + ' -T -'
                         self.backup_photos_failed = True
                     
-                    # If the logs are too big, perhaps the photos can be backupped
-                    elif self.photos_size < 90000000 and self.photos_size != 0:
-                        self.backup_logs_failed = True
-                        extra_tar_commands += '; tar -rf ' + str(self.backup_file_path)  + ' ' + os.path.join('.','addons','photo-frame','photos')
-                        if self.DEBUG:
-                            print("adding photos to backup command, but logs were too big")
+                    
                         
                     # if both were too big, then that's bad.
                     else:
@@ -3076,8 +3104,12 @@ class PowerSettingsAPIHandler(APIHandler):
                     if self.DEBUG:
                         print("self.backup_more was false, skipping logs, photos and uploads")
                 
-                backup_command = 'cd ' + str(self.user_profile['baseDir']) + '; find ./config ./data -maxdepth 2 -name "*.json" -o -name "*.xtt" -o -name "*.yaml" -o -name "*.xml" -o -name "*.sqlite3" -o -name "*.blacklisted_devices" -o -name "*.trusted_devices" -o -name "*.ignored_devices" -o -name "*.db"  | tar -cf ' + str(self.backup_file_path) + ' -T -' 
+                backup_command = 'cd ' + str(self.user_profile['baseDir']) + '; find ./config ./data -maxdepth 2 -name "*.json" -o -name "*.xtt" -o -name "*.yaml" -o -name "*.xml" -o -name "*.sqlite3" -o -name "*.blacklisted_devices" -o -name "*.trusted_devices" -o -name "*.ignored_devices" -o -name "*.db" -o -name "*.txt" | tar -cf ' + str(self.backup_file_path) + ' -T -' 
                 backup_command += extra_tar_commands
+                
+                touch_all_data_folder_command = "find .  -maxdepth 1 -type d -exec sh -c 'echo \"$(date)\" > \"$1\"/backuped.txt' _ {} \;"
+                os.system('cd ' + str(self.user_profile['dataDir']) + '; ' + str(touch_all_data_folder_command))
+                
                 
                 if self.DEBUG:
                     print("Running backup command: " + str(backup_command))
@@ -3094,6 +3126,15 @@ class PowerSettingsAPIHandler(APIHandler):
             else:
                 if self.DEBUG:
                     print("\nError, could not create symlink to backup download directory. Perhaps already linked?: " + str(os.path.islink(self.backup_download_dir)))
+            
+            
+            if os.path.exists(str(self.log_meta_file_path)):
+                if self.DEBUG:
+                    print("Backup should now be created, so deleting logs meta file")
+                os.unlink(str(self.log_meta_file_path))
+                 if os.path.exists(str(self.log_meta_file_path)):
+                     if self.DEBUG:
+                         print("Error, failed to delete logs meta file: " + str(self.log_meta_file_path))
             
             return True
         except Exception as ex:

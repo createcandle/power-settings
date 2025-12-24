@@ -9,6 +9,67 @@ echo "$(date) - restoring Candle backup" >> /boot/candle_log.txt
 echo "$(date) - restoring Candle backup" >> /home/pi/.webthings/candle.log
 echo "$(date) - restoring Candle backup" >> /dev/kmsg
 
+
+
+# all this may get overwritten by a complete log file later
+if [ -f /home/pi/.webthings/data/power-settings/logs_meta.sqlite3 ] && [ -f /home/pi/.webthings/log/logs.sqlite3 ]; then
+	
+	#log_meta = run_command("sqlite3 " + str(self.log_db_file_path) + " 'SELECT id, descr, maxAge FROM metricIds'")
+	echo "restoring logs"
+	
+	sqlite3 /home/pi/.webthings/log/logs.sqlite3 'DELETE FROM metricIds;'
+	sqlite3 /home/pi/.webthings/log/logs.sqlite3 'DELETE FROM metricsBoolean;'
+	sqlite3 /home/pi/.webthings/log/logs.sqlite3 'DELETE FROM metricsNumber;'
+	sqlite3 /home/pi/.webthings/log/logs.sqlite3 'DELETE FROM metricsOther;'
+	
+	LINES=$(cat /home/pi/.webthings/data/power-settings/logs_meta.sqlite3)
+	echo
+	echo "LINES: "
+	echo $LINES
+	echo
+
+	IFS='
+	'
+	COUNT=0
+	for LINE in $LINES
+	do
+		COUNT=$((COUNT+1))
+		echo "$COUNT  -> $LINE"
+	  
+		if [[ "$LINE" == *\|* ]]; then
+  	    	echo "Line seems valid"
+			
+			ID=$(echo $LINE | cut -d '|' -f 1)
+			DESCR=$(echo $LINE | cut -d '|' -f 2)
+			MAXAGE=$(echo $LINE | cut -d '|' -f 3)
+			echo "ID: $ID"
+			echo "DESCR: $DESCR"
+			echo "MAXAGE: $MAXAGE"
+			
+			if [ -n "$ID" ] && [ -n "$DESCR" ] && [ -n "MAXAGE" ]; then
+				#sqlite3 /home/pi/.webthings/log/logs.sqlite3 'INSERT INTO metricIds (id, descr, maxAge) VALUES ($ID, $DESCR, $MAXAGE);'
+				
+				echo "Candle: restore_backup.sh: adding log: $DESCR" >> /dev/kmsg
+				
+				(printf "INSERT INTO metricIds VALUES ('%s', '%s', '%s');" $ID $DESCR $MAXAGE) | sqlite3 /home/pi/.webthings/log/logs.sqlite3
+				
+			else
+				echo "A VALUE WAS EMPTY, NOT WRITING TO LOGS DB!"
+			fi
+			
+		else
+	  	    	echo "Log meta line did not seem valid!"
+		fi
+	  
+	done
+	
+fi
+
+
+
+
+
+
 BIT_TYPE=$(getconf LONG_BIT)
 echo "Bits: $BIT_TYPE"
 
@@ -60,21 +121,23 @@ else
     fi
     sleep 1
 
-    # Wait for IP address for at most 30 seconds
-     echo "waiting for IP address"
-     for i in {1..30}
-     do
-       #echo "current hostname: $(hostname -I)"
-       if [ "$(hostname -I)" = "" ]
-       then
-         echo "Candle: rc.local doing bootup_actions: no network yet $i" >> /dev/kmsg
-         echo "no network yet $i"
-         sleep 1    
-       else
-         echo "Candle: rc.local doing bootup_actions: IP address detected: $(hostname -I)" >> /dev/kmsg
-         break
-       fi
-     done
+	# Wait for IP address for at most 30 seconds
+	echo "Candle: late: waiting for IP address"
+	for i in {1..30}
+	do
+	    #echo "current hostname: $(hostname -I)"
+		IPS=$(hostname -I | sed -En "s/(.*) 192.168.12.1/\1/p" | xargs)
+	    if [ "$IPS" = "" ]
+	    then
+			echo "Candle: late.sh: no network yet $i" >> /dev/kmsg
+		    echo "no network yet $i"
+			sleep 1    
+	    else
+			echo "Candle: late.sh: IP address detected: $(hostname -I)" >> /dev/kmsg
+			break
+	    fi
+	done
+
 
 
      #download additional splash images if they don't exist already
@@ -140,13 +203,16 @@ else
                     fi
                 fi
             
-                if [[ $URLS == *"v3.9."* ]]; then
-                    echo "v3.9. spotted"
-                    URLS=$(echo "$URLS" | grep "v3.9.")
+               	if [[ $URLS == *"v3.11."* ]]; then
+                    echo "v3.11. spotted"
+                    URLS=$(echo "$URLS" | grep "v3.11.")
+	            elif [[ $URLS == *"v3.9."* ]]; then
+	            	echo "v3.9. spotted"
+	            	URLS=$(echo "$URLS" | grep "v3.9.")
                 fi
             
                 if [ -n "$URLS" ]; then
-                    echo "selecting first URL from remaning list:"
+                    echo "selecting first URL from remaining list:"
                     URLS=`echo "${URLS}" | head -1`
                     echo "$URLS"
             
@@ -218,12 +284,9 @@ else
         fi
         sleep 7
         
-    
     fi
     
 fi
-
-
 
 
 
