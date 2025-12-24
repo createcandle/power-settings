@@ -74,7 +74,7 @@ else
 	for i in {1..30}
 	do
 	    #echo "current hostname: $(hostname -I)"
-		IPS=$(hostname -I | sed -En "s/(.*) 192.168.12.1/\1/p" | xargs)
+		IPS=$(hostname -I | sed -r 's/192.168.12.1//' | xargs)
 	    if [ "$IPS" = "" ]
 	    then
 			echo "Candle: late.sh: no network yet $i" >> /dev/kmsg
