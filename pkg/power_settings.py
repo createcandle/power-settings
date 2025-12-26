@@ -432,12 +432,13 @@ class PowerSettingsAPIHandler(APIHandler):
         
         self.hotspot_ssid = 'Candle'
         
-        self.hotspot_mac_address = run_command("nmcli device show uap0 | grep HWADDR | awk '{print $2}'")
-        self.hotspot_mac_address = self.hotspot_mac_address.strip()
-        if "Error" in self.hotspot_mac_address:
-            self.hotspot_mac_address = ""
-        elif ":" in self.hotspot_mac_address:
-            self.hotspot_ssid = self.hotspot_ssid + " " + self.hotspot_mac_address[-5:].replace(":", "")
+        self.hotspot_mac_address = run_command("nmcli -t device show uap0 | grep HWADDR | cut -d':' -f2-7")
+        if self.hotspot_mac_address != None:
+            self.hotspot_mac_address = self.hotspot_mac_address.strip()
+            if "Error" in self.hotspot_mac_address:
+                self.hotspot_mac_address = ""
+            elif ":" in self.hotspot_mac_address:
+                self.hotspot_ssid = self.hotspot_ssid + " " + self.hotspot_mac_address[-5:].replace(":", "")
         
         self.sd_card_written_kbytes = '?'
         
@@ -1782,7 +1783,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 if self.performed_initial_wifi_scan == False:
                                     self.performed_initial_wifi_scan = True
-                                    os.system('nmcli dev wifi list &')
+                                    os.system('nmcli -t dev wifi list --no-pager &')
                                 
                                 result = {
                                     'state':True,
@@ -1823,7 +1824,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                     else:
                                         # don't disable the hotspot if there are no remaining network connections
                                         # TODO could also check if a thatouch screne is connected, in which case that can still be used to keep access.
-                                        active_connections = run_command("nmcli connection show --active | tail -n +2 | grep -v 'candle_hotspot' | grep -v 'loopback  lo'")
+                                        active_connections = run_command("nmcli -t connection show --active | tail -n +2 | grep -v 'candle_hotspot' | grep -v 'loopback:lo'")
                                         if active_connections != None:
                                             if len(str(active_connections).strip()) > 10:
                                                 os.system('sudo rm ' + str(self.candle_hotspot_file_path))
