@@ -1546,11 +1546,11 @@
             if(typeof body.debug != 'undefined'){
                 this.debug = body.debug;
 				if(this.debug){
-					console.log("power settings: debugging enabled. init response: ", body);
+					console.log("power settings debug: handle_init: debugging enabled. init response: ", body);
 				}
             }
             else{
-                console.error("power settings: init response: body.debug was undefined. Body: ", body);
+                console.error("power settings: handle_init: init response: body.debug was undefined. Body: ", body);
 				if(this.second_init_attempted == false){
 					console.warn("power settings: will attempt power settings init again in 10 seconds");
 					setTimeout(() => {
@@ -1562,11 +1562,6 @@
             }
             
             
-            
-            if(this.debug){
-                console.log('power settings debug: init response: ', body);
-            }
-            
             // Does the recovery partition exist?
             if(typeof body.recovery_partition_exists != 'undefined'){
                 this.recovery_partition_exists = body.recovery_partition_exists;
@@ -1575,7 +1570,7 @@
                 }
                 if(this.recovery_partition_exists == false){
                     if(this.debug){
-                        console.log('power settings: there is no recovery partition');
+                        console.log('power settings debug: there is no recovery partition');
                     }
                     document.getElementById('extension-power-settings-update-recovery-not-supported').style.display = 'block';
                     document.getElementById('extension-power-settings-update-recovery-container').style.display = 'none';
@@ -1642,7 +1637,7 @@
             if(typeof body.bits != 'undefined'){
                 this.bits = parseInt(body.bits);
                 if(this.debug){
-                    console.log("power settings: system bits: ", this.bits);
+                    console.log("power settings debug: system bits: ", this.bits);
                 }
                 document.getElementById('extension-power-settings-bits').innerText = this.bits + 'bit';
                 //document.getElementById('extension-power-settings-bits2').innerText = this.bits + 'bit';
@@ -1827,10 +1822,15 @@
 				this.mouse_pointer_enabled = body.mouse_pointer_enabled;
 			}
 			
+			this.render_hotspot_settings(body);
+			
 		}
 		
 		
         render_hotspot_settings(body){
+			if(this.debug){
+				console.log("power settings debug: in render_hotspot_settings. body: ", body);
+			}
             if(typeof body.hotspot_enabled == 'boolean' && typeof body.hotspot_ssid == 'string' && typeof body.hotspot_password == 'string'){
 
 				this.hotspot_enabled = body.hotspot_enabled;
@@ -1873,6 +1873,7 @@
 						hotspot_details_el.appendChild(hotspot_details_ssid_el);
 						
 						const hotspot_details_password_el = document.createElement('input');
+						hotspot_details_password_el.setAttribute('id','extension-power-settings-hotspot-password-input');
 						hotspot_details_password_el.classList.add('network-settings-list-item-detail');
 						hotspot_details_password_el.setAttribute('type','text');
 						hotspot_details_password_el.setAttribute('placeholder','Password');
@@ -1990,6 +1991,7 @@
 						
 						const hotspot_connected_devices_container_el = document.createElement('div');
 						hotspot_connected_devices_container_el.classList.add('extension-power-settings-hotspot-connected-devices-container');
+						//hotspot_connected_devices_container_el.setAttribute('id','extension-power-settings-hotspot-connected-devices-container');
 						
 						const update_connected_devices_list = () => {
 							//console.log("in update_connected_devices_list. this.hotspot_connected_devices: ", this.hotspot_connected_devices);
@@ -2052,6 +2054,17 @@
 						
 						network_settings_list_el.appendChild(hotspot_settings_list_item_el);
 						
+					}
+					else{
+						const hotspot_connected_checkbox_el = document.getElementById('extension-power-settings-hotspot-enabled-checkbox');
+						if(hotspot_connected_checkbox_el && typeof body.hotspot_enabled == 'boolean'){
+							hotspot_connected_checkbox_el.setAttribute('checked',body.hotspot_enabled);
+						}
+						
+						const hotspot_password_input_el = document.getElementById('extension-power-settings-hotspot-password-input');
+						if(hotspot_password_input_el && typeof body.hotspot_password == 'string'){
+							hotspot_password_input_el.value = body.hotspot_password;
+						}
 					}
 				}
 				

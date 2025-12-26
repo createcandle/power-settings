@@ -2522,6 +2522,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'has_cups':self.has_cups,
                                             'pipewire_enabled':self.pipewire_enabled,
                                             'user_partition_expansion_failed': self.user_partition_expansion_failed,
+                                            'hotspot_enabled':self.hotspot_enabled,
+                                            'hotspot_ssid':self.hotspot_ssid,
+                                            'hotspot_password':self.hotspot_password,
+                                            'hotspot_connected_devices':self.get_hotspot_arp(),
                                             'debug':self.DEBUG
                                         }
                                         
