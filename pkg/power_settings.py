@@ -442,8 +442,8 @@ class PowerSettingsAPIHandler(APIHandler):
         self.sd_card_written_kbytes = '?'
         
         try:
-            if os.path.isdir(str(user_profile['baseDir'])):
-                self.user_partition_free_disk_space = int(run_command("df " + str(user_profile['baseDir']) + " | awk 'NR==2{print $4}' | tr -d '\n'"))
+            if os.path.isdir(str(self.user_profile['baseDir'])):
+                self.user_partition_free_disk_space = int(run_command("df " + str(self.user_profile['baseDir']) + " | awk 'NR==2{print $4}' | tr -d '\n'"))
                 total_memory = run_command("awk '/^MemTotal:/{print $2}' /proc/meminfo | tr -d '\n'")
                 self.total_memory = int( int(''.join(filter(str.isdigit, total_memory))) / 1000)
                 
@@ -3387,7 +3387,7 @@ class PowerSettingsAPIHandler(APIHandler):
             
                 self.busy_updating_recovery = 2
             
-                os.system('cd ' + str(user_profile['baseDir']) + '; tar -xf recovery.fs.tar.gz')
+                os.system('cd ' + str(self.user_profile['baseDir']) + '; tar -xf recovery.fs.tar.gz')
             
             
                 # Recovery image failed to download/extract
