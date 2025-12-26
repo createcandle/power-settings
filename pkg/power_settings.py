@@ -320,7 +320,7 @@ class PowerSettingsAPIHandler(APIHandler):
                 display_port_names = run_command("DISPLAY=:0 xrandr | grep 'connected' | cut -d' ' -f1")
                 if self.DEBUG:
                     print("power-settings debug: display_port_names: \n" + str(display_port_names))
-                display_port_names = display_port_names.splitlines()
+                display_port_names = str(display_port_names).splitlines()
         
                 if len(display_port_names) > 0:
                     if len(str(display_port_names[0])) > 2:
@@ -711,7 +711,7 @@ class PowerSettingsAPIHandler(APIHandler):
     def get_hotspot_arp(self):
         result = []
         hotspot_arp_list = run_command("cat /proc/net/arp | tail -n +2 | grep '192.168.12.'")
-        for line in hotspot_arp_list.splitlines():
+        for line in str(hotspot_arp_list).splitlines():
             if "192.168.12." in line:
                 if "192.168.12.1 " in line:
                     pass
@@ -828,7 +828,7 @@ class PowerSettingsAPIHandler(APIHandler):
             # Touch input rotation
             pointer_output = run_command("DISPLAY=:0 xinput | grep pointer | tail -n +2 | grep -v ' XTEST '") #  | cut -f1 -d$'\t'     # | grep -v ' XTEST '
             if pointer_output != None:
-                for line in pointer_output.splitlines():
+                for line in str(pointer_output).splitlines():
                     print("pointer_output line: " + str(line))
                 
                     input_name = re.split(r'\t+', line)[0]
@@ -907,7 +907,9 @@ class PowerSettingsAPIHandler(APIHandler):
         try:
             if os.path.isdir('/sys'):
                 init_hardware_clock = False
-                for line in run_command("sudo i2cdetect -y 1").splitlines():
+                i2c_check = run_command("sudo i2cdetect -y 1")
+                if i2c_check != None:
+                    for line in str(i2c_check).splitlines():
                     if self.DEBUG:
                         print(line)
                     if line.startswith( '60:' ):
@@ -1210,44 +1212,48 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                         # get HDMI port names
                                         display_port_names = run_command("DISPLAY=:0 xrandr | grep 'connected' | cut -d' ' -f1")
-                                        if self.DEBUG:
-                                            print("display_port_names: \n" + str(display_port_names))
-                                        display_port_names = display_port_names.splitlines()
-                                
-                                        if len(display_port_names) > 0:
-                                            if len(str(display_port_names[0])) > 2:
-                                                self.display_port1_name = str(display_port_names[0])
-                                                [ self.display1_width, self.display1_height ] = self.get_hdmi_port_resolution(self.display_port1_name)
-                                                if self.DEBUG:
-                                                    print("self.display1_width: " + str(self.display1_width))
-                                        
-                                        if len(display_port_names) > 1:
-                                            if len(str(display_port_names[1])) > 2:
-                                                self.display_port2_name = str(display_port_names[1])
-                                                [ self.display2_width, self.display2_height ] = self.get_hdmi_port_resolution(self.display_port2_name)
-                                                if self.DEBUG:
-                                                    print("self.display2_width: " + str(self.display2_width))
+                                        if display_port_names != None:
+                                            if self.DEBUG:
+                                                print("display_port_names: \n" + str(display_port_names))
+                                            display_port_names = display_port_names.splitlines()
+                                    
+                                            if len(display_port_names) > 0:
+                                                if len(str(display_port_names[0])) > 2:
+                                                    self.display_port1_name = str(display_port_names[0])
+                                                    [ self.display1_width, self.display1_height ] = self.get_hdmi_port_resolution(self.display_port1_name)
+                                                    if self.DEBUG:
+                                                        print("self.display1_width: " + str(self.display1_width))
+                                            
+                                            if len(display_port_names) > 1:
+                                                if len(str(display_port_names[1])) > 2:
+                                                    self.display_port2_name = str(display_port_names[1])
+                                                    [ self.display2_width, self.display2_height ] = self.get_hdmi_port_resolution(self.display_port2_name)
+                                                    if self.DEBUG:
+                                                        print("self.display2_width: " + str(self.display2_width))
                                                 
                                     
                                         connected_port_names = run_command("DISPLAY=:0 xrandr | grep ' connected'")
-                                        for connected_port in connected_port_names.splitlines():
-                                            if connected_port == self.display_port1_name:
-                                                self.display1_available = True
-                                            if connected_port == self.display_port2_name:
-                                                self.display2_available = True
+                                        if connected_port_names != None:
+                                            for connected_port in connected_port_names.splitlines():
+                                                if connected_port == self.display_port1_name:
+                                                    self.display1_available = True
+                                                if connected_port == self.display_port2_name:
+                                                    self.display2_available = True
                                 
                                         #subprocess.check_output
-                                        edids = pyedid.get_edid_from_xrandr_verbose(run_command("DISPLAY=:0 xrandr --verbose"))
-                                        if self.DEBUG:
-                                            print("edids 1: " + str(edids))
-                                    
-                                        for x, edid in enumerate(edids):
+                                        xrand_verbose_check = run_command("DISPLAY=:0 xrandr --verbose")
+                                        if xrand_verbose_check:
+                                            edids = pyedid.get_edid_from_xrandr_verbose(str(xrand_verbose_check))
                                             if self.DEBUG:
-                                                print(x, pyedid.parse_edid(edid))
-                                            if x == 0:
-                                                self.display1_details = str(pyedid.parse_edid(edid))
-                                            if x == 1:
-                                                self.display2_details = str(pyedid.parse_edid(edid))
+                                                print("edids 1: " + str(edids))
+                                        
+                                            for x, edid in enumerate(edids):
+                                                if self.DEBUG:
+                                                    print(x, pyedid.parse_edid(edid))
+                                                if x == 0:
+                                                    self.display1_details = str(pyedid.parse_edid(edid))
+                                                if x == 1:
+                                                    self.display2_details = str(pyedid.parse_edid(edid))
                                 
                                 
                                         """
@@ -1336,16 +1342,17 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                         # Power management
                                         display1_power_management_output = run_command("DISPLAY=:0 xset -q | awk '/DPMS is/ {print $NF}'")
-                                        if 'unable to open' in display1_power_management_output:
-                                            #self.display1_available = False
-                                            pass
-                                        elif 'Disabled' in display1_power_management_output:
-                                            self.display1_power = False
-                                            self.display2_power = False
-                                        else:
-                                            self.display1_power = True
-                                            self.display2_power = True
-                                
+                                        if display1_power_management_output != None:
+                                            if 'unable to open' in str(display1_power_management_output):
+                                                #self.display1_available = False
+                                                pass
+                                            elif 'Disabled' in str(display1_power_management_output):
+                                                self.display1_power = False
+                                                self.display2_power = False
+                                            else:
+                                                self.display1_power = True
+                                                self.display2_power = True
+                                    
                                     
                                         self.detect_touchscreen()
                                 
@@ -1561,7 +1568,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         new_display_settings = ""
                                     
                                     
-                                        self.config_txt_lines = self.config_txt.splitlines()
+                                        self.config_txt_lines = str(self.config_txt).splitlines()
                                         if "#candle_force_display_start" in self.config_txt_lines:
                                             for line in self.config_txt_lines:
                                                 if line.startswith('#'):
@@ -2029,7 +2036,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         dmesg_output = run_command("dmesg --level=err,warn | grep Candle")
                                         if dmesg_output != None:
                                             if dmesg_output != "":
-                                                for line in dmesg_output.splitlines():
+                                                for line in str(dmesg_output).splitlines():
                                                     if "starting update" in line:
                                                         dmesg_lines = line + "\n"
                                                     else:
@@ -2350,8 +2357,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                         if self.DEBUG:
                                             print("debug: lsusb output: " + str(lsusb_output))
                                     
-                                        if lsusb_output  != None:
-                                            self.attached_devices = lsusb_output.splitlines()
+                                        if lsusb_output != None:
+                                            self.attached_devices = str(lsusb_output).splitlines()
                                     
                                     
                                         self.attached_cameras = []
@@ -2470,12 +2477,14 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if os.path.isdir(self.boot_path):
                                     self.check_update_processes()
                                     self.update_backup_info()
-                                
-                                    for line in run_command("timedatectl show").splitlines():
-                                        if self.DEBUG:
-                                            print(line)
-                                        if line.startswith( 'NTP=no' ):
-                                            current_ntp_state = False
+
+                                    timedate_check = run_command("timedatectl show")
+                                    if timedate_check != None:
+                                        for line in str(timedate_check).splitlines():
+                                            if self.DEBUG:
+                                                print(line)
+                                            if line.startswith( 'NTP=no' ):
+                                                current_ntp_state = False
                                         
                                     shell_date = run_command("date")
                                         
@@ -2877,7 +2886,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     #print("--\n\n")
             
                     if avahi_output != None and cups_output != None:
-                        cups_parts = cups_output.split('Device: uri = lpd://')
+                        cups_parts = str(cups_output).split('Device: uri = lpd://')
                         if self.DEBUG:
                             print("Detected number of printers: " + str(len(cups_parts)-1))
             
@@ -2886,10 +2895,10 @@ class PowerSettingsAPIHandler(APIHandler):
             
                         for printer_info in cups_parts:
                             printer_counter += 1
-                            if len(printer_info) > 10:
+                            if len(str(printer_info)) > 10:
                                 if self.DEBUG:
                                     print("\nprinter_info: " + str(printer_info))
-                                printer_lines = printer_info.splitlines()
+                                printer_lines = str(printer_info).splitlines()
                                 for printer_line in printer_lines:
                                     if 'make-and-model =' in printer_line:
                                         printer_name = printer_line.split('make-and-model =')[1]
@@ -2900,7 +2909,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             safe_printer_name = re.sub(r'\W+', '', safe_printer_name)
                                             if self.DEBUG:
                                                 print("\nsafe_printer_name: " + str(safe_printer_name))
-                                            for line in avahi_output.splitlines():
+                                            for line in str(avahi_output).splitlines():
                                                 if self.DEBUG:
                                                     print("avahi line: " + str(line))
                                                 ip_address_list = re.findall(r'(?:\d{1,3}\.)+(?:\d{1,3})', str(line))
