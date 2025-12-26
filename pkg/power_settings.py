@@ -1823,12 +1823,13 @@ class PowerSettingsAPIHandler(APIHandler):
                                         # don't disable the hotspot if there are no remaining network connections
                                         # TODO could also check if a thatouch screne is connected, in which case that can still be used to keep access.
                                         active_connections = run_command("nmcli connection show --active | tail -n +2 | grep -v 'candle_hotspot' | grep -v 'loopback  lo'")
-                                        if len(active_connections.strip()) > 10:
-                                            os.system('sudo rm ' + str(self.candle_hotspot_file_path))
-                                            os.system('nmcli connection down candle_hotspot')
-                                            os.system('nmcli connection modify candle_hotspot autoconnect no')
-                                            os.system('sudo pkill dnsmasq')
-                                            state = True
+                                        if active_connections != None:
+                                            if len(str(active_connections).strip()) > 10:
+                                                os.system('sudo rm ' + str(self.candle_hotspot_file_path))
+                                                os.system('nmcli connection down candle_hotspot')
+                                                os.system('nmcli connection modify candle_hotspot autoconnect no')
+                                                os.system('sudo pkill dnsmasq')
+                                                state = True
                                             
                                 return APIResponse(
                                   status=200,
@@ -1840,11 +1841,11 @@ class PowerSettingsAPIHandler(APIHandler):
                             elif action == 'set_hotspot_password':
                                 state = False
                                 if 'password' in request.body:
-                                    new_password = request.body['password']
+                                    new_password = str(request.body['password'])
                                     if len(new_password) > 7 and len(new_password) < 64:
                                         self.hotspot_password = new_password
-                                        os.system('echo "' + new_password + '" | sudo tee ' + self.candle_hotspot_password_file_path)
-                                        os.system('nmcli con modify candle_hotspot wifi-sec.key-mgmt wpa-psk wifi-sec.psk "' + new_password + '"')
+                                        os.system('echo "' + str(new_password) + '" | sudo tee ' + str(self.candle_hotspot_password_file_path))
+                                        os.system('nmcli con modify candle_hotspot wifi-sec.key-mgmt wpa-psk wifi-sec.psk "' + str(new_password) + '"')
                                         state = True
                                 
                                 return APIResponse(
@@ -2524,9 +2525,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'update_via_recovery_interupted':local_update_via_recovery_interupted,
                                             'user_partition_expanded':self.user_partition_expanded,
                                             'unused_volume_space': self.unused_volume_space,
-                                            'device_model':self.device_model.rstrip(),
-                                            'device_kernel':self.device_kernel.rstrip(),
-                                            'device_linux':self.device_linux.rstrip(),
+                                            'device_model':str(self.device_model).rstrip(),
+                                            'device_kernel':str(self.device_kernel).rstrip(),
+                                            'device_linux':sstr(self.device_linux).rstrip(),
                                             'device_sd_card_size':self.device_sd_card_size,
                                             'has_cups':self.has_cups,
                                             'pipewire_enabled':self.pipewire_enabled,
