@@ -711,12 +711,13 @@ class PowerSettingsAPIHandler(APIHandler):
     def get_hotspot_arp(self):
         result = []
         hotspot_arp_list = run_command("cat /proc/net/arp | tail -n +2 | grep '192.168.12.'")
-        for line in str(hotspot_arp_list).splitlines():
-            if "192.168.12." in line:
-                if "192.168.12.1 " in line:
-                    pass
-                else:
-                    result.append(line.split(' ')[0])
+        if hotspot_arp_list != None:
+            for line in str(hotspot_arp_list).splitlines():
+                if "192.168.12." in str(line):
+                    if "192.168.12.1 " in str(line):
+                        pass
+                    else:
+                        result.append(str(line).split(' ')[0])
         return result
         
         
@@ -2483,16 +2484,18 @@ class PowerSettingsAPIHandler(APIHandler):
                                     if timedate_check != None:
                                         for line in str(timedate_check).splitlines():
                                             if self.DEBUG:
-                                                print(line)
+                                                print("timedate_check line: " + str(line))
                                             if line.startswith( 'NTP=no' ):
                                                 current_ntp_state = False
                                         
                                     shell_date = run_command("date")
-                                        
+                                    print("shell_date: " + str(shell_date))
                                     #just_updated_via_recovery = self.just_updated_via_recovery
                                     #self.just_updated_via_recovery = False
-                                
-                                    
+
+                                    hotspot_arp_list = self.get_hotspot_arp()
+                                    hotspot_arp_list = str(hotspot_arp_list)
+                                    print("hotspot_arp_list: " + str(hotspot_arp_list))
                                 
                                 response = {'hours':now.hour,
                                             'minutes':now.minute,
@@ -2527,7 +2530,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'unused_volume_space': self.unused_volume_space,
                                             'device_model':str(self.device_model).rstrip(),
                                             'device_kernel':str(self.device_kernel).rstrip(),
-                                            'device_linux':sstr(self.device_linux).rstrip(),
+                                            'device_linux':str(self.device_linux).rstrip(),
                                             'device_sd_card_size':self.device_sd_card_size,
                                             'has_cups':self.has_cups,
                                             'pipewire_enabled':self.pipewire_enabled,
@@ -2535,7 +2538,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'hotspot_enabled':self.hotspot_enabled,
                                             'hotspot_ssid':self.hotspot_ssid,
                                             'hotspot_password':self.hotspot_password,
-                                            'hotspot_connected_devices':self.get_hotspot_arp(),
+                                            'hotspot_connected_devices':hotspot_arp_list,
                                             'debug':self.DEBUG
                                         }
                                         
