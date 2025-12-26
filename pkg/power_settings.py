@@ -3048,8 +3048,10 @@ class PowerSettingsAPIHandler(APIHandler):
                 #uploads_option = ""
 
                 touch_all_data_folder_command = 'echo "$(date)" > "$1"/candle_backuped.txt'
-                touch_all_data_folder_command = "find .  -maxdepth 1 -type d -exec sh -c '" + str(touch_all_data_folder_command) + "' _ {} \;"
+                touch_all_data_folder_command = "find .  -maxdepth 1 -type d -exec sh -c '" + str(touch_all_data_folder_command) + "' _ {}"
                 touch_all_data_folder_command = 'cd ' + str(self.user_profile['dataDir']) + '; ' + str(touch_all_data_folder_command)
+                touch_all_data_folder_command = touch_all_data_folder_command + ' \'
+                touch_all_data_folder_command = touch_all_data_folder_command + ';'
                 if self.DEBUG:
                     print("running command to touch al data folders: \n" + str(touch_all_data_folder_command))
                 
