@@ -910,16 +910,16 @@ class PowerSettingsAPIHandler(APIHandler):
                 i2c_check = run_command("sudo i2cdetect -y 1")
                 if i2c_check != None:
                     for line in str(i2c_check).splitlines():
-                    if self.DEBUG:
-                        print(line)
-                    if line.startswith( '60:' ):
-                        if '-- 68 --' in line or '-- UU --' in line:
-                            self.hardware_clock_detected = True
-                            if self.DEBUG:
-                                print("Hardware clock detected")
-                            
-                        if '-- 68 --' in line:
-                            init_hardware_clock = True
+                        if self.DEBUG:
+                            print(line)
+                        if line.startswith( '60:' ):
+                            if '-- 68 --' in line or '-- UU --' in line:
+                                self.hardware_clock_detected = True
+                                if self.DEBUG:
+                                    print("Hardware clock detected")
+                                
+                            if '-- 68 --' in line:
+                                init_hardware_clock = True
             
                 if init_hardware_clock:
                     if self.DEBUG:
