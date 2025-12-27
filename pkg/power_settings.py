@@ -91,12 +91,12 @@ class PowerSettingsAPIHandler(APIHandler):
         #print("\n\n\n")
         #print("self.user_profile: ", self.user_profile)
         
-        self.addon_dir = os.path.join(self.user_profile['addonsDir'], self.addon_id)
-        self.data_dir = os.path.join(self.user_profile['dataDir'], self.addon_id)
+        self.addon_dir = os.path.join(str(self.user_profile['addonsDir']), self.addon_id)
+        self.data_dir = os.path.join(str(self.user_profile['dataDir']), self.addon_id)
         # baseDir is another useful option in user_profile
 
-        self.mosquitto_conf_file_path = os.path.join(self.user_profile['baseDir'], 'etc','mosquitto','mosquitto.conf')
-        self.late_sh_path = os.path.join(self.user_profile['baseDir'].replace('/.webthings',''), 'candle','late.sh')
+        self.mosquitto_conf_file_path = os.path.join(str(self.user_profile['baseDir']), 'etc','mosquitto','mosquitto.conf')
+        self.late_sh_path = os.path.join(str(self.user_profile['baseDir']).replace('/.webthings',''), 'candle','late.sh')
         #print("self.late_sh_path: ", self.late_sh_path)
         self.display_manufacturers_csv_path = os.path.join(self.addon_dir, 'display_manufacturers.csv')
         
@@ -190,8 +190,8 @@ class PowerSettingsAPIHandler(APIHandler):
         self.backup_more = False # May be set to true in the UI, in which case logs and photos are also backuped
         self.backup_logs_failed = False
         self.backup_photos_failed = False
-        self.uploads_dir_path = os.path.join(self.user_profile['baseDir'], 'uploads')
-        self.photos_dir_path = os.path.join(self.user_profile['dataDir'],'photo-frame','photos')
+        self.uploads_dir_path = os.path.join(str(self.user_profile['baseDir']), 'uploads')
+        self.photos_dir_path = os.path.join(str(self.user_profile['dataDir']),'photo-frame','photos')
         self.photo_frame_installed = False
         self.photos_size = 0
         self.log_size = 0
@@ -250,7 +250,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.backup_file_path = os.path.join(self.backup_dir, "candle_backup.tar")
         
         # Backup data logs path
-        self.log_db_file_path = os.path.join(self.user_profile['baseDir'], 'log','logs.sqlite3')
+        self.log_db_file_path = os.path.join(str(self.user_profile['baseDir']), 'log','logs.sqlite3')
         self.log_meta_file_path = os.path.join(self.data_dir, "logs_meta.sqlite3")
         
         # Restore
@@ -380,7 +380,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.updating_recovery_failed = False
         self.should_start_recovery_update = False
         
-        self.recovery_partition_mount_point = os.path.join(self.user_profile['dataDir'], self.addon_id,'recoverypart')
+        self.recovery_partition_mount_point = os.path.join(str(self.user_profile['dataDir']), self.addon_id,'recoverypart')
         
         if not os.path.exists(self.recovery_partition_mount_point):
             os.system('mkdir -p ' + str(self.recovery_partition_mount_point))
@@ -443,7 +443,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.sd_card_written_kbytes = '?'
         
         try:
-            if os.path.isdir(str(self.user_profile['baseDir'])):
+            if self.user_profile and os.path.isdir(str(self.user_profile['baseDir'])):
                 self.user_partition_free_disk_space = int(run_command("df " + str(self.user_profile['baseDir']) + " | awk 'NR==2{print $4}' | tr -d '\n'"))
                 total_memory = run_command("awk '/^MemTotal:/{print $2}' /proc/meminfo | tr -d '\n'")
                 self.total_memory = int( int(''.join(filter(str.isdigit, total_memory))) / 1000)
