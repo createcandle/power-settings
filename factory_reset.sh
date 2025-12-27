@@ -90,8 +90,12 @@ rm -rf /home/pi/.webthings/data/hotspot/*
 rm -rf /home/pi/.webthings/data/followers/*
 rm -rf /home/pi/.webthings/data/privacy-manager/*
 rm -rf /home/pi/.webthings/data/photo-frame/*
-rm -rf /home/pi/.webthings/data/welcome/*
-rm -rf /home/pi/.webthings/data/tutorial/*
+if [ -d /home/pi/.webthings/data/welcome ]; then
+    rm -rf /home/pi/.webthings/data/welcome/*
+fi
+if [ -d /home/pi/.webthings/data/tutorial ]; then
+    rm -rf /home/pi/.webthings/data/tutorial/*
+fi
 rm -rf /home/pi/.webthings/data/network-presence-detection-adapter/*
 rm -rf /home/pi/.webthings/data/internet-radio/*
 rm -rf /home/pi/.webthings/data/scenes/*
@@ -100,6 +104,7 @@ if [ -f /home/pi/.webthings/addons/dashboard/persistence.json ]; then
     mkdir -p /home/pi/.webthings/data/dashboard
     cp /home/pi/.webthings/addons/dashboard/persistence.json /home/pi/.webthings/data/dashboard/persistence.json
     chown -R pi:pi /home/pi/.webthings/data/dashboard
+    chmod 755 /home/pi/.webthings/data/dashboard/persistence.json
 fi
 
 
