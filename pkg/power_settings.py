@@ -3153,6 +3153,9 @@ class PowerSettingsAPIHandler(APIHandler):
                 if self.DEBUG:
                     print("Running backup command: " + str(backup_command))
                 run_command(backup_command)
+                
+                os.system("find /home/pi/.webthings/data -maxdepth 1 -type d -exec sh -c 'rm $1/candle_backuped.txt' _ {} \;")
+                
             #soft_link = 'ln -s ' + str(self.backup_download_file_path) + " " + str(self.self.backup_download_dir)
             #if self.DEBUG:
             #    print("linking: " + soft_link)
