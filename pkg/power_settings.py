@@ -63,7 +63,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.DEBUG = False
         self.running = True
         
-        
+        os.system("find /home/pi/.webthings/data -maxdepth 1 -type d -exec sh -c 'rm $1/candle_backuped.txt' _ {} \;")
         
         """
         try:
