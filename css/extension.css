@@ -535,9 +535,7 @@
     padding-bottom:0;
 }
 
-#extension-power-settings-pages .section-title{
-	margin-bottom:1rem;
-}
+
 
 
 .extension-power-settings-hidden{
@@ -1291,6 +1289,20 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
     
 	#extension-power-settings-back-button{
 		display:none!important;
+	}
+	
+	.section-title{
+		margin-bottom:1rem;
+	}
+	
+	#domain-settings ul,
+	#user-settings ul,
+	#localization-settings ul,
+	#network-settings-client ul{
+		position: initial;
+		transform:none;
+		padding:0 2rem;
+		margin: 0 auto;
 	}
 	
 }
