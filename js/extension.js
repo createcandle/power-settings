@@ -3037,11 +3037,13 @@
                                 console.log("file upload done. Response: ", body);
                             }
                             if(body.state == 'ok'){
-                                if(confirm("The system must now reboot to finish restoring the backup")){
-                                    window.API.postJson('/settings/system/actions', {
+                                if(confirm("The system will be unavailable for a few minutes while the backup is being restored")){
+                                    /*
+									window.API.postJson('/settings/system/actions', {
                                         action: 'restartSystem'
                                     }).catch(console.error);
-                                    document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<p>Rebooting...</p>';
+									*/
+                                    document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<p>Restoring and restarting...</p>';
                                 }
                                 else{
                                     document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<p>Please reboot the controller to complete the restore process.</p>';
