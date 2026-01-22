@@ -83,6 +83,10 @@
 	            });
 			}
 			
+			document.getElementById('main-menu').addEventListener('click', (event) => {
+				this.hide_all_settings_containers();
+			});
+			
 			document.getElementById('settings-menu').addEventListener('click', (event) => {
 
 				if(event.target.tagName == 'A'){
