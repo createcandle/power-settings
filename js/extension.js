@@ -89,7 +89,6 @@
 					
 					const menu_item_els = document.querySelectorAll('#settings-view section.settings-section');
 					for(let mi = 0; mi < menu_item_els.length; mi++){
-						console.log("hiding settings-section");
 						menu_item_els[mi].classList.add('hidden');
 					}
 				
@@ -97,7 +96,6 @@
 						// do nothing
 					}
 					else {
-						console.log('hiding all extra settings containers');
 						this.hide_all_settings_containers();
 					}
 				
@@ -115,9 +113,6 @@
 			            });
 					}
 					
-				}
-				else{
-					console.log("clicked in between buttons?");
 				}
 				
 			});
