@@ -430,16 +430,22 @@ class PowerSettingsAPIHandler(APIHandler):
                 self.hotspot_password = file.read()
                 self.hotspot_password = self.hotspot_password.strip()
         
-        self.hotspot_ssid = 'Candle'
+        
         
         self.hotspot_mac_address = run_command("nmcli -t device show uap0 | grep HWADDR | cut -d':' -f2-7")
         if self.hotspot_mac_address != None:
             self.hotspot_mac_address = self.hotspot_mac_address.strip()
             if "Error" in self.hotspot_mac_address:
                 self.hotspot_mac_address = ""
-            elif ":" in self.hotspot_mac_address:
-                self.hotspot_ssid = self.hotspot_ssid + " " + self.hotspot_mac_address[-5:].replace(":", "")
-        
+            #elif ":" in self.hotspot_mac_address:
+            #    self.hotspot_ssid = self.hotspot_ssid + " " + self.hotspot_mac_address[-5:].replace(":", "")
+            
+        self.hotspot_ssid = 'Candle'
+        actual_hotspot_ssid = run_command('nmcli con show candle_hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | tr -d \" | sed "s/,*$//g" | xargs')
+        actual_hotspot_ssid = str(actual_hotspot_ssid)
+        if actual_hotspot_ssid.startswith('Candle '):
+            self.hotspot_ssid = actual_hotspot_ssid
+            
         self.sd_card_written_kbytes = '?'
         
         try:

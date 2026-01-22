@@ -37,6 +37,8 @@
             this.baseUrl = getUrl.protocol + "//" + getUrl.host + "/things";
 
 			
+			//console.log('this.view: ', this.view);
+			
 			this.display_port1_name = 'HDMI-1';
 			this.display_port2_name = 'HDMI-2';
 
@@ -55,6 +57,19 @@
 			
 			this.mouse_pointer_enabled = false;
 			
+			let addon_settings_link_el = document.getElementById('addon-settings-link');
+			if(addon_settings_link_el){
+				addon_settings_link_el.parentNode.classList.add('extension-power-settings-hidden');
+			}
+			setTimeout(() => {
+				addon_settings_link_el = document.getElementById('addon-settings-link');
+				if(addon_settings_link_el){
+					addon_settings_link_el.parentNode.classList.add('extension-power-settings-hidden');
+				}
+			},1000);
+			
+			
+			
 			if(document.location.href.endsWith('/settings/network')){
 	            window.API.postJson(
 	                `/extensions/${this.id}/api/ajax`, {
@@ -69,19 +84,42 @@
 			}
 			
 			document.getElementById('settings-menu').addEventListener('click', (event) => {
-				if(event.target.getAttribute('id') == 'network-settings-link'){
+
+				if(event.target.tagName == 'A'){
 					
-		            window.API.postJson(
-		                `/extensions/${this.id}/api/ajax`, {
-		                    'action': 'get_hotspot_settings'
-		                }
-		            ).then((body) => {
-		                this.render_hotspot_settings(body);
+					const menu_item_els = document.querySelectorAll('#settings-view section.settings-section');
+					for(let mi = 0; mi < menu_item_els.length; mi++){
+						console.log("hiding settings-section");
+						menu_item_els[mi].classList.add('hidden');
+					}
+				
+					if( event.target.parentNode.classList.contains('extension-power-settings-settings-item') ){
+						// do nothing
+					}
+					else {
+						console.log('hiding all extra settings containers');
+						this.hide_all_settings_containers();
+					}
+				
+					if(event.target.getAttribute('id') == 'network-settings-link'){
+					
+			            window.API.postJson(
+			                `/extensions/${this.id}/api/ajax`, {
+			                    'action': 'get_hotspot_settings'
+			                }
+			            ).then((body) => {
+			                this.render_hotspot_settings(body);
             
-		            }).catch((err) => {
-		                console.error("power-settings get_hotspot_details error: ", err);
-		            });
+			            }).catch((err) => {
+			                console.error("power-settings get_hotspot_details error: ", err);
+			            });
+					}
+					
 				}
+				else{
+					console.log("clicked in between buttons?");
+				}
+				
 			});
 			
 			/*
@@ -404,14 +442,14 @@
 				//
                 
                 // Add buttons to settings menu
-                document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-time-button">Clock</a></li>';
-				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-display-button">Display</a></li>';
-				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item" id="extension-power-settings-main-menu-audio-item"><a id="extension-power-settings-menu-audio-button">Audio</a></li>';
-				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item" id="extension-power-settings-main-menu-printer-item" style="display:none"><a id="extension-power-settings-menu-printer-button">Printer</a></li>';
-				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-system-button">System Information</a></li>';
-                document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-backup-button">Backup & Restore</a></li>';
-                document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-update-button">Update <span id="extension-power-settings-menu-update-button-indicator">' + this.update_available_text + '</span></a></li>';
-                document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item"><a id="extension-power-settings-menu-reset-button">Factory reset</a></li>';
+                document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-time-button">Clock</a></li>';
+				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-display-button">Display</a></li>';
+				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item" id="extension-power-settings-main-menu-audio-item"><a id="extension-power-settings-menu-audio-button">Audio</a></li>';
+				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item" id="extension-power-settings-main-menu-printer-item" style="display:none"><a id="extension-power-settings-menu-printer-button">Printer</a></li>';
+				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-system-button">System Information</a></li>';
+                document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-backup-button">Backup & Restore</a></li>';
+                document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-update-button">Update <span id="extension-power-settings-menu-update-button-indicator">' + this.update_available_text + '</span></a></li>';
+                document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-reset-button">Factory reset</a></li>';
                 
                 
                 

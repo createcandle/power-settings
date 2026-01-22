@@ -535,6 +535,10 @@
     padding-bottom:0;
 }
 
+#extension-power-settings-pages .section-title{
+	margin-bottom:1rem;
+}
+
 
 .extension-power-settings-hidden{
     display:none!important;
@@ -548,7 +552,7 @@
 #extension-power-settings-scroll-container > div{
     max-width:60rem;
     box-sizing:border-box;
-    margin:6rem auto;
+    margin:0 auto 6rem auto;
 }
 
 
@@ -1264,7 +1268,31 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
 	    left:10rem;
         right:10rem;
 	}
+	
+	nav#settings-menu {
+	    max-width: 46rem;
+	    padding-left: 7.6rem;
+	}
+
+	nav#settings-menu.hidden{
+		transform: translate(0%, -50%);
+	}
+
+	section.settings-section{
+	    margin-left: 46rem;
+	    max-width: calc(100% - 46rem);
+	}
+	
+	#extension-power-settings-pages{
+		left:46rem;
+		width: calc(100% - 46rem);
+		max-width: calc(100% - 46rem);
+	}
     
+	#extension-power-settings-back-button{
+		display:none!important;
+	}
+	
 }
 
 @media screen and (min-width: 1600px) {
