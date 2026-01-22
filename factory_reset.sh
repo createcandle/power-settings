@@ -78,8 +78,8 @@ cp /home/pi/.webthings/floorplan.svg /home/pi/.webthings/uploads/floorplan.svg
 chown pi:pi /home/pi/.webthings/uploads/floorplan.svg
 
 # remove any addons that are not the originals
-cd /home/pi/.webthings/addons && find -not -path "./candleappstore*" -not -path "./candle-theme*" -not -path "./power-settings*" -not -path "./webinterface*" -not -path "./zigbee2mqtt-adapter*" -not -path "./followers*" -not -path "./privacy-manager*" -not -path "./photo-frame*" -not -path "./tutorial*" -not -path "./internet-radio*" -not -path "./bluetoothpairing*" -not -path "./scenes*" -not -path "./dashboard*"  -not -path "./hotspot*" -delete
-cd /home/pi/.webthings/data && find -not -path "./candleappstore*" -not -path "./candle-theme*" -not -path "./power-settings*" -not -path "./webinterface*" -not -path "./zigbee2mqtt-adapter*" -not -path "./followers*" -not -path "./privacy-manager*" -not -path "./photo-frame*" -not -path "./tutorial*" -not -path "./internet-radio*" -not -path "./bluetoothpairing*" -not -path "./scenes*" -not -path "./dashboard*" -not -path "./hotspot*" -delete
+cd /home/pi/.webthings/addons && find -not -path "./candleappstore*" -not -path "./candle-theme*" -not -path "./power-settings*" -not -path "./webinterface*" -not -path "./zigbee2mqtt-adapter*" -not -path "./followers*" -not -path "./privacy-manager*" -not -path "./photo-frame*" -not -path "./tutorial*" -not -path "./internet-radio*" -not -path "./bluetoothpairing*" -not -path "./scenes*" -not -path "./dashboard*" -not -path "./hotspot*" -not -path "./matter-adapter*"  -not -path "./energyuse*" -delete
+cd /home/pi/.webthings/data && find -not -path "./candleappstore*" -not -path "./candle-theme*" -not -path "./power-settings*" -not -path "./webinterface*" -not -path "./zigbee2mqtt-adapter*" -not -path "./followers*" -not -path "./privacy-manager*" -not -path "./photo-frame*" -not -path "./tutorial*" -not -path "./internet-radio*" -not -path "./bluetoothpairing*" -not -path "./scenes*" -not -path "./dashboard*" -not -path "./hotspot*" -not -path "./matter-adapter*"  -not -path "./energyuse*" -delete
 
 # make sure data is removed from addons that remain
 rm -rf /home/pi/.webthings/data/candleappstore/*
@@ -106,6 +106,8 @@ if [ -f /home/pi/.webthings/addons/dashboard/persistence.json ]; then
     chown -R pi:pi /home/pi/.webthings/data/dashboard
     chmod 755 /home/pi/.webthings/data/dashboard/persistence.json
 fi
+rm -rf /home/pi/.webthings/data/matter-adapter/*
+rm -rf /home/pi/.webthings/data/energyuse/*
 
 
 touch $BOOT_DIR/candle_hotspot.txt
