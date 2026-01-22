@@ -63,7 +63,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.DEBUG = False
         self.running = True
         
-        os.system("find /home/pi/.webthings/data -maxdepth 1 -type d -exec sh -c 'rm $1/candle_backuped.txt' _ {} \;")
+        os.system(r"find /home/pi/.webthings/data -maxdepth 1 -type d -exec sh -c 'rm $1/candle_backuped.txt' _ {} \; 2> /dev/null")
         
         """
         try:
@@ -441,11 +441,13 @@ class PowerSettingsAPIHandler(APIHandler):
             #    self.hotspot_ssid = self.hotspot_ssid + " " + self.hotspot_mac_address[-5:].replace(":", "")
             
         self.hotspot_ssid = 'Candle'
-        actual_hotspot_ssid = run_command('nmcli con show candle_hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | tr -d \" | sed "s/,*$//g" | xargs')
-        actual_hotspot_ssid = str(actual_hotspot_ssid)
+        #actual_hotspot_ssid = run_command("nmcli con show candle_hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | sed 's/,*$//g' | xargs")
+        actual_hotspot_ssid = run_command("nmcli con show candle_hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | sed 's/,*$//g' | xargs")
+        actual_hotspot_ssid = str(actual_hotspot_ssid).rstrip()
         if actual_hotspot_ssid.startswith('Candle '):
             self.hotspot_ssid = actual_hotspot_ssid
-            
+        
+        #print("actual_hotspot_ssid: -" + actual_hotspot_ssid + '-');
         self.sd_card_written_kbytes = '?'
         
         try:
@@ -514,7 +516,8 @@ class PowerSettingsAPIHandler(APIHandler):
         
         # Remove old actions script if it survived somehow
         if os.path.isfile(self.actions_file_path):
-            print("ERROR: old actions script still exists! Removing it now.")
+            if self.DEBUG:
+                print("ERROR: old actions script still exists! Removing it now.")
             os.system('sudo rm ' + str(self.actions_file_path))
         
         
@@ -3160,7 +3163,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     print("Running backup command: " + str(backup_command))
                 run_command(backup_command)
                 
-                os.system("find /home/pi/.webthings/data -maxdepth 1 -type d -exec sh -c 'rm $1/candle_backuped.txt' _ {} \;")
+                os.system(r"find /home/pi/.webthings/data -maxdepth 1 -type d -exec sh -c 'rm $1/candle_backuped.txt' _ {} \; 2> /dev/null")
                 
             #soft_link = 'ln -s ' + str(self.backup_download_file_path) + " " + str(self.self.backup_download_dir)
             #if self.DEBUG:
