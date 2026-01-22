@@ -3037,17 +3037,20 @@
                                 console.log("file upload done. Response: ", body);
                             }
                             if(body.state == 'ok'){
+								document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<p>Restoring and restarting...</p>';
+								alert("The system will be unavailable for a few minutes while the backup is being restored");
+								/*
                                 if(confirm("The system will be unavailable for a few minutes while the backup is being restored")){
-                                    /*
 									window.API.postJson('/settings/system/actions', {
                                         action: 'restartSystem'
                                     }).catch(console.error);
-									*/
                                     document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<p>Restoring and restarting...</p>';
                                 }
                                 else{
                                     document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<p>Please reboot the controller to complete the restore process.</p>';
                                 }
+								*/
+								
                             }
                             else{
                                 document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML =  '<p>An error occured while handling the uploaded file.</p>';
