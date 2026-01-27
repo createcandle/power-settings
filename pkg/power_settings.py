@@ -1796,7 +1796,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 
                             # force a wifi rescan
-                            elif action == 'wifi_rescan':
+                            elif action == 'rescan_wifi':
                                 os.system('nmcli dev wifi list --rescan yes')
                                 
                                 return APIResponse(
