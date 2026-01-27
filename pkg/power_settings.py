@@ -446,7 +446,7 @@ class PowerSettingsAPIHandler(APIHandler):
             
         self.hotspot_ssid = 'Candle'
         #actual_hotspot_ssid = run_command("nmcli con show candle_hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | sed 's/,*$//g' | xargs")
-        actual_hotspot_ssid = run_command("nmcli con show candle_hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | sed 's/,*$//g' | xargs")
+        actual_hotspot_ssid = run_command("nmcli con show Hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | sed 's/,*$//g' | xargs")
         actual_hotspot_ssid = str(actual_hotspot_ssid).rstrip()
         if actual_hotspot_ssid.startswith('Candle '):
             self.hotspot_ssid = actual_hotspot_ssid
