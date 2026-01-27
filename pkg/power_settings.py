@@ -134,9 +134,13 @@ class PowerSettingsAPIHandler(APIHandler):
         if not 'display2_power' in self.persistent_data:
             self.persistent_data['display2_power'] = False
             self.persistent_changed = True
+        #if not 'show_hotspot_password' in self.persistent_data:
+        #    self.persistent_data['show_hotspot_password'] = True
+        #    self.persistent_changed = True
             
         if self.persistent_changed:
             self.save_persistent_data()
+        
         
         
         
@@ -425,11 +429,11 @@ class PowerSettingsAPIHandler(APIHandler):
         self.performed_initial_wifi_scan = False
         self.hotspot_enabled = os.path.exists(self.candle_hotspot_file_path)
         self.hotspot_password = ""
+        self.show_hotspot_password = False
         if os.path.exists(self.candle_hotspot_password_file_path):
             with open(self.candle_hotspot_password_file_path, "r") as file:
                 self.hotspot_password = file.read()
                 self.hotspot_password = self.hotspot_password.strip()
-        
         
         
         self.hotspot_mac_address = run_command("nmcli -t device show uap0 | grep HWADDR | cut -d':' -f2-7")
@@ -715,7 +719,12 @@ class PowerSettingsAPIHandler(APIHandler):
             self.display_standby_delay = int(config['Display standby delay']) * 60
             if self.DEBUG:
                 print("-Display standby delay preference was in config: " + str(self.display_standby_delay))
-        
+                
+        if 'Show hotspot password' in config:
+            self.show_hotspot_password = bool(config['Show hotspot password'])
+            if self.DEBUG:
+                print("-Show hotspot pasword preference was in config: " + str(self.show_hotspot_password))
+                
                 
     
     def get_hotspot_arp(self):
@@ -1786,20 +1795,39 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 
                                 
+                            # force a wifi rescan
+                            elif action == 'wifi_rescan':
+                                os.system('nmcli dev wifi list --rescan yes')
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':True}),
+                                )
+                                
                             
                             # get current hotspot settings
                             elif action == 'get_hotspot_settings':
                                 
                                 if self.performed_initial_wifi_scan == False:
                                     self.performed_initial_wifi_scan = True
-                                    os.system('nmcli -t dev wifi list --no-pager &')
+                                    os.system('nmcli -t dev wifi list &')
+                                    time.sleep(2)
+                                
+                                the_hotspot_password = ''
+                                #if self.persistent_data['show_hotspot_password'] == True:
+                                if self.show_hotspot_password == True:
+                                    the_hotspot_password = self.hotspot_password
+                                
+                                connected_hotspot_devices_according_to_arp = self.get_hotspot_arp()
                                 
                                 result = {
                                     'state':True,
                                     'hotspot_enabled':self.hotspot_enabled,
                                     'hotspot_ssid':self.hotspot_ssid,
-                                    'hotspot_password':self.hotspot_password,
-                                    'hotspot_connected_devices':self.get_hotspot_arp(),
+                                    'hotspot_password':the_hotspot_password,
+                                    'hotspot_password_length':len(self.hotspot_password),
+                                    'hotspot_connected_devices':connected_hotspot_devices_according_to_arp,
                                 }
                                 return APIResponse(
                                   status=200,
@@ -1808,9 +1836,12 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                             elif action == 'get_hotspot_connected_devices':
+                                
+                                connected_hotspot_devices_according_to_arp = self.get_hotspot_arp()
+                                
                                 result = {
                                     'state':True,
-                                    'hotspot_connected_devices':self.get_hotspot_arp(),
+                                    'hotspot_connected_devices':connected_hotspot_devices_according_to_arp,
                                 }
                                 return APIResponse(
                                   status=200,
@@ -1856,7 +1887,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                     if len(new_password) > 7 and len(new_password) < 64:
                                         self.hotspot_password = new_password
                                         os.system('echo "' + str(new_password) + '" | sudo tee ' + str(self.candle_hotspot_password_file_path))
-                                        os.system('nmcli con modify candle_hotspot wifi-sec.key-mgmt wpa-psk wifi-sec.psk "' + str(new_password) + '"')
+                                        os.system('nmcli con modify candle_hotspot wifi-sec.key-mgmt sae wifi-sec.psk "' + str(new_password) + '"')
                                         state = True
                                 
                                 return APIResponse(
@@ -1865,6 +1896,20 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':state}),
                                 )
                                 
+                            # Update hotspot password visibility
+                           
+                            elif action == 'set_hotspot_password_visibility':
+                                state = False
+                                if 'visibility' in request.body:
+                                    #self.persistent_data['show_hotspot_password'] = bool(request.body['visibility'])
+                                    state = True
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
+                            
                                 
                                 
                             # OLD SCHOOL SYSTEM UPDATE 
@@ -2486,6 +2531,11 @@ class PowerSettingsAPIHandler(APIHandler):
                                 local_update_via_recovery_interupted = self.update_via_recovery_interupted
                                 self.update_via_recovery_interupted = False
                                 
+                                the_hotspot_password = ''
+                                #if self.persistent_data['show_hotspot_password'] == True:
+                                if self.show_hotspot_password == True:
+                                    the_hotspot_password = self.hotspot_password
+                                
                                 if os.path.isdir(self.boot_path):
                                     self.check_update_processes()
                                     self.update_backup_info()
@@ -2499,13 +2549,15 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 current_ntp_state = False
                                         
                                     shell_date = run_command("date")
-                                    print("shell_date: " + str(shell_date))
+                                    if self.DEBUG:
+                                        print("shell_date: " + str(shell_date))
                                     #just_updated_via_recovery = self.just_updated_via_recovery
                                     #self.just_updated_via_recovery = False
 
                                     hotspot_arp_list = self.get_hotspot_arp()
                                     hotspot_arp_list = str(hotspot_arp_list)
-                                    print("hotspot_arp_list: " + str(hotspot_arp_list))
+                                    if self.DEBUG:
+                                        print("hotspot_arp_list: " + str(hotspot_arp_list))
                                 
                                 response = {'hours':now.hour,
                                             'minutes':now.minute,
@@ -2547,7 +2599,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'user_partition_expansion_failed': self.user_partition_expansion_failed,
                                             'hotspot_enabled':self.hotspot_enabled,
                                             'hotspot_ssid':self.hotspot_ssid,
-                                            'hotspot_password':self.hotspot_password,
+                                            'hotspot_password':the_hotspot_password,
+                                            'hotspot_password_length':len(self.hotspot_password),
                                             'hotspot_connected_devices':hotspot_arp_list,
                                             'debug':self.DEBUG
                                         }
@@ -3657,7 +3710,7 @@ class PowerSettingsAPIHandler(APIHandler):
             if self.DEBUG:
                 print("pipewire is enabled")
             self.pipewire_enabled = True
-            self.pipewire_data = get_pipewire_audio_controls(self.DEBUG) # True = debug    
+            self.pipewire_data = get_pipewire_audio_controls(False) # True = debug    
             if self.DEBUG:
                 print("pipewire data: " + str(self.pipewire_data))
         return self.pipewire_data

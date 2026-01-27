@@ -2,6 +2,10 @@
   background-image: url('../images/menu-icon.svg');
 }
 
+#settings-menu .section-title-container{
+	user-select: none;
+}
+
 /*
 #extension-power-settings-show-reset-settings-button{
     display:none!important;
@@ -1188,6 +1192,21 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
    transform:scale(2);
    cursor:pointer;
 }
+
+
+/*  WIFI settings  */
+
+#extension-power-settings-wifi-rescan-container{
+	display:none;
+}
+
+#network-settings-wifi-network-list:not(:empty) + #network-settings-wifi-wrap.hidden + #extension-power-settings-wifi-rescan-container{
+	display:block;
+}
+
+
+
+
 
 
 /*  hotspot settings  */
