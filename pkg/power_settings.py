@@ -445,7 +445,7 @@ class PowerSettingsAPIHandler(APIHandler):
             #    self.hotspot_ssid = self.hotspot_ssid + " " + self.hotspot_mac_address[-5:].replace(":", "")
             
         self.hotspot_ssid = 'Candle'
-        #actual_hotspot_ssid = run_command("nmcli con show candle_hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | sed 's/,*$//g' | xargs")
+        #actual_hotspot_ssid = run_command("nmcli con show Hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | sed 's/,*$//g' | xargs")
         actual_hotspot_ssid = run_command("nmcli con show Hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | sed 's/,*$//g' | xargs")
         actual_hotspot_ssid = str(actual_hotspot_ssid).rstrip()
         if actual_hotspot_ssid.startswith('Candle '):
@@ -1857,19 +1857,19 @@ class PowerSettingsAPIHandler(APIHandler):
                                     self.hotspot_enabled = bool(request.body['enabled'])
                                     if self.hotspot_enabled:
                                         os.system('sudo touch ' + str(self.candle_hotspot_file_path))
-                                        os.system('nmcli connection up candle_hotspot')
-                                        os.system('nmcli connection modify candle_hotspot autoconnect yes')
+                                        os.system('nmcli connection up Hotspot')
+                                        os.system('nmcli connection modify Hotspot autoconnect yes')
                                         
                                         state = True
                                     else:
                                         # don't disable the hotspot if there are no remaining network connections
                                         # TODO could also check if a thatouch screne is connected, in which case that can still be used to keep access.
-                                        active_connections = run_command("nmcli -t connection show --active | tail -n +2 | grep -v 'candle_hotspot' | grep -v 'loopback:lo'")
+                                        active_connections = run_command("nmcli -t connection show --active | tail -n +2 | grep -v 'Hotspot' | grep -v 'loopback:lo'")
                                         if active_connections != None:
                                             if len(str(active_connections).strip()) > 10:
                                                 os.system('sudo rm ' + str(self.candle_hotspot_file_path))
-                                                os.system('nmcli connection down candle_hotspot')
-                                                os.system('nmcli connection modify candle_hotspot autoconnect no')
+                                                os.system('nmcli connection down Hotspot')
+                                                os.system('nmcli connection modify Hotspot autoconnect no')
                                                 os.system('sudo pkill dnsmasq')
                                                 state = True
                                             
@@ -1887,7 +1887,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                     if len(new_password) > 7 and len(new_password) < 64:
                                         self.hotspot_password = new_password
                                         os.system('echo "' + str(new_password) + '" | sudo tee ' + str(self.candle_hotspot_password_file_path))
-                                        os.system('nmcli con modify candle_hotspot wifi-sec.key-mgmt sae wifi-sec.psk "' + str(new_password) + '"')
+                                        os.system('nmcli con modify Hotspot wifi-sec.key-mgmt sae wifi-sec.psk "' + str(new_password) + '"')
                                         state = True
                                 
                                 return APIResponse(
