@@ -3124,7 +3124,14 @@
         
         
         hide_all_settings_containers(){
-            document.getElementById('extension-power-settings-pages').classList.add('hidden');
+			const settings_pages_el = document.getElementById('extension-power-settings-pages');
+			if(settings_pages_el == null){
+				if(this.debug){
+					console.error("power settings: hide_all_settings_containers: power settings pages do not exist (yet)");
+				}
+				return
+			}
+            settings_pages_el.classList.add('hidden');
             document.querySelectorAll('.extension-power-settings-container').forEach( el => {
                 el.classList.add('extension-power-settings-hidden');
             });
