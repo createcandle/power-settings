@@ -2190,11 +2190,11 @@
 							}
 							this.view.hotspot_connected_devices_timeout = setTimeout(() => {
 								if(this.debug){
-									console.log("get_hotspot_connected_devices timeout is done");
+									console.log("power settings debug: get_hotspot_connected_devices timeout is done");
 								}
 								if(document.location.href.endsWith('/settings/network')){
 									if(this.debug){
-										console.log("calling get_hotspot_connected_devices for an updated list");
+										console.log("power settings debug: calling get_hotspot_connected_devices for an updated list");
 									}
 						            window.API.postJson(
 						                `/extensions/${this.id}/api/ajax`, {
@@ -2212,7 +2212,7 @@
 						            });
 								}
 								else if(this.debug){
-									console.log("get_hotspot_connected_devices timeout is done, but user is no longer at /settings/network");
+									console.log("power settings debug: get_hotspot_connected_devices timeout is done, but user is no longer at /settings/network");
 								}
 							},10000);
 							
