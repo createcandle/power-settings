@@ -1206,6 +1206,7 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 
 .wireless-network-info-ssid{
 	cursor:pointer;
+	user-select: none;
 }
 	
 
