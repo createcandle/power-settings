@@ -1204,7 +1204,10 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 	display:block;
 }
 
-
+.wireless-network-info-ssid{
+	cursor:pointer;
+}
+	
 
 
 
