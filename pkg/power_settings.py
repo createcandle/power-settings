@@ -426,7 +426,7 @@ class PowerSettingsAPIHandler(APIHandler):
         # Hotspot
         self.candle_hotspot_file_path = os.path.join(self.boot_path, 'candle_hotspot.txt')
         self.candle_hotspot_password_file_path = os.path.join(self.boot_path, 'candle_hotspot_password.txt')
-        self.performed_initial_wifi_scan = False
+        #self.performed_initial_wifi_scan = False
         self.hotspot_enabled = os.path.exists(self.candle_hotspot_file_path)
         self.hotspot_password = ""
         self.show_hotspot_password = False
@@ -436,13 +436,13 @@ class PowerSettingsAPIHandler(APIHandler):
                 self.hotspot_password = self.hotspot_password.strip()
         
         
-        self.hotspot_mac_address = run_command("nmcli -t device show uap0 | grep HWADDR | cut -d':' -f2-7")
-        if self.hotspot_mac_address != None:
-            self.hotspot_mac_address = self.hotspot_mac_address.strip()
-            if "Error" in self.hotspot_mac_address:
-                self.hotspot_mac_address = ""
-            #elif ":" in self.hotspot_mac_address:
-            #    self.hotspot_ssid = self.hotspot_ssid + " " + self.hotspot_mac_address[-5:].replace(":", "")
+        #self.hotspot_mac_address = run_command("nmcli -t device show uap0 | grep HWADDR | cut -d':' -f2-7")
+        #if self.hotspot_mac_address != None:
+        #    self.hotspot_mac_address = self.hotspot_mac_address.strip()
+        #    if "Error" in self.hotspot_mac_address:
+        #        self.hotspot_mac_address = ""
+        #    #elif ":" in self.hotspot_mac_address:
+        #    #    self.hotspot_ssid = self.hotspot_ssid + " " + self.hotspot_mac_address[-5:].replace(":", "")
             
         self.hotspot_ssid = 'Candle'
         #actual_hotspot_ssid = run_command("nmcli con show Hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | sed 's/,*$//g' | xargs")
@@ -1811,13 +1811,13 @@ class PowerSettingsAPIHandler(APIHandler):
                             # get current hotspot settings
                             elif action == 'get_hotspot_settings':
                                 
-                                if self.performed_initial_wifi_scan == False:
-                                    self.performed_initial_wifi_scan = True
+                                #if self.performed_initial_wifi_scan == False:
+                                    #self.performed_initial_wifi_scan = True
                                     #os.system('nmcli -t dev wifi list &')
-                                    os.system('nmcli dev wifi rescan ifname wlan0')
+                                    #os.system('nmcli dev wifi rescan ifname wlan0')
                                     #os.system('nmcli device wifi list ifname wlan0 &')
                                     
-                                    time.sleep(2)
+                                    #time.sleep(2)
                                 
                                 the_hotspot_password = ''
                                 #if self.persistent_data['show_hotspot_password'] == True:
