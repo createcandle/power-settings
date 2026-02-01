@@ -1797,7 +1797,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                             # force a wifi rescan
                             elif action == 'rescan_wifi':
-                                os.system('nmcli dev wifi list --rescan yes')
+                                #os.system('nmcli dev wifi list --rescan yes')
+                                os.system('nmcli dev wifi rescan ifname wlan0')
+                                
                                 
                                 return APIResponse(
                                   status=200,
@@ -1811,7 +1813,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 if self.performed_initial_wifi_scan == False:
                                     self.performed_initial_wifi_scan = True
-                                    os.system('nmcli -t dev wifi list &')
+                                    #os.system('nmcli -t dev wifi list &')
+                                    os.system('nmcli dev wifi rescan ifname wlan0')
+                                    #os.system('nmcli device wifi list ifname wlan0 &')
+                                    
                                     time.sleep(2)
                                 
                                 the_hotspot_password = ''
