@@ -1208,7 +1208,10 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 	cursor:pointer;
 	user-select: none;
 }
-	
+
+.network-settings-list-item-detail{
+	margin:1rem 0;	
+}
 
 
 
