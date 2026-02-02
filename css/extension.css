@@ -1248,6 +1248,7 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 }
 
 .network-settings-wrap{
+	position:initial;
     top: initial;
     transform: none;
 }
