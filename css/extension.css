@@ -1196,8 +1196,32 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 
 /*  WIFI settings  */
 
+
+#network-settings-client ul.network-settings-list{
+	max-height:auto;
+}
+
+.network-settings-list-item-container-2,
+.network-settings-list-item-container-3{
+	height:auto;
+	min-height:6rem;
+}
+
+#network-settings-client .network-item{
+	padding-bottom:1rem;
+}
+
 #extension-power-settings-wifi-rescan-container{
 	display:none;
+}
+#network-settings-wifi .network-settings-wrap #extension-power-settings-wifi-rescan-container > button{
+	margin-top:0;
+	margin-bottom:10rem;
+	font-size:1.8rem;
+	padding: 1rem 1.5rem;
+	letter-spacing: 0.8px;
+    border: none;
+    border-radius: 0.5rem;
 }
 
 #network-settings-wifi-network-list:not(:empty) + #network-settings-wifi-wrap.hidden + #extension-power-settings-wifi-rescan-container{
@@ -1211,6 +1235,21 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 
 .network-settings-list-item-detail{
 	margin:1rem 0;	
+}
+
+#network-settings-wifi-ssid{
+	width: 100%;
+	background: transparent;
+	color: white;
+	letter-spacing: 1.2px;
+	font-size: 2rem;
+	padding-left: 0;
+	pointer-events:none;
+}
+
+.network-settings-wrap{
+    top: initial;
+    transform: none;
 }
 
 

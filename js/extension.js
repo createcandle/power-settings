@@ -66,6 +66,13 @@
 				if(addon_settings_link_el){
 					addon_settings_link_el.parentNode.classList.add('extension-power-settings-hidden');
 				}
+				
+				const network_settings_ssid_hidden_input_el = document.getElementById('network-settings-wifi-ssid');
+				if(network_settings_ssid_hidden_input_el){
+					network_settings_ssid_hidden_input_el.setAttribute('type','text');
+					network_settings_ssid_hidden_input_el.setAttribute('disabled',true);
+				}
+				
 			},1000);
 			
 			

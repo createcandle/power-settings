@@ -1797,6 +1797,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                             # force a wifi rescan
                             elif action == 'rescan_wifi':
+                                print("power settings: in rescan_wifi")
                                 #os.system('nmcli dev wifi list --rescan yes')
                                 os.system('nmcli dev wifi rescan ifname wlan0')
                                 
