@@ -6,6 +6,12 @@
 	user-select: none;
 }
 
+
+.network-settings-flex-align-center{
+	display:flex;
+	align-items:center;
+}
+
 /*
 #extension-power-settings-show-reset-settings-button{
     display:none!important;
@@ -1248,7 +1254,6 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 }
 
 .network-settings-wrap{
-	position:initial;
     top: initial;
     transform: none;
 }
@@ -1258,17 +1263,35 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 
 /*  hotspot settings  */
 
+.network-settings-hotspot-left-padded-container{
+	padding-left:10rem;
+	padding-right:2rem;
+}
+
 .extension-power-settings-hotspot-password-changed{
 	background-color:green;
 }
 
+#extension-power-settings-hotspot-password-save-button{
+	margin:0 0 0 .5rem;
+	display:none;
+}
+
+#extension-power-settings-hotspot-password-input:focus + #extension-power-settings-hotspot-password-save-button{
+	display:inline-block;
+}
+
+#network-settings-client #extension-power-settings-hotspot-container{
+	padding-bottom:2rem;
+}
+	
 #extension-power-settings-hotspot-container > div{
 	display:flex;
 	width:100%;
 }
 
 #extension-power-settings-hotspot-container .network-settings-list-item-container-4{
-	margin:2rem 0;
+	margin:2rem 0 0 0;
 	display:flex;
 	flex-direction:column;
 	min-height: 6rem;
@@ -1276,7 +1299,8 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 }
 #extension-power-settings-hotspot-container input{
 	color:black;
-	width:80%;
+	width:70%;
+	flex-grow:1;
 }
 
 .extension-power-settings-hotspot-enabled-checkbox-container{
@@ -1305,6 +1329,38 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a:hover{
 	background-color:rgba(255,255,255,.1);
 }
+
+#extension-power-settings-hotspot-info-container{
+	flex-direction:column;
+	margin-top:2rem;
+}
+#extension-power-settings-hotspot-info-container > div{
+	display:flex;
+	justify-content:space-between;
+	
+}
+#extension-power-settings-hotspot-info-container > div:not(:last-of-type){
+	padding:.5rem 0;
+	border-bottom:1px solid rgba(255,255,255,.1);
+	margin-bottom:.5rem;
+}
+#extension-power-settings-hotspot-info-container span{
+	display:inline-block;
+}
+
+.extension-power-settings-hotspot-info-ipv6_addresses{
+	flex-direction:column;
+	white-space: pre;
+}
+
+.extension-power-settings-hotspot-info-name{
+	opacity:.7;
+}
+
+.extension-power-settings-hotspot-info-value{
+	text-align:right;
+}
+
 
 /*
 body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a::after{

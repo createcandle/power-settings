@@ -1828,7 +1828,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 hotspot_ipv6_addresses = str(run_command("nmcli c s Hotspot | grep IP6.ADDRESS | awk '{print $2}'"))
                                 hotspot_band = str(run_command("nmcli c s Hotspot | grep 802-11-wireless.band: | awk '{print $2}'"))
                                 hotspot_channel = str(run_command("nmcli c s Hotspot | grep 802-11-wireless.channel: | awk '{print $2}'"))
-                                hotspot_isolation = str(run_command("nmcli c s Hotspot | 802-11-wireless.ap-isolation: | awk '{print $2}'"))
+                                hotspot_isolation = str(run_command("nmcli c s Hotspot | grep 802-11-wireless.ap-isolation: | awk '{print $2}'"))
                                 matter_adapter_installed = os.path.exists(self.matter_adapter_path) # Matter cannot work if isolation is enabled
                                 
                                 the_hotspot_password = ''
@@ -1846,7 +1846,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                     'hotspot_password':the_hotspot_password,
                                     'hotspot_password_length':len(self.hotspot_password),
                                     'hotspot_connected_devices':connected_hotspot_devices_according_to_arp,
-                                    'hotspot_ipv6_addresses':ipv6_addresses,
+                                    'hotspot_ipv4_address':'192.168.12.1',
+                                    'hotspot_ipv6_addresses':hotspot_ipv6_addresses,
                                     'hotspot_band':hotspot_band,
                                     'hotspot_channel':hotspot_channel,
                                     'hotspot_isolation':hotspot_isolation,

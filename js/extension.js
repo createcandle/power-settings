@@ -1997,7 +1997,8 @@
 						
 						
 						const hotspot_password_wrapper_el = document.createElement('div');
-						hotspot_password_wrapper_el.classList.add('network-settings-flex');
+						hotspot_password_wrapper_el.classList.add('network-settings-hotspot-left-padded-container');
+						hotspot_password_wrapper_el.classList.add('network-settings-flex-align-center');
 						
 						const hotspot_details_password_el = document.createElement('input');
 						hotspot_details_password_el.setAttribute('id','extension-power-settings-hotspot-password-input');
@@ -2069,7 +2070,7 @@
 							}
 							
 						});
-						hotspot_details_el.appendChild(hotspot_password_wrapper_el);
+						
 						
 						const hotspot_details_password_visibility_checkbox_el = document.createElement('input');
 						hotspot_details_password_visibility_checkbox_el.setAttribute('type','checkbox');
@@ -2174,33 +2175,44 @@
 						//  HOTSPOT INFO
 						//
 						
-						const hotspot_info_container_el = document.createElement('ul');
-						hotspot_info_container_el.classList.add('extension-power-settings-hotspot-info-container');
+						const hotspot_info_container_el = document.createElement('div');
+						hotspot_info_container_el.setAttribute('id','extension-power-settings-hotspot-info-container');
+						hotspot_info_container_el.classList.add('network-settings-hotspot-left-padded-container');
 						
-						const hotspot_info_fields = ['hotspot_state','hotspot_band','hotspot_channel','hotspot_isolation']
+						
+						const hotspot_info_fields = ['hotspot_state','hotspot_ipv4_address','hotspot_ipv6_addresses','hotspot_band','hotspot_channel','hotspot_isolation']
 						for(let hi = 0; hi < hotspot_info_fields.length; hi++){
 							
+							console.log("hotspot_info_fields[hi]: ", hotspot_info_fields[hi]);
+							console.log(" -> ", body[ hotspot_info_fields[hi] ]);
+							
 							if(typeof body[ hotspot_info_fields[hi] ] == 'string'){
-								const hotspot_info_field_container_el = document.createElement('li');
+								const hotspot_info_field_container_el = document.createElement('div');
 								hotspot_info_field_container_el.classList.add('extension-power-settings-flex-space-between');
+								hotspot_info_field_container_el.classList.add('extension-power-settings-hotspot-info-' + hotspot_info_fields[hi].replace('hotspot_',''));
 							
 								const hotspot_info_field_name_el = document.createElement('span');
+								hotspot_info_field_name_el.classList.add('extension-power-settings-hotspot-info-name');
+								
 								hotspot_info_field_name_el.textContent = hotspot_info_fields[hi].replace('hotspot_','');
 							
 								hotspot_info_field_container_el.appendChild(hotspot_info_field_name_el);
 							
 								const hotspot_info_field_value_el = document.createElement('span');
+								hotspot_info_field_value_el.classList.add('extension-power-settings-hotspot-info-value');
 								hotspot_info_field_value_el.textContent = body[ hotspot_info_fields[hi] ];
 							
 								hotspot_info_field_container_el.appendChild(hotspot_info_field_name_el);
 								hotspot_info_field_container_el.appendChild(hotspot_info_field_value_el);
 							
 								hotspot_info_container_el.appendChild(hotspot_info_field_container_el);
+								
 							}
 							
 						}
 						
-						hotspot_settings_container_el.appendChild(hotspot_info_container_el);
+						
+						
 						
 						
 						//
@@ -2280,6 +2292,8 @@
 						//hotspot_settings_container_el.appendChild(hotspot_connected_devices_container_el);
 						
 						hotspot_settings_list_item_el.appendChild(hotspot_settings_container_el);
+						hotspot_settings_list_item_el.appendChild(hotspot_password_wrapper_el);
+						hotspot_settings_list_item_el.appendChild(hotspot_info_container_el);
 						hotspot_settings_list_item_el.appendChild(hotspot_connected_devices_container_el);
 						
 						network_settings_list_el.appendChild(hotspot_settings_list_item_el);
@@ -4515,8 +4529,6 @@
                 }
 				
                
-				
-                
                 // Show low voltage warning
                 if(typeof body['low_voltage'] != 'undefined'){
                     if(body['low_voltage'] == true){
@@ -4524,14 +4536,10 @@
 						if(low_voltage_el){
 							low_voltage_el.style.display = 'block';
 						}
-                        
                     }
                 }
 				
 				
-				
-                
-            
             }).catch((e) => {
                 console.error("Error, power settings: get stats failed: could not connect to controller: ", e);
 				this.get_stats_fail_counter = 6;
