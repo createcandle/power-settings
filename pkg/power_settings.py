@@ -260,9 +260,12 @@ class PowerSettingsAPIHandler(APIHandler):
         # Restore
         self.restore_file_path = os.path.join(self.data_dir, "candle_restore.tar")
         
-        # Candle version fie path
+        # Candle version file path
         self.version_file_path = self.boot_path + '/candle_version.txt'
         self.original_version_file_path = self.boot_path + '/candle_original_version.txt'
+        
+        # Matter adapter path
+        self.matter_adapter_path = os.path.join(str(self.user_profile['addonsDir']), 'matter-adapter')
         
         # Hardware clock
         self.hardware_clock_detected = False
@@ -1819,6 +1822,14 @@ class PowerSettingsAPIHandler(APIHandler):
                                     #os.system('nmcli device wifi list ifname wlan0 &')
                                     
                                     #time.sleep(2)
+                                    
+                                    
+                                hotspot_state = str(run_command("nmcli c s Hotspot | grep GENERAL.STATE: | awk '{print $2}'"))
+                                hotspot_ipv6_addresses = str(run_command("nmcli c s Hotspot | grep IP6.ADDRESS | awk '{print $2}'"))
+                                hotspot_band = str(run_command("nmcli c s Hotspot | grep 802-11-wireless.band: | awk '{print $2}'"))
+                                hotspot_channel = str(run_command("nmcli c s Hotspot | grep 802-11-wireless.channel: | awk '{print $2}'"))
+                                hotspot_isolation = str(run_command("nmcli c s Hotspot | 802-11-wireless.ap-isolation: | awk '{print $2}'"))
+                                matter_adapter_installed = os.path.exists(self.matter_adapter_path) # Matter cannot work if isolation is enabled
                                 
                                 the_hotspot_password = ''
                                 #if self.persistent_data['show_hotspot_password'] == True:
@@ -1830,10 +1841,16 @@ class PowerSettingsAPIHandler(APIHandler):
                                 result = {
                                     'state':True,
                                     'hotspot_enabled':self.hotspot_enabled,
+                                    'hotspot_state':hotspot_state,
                                     'hotspot_ssid':self.hotspot_ssid,
                                     'hotspot_password':the_hotspot_password,
                                     'hotspot_password_length':len(self.hotspot_password),
                                     'hotspot_connected_devices':connected_hotspot_devices_according_to_arp,
+                                    'hotspot_ipv6_addresses':ipv6_addresses,
+                                    'hotspot_band':hotspot_band,
+                                    'hotspot_channel':hotspot_channel,
+                                    'hotspot_isolation':hotspot_isolation,
+                                    'matter_adapter_installed':matter_adapter_installed,
                                 }
                                 return APIResponse(
                                   status=200,
