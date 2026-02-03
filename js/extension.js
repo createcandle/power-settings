@@ -1995,22 +1995,38 @@
 						hotspot_details_ssid_el.textContent = '' + body.hotspot_ssid;
 						hotspot_details_el.appendChild(hotspot_details_ssid_el);
 						
+						
+						const hotspot_password_wrapper_el = document.createElement('div');
+						hotspot_password_wrapper_el.classList.add('network-settings-flex');
+						
 						const hotspot_details_password_el = document.createElement('input');
 						hotspot_details_password_el.setAttribute('id','extension-power-settings-hotspot-password-input');
 						hotspot_details_password_el.classList.add('network-settings-list-item-detail');
 						hotspot_details_password_el.setAttribute('type','text');
 						
+						hotspot_password_wrapper_el.appendChild(hotspot_details_password_el);
+						
+						const hotspot_details_password_save_button_el = document.createElement('button');
+						hotspot_details_password_save_button_el.classList.add('text-button');
+						hotspot_details_password_save_button_el.textContent = 'Save';
+						hotspot_details_password_save_button_el.setAttribute('id','extension-power-settings-hotspot-password-save-button');
+						hotspot_details_password_save_button_el.classList.add('network-settings-list-item-detail');
+						hotspot_details_password_save_button_el.setAttribute('type','text');
+						
+						hotspot_password_wrapper_el.appendChild(hotspot_details_password_save_button_el);
 						
 						
-						hotspot_details_password_el.setAttribute('placeholder','Password');
-						hotspot_details_password_el.value = '' + body.hotspot_password;
-						
+						hotspot_details_password_el.setAttribute('placeholder',body.hotspot_password);
+
 						if(body.hotspot_password == '' && body.hotspot_password_length != 0){
 							let stars = '';
 							for(let pl = 0; pl < parseInt(body.hotspot_password_length); pl++){
 								stars += '*';
 							}
 							hotspot_details_password_el.setAttribute('placeholder',stars);
+						}
+						else if(typeof body.hotspot_password == 'string'){
+							hotspot_details_password_el.value = '' + body.hotspot_password;
 						}
 						
 						hotspot_details_password_el.addEventListener('change', () => {
@@ -2053,7 +2069,7 @@
 							}
 							
 						});
-						hotspot_details_el.appendChild(hotspot_details_password_el);
+						hotspot_details_el.appendChild(hotspot_password_wrapper_el);
 						
 						const hotspot_details_password_visibility_checkbox_el = document.createElement('input');
 						hotspot_details_password_visibility_checkbox_el.setAttribute('type','checkbox');
@@ -2154,6 +2170,42 @@
 						
 						
 						
+						//
+						//  HOTSPOT INFO
+						//
+						
+						const hotspot_info_container_el = document.createElement('ul');
+						hotspot_info_container_el.classList.add('extension-power-settings-hotspot-info-container');
+						
+						const hotspot_info_fields = ['hotspot_state','hotspot_band','hotspot_channel','hotspot_isolation']
+						for(let hi = 0; hi < hotspot_info_fields.length; hi++){
+							
+							if(typeof body[ hotspot_info_fields[hi] ] == 'string'){
+								const hotspot_info_field_container_el = document.createElement('li');
+								hotspot_info_field_container_el.classList.add('extension-power-settings-flex-space-between');
+							
+								const hotspot_info_field_name_el = document.createElement('span');
+								hotspot_info_field_name_el.textContent = hotspot_info_fields[hi].replace('hotspot_','');
+							
+								hotspot_info_field_container_el.appendChild(hotspot_info_field_name_el);
+							
+								const hotspot_info_field_value_el = document.createElement('span');
+								hotspot_info_field_value_el.textContent = body[ hotspot_info_fields[hi] ];
+							
+								hotspot_info_field_container_el.appendChild(hotspot_info_field_name_el);
+								hotspot_info_field_container_el.appendChild(hotspot_info_field_value_el);
+							
+								hotspot_info_container_el.appendChild(hotspot_info_field_container_el);
+							}
+							
+						}
+						
+						hotspot_settings_container_el.appendChild(hotspot_info_container_el);
+						
+						
+						//
+						//  HOTSPOT CONNECTED DEVICES
+						//
 						
 						const hotspot_connected_devices_container_el = document.createElement('div');
 						hotspot_connected_devices_container_el.classList.add('extension-power-settings-hotspot-connected-devices-container');
@@ -2190,8 +2242,6 @@
 							
 							
 							
-							
-							
 							if(typeof this.view.hotspot_connected_devices_timeout != 'undefined'){
 								clearTimeout(this.view.hotspot_connected_devices_timeout);
 							}
@@ -2223,17 +2273,14 @@
 								}
 							},10000);
 							
-						
 						}
 						
 						update_connected_devices_list();
 						
 						//hotspot_settings_container_el.appendChild(hotspot_connected_devices_container_el);
 						
-						
 						hotspot_settings_list_item_el.appendChild(hotspot_settings_container_el);
 						hotspot_settings_list_item_el.appendChild(hotspot_connected_devices_container_el);
-						
 						
 						network_settings_list_el.appendChild(hotspot_settings_list_item_el);
 						
