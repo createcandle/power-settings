@@ -1800,7 +1800,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                             # force a wifi rescan
                             elif action == 'rescan_wifi':
-                                print("power settings: in rescan_wifi")
+                                if self.DEBUG:
+                                    print("power settings: in rescan_wifi")
                                 #os.system('nmcli dev wifi list --rescan yes')
                                 os.system('nmcli dev wifi rescan ifname wlan0')
                                 
@@ -1839,7 +1840,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 
                                 def get_more_phone_info(usb_device_id):
-                                    print("in get_more_phone_info.  usb_device_id: " + str(usb_device_id))
+                                    if self.DEBUG:
+                                        print("in get_more_phone_info.  usb_device_id: " + str(usb_device_id))
                                     
                                     result = {'Device_ID':usb_device_id}
                                     
@@ -1863,7 +1865,6 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 if self.DEBUG:
                                                     print("tethering: checking usb_id: -->" + str(usb_id) + "<--")
                                                 if str(usb_id).startswith('0'):
-                                                    print("looking for shorter_mac: -->" + str(shorter_mac) + "<--")
                                                     mac_check = str(run_command('sudo lsusb -v -s ' + str(usb_id) + ' | grep ' + str(shorter_mac).upper()))
                                                     if self.DEBUG:
                                                         print("mac_check output: -->" + str(mac_check) + "<--")
@@ -1882,7 +1883,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 print("Error, usb tethering: did not get valid mac from phone: -->" + str(phone_mac) + "<--")
                                     
                                     except Exception as ex:
-                                        print("caught error in get_more_phone_info: " + str(ex))
+                                        if self.DEBUG:
+                                            print("caught error in get_more_phone_info: " + str(ex))
                                                             
                                     return result
                                     
