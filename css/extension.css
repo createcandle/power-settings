@@ -900,6 +900,9 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 .extension-power-settings-display-info-flex{
 	display:flex;
 }
+.extension-power-settings-flex-wrap{
+	flex-wrap:wrap;
+}
 
 .extension-power-settings-display-info-flex img{
 	max-width:100%;
@@ -1003,10 +1006,22 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 	display:none;
 }
 
-.extension-power-settings-flex-centered-spaced{
+.extension-power-settings-flex{
+	display:flex;
+}
+.extension-power-settings-flex-space-between{
+	display:flex;
+	justify-content:space-between;
+}
+
+.extension-power-settings-flex-center-space-between{
 	display:flex;
 	align-items:center;
 	justify-content:space-between;
+}
+
+.extension-power-settings-flex-grow{
+	flex-grow:1;
 }
 
 
@@ -1050,6 +1065,11 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 
 #extension-power-settings-printers-list-container:empty{
 	display:none;
+}
+
+#extension-power-settings-general-printing-container label + p{
+	margin-top:2rem;
+	max-width: 85%;
 }
 
 .extension-power-settings-printer-item{
@@ -1204,7 +1224,12 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 
 
 #network-settings-client ul.network-settings-list{
-	max-height:auto;
+    max-height: none;
+    margin-bottom: 20rem;
+    height: auto;
+    position: initial;
+    transform: none;
+    padding: 2rem;
 }
 
 .network-settings-list-item-container-2,
@@ -1339,6 +1364,8 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
 	justify-content:space-between;
 	
 }
+
+#extension-power-settings-usb-tethering-info-list > div:not(:last-of-type),
 #extension-power-settings-hotspot-info-container > div:not(:last-of-type){
 	padding:.5rem 0;
 	border-bottom:1px solid rgba(255,255,255,.1);
@@ -1350,7 +1377,7 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
 
 .extension-power-settings-hotspot-info-ipv6_addresses{
 	flex-direction:column;
-	white-space: pre;
+	white-space: pre-wrap;
 }
 
 .extension-power-settings-hotspot-info-name{
@@ -1359,6 +1386,7 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
 
 .extension-power-settings-hotspot-info-value{
 	text-align:right;
+	word-break: break-all;
 }
 
 
@@ -1370,6 +1398,47 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
 */
 
 
+/*  USB TETHERING  */
+
+#extension-power-settings-usb-tethering-container{
+	align-items:flex-start;
+	flex-wrap:nowrap;
+}
+
+#extension-power-settings-usb-tethering-icon{
+	height:auto;
+}
+
+.extension-power-settings-right-padded{
+	padding:2rem 2rem 2rem 0;
+}
+
+.extension-power-settings-usb-tethering-device-container{
+	/*background-color:rgba(255,255,255,.1);
+	padding:1.5rem;
+	border-radius:1rem;*/
+	margin-top:3rem;
+}
+
+#extension-power-settings-usb-tethering-devices-list h4{
+	margin:.5rem 0;
+	opacity:.8;
+}
+#extension-power-settings-usb-tethering-devices-list span:not(.extension-power-settings-green-text){
+	opacity:.8;
+}
+
+.extension-power-settings-usb-tethering-info-value{
+	text-align:right;
+	word-break: break-all;
+}
+.extension-power-settings-green-text{
+	color:green;
+	font-weight:bold;
+}
+
+
+
 @media screen and (max-width: 640px) {
 	#extension-power-settings-display1-info,
 	#extension-power-settings-display2-info{
@@ -1378,6 +1447,10 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
 	#extension-power-settings-display1-info > div,
 	#extension-power-settings-display2-info > div{
 		width:100%;
+	}
+	
+	.network-settings-hotspot-left-padded-container{
+		padding-left:2rem;
 	}
 }
 

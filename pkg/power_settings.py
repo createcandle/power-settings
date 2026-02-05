@@ -426,7 +426,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.system_update_in_progress = False
         
         
-        # Hotspot
+        # Candle_hotspot
         self.candle_hotspot_file_path = os.path.join(self.boot_path, 'candle_hotspot.txt')
         self.candle_hotspot_password_file_path = os.path.join(self.boot_path, 'candle_hotspot_password.txt')
         #self.performed_initial_wifi_scan = False
@@ -448,8 +448,8 @@ class PowerSettingsAPIHandler(APIHandler):
         #    #    self.hotspot_ssid = self.hotspot_ssid + " " + self.hotspot_mac_address[-5:].replace(":", "")
             
         self.hotspot_ssid = 'Candle'
-        #actual_hotspot_ssid = run_command("nmcli con show Hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | sed 's/,*$//g' | xargs")
-        actual_hotspot_ssid = run_command("nmcli con show Hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | sed 's/,*$//g' | xargs")
+        #actual_hotspot_ssid = run_command("nmcli con show Candle_hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | sed 's/,*$//g' | xargs")
+        actual_hotspot_ssid = run_command("nmcli con show Candle_hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | sed 's/,*$//g' | xargs")
         actual_hotspot_ssid = str(actual_hotspot_ssid).rstrip()
         if actual_hotspot_ssid.startswith('Candle '):
             self.hotspot_ssid = actual_hotspot_ssid
@@ -1813,7 +1813,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                             
                             # get current hotspot settings
-                            elif action == 'get_hotspot_settings':
+                            elif action == 'get_hotspot_settings' or action == 'get_hotspot_connected_devices':
                                 
                                 #if self.performed_initial_wifi_scan == False:
                                     #self.performed_initial_wifi_scan = True
@@ -1823,13 +1823,12 @@ class PowerSettingsAPIHandler(APIHandler):
                                     
                                     #time.sleep(2)
                                     
-                                    
-                                hotspot_state = str(run_command("nmcli c s Hotspot | grep GENERAL.STATE: | awk '{print $2}'"))
-                                hotspot_ipv6_addresses = str(run_command("nmcli c s Hotspot | grep IP6.ADDRESS | awk '{print $2}'"))
-                                hotspot_band = str(run_command("nmcli c s Hotspot | grep 802-11-wireless.band: | awk '{print $2}'"))
-                                hotspot_channel = str(run_command("nmcli c s Hotspot | grep 802-11-wireless.channel: | awk '{print $2}'"))
-                                hotspot_isolation = str(run_command("nmcli c s Hotspot | grep 802-11-wireless.ap-isolation: | awk '{print $2}'"))
-                                matter_adapter_installed = os.path.exists(self.matter_adapter_path) # Matter cannot work if isolation is enabled
+                                # Candle_hotspot
+                                hotspot_state = str(run_command("nmcli c s Candle_hotspot | grep GENERAL.STATE: | awk '{print $2}'"))
+                                hotspot_ipv6_addresses = str(run_command("nmcli c s Candle_hotspot | grep IP6.ADDRESS | awk '{print $2}'"))
+                                hotspot_band = str(run_command("nmcli c s Candle_hotspot | grep 802-11-wireless.band: | awk '{print $2}'"))
+                                hotspot_channel = str(run_command("nmcli c s Candle_hotspot | grep 802-11-wireless.channel: | awk '{print $2}'"))
+                                hotspot_isolation = str(run_command("nmcli c s Candle_hotspot | grep 802-11-wireless.ap-isolation: | awk '{print $2}'"))
                                 
                                 the_hotspot_password = ''
                                 #if self.persistent_data['show_hotspot_password'] == True:
@@ -1837,6 +1836,84 @@ class PowerSettingsAPIHandler(APIHandler):
                                     the_hotspot_password = self.hotspot_password
                                 
                                 connected_hotspot_devices_according_to_arp = self.get_hotspot_arp()
+                                
+                                
+                                def get_more_phone_info(usb_device_id):
+                                    print("in get_more_phone_info.  usb_device_id: " + str(usb_device_id))
+                                    
+                                    result = {'Device_ID':usb_device_id}
+                                    
+                                    try:
+                                        
+                                        result['IPv4_address'] = str(run_command("nmcli device show " + str(usb_device_id) + " | grep IP4.ADDRESS | awk '{print $2}'")).rstrip()
+                                        result['IPv4_gateway'] = str(run_command("nmcli device show " + str(usb_device_id) + " | grep IP4.GATEWAY | awk '{print $2}'")).rstrip()
+                                        result['IPv4_dns'] = str(run_command("nmcli device show " + str(usb_device_id) + " | grep IP4.DNS | awk '{print $2}'")).rstrip()
+                                        
+                                        result['IPv6_address'] = str(run_command("nmcli device show " + str(usb_device_id) + " | grep IP6.ADDRESS | awk '{print $2}'")).rstrip()
+                                        result['IPv6_gateway'] = str(run_command("nmcli device show " + str(usb_device_id) + " | grep IP6.GATEWAY | awk '{print $2}'")).rstrip()
+                                        result['IPv6_dns'] = str(run_command("nmcli device show " + str(usb_device_id) + " | grep IP6.DNS | awk '{print $2}'")).rstrip()
+                                        
+                                        phone_mac = str(run_command("ip link show " + str(usb_device_id) + " | grep link/ether | awk '{print $2}'")).rstrip()
+                                        if valid_mac(phone_mac):
+                                            result['MAC_address'] = phone_mac
+                                            shorter_mac = phone_mac.replace(':','')
+                                        
+                                            usb_ids_raw = str(run_command(r"lsusb | sed -n 's/.*Bus \(.*\) ID.*/\1/p' | sed s/Device// | sed 's/\://g' | sed s/Device// | sed 's/  /\:/g'"))
+                                            for usb_id in usb_ids_raw.splitlines():
+                                                if self.DEBUG:
+                                                    print("tethering: checking usb_id: -->" + str(usb_id) + "<--")
+                                                if str(usb_id).startswith('0'):
+                                                    print("looking for shorter_mac: -->" + str(shorter_mac) + "<--")
+                                                    mac_check = str(run_command('sudo lsusb -v -s ' + str(usb_id) + ' | grep ' + str(shorter_mac).upper()))
+                                                    if self.DEBUG:
+                                                        print("mac_check output: -->" + str(mac_check) + "<--")
+                                                    if 'iMacAddress' in mac_check:
+                                                        raw_phone_details = str(run_command("sudo lsusb -v -s " + str(usb_id) + " | grep -E 'idVendor|idProduct|iManufacturer|iProduct|iSerial'"))
+                                                        for phone_line in raw_phone_details.splitlines():
+                                                            phone_line_parts = phone_line.split()
+                                                            if self.DEBUG:
+                                                                print("phone_line_parts: " + str(phone_line_parts))
+                                                            if len(phone_line_parts) >= 3:
+                                                                result[ phone_line_parts[0] ] = str(' '.join(phone_line_parts[2:])).rstrip()
+                                    
+                                                            
+                                        else:
+                                            if self.DEBUG:
+                                                print("Error, usb tethering: did not get valid mac from phone: -->" + str(phone_mac) + "<--")
+                                    
+                                    except Exception as ex:
+                                        print("caught error in get_more_phone_info: " + str(ex))
+                                                            
+                                    return result
+                                    
+                                
+                                # USB tethering
+                                usb0_tethering_info = str(run_command("ip link show usb0")).rstrip()
+                                usb0_tethering_data = {}
+                                if 'does not exist' in usb0_tethering_info:
+                                    usb0_tethering_info = ""
+                                else:
+                                    usb0_tethering_data = get_more_phone_info('usb0')
+                                    if 'state UP mode' in usb0_tethering_info:
+                                        usb0_tethering_data['state'] = 'connected'
+                                    else:
+                                        usb0_tethering_data['state'] = 'disconnected'
+                                
+                                usb1_tethering_info = str(run_command("ip link show usb1")).rstrip()
+                                usb1_tethering_data = {}
+                                if 'does not exist' in usb1_tethering_info:
+                                    usb1_tethering_info = ""
+                                else:
+                                    usb1_tethering_data = get_more_phone_info('usb1')
+                                    if 'state UP mode' in usb1_tethering_info:
+                                        usb1_tethering_data['state'] = 'connected'
+                                    else:
+                                        usb1_tethering_data['state'] = 'disconnected'
+
+
+                                # Is the matter adapter installed?
+                                matter_adapter_installed = os.path.exists(self.matter_adapter_path) # Matter cannot work if isolation is enabled
+                                
                                 
                                 result = {
                                     'state':True,
@@ -1851,6 +1928,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                     'hotspot_band':hotspot_band,
                                     'hotspot_channel':hotspot_channel,
                                     'hotspot_isolation':hotspot_isolation,
+                                    'usb0_tethering_info':usb0_tethering_info,
+                                    'usb0_tethering_data':usb0_tethering_data,
+                                    'usb1_tethering_info':usb1_tethering_info,
+                                    'usb1_tethering_data':usb1_tethering_data,
                                     'matter_adapter_installed':matter_adapter_installed,
                                 }
                                 return APIResponse(
@@ -1859,20 +1940,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps(result),
                                 )
                                 
-                            elif action == 'get_hotspot_connected_devices':
-                                
-                                connected_hotspot_devices_according_to_arp = self.get_hotspot_arp()
-                                
-                                result = {
-                                    'state':True,
-                                    'hotspot_connected_devices':connected_hotspot_devices_according_to_arp,
-                                }
-                                return APIResponse(
-                                  status=200,
-                                  content_type='application/json',
-                                  content=json.dumps(result),
-                                )
-                                
+                            
                                 
                             # enable or disable the hotspot
                             elif action == 'set_hotspot_enabled':
@@ -1881,19 +1949,19 @@ class PowerSettingsAPIHandler(APIHandler):
                                     self.hotspot_enabled = bool(request.body['enabled'])
                                     if self.hotspot_enabled:
                                         os.system('sudo touch ' + str(self.candle_hotspot_file_path))
-                                        os.system('nmcli connection up Hotspot')
-                                        os.system('nmcli connection modify Hotspot autoconnect yes')
+                                        os.system('nmcli connection up Candle_hotspot')
+                                        os.system('nmcli connection modify Candle_hotspot autoconnect yes')
                                         
                                         state = True
                                     else:
                                         # don't disable the hotspot if there are no remaining network connections
                                         # TODO could also check if a thatouch screne is connected, in which case that can still be used to keep access.
-                                        active_connections = run_command("nmcli -t connection show --active | tail -n +2 | grep -v 'Hotspot' | grep -v 'loopback:lo'")
+                                        active_connections = run_command("nmcli -t connection show --active | tail -n +2 | grep -v 'Candle_hotspot' | grep -v 'loopback:lo'")
                                         if active_connections != None:
                                             if len(str(active_connections).strip()) > 10:
                                                 os.system('sudo rm ' + str(self.candle_hotspot_file_path))
-                                                os.system('nmcli connection down Hotspot')
-                                                os.system('nmcli connection modify Hotspot autoconnect no')
+                                                os.system('nmcli connection down Candle_hotspot')
+                                                os.system('nmcli connection modify Candle_hotspot autoconnect no')
                                                 os.system('sudo pkill dnsmasq')
                                                 state = True
                                             
@@ -1911,7 +1979,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                     if len(new_password) > 7 and len(new_password) < 64:
                                         self.hotspot_password = new_password
                                         os.system('echo "' + str(new_password) + '" | sudo tee ' + str(self.candle_hotspot_password_file_path))
-                                        os.system('nmcli con modify Hotspot wifi-sec.key-mgmt sae wifi-sec.psk "' + str(new_password) + '"')
+                                        os.system('nmcli con modify Candle_hotspot wifi-sec.key-mgmt sae wifi-sec.psk "' + str(new_password) + '"')
                                         state = True
                                 
                                 return APIResponse(

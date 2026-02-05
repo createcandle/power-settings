@@ -55,6 +55,12 @@ def valid_ip(ip):
         #print("error in valid_ip: " + str(ex))
         pass
     return valid
+
+
+def valid_mac(mac):
+    return mac.count(':') == 5 and \
+        all(0 <= int(num, 16) < 256 for num in mac.rstrip().split(':')) and \
+        not all(int(num, 16) == 255 for num in mac.rstrip().split(':'))
     
     
 def get_pipewire_audio_controls(debug=False):
