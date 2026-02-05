@@ -1804,7 +1804,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                     print("power settings: in rescan_wifi")
                                 #os.system('nmcli dev wifi list --rescan yes')
                                 os.system('nmcli dev wifi rescan ifname wlan0')
-                                
+                                os.system('nmcli dev wifi | cat')
                                 
                                 return APIResponse(
                                   status=200,
