@@ -51,6 +51,7 @@
 			this.get_stats_interval = null;
 			this.get_stats_fail_counter = 0;
 
+			this.hotspot_data_string = "";
 
 			this.pipewire_enabled = false;
 			this.pipewire_data = {};
@@ -2541,7 +2542,7 @@
 								}
 								else{
 									if(this.debug){
-										console.error("power settings: could not find USB tethering container element");
+										console.error("power settings debug: could not find USB tethering container element");
 									}
 								}
 							}
@@ -2560,21 +2561,37 @@
 						
 								if(Array.isArray(this.hotspot_connected_devices)){
 						
-					
-									this.hotspot_connected_devices.sort();
+									this.hotspot_connected_devices.sort((x, y) => x.ip.localeCompare(y.ip));
+									//this.hotspot_connected_devices.sort();
 				
 									for(let cd = 0; cd < this.hotspot_connected_devices.length; cd++){
 										const hotspot_connected_device_container_el = document.createElement('div');
+										
+										const hotspot_connected_device_ip_span_el = document.createElement('span');
+										hotspot_connected_device_ip_span_el.classList.add('extension-power-settings-hotspot-connected-device-ip');
+										hotspot_connected_device_ip_span_el.textContent = this.hotspot_connected_devices[cd]['ip'];
+										
+										let hotspot_connected_device_name_span_el = null;
+										if(typeof this.hotspot_connected_devices[cd]['name'] == 'string' && this.hotspot_connected_devices[cd]['name'] != this.hotspot_connected_devices[cd]['ip']){
+											hotspot_connected_device_name_span_el = document.createElement('span');
+											hotspot_connected_device_name_span_el.classList.add('extension-power-settings-hotspot-connected-device-name');
+											hotspot_connected_device_name_span_el.textContent = this.hotspot_connected_devices[cd]['name'];
+										}
+										
 										if(this.kiosk){
-											const hotspot_connected_device_span_el = document.createElement('span');
-											hotspot_connected_device_span_el.textContent = this.hotspot_connected_devices[cd];
-											hotspot_connected_device_container_el.appendChild(hotspot_connected_device_span_el);
+											hotspot_connected_device_container_el.appendChild(hotspot_connected_device_ip_span_el);
+											if(hotspot_connected_device_name_span_el){
+												hotspot_connected_device_container_el.appendChild(hotspot_connected_device_name_span_el);
+											}
 										}
 										else{
 											const hotspot_connected_device_link_el = document.createElement('a');
-											hotspot_connected_device_link_el.setAttribute('href','http://' + this.hotspot_connected_devices[cd]);
+											hotspot_connected_device_link_el.setAttribute('href','http://' + this.hotspot_connected_devices[cd]['ip']);
 											hotspot_connected_device_link_el.setAttribute('target','_blank');
-											hotspot_connected_device_link_el.textContent = this.hotspot_connected_devices[cd];
+											hotspot_connected_device_link_el.appendChild(hotspot_connected_device_ip_span_el);
+											if(hotspot_connected_device_name_span_el){
+												hotspot_connected_device_link_el.appendChild(hotspot_connected_device_name_span_el);
+											}
 											hotspot_connected_device_container_el.appendChild(hotspot_connected_device_link_el);
 										}
 										hotspot_connected_devices_list_el.appendChild(hotspot_connected_device_container_el);
@@ -2590,46 +2607,64 @@
 							//
 							
 							
-							if(typeof fresh_body.hotspot_state == 'string'){
+							if(typeof fresh_body.hotspot == 'object'){
 								let hotspot_info_container_el = document.getElementById('extension-power-settings-hotspot-info-container');
 								if(hotspot_info_container_el){
-									hotspot_info_container_el.innerHTML = '';
+									
+									if(this['hotspot_data_string'] === JSON.stringify(fresh_body.hotspot)){
+										if(this.debug){
+											console.warn("power settings debug: same hotspot data as before, no need to update html");
+										}
+										
+									}
+									else{
+										if(this.debug){
+											console.warn("power settings debug: hotspot information changed, updating html");
+										}
+										this['hotspot_data_string'] = JSON.stringify(fresh_body.hotspot);
+									
+									
+										hotspot_info_container_el.innerHTML = '';
+									
+										const hotspot_info_fields = ['state','ipv4_address','ipv6_addresses','band','channel','isolation'];
+										for(let hi = 0; hi < hotspot_info_fields.length; hi++){
+										
+											//console.log("hotspot_info_fields[hi]: ", hotspot_info_fields[hi]);
+											//console.log(" -> ", fresh_body[ hotspot_info_fields[hi] ]);
+										
+											if(typeof fresh_body.hotspot[ hotspot_info_fields[hi] ] == 'string'){
+												const hotspot_info_field_container_el = document.createElement('div');
+												hotspot_info_field_container_el.classList.add('extension-power-settings-flex-space-between');
+												hotspot_info_field_container_el.classList.add('extension-power-settings-flex-wrap');
+												hotspot_info_field_container_el.classList.add('extension-power-settings-hotspot-info-' + hotspot_info_fields[hi]); //.replace('hotspot_',''));
+						
+												const hotspot_info_field_name_el = document.createElement('span');
+												hotspot_info_field_name_el.classList.add('extension-power-settings-hotspot-info-name');
 							
-									const hotspot_info_fields = ['hotspot_state','hotspot_ipv4_address','hotspot_ipv6_addresses','hotspot_band','hotspot_channel','hotspot_isolation']
-									for(let hi = 0; hi < hotspot_info_fields.length; hi++){
+												hotspot_info_field_name_el.textContent = hotspot_info_fields[hi]; //.replace('hotspot_','');
 						
-										//console.log("hotspot_info_fields[hi]: ", hotspot_info_fields[hi]);
-										//console.log(" -> ", fresh_body[ hotspot_info_fields[hi] ]);
+												hotspot_info_field_container_el.appendChild(hotspot_info_field_name_el);
 						
-										if(typeof fresh_body[ hotspot_info_fields[hi] ] == 'string'){
-											const hotspot_info_field_container_el = document.createElement('div');
-											hotspot_info_field_container_el.classList.add('extension-power-settings-flex-space-between');
-											hotspot_info_field_container_el.classList.add('extension-power-settings-flex-wrap');
-											hotspot_info_field_container_el.classList.add('extension-power-settings-hotspot-info-' + hotspot_info_fields[hi].replace('hotspot_',''));
+												const hotspot_info_field_value_el = document.createElement('span');
+												hotspot_info_field_value_el.classList.add('extension-power-settings-hotspot-info-value');
+												hotspot_info_field_value_el.textContent = fresh_body.hotspot[ hotspot_info_fields[hi] ]; //.replace(/(\r\n|\n|\r)/gm, " ");
+												//console.log("acivated? -->" + fresh_body[ hotspot_info_fields[hi] ] + "<--");
+												if(fresh_body.hotspot[ hotspot_info_fields[hi] ].startsWith('activated')){
+													hotspot_info_field_value_el.classList.add('extension-power-settings-green-text');
+												}
 						
-											const hotspot_info_field_name_el = document.createElement('span');
-											hotspot_info_field_name_el.classList.add('extension-power-settings-hotspot-info-name');
+												hotspot_info_field_container_el.appendChild(hotspot_info_field_name_el);
+												hotspot_info_field_container_el.appendChild(hotspot_info_field_value_el);
+						
+												hotspot_info_container_el.appendChild(hotspot_info_field_container_el);
 							
-											hotspot_info_field_name_el.textContent = hotspot_info_fields[hi].replace('hotspot_','');
-						
-											hotspot_info_field_container_el.appendChild(hotspot_info_field_name_el);
-						
-											const hotspot_info_field_value_el = document.createElement('span');
-											hotspot_info_field_value_el.classList.add('extension-power-settings-hotspot-info-value');
-											hotspot_info_field_value_el.textContent = fresh_body[ hotspot_info_fields[hi] ].replace(/(\r\n|\n|\r)/gm, " ");;
-											//console.log("acivated? -->" + fresh_body[ hotspot_info_fields[hi] ] + "<--");
-											if(fresh_body[ hotspot_info_fields[hi] ].startsWith('activated')){
-												hotspot_info_field_value_el.classList.add('extension-power-settings-green-text');
 											}
 						
-											hotspot_info_field_container_el.appendChild(hotspot_info_field_name_el);
-											hotspot_info_field_container_el.appendChild(hotspot_info_field_value_el);
-						
-											hotspot_info_container_el.appendChild(hotspot_info_field_container_el);
-							
 										}
-						
+									
 									}
+									
+									
 					
 								}
 							}
@@ -3815,8 +3850,8 @@
 			try{
 				
 				// not used?
-				//const sink_list_el = document.getElementById('extension-power-settings-audio-sink-list-container');
-				//const source_list_el = document.getElementById('extension-power-settings-audio-source-list-container');
+				const sink_list_el = document.getElementById('extension-power-settings-audio-sink-list-container');
+				const source_list_el = document.getElementById('extension-power-settings-audio-source-list-container');
 				//const audio_device_els = [source_list_el, sink_list_el];
 				
 				
@@ -4009,6 +4044,10 @@
 				}
 				else{
 					document.getElementById('extension-power-settings-audio-no-devices').classList.add('extension-power-settings-hidden');
+				}
+				
+				if(source_list_el.children && source_list_el.children.length && source_list_el.children[0].classList.contains('extension-power-settings-spinner')){
+					source_list_el.innerHTML = '<p style="text-align:center;padding:2rem">No microphones detected</p>';
 				}
 				
 				

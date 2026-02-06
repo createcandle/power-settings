@@ -1229,7 +1229,6 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
     height: auto;
     position: initial;
     transform: none;
-    padding: 2rem;
 }
 
 .network-settings-list-item-container-2,
@@ -1333,13 +1332,17 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 }
 
 
-.extension-power-settings-hotspot-connected-devices-container{
+#extension-power-settings-hotspot-connected-devices-container{
 	display:flex;
 	flex-direction:column;
+
+}
+#extension-power-settings-hotspot-connected-devices-container:not(:empty){
+	margin-top:4rem;
 }
 
-.extension-power-settings-hotspot-connected-devices-container span,
-.extension-power-settings-hotspot-connected-devices-container a{
+#extension-power-settings-hotspot-connected-devices-container span,
+#extension-power-settings-hotspot-connected-devices-container a{
 	display:block;
 	padding:2rem;
 	color:white;
@@ -1347,11 +1350,11 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 	text-align:center;
 	border-top:1px solid rgba(255,255,255,.1);
 }
-.extension-power-settings-hotspot-connected-devices-container a{
+#extension-power-settings-hotspot-connected-devices-container a{
 	text-decoration:none;
 	cursor:pointer;
 }
-body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a:hover{
+body:not(.kiosk) #extension-power-settings-hotspot-connected-devices-container a:hover{
 	background-color:rgba(255,255,255,.1);
 }
 
@@ -1523,4 +1526,11 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
 	font-size: 1.5rem;
 	margin-bottom: 0.5rem;
 	padding-left: 100px;
+}
+
+#extension-power-settings-container-reset ul{
+	list-style-type: disc;
+}
+#extension-power-settings-container-reset ul li{
+	display: list-item;
 }

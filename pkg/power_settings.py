@@ -730,7 +730,7 @@ class PowerSettingsAPIHandler(APIHandler):
                 
                 
     
-    def get_hotspot_arp(self):
+    def get_hotspot_arp(self,intensive_scan=False):
         result = []
         hotspot_arp_list = run_command("cat /proc/net/arp | tail -n +2 | grep '192.168.12.'")
         if hotspot_arp_list != None:
@@ -739,7 +739,16 @@ class PowerSettingsAPIHandler(APIHandler):
                     if "192.168.12.1 " in str(line):
                         pass
                     else:
-                        result.append(str(line).split(' ')[0])
+                        
+                        ip = str(line).split(' ')[0]
+                        if valid_ip(ip):
+                            name = ip
+                            if intensive_scan:
+                                lookup_result = str(run_command("timeout 1 nmblookup -A " + str(ip) + " | grep '<00>' | awk '{print $1}'"))
+                                if len(lookup_result) > 3 and lookup_result != 'None' and 'No reply from' not in lookup_result:
+                                    name = lookup_result
+                        
+                            result.append({'ip':ip ,'name':name})
         return result
         
         
@@ -1836,8 +1845,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if self.show_hotspot_password == True:
                                     the_hotspot_password = self.hotspot_password
                                 
-                                connected_hotspot_devices_according_to_arp = self.get_hotspot_arp()
-                                
+                                if action == 'get_hotspot_connected_devices':
+                                    connected_hotspot_devices_according_to_arp = self.get_hotspot_arp(True)
+                                else:
+                                    connected_hotspot_devices_according_to_arp = self.get_hotspot_arp()
                                 
                                 def get_more_phone_info(usb_device_id):
                                     if self.DEBUG:
@@ -1919,17 +1930,20 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 result = {
                                     'state':True,
-                                    'hotspot_enabled':self.hotspot_enabled,
-                                    'hotspot_state':hotspot_state,
+
                                     'hotspot_ssid':self.hotspot_ssid,
                                     'hotspot_password':the_hotspot_password,
                                     'hotspot_password_length':len(self.hotspot_password),
                                     'hotspot_connected_devices':connected_hotspot_devices_according_to_arp,
-                                    'hotspot_ipv4_address':'192.168.12.1',
-                                    'hotspot_ipv6_addresses':hotspot_ipv6_addresses,
-                                    'hotspot_band':hotspot_band,
-                                    'hotspot_channel':hotspot_channel,
-                                    'hotspot_isolation':hotspot_isolation,
+                                    'hotspot_enabled':self.hotspot_enabled,
+                                    'hotspot':{
+                                        'state':hotspot_state,
+                                        'ipv4_address':'192.168.12.1',
+                                        'ipv6_addresses':hotspot_ipv6_addresses,
+                                        'band':hotspot_band,
+                                        'channel':hotspot_channel,
+                                        'isolation':hotspot_isolation,
+                                    },
                                     'usb0_tethering_info':usb0_tethering_info,
                                     'usb0_tethering_data':usb0_tethering_data,
                                     'usb1_tethering_info':usb1_tethering_info,
