@@ -244,7 +244,8 @@ echo " "
 echo " "
 
 # clear Bash history
-echo "curl -sSL www.candlesmarthome.com/tools/samba.txt | sudo bash" > /home/pi/.bash_history
+echo "sudo /home/pi/candle/debug.sh" > /home/pi/.bash_history
+echo "curl -sSL www.candlesmarthome.com/tools/samba.txt | sudo bash" >> /home/pi/.bash_history
 echo "sudo fsck -n -f" >> /home/pi/.bash_history
 echo "journalctl --boot=0 --priority=0..3" >> /home/pi/.bash_history
 echo "systemctl list-units --failed" >> /home/pi/.bash_history
@@ -260,7 +261,7 @@ echo "hostname -I" >> /home/pi/.bash_history
 #echo "sudo resolvconf -u" >> /home/pi/.bash_history
 #echo "cd /boot/firmware" >> /home/pi/.bash_history
 echo "tail -f -n10 ~/.webthings/log/run-app.log" >> /home/pi/.bash_history
-echo "sudo /home/pi/candle/debug.sh" > /home/pi/.bash_history
+
 #cat /dev/null > /home/pi/.bash_history
 
 if [ -f "$BOOT_DIR/developer.txt" ]; then
