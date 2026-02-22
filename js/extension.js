@@ -15,7 +15,14 @@
 			this.developer = false;
 			this.second_init_attempted = false;
 			
-            this.kiosk = false;
+            
+            // Kiosk?
+			this.kiosk = false;
+            if(document.getElementById('virtualKeyboardChromeExtension') != null){
+                document.body.classList.add('kiosk');
+                this.kiosk = true;
+            }
+			
             this.exhibit_mode = false;
             
             this.bits = "UNKNOWN";
@@ -57,6 +64,13 @@
 			this.pipewire_data = {};
 			
 			this.mouse_pointer_enabled = false;
+			
+			this.allow_password_remembering_in_this_browser = false;
+			
+			this.hostname_was_changed_here = false;
+			if(localStorage.getItem("extension_power_settings_hostname")){
+				localStorage.removeItem("extension_power_settings_hostname");
+			}
 			
 			let addon_settings_link_el = document.getElementById('addon-settings-link');
 			if(addon_settings_link_el){
@@ -149,6 +163,29 @@
 				console.error("power-settings: network_settings_link_el does not exist (yet)");
 			}
 			*/
+			const network_settings_wifi_connect_button_el = document.getElementById('network-settings-wifi-connect');
+			if(network_settings_wifi_connect_button_el){
+				network_settings_wifi_connect_button_el.addEventListener('click', () => {
+					const wifi_ssid_el = document.getElementById('network-settings-list-item-wifi-ssid');
+					if(wifi_ssid_el && wifi_ssid_el.textContent == ''){
+						wifi_ssid_el.textContent = 'Connecting...';
+						setTimeout(() => {
+							if(window.location.href.endsWith('/settings/network') && wifi_ssid_el.textContent == 'Connecting...'){
+								if(this.debug){
+									console.log("power settings debug: clicking on network button in menu to update wifi info being displayed");
+								}
+								const network_settings_link_el = document.getElementById('network-settings-link');
+								if(network_settings_link_el){
+									network_settings_link_el.click();
+								}
+							}
+						},7000);
+					}
+				});
+			}
+			else{
+				console.error("power-settings: network_settings_link_el does not exist (yet)");
+			}
 			
 			
 			
@@ -189,7 +226,74 @@
                 .catch((e) => {
                     console.error('Failed to fetch settings pages content:', e);
                 });
-                
+			
+			
+			if(!this.kiosk){
+				setInterval(() => {
+					if(this.hostname_was_changed_here === false){
+						let localstorage_hostname_data = localStorage.getItem('extension_power_settings_hostname');
+						if(localstorage_hostname_data && typeof localstorage_hostname_data == 'string'){
+							localstorage_hostname_data = JSON.parse(localstorage_hostname_data);
+							console.log("parsed localstorage_hostname_data: ", localstorage_hostname_data);
+							if(typeof localstorage_hostname_data['change_timestamp'] == 'number' && localstorage_hostname_data['change_timestamp'] < Date.now() - (38400 * 1000)){
+								localStorage.removeItem("extension_power_settings_hostname");
+							}
+							if(typeof localstorage_hostname_data['hostname'] == 'string' && localstorage_hostname_data['hostname'] != window.location.hostname){
+								console.log("detected a hostname mismatch between the current URL and the data in localstorage: ", window.location.hostname, localstorage_hostname_data['hostname']);
+							
+								let hostname_changed_warning_el = document.getElementById('extension-power-settings-hostname-changed-warning');
+								console.log("hostname_changed_warning_el: ", hostname_changed_warning_el);
+								if(!hostname_changed_warning_el){
+									const new_hostname_changed_warning_el = document.createElement('div');
+									new_hostname_changed_warning_el.setAttribute('id','extension-power-settings-hostname-changed-warning');
+									//new_hostname_changed_warning_el.innerHTML = '<div class="extension-power-settings-vlak"><div id="extension-power-settings-hostname-changed-warning-close-button"><h1>Hostname changed</h1><p>The hostname of this Candle Controller seems to have changed from ' + window.location.hostname + ' to ' + localstorage_hostname_data['hostname'] + '.</p><p>If this is intentional, then you should continue using Candle at the new hostname.</p><p></p><a class="text-button" href="' + (location.protocol + '//' + localstorage_hostname_data['hostname']) + '">Switch to ' + localstorage_hostname_data['hostname'] + '</a></div>';
+									
+									const hostname_changed_warning_inner_el = document.createElement('div');
+									hostname_changed_warning_inner_el.classList.add('extension-power-settings-vlak');
+									
+									const close_hostname_change_warning_button_el = document.createElement('div');
+									close_hostname_change_warning_button_el.classList.add('extension-power-settings-top-right-close-button');
+									close_hostname_change_warning_button_el.textContent = '✕';
+									close_hostname_change_warning_button_el.addEventListener('click', () => {
+										localStorage.removeItem('extension_power_settings_hostname');
+										new_hostname_changed_warning_el.remove();
+									});
+									hostname_changed_warning_inner_el.appendChild(close_hostname_change_warning_button_el);
+									
+									const hostname_changed_warning_content_el = document.createElement('div');
+									hostname_changed_warning_content_el.innerHTML = '<h1>Hostname changed</h1><p>The hostname of this Candle Controller seems to have changed from <strong>' + window.location.hostname + '</strong> to <strong>' + localstorage_hostname_data['hostname'] + '</strong>.</p><p>If this is intentional and correct, then you should continue using Candle at the new hostname.</p><p></p><a class="text-button" href="' + (location.protocol + '//' + localstorage_hostname_data['hostname']) + '">Switch to ' + localstorage_hostname_data['hostname'] + '</a>';
+									
+									hostname_changed_warning_inner_el.appendChild(hostname_changed_warning_content_el);
+									
+									
+									new_hostname_changed_warning_el.appendChild(hostname_changed_warning_inner_el);
+									
+									
+									document.body.appendChild(new_hostname_changed_warning_el);
+								}
+							
+								
+								/*
+								const connectivity_scrim_el = document.getElementById('connectivity-scrim');
+								if(connectivity_scrim_el && connectivity_scrim_el.classList.contains('hidden') == false){
+									console.log("it seems the hostname was recently changed, and this window is not on the new hostname yet");
+								
+									if(connectivity_scrim_el.innerHTML == ''){
+										console.log("connectivity_scrim is empty");
+										let test_el = document.createElement('h1');
+										test_el.textContent = 'Hostname changed';
+										connectivity_scrim_el.appendChild(test_el);
+									}
+								
+								
+									//connectivity_scrim_el.innerHTML == '<h1>Hostname changed</h1><p>The hostname of this Candle Controller seems to have changed from ' + window.location.hostname + ' to ' + localstorage_hostname_data['hostname'] + '.</p><p>If this is correct, then you can continue using Candle at the new hostname.</p><p></p><a class="text-button" href="' + location.protocol + '//' + localstorage_hostname_data['hostname'] + '">Go to ' + localstorage_hostname_data['hostname'] + '</a>';
+								}
+								*/
+							}
+						}
+					}
+				},1000);
+			}
         }
 
 
@@ -404,7 +508,7 @@
         // Mostly adds event listeners once settings_page.html has loaded in
         create_extra_settings(){
             
-            if(document.querySelector('#settings-menu > ul') != null){
+            if(document.querySelector('#settings-menu > ul') != null && !document.getElementById('extension-power-settings-menu-time-button')){
                 
                 const hours = document.getElementById('extension-power-settings-form-hours');
                 const minutes = document.getElementById('extension-power-settings-form-minutes');
@@ -417,16 +521,7 @@
                     console.error("Error, missing power settings back button? Aborting");
                     return;
                 }
-                
 				
-				
-                
-                // Kiosk?
-                if(document.getElementById('virtualKeyboardChromeExtension') != null){
-                    document.body.classList.add('kiosk');
-                    this.kiosk = true;
-                }
-                
                 
                 // Back button
                 document.getElementById('extension-power-settings-back-button').addEventListener('click', () => {
@@ -525,7 +620,8 @@
 				//
                 
                 // Add buttons to settings menu
-                document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-time-button">Clock</a></li>';
+                document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-security-button">Security</a></li>';
+				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-time-button">Clock</a></li>';
 				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-display-button">Display</a></li>';
 				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item" id="extension-power-settings-main-menu-audio-item"><a id="extension-power-settings-menu-audio-button">Audio</a></li>';
 				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item" id="extension-power-settings-main-menu-printer-item" style="display:none"><a id="extension-power-settings-menu-printer-button">Printer</a></li>';
@@ -535,6 +631,16 @@
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-reset-button">Factory reset</a></li>';
                 
                 
+                // Show security page button
+                document.getElementById('extension-power-settings-menu-security-button').addEventListener('click', () => {
+                    this.hide_all_settings_containers();
+                    document.getElementById('extension-power-settings-container-security').classList.remove('extension-power-settings-hidden');
+                    document.getElementById('extension-power-settings-pages').classList.remove('hidden');
+                    
+                    this.show_security_page();
+                    
+                });
+				
                 
                 // Show time page button
                 document.getElementById('extension-power-settings-menu-time-button').addEventListener('click', () => {
@@ -703,6 +809,7 @@
 		            });
 	            });
 				
+				
 				// power management checkbox for display 1
 	            document.getElementById("extension-power-settings-display1-power-checkbox").addEventListener('change', () => {
 	                //console.log("display1 rotation changed");
@@ -724,6 +831,7 @@
 		                console.error("Error sending display power command: ", e);
 		            });
 	            });
+				
 				
 				// power management checkbox for display 2
 	            document.getElementById("extension-power-settings-display2-power-checkbox").addEventListener('change', () => {
@@ -748,7 +856,6 @@
 	            });
 				
 				
-                
                 // Show System Details page button
                 document.getElementById('extension-power-settings-menu-system-button').addEventListener('click', () => {
                     this.hide_all_settings_containers();
@@ -777,6 +884,7 @@
 					
 				});
 				
+				
 	            // START PARTITION EXPANSION
 	            document.getElementById("extension-power-settings-user-partition-expansion-button").addEventListener('click', () => {
 	                //document.getElementById("extension-power-settings-low-storage-warning").style.display = 'none';
@@ -785,6 +893,7 @@
 						this.start_partition_expansion();
 					}
 	            });
+				
 				
 				// test speakers button
                 document.getElementById('extension-power-settings-test-speakers-button').addEventListener('click', () => {
@@ -1266,8 +1375,30 @@
                     minutes.value = powerSettingsCurrentTime.getMinutes();
                 });
 
+				const allow_password_remembering_checkbox_el = document.getElementById('extension-power-settings-security-allow-password-remembering-on-this-device');
+				if(allow_password_remembering_checkbox_el){
+					if(localStorage.getItem('candle-login-allow-password-remembering')){
+						this.allow_password_remembering_in_this_browser = true;
+					}
+					//console.log("this.allow_password_remembering_in_this_browser: ", this.allow_password_remembering_in_this_browser);
+					allow_password_remembering_checkbox_el.checked = this.allow_password_remembering_in_this_browser;
+					allow_password_remembering_checkbox_el.addEventListener('change', () => {
+						if(allow_password_remembering_checkbox_el.checked){
+							localStorage.setItem('candle-login-allow-password-remembering','true');
+						}
+						else{
+							if(localStorage.getItem('candle-login-allow-password-remembering')){
+								localStorage.removeItem('candle-login-allow-password-remembering');
+							}
+						}
+						//console.log("allow_password_remembering_in_this_browser: localstorage item: ", localStorage.getItem('candle-login-allow-password-remembering'));
+					})
+				}
+
+
+
 				
-                this.get_init();
+                //this.get_init();
                 
                 
                 
@@ -1501,9 +1632,6 @@
                                 
                                 }, 40000);
                                    
-                                
-                                
-                                
                                 window.API.postJson('/settings/system/actions', {
                                     action: 'restartSystem'
                                 }).catch(console.error);
@@ -1585,13 +1713,15 @@
                 //  Change hostname
     			document.getElementById("domain-settings-local-update").addEventListener('click', () => {
     				//console.log("change hostname button clicked");
-                    
+                    this.hostname_was_changed_here = true;
                     const domain_update_button = document.getElementById("domain-settings-local-update");
                     document.getElementById("domain-settings-local-update").style.display = 'none';
                     
                     const new_domain = document.getElementById('domain-settings-local-name').value;
                     const suffix = document.getElementById('domain-settings-local-suffix').innerText;
                     //console.log(new_domain,suffix);
+					
+					
                     
                     var after_html = "";
                     const explanation_el = document.getElementById('extension-power-settings-domain-explanation');
@@ -1604,7 +1734,7 @@
                         after_html = '<p id="extension-power-settings-domain-explanation">If all went well you can now use Candle from other devices on your local network by visiting:<br/><br/> <strong>http://' + new_domain + suffix + '</strong></p>';
                     }
                     else{
-                        after_html = '<p id="extension-power-settings-domain-explanation">If all went well then in about 10 seconds you should switch to <a href="http://' + new_domain + suffix + '" style="color:white;font-weight:bold">' + new_domain + suffix + '</a> to continue using Candle.</p>';
+                        after_html = '<p id="extension-power-settings-domain-explanation">If all went well then in about 10 seconds you should switch to <a href="http://' + new_domain + suffix + '" style="color:white;font-weight:bold" class="text-=button">' + new_domain + suffix + '</a> to continue using Candle.</p>';
                     }
                     
                     domain_update_button.insertAdjacentHTML('afterend', after_html);
@@ -1615,8 +1745,15 @@
                     
                     //document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>';
                     //this.upload_files(filesSelected);
+					
+					localStorage.setItem("extension_power_settings_hostname", JSON.stringify({'hostname':new_domain + suffix, "changed_timestamp": Date.now()}));
     			});
                 
+				
+				
+				this.get_init();
+				
+				
                 
             }
             else{
@@ -1812,13 +1949,14 @@
                 }
 				if(body.device_sd_card_size != null && parseInt(body.device_sd_card_size) > 1000000){
 					if(document.getElementById('extension-power-settings-device-sd-card-size')){
-						document.getElementById('extension-power-settings-device-sd-card-size').textContent = Math.round(parseInt(body.device_sd_card_size) / 1000000000) + "GB";
+						let likely_size = Math.round(Math.round(parseInt(body.device_sd_card_size) / 1000000000) / 8) * 8;
+						document.getElementById('extension-power-settings-device-sd-card-size').textContent = likely_size + "GB";
 					}
 				}
             }
 			
             
-			// Exhiit mode
+			// Exhibit mode
             if(typeof body.exhibit_mode != 'undefined'){
                 this.exhibit_mode = body.exhibit_mode;
                 if(this.debug){
@@ -2248,7 +2386,7 @@
 					
 					
 							if(hotspot_details_password_el.value != ''){
-								hotspot_details_password__visibility_checkbox_el.setAttribute('checked',true);
+								hotspot_details_password_visibility_checkbox_el.checked = true;
 							}
 					
 							hotspot_settings_container_el.appendChild(hotspot_details_el);
@@ -2352,7 +2490,7 @@
 						else{
 							const hotspot_connected_checkbox_el = document.getElementById('extension-power-settings-hotspot-enabled-checkbox');
 							if(hotspot_connected_checkbox_el && typeof body.hotspot_enabled == 'boolean'){
-								hotspot_connected_checkbox_el.setAttribute('checked',body.hotspot_enabled);
+								hotspot_connected_checkbox_el.checked = body.hotspot_enabled;
 							}
 					
 							const hotspot_password_input_el = document.getElementById('extension-power-settings-hotspot-password-input');
@@ -2738,11 +2876,42 @@
 					console.error("power settings debug: caught general error in render_hotspot_settings: ", err);
 				}
 			}
-			
-			
-			
         }
         
+		
+		
+        show_security_page(){
+			//console.log("in show_security_page");
+			const allow_password_remembering_checkbox_el = document.getElementById('extension-power-settings-security-allow-password-remembering-on-this-device');
+			if(allow_password_remembering_checkbox_el){
+				if(localStorage.getItem('candle-login-allow-password-remembering')){
+					this.allow_password_remembering_in_this_browser = true;
+				}
+				else{
+					this.allow_password_remembering_in_this_browser = false;
+				}
+				allow_password_remembering_checkbox_el.checked = this.allow_password_remembering_in_this_browser;
+			}
+			
+			/*
+            window.API.postJson(
+                `/extensions/${this.id}/api/ajax`, {
+                    'action': 'security_page_init'
+                }
+            ).then((body) => {
+                if(this.debug){
+                    console.log("power settings debug: security page init response: ", body);
+                }
+            }).catch((err) => {
+				console.error("Error: security page init: connection failed: ", err);
+            });
+			*/
+        }
+		
+		
+		
+		
+		
         show_clock_page(){
             //console.log("in show_clock_page");
             window.API.postJson(
@@ -4542,9 +4711,6 @@
 				}
 				
 				
-				
-				
-				
             }).catch((err) => {
                 console.error("power settings: caught error sending get_display_info command: ", err);
             });
@@ -4967,6 +5133,18 @@
 						}
                     }
                 }
+				
+				// Show disk errors warning
+				if(typeof body['disk_errors'] == 'number' && body['disk_errors'] > 0){
+					let disk_errors_warning_el = document.getElementById('extension-power-settings-disk-errors-warning');
+					if(disk_errors_warning_el){
+						disk_errors_warning.innerHTML = '<p>' + body['disk_errors'] + ' disk errors detected</p><p>Consider making a backup and then rebooting, which could fix small disk errors. If the SD card that Candle is running on is quite old, and these errors keep appearing, then you should consider switching to a new or more durable SD card.</p>';
+						disk_errors_warning_el.style.display = 'block';
+					}
+				}
+				
+				
+				
 				
 				
             }).catch((err) => {

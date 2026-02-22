@@ -469,6 +469,11 @@
     display:none;
 }
 
+#extension-power-settings-menu-security-button{
+    cursor:pointer;
+    background-image:url('../images/security.svg');
+}
+
 #extension-power-settings-menu-time-button{
     cursor:pointer;
     background-image:url('../images/clock.svg');
@@ -1284,6 +1289,62 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 
 
 
+/*  hostname change  */
+
+#extension-power-settings-hostname-changed-warning{
+	z-index:1001;
+	position:absolute;
+	top:0;
+	left:0;
+	width:100%;
+	height:100%;
+	display:flex;
+	align-items:center;
+	justify-content:center;
+    background: rgba(0, 0, 0, .5);
+}
+
+#extension-power-settings-hostname-changed-warning > div{
+	max-width:60rem;
+	background-color:#04385d;
+	border-radius:1rem;
+	padding:4rem;
+	position:relative;
+}
+
+#extension-power-settings-hostname-changed-warning p{
+	font-size:1.6rem;
+	line-height:160%;
+}
+
+#extension-power-settings-hostname-changed-warning a{
+    font-size: 2.4rem;
+    text-decoration: none;
+    padding: 1rem 2rem;
+    display: inline-block;
+    margin: 2rem 0;
+    float: right;
+}
+
+.extension-power-settings-top-right-close-button{
+	position:absolute;
+	top:1.5rem;
+	right:1.5rem;
+	width:3rem;
+	height:3rem;
+	border-radius:1.5rem;
+	background-color:rgba(255,255,255,.1);
+	color:white;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor:pointer;
+}
+
+.extension-power-settings-top-right-close-button:hover{
+	background-color:#900;
+}
+
 
 /*  hotspot settings  */
 
@@ -1487,6 +1548,13 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
     
 	#extension-power-settings-back-button{
 		display:none!important;
+	}
+	
+	#menu-button{
+		display:initial!important;
+	}
+	#settings-back-button{
+		margin-left:44rem;
 	}
 	
 	.section-title{

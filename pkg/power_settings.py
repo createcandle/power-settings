@@ -376,6 +376,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         # Low voltage
         self.low_voltage = False
+        self.disk_errors = 0
         
         
         # Recovery partition
@@ -2518,7 +2519,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                     try:
                                         self.attached_devices = []
-                                        lsusb_output = run_command("lsusb | cut -d' ' -f 7,8,9,10,11,12,13,14,15")
+                                        lsusb_output = run_command("lsusb | cut -d' ' -f 7,8,9,10,11,12,13,14,15") # get all words beyond the 7th..
                                         if self.DEBUG:
                                             print("debug: lsusb output: " + str(lsusb_output))
                                     
@@ -2553,6 +2554,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'available_memory':available_memory, 
                                                       'free_memory':free_memory, 
                                                       'disk_usage':self.disk_usage,
+                                                      'disk_errors':self.disk_errors,
                                                       'sd_card_written_kbytes':self.sd_card_written_kbytes,
                                                       'low_voltage':self.low_voltage,
                                                       'board_temperature':board_temperature,
@@ -2639,6 +2641,16 @@ class PowerSettingsAPIHandler(APIHandler):
                                 local_update_via_recovery_interupted = self.update_via_recovery_interupted
                                 self.update_via_recovery_interupted = False
                                 
+                                
+                                dmesg_output = run_command("dmesg --level=err,warn")
+                                if isinstance(dmesg_output,str):
+                                    self.disk_errors = 0
+                                    for line in str(dmesg_output).splitlines():
+                                        if 'I/O error, dev mmcblk0' in line:
+                                            self.disk_errors += 2
+                                        elif 'mmc0: timeout waiting for hardware interrupt' in line:
+                                             self.disk_errors += 1
+                                        
                                 the_hotspot_password = ''
                                 #if self.persistent_data['show_hotspot_password'] == True:
                                 if self.show_hotspot_password == True:
@@ -2710,6 +2722,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'hotspot_password':the_hotspot_password,
                                             'hotspot_password_length':len(self.hotspot_password),
                                             'hotspot_connected_devices':hotspot_arp_list,
+                                            'disk_errors':self.disk_errors,
                                             'debug':self.DEBUG
                                         }
                                         
