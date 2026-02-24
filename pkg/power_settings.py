@@ -724,10 +724,10 @@ class PowerSettingsAPIHandler(APIHandler):
             if self.DEBUG:
                 print("-Display standby delay preference was in config: " + str(self.display_standby_delay))
                 
-        if 'Show hotspot password' in config:
-            self.show_hotspot_password = bool(config['Show hotspot password'])
-            if self.DEBUG:
-                print("-Show hotspot pasword preference was in config: " + str(self.show_hotspot_password))
+        #if 'Show hotspot password' in config:
+        #    self.show_hotspot_password = bool(config['Show hotspot password'])
+        #    if self.DEBUG:
+        #        print("-Show hotspot pasword preference was in config: " + str(self.show_hotspot_password))
                 
                 
     
@@ -1843,7 +1843,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 the_hotspot_password = ''
                                 #if self.persistent_data['show_hotspot_password'] == True:
-                                if self.show_hotspot_password == True:
+                                if self.show_hotspot_password and self.show_hotspot_password == True:
                                     the_hotspot_password = self.hotspot_password
                                 
                                 if action == 'get_hotspot_connected_devices':
@@ -1965,6 +1965,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if 'enabled' in request.body:
                                     self.hotspot_enabled = bool(request.body['enabled'])
                                     if self.hotspot_enabled:
+                                        if self.DEBUG:
+                                            print("enabling candle hotspot")
                                         os.system('sudo touch ' + str(self.candle_hotspot_file_path))
                                         os.system('nmcli connection up Candle_hotspot')
                                         os.system('nmcli connection modify Candle_hotspot autoconnect yes')
@@ -1973,14 +1975,23 @@ class PowerSettingsAPIHandler(APIHandler):
                                     else:
                                         # don't disable the hotspot if there are no remaining network connections
                                         # TODO could also check if a thatouch screne is connected, in which case that can still be used to keep access.
-                                        active_connections = run_command("nmcli -t connection show --active | tail -n +2 | grep -v 'Candle_hotspot' | grep -v 'loopback:lo'")
+                                        active_connections = run_command("nmcli -t connection show --active | tail -n +2 | grep -v 'Candle_hotspot' | grep -v 'loopback:lo'") # filter out the hotspot and lo interfaces
                                         if active_connections != None:
-                                            if len(str(active_connections).strip()) > 10:
+                                            if isinstance(active_connections,str) and len(str(active_connections).strip()) > 10:
+                                                if self.DEBUG:
+                                                    print("disabling candle hotspot")
                                                 os.system('sudo rm ' + str(self.candle_hotspot_file_path))
                                                 os.system('nmcli connection down Candle_hotspot')
                                                 os.system('nmcli connection modify Candle_hotspot autoconnect no')
+                                                os.system('nmcli device set uap0 managed false')
                                                 os.system('sudo pkill dnsmasq')
                                                 state = True
+                                            else:
+                                                if self.DEBUG:
+                                                    print("error, not disabling Hotspot: no other connection would remain. ")
+                                        else:
+                                            if self.DEBUG:
+                                                print("\nERROR, not disabling Hotspot: nmcli show command returned null. ")
                                             
                                 return APIResponse(
                                   status=200,
@@ -1996,7 +2007,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                     if len(new_password) > 7 and len(new_password) < 64:
                                         self.hotspot_password = new_password
                                         os.system('echo "' + str(new_password) + '" | sudo tee ' + str(self.candle_hotspot_password_file_path))
-                                        os.system('nmcli con modify Candle_hotspot wifi-sec.key-mgmt sae wifi-sec.psk "' + str(new_password) + '"')
+                                        #os.system('nmcli con modify Candle_hotspot wifi-sec.key-mgmt sae wifi-sec.psk "' + str(new_password) + '"')
+                                        os.system('nmcli con modify Candle_hotspot wifi-sec.psk "' + str(new_password) + '"')
+                                        
                                         state = True
                                 
                                 return APIResponse(
@@ -2004,7 +2017,26 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':state}),
                                 )
-                                
+                            
+                            # Update hotspot password
+                            elif action == 'get_hotspot_password':
+                                state = False
+                                current_hotspot_password = ''
+                                try:
+                                    if os.path.exists(self.candle_hotspot_password_file_path):
+                                        with open(self.candle_hotspot_password_file_path, "r") as file:
+                                            current_hotspot_password = str(file.read()).rstrip()
+                                            state = True
+                                except Exception as ex:
+                                    print("get_hotspot_password: caught error reading current hotspot password from file: " + str(ex))
+                                    
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state,'value':current_hotspot_password}),
+                                )
+                            
+                            
                             # Update hotspot password visibility
                            
                             elif action == 'set_hotspot_password_visibility':
@@ -2653,7 +2685,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         
                                 the_hotspot_password = ''
                                 #if self.persistent_data['show_hotspot_password'] == True:
-                                if self.show_hotspot_password == True:
+                                if self.show_hotspot_password and self.show_hotspot_password == True:
                                     the_hotspot_password = self.hotspot_password
                                 
                                 if os.path.isdir(self.boot_path):
