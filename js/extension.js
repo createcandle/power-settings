@@ -2094,7 +2094,7 @@
 			if(this.debug){
 				console.log("power settings debug: in render_hotspot_settings. body: ", body);
 			}
-			console.log("in render_hotspot_settings");
+			
 			try{
 				
 				
@@ -2620,7 +2620,7 @@
 					
 						const update_connected_devices_list = (fresh_body) => {
 							if(this.debug){
-								console.log("in update_connected_devices_list. this.hotspot_connected_devices: ", this.hotspot_connected_devices);
+								console.log("power settings debug: in update_connected_devices_list. this.hotspot_connected_devices: ", this.hotspot_connected_devices);
 							}
 							
 							
