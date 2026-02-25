@@ -430,6 +430,8 @@ class PowerSettingsAPIHandler(APIHandler):
         # Candle_hotspot
         self.candle_hotspot_file_path = os.path.join(self.boot_path, 'candle_hotspot.txt')
         self.candle_hotspot_password_file_path = os.path.join(self.boot_path, 'candle_hotspot_password.txt')
+        self.candle_hotspot_ssid_file_path = os.path.join(self.boot_path, 'candle_hotspot_name.txt')
+        self.candle_hotspot_5G_file_path = os.path.join(self.boot_path, 'candle_hotspot_5G.txt')
         #self.performed_initial_wifi_scan = False
         self.hotspot_enabled = os.path.exists(self.candle_hotspot_file_path)
         self.hotspot_password = ""
@@ -439,6 +441,9 @@ class PowerSettingsAPIHandler(APIHandler):
                 self.hotspot_password = file.read()
                 self.hotspot_password = self.hotspot_password.strip()
         
+        self.hotspot_band_5G = False
+        if os.path.isfile(self.candle_hotspot_5G_file_path):
+            self.hotspot_band_5G = True
         
         #self.hotspot_mac_address = run_command("nmcli -t device show uap0 | grep HWADDR | cut -d':' -f2-7")
         #if self.hotspot_mac_address != None:
@@ -447,13 +452,15 @@ class PowerSettingsAPIHandler(APIHandler):
         #        self.hotspot_mac_address = ""
         #    #elif ":" in self.hotspot_mac_address:
         #    #    self.hotspot_ssid = self.hotspot_ssid + " " + self.hotspot_mac_address[-5:].replace(":", "")
-            
+        
         self.hotspot_ssid = 'Candle'
         #actual_hotspot_ssid = run_command("nmcli con show Candle_hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | sed 's/,*$//g' | xargs")
         actual_hotspot_ssid = run_command("nmcli con show Candle_hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | sed 's/,*$//g' | xargs")
         actual_hotspot_ssid = str(actual_hotspot_ssid).rstrip()
         if actual_hotspot_ssid.startswith('Candle '):
             self.hotspot_ssid = actual_hotspot_ssid
+        
+        
         
         #print("actual_hotspot_ssid: -" + actual_hotspot_ssid + '-');
         self.sd_card_written_kbytes = '?'
@@ -1931,7 +1938,6 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 result = {
                                     'state':True,
-
                                     'hotspot_ssid':self.hotspot_ssid,
                                     'hotspot_password':the_hotspot_password,
                                     'hotspot_password_length':len(self.hotspot_password),
@@ -1998,6 +2004,62 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':state}),
                                 )
+                                
+                            
+                            # select 2.4 or 5ghz mode
+                            elif action == 'set_hotspot_band':
+                                state = False
+                                if 'band' in request.body:
+                                    self.hotspot_band_5G = bool(request.body['band'])
+                                    if self.hotspot_band_5G == True:
+                                        if self.DEBUG:
+                                            print("Selecting candle hotspot 5Ghz frequency")
+                                        os.system('sudo touch ' + str(self.candle_hotspot_5G_file_path))
+                                        if os.path.isfile(self.candle_hotspot_file_path):
+                                            os.system('nmcli connection down Candle_hotspot')
+                                            os.system('nmcli connection modify Candle_hotspot 802-11-wireless.band a 802-11-wireless.channel 44')
+                                            os.system('nmcli connection up Candle_hotspot')
+                                        else:
+                                            os.system('nmcli connection modify Candle_hotspot 802-11-wireless.band a 802-11-wireless.channel 44')
+                                        state = True
+                                    elif os.path.isfile(self.candle_hotspot_5G_file_path):
+                                        os.system('sudo rm ' + str(self.candle_hotspot_5G_file_path))
+                                        if os.path.isfile(self.candle_hotspot_file_path):
+                                            os.system('nmcli connection down Candle_hotspot')
+                                            os.system('nmcli connection modify Candle_hotspot 802-11-wireless.band bg 802-11-wireless.channel 1')
+                                            os.system('nmcli connection up Candle_hotspot')
+                                        else:
+                                            os.system('nmcli connection modify Candle_hotspot 802-11-wireless.band bg 802-11-wireless.channel 1')
+                                        state = True
+                                            
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
+                            
+                            
+                            # Update hotspot password
+                            elif action == 'set_hotspot_ssid':
+                                state = False
+                                if 'ssid' in request.body:
+                                    new_ssid = str(request.body['ssid'])
+                                    if len(new_ssid) > 3 and len(new_ssid) < 32:
+                                        self.hotspot_ssid = new_ssid
+                                        os.system('echo "' + str(new_ssid) + '" | sudo tee ' + str(self.candle_hotspot_ssid_file_path))
+                                        #os.system('nmcli con modify Candle_hotspot wifi-sec.key-mgmt sae wifi-sec.psk "' + str(new_password) + '"')
+                                        if os.path.isfile(self.candle_hotspot_file_path):
+                                            os.system('nmcli con down Candle_hotspot; nmcli con modify Candle_hotspot ssid "' + str(new_ssid) + '"; nmcli con up Candle_hotspot')
+                                        else:
+                                            os.system('nmcli con down Candle_hotspot; nmcli con modify Candle_hotspot ssid "' + str(new_ssid) + '"')
+                                        state = True
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
+                            
                                 
                             # Update hotspot password
                             elif action == 'set_hotspot_password':

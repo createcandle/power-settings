@@ -379,7 +379,7 @@
                 */
                 window.API.logout()
                 .then((body) => {
-                    console.log("log out done");
+                    console.log("power settings: log out done");
                     window.location.reload(true);
                 }).catch((e) => {
           			console.log("Error saving token: ", e);
@@ -426,7 +426,7 @@
             
 			if(close_browser){
 	            close_browser.addEventListener('click', () => {
-					console.log("closing browser");
+					console.log("power settings: closing browser");
 	                window.API.postJson(
 	                    `/extensions/${this.id}/api/close_browser`, {}
 	                )
@@ -535,7 +535,7 @@
                         }
                     ).then((body) => {
                         if(this.debug){
-                            console.log("power settings: unlink_backup_download_dir response: ", body);
+                            console.log("power settings debug: unlink_backup_download_dir response: ", body);
                         }
                     }).catch((e) => {
                        console.error("Error: unlink_backup_download_dir connection failed: ", e);
@@ -581,7 +581,7 @@
 		                        }
 		                    ).then((body) => {
 		                        if(this.debug){
-		                            console.log("rescan_wifi response: ", body);
+		                            console.log("power settings debug: rescan_wifi response: ", body);
 		                        }
 		                    }).catch((err) => {
 								console.error("power settings: caught error calling rescan_wifi via api: ", err);
@@ -712,7 +712,7 @@
 		                }
 		            ).then((body) => {
 		                if(this.debug){
-		                    console.log("printer change printing_allowed response: ", body);
+		                    console.log("power settings debug: printer change printing_allowed response: ", body);
 		                }
 				
 						if(this.printing_allowed && typeof body.connected_printers != 'undefined'){
@@ -720,8 +720,8 @@
 							this.generate_connected_printers_list();
 						}
 						
-		            }).catch((e) => {
-		                console.log("Error, changing printing_allowed setting (connection) error: ", e);
+		            }).catch((err) => {
+		                console.error("power settings: error, changing printing_allowed setting (connection) error: ", err);
 		            });
 				});
 				
@@ -743,7 +743,7 @@
 		                }
 		            ).then((body) => {
 		                if(this.debug){
-		                    console.log("set_rpi_display_rotation response: ", body);
+		                    console.log("power settings debug: set_rpi_display_rotation response: ", body);
 		                }
 		            }).catch((e) => {
 		                console.error("Error sending rpi display rotation command: ", e);
@@ -773,10 +773,10 @@
 		                }
 		            ).then((body) => {
 		                if(this.debug){
-		                    console.log("set_display_rotation response: ", body);
+		                    console.log("power settings debug: set_display_rotation response: ", body);
 		                }
-		            }).catch((e) => {
-		                console.error("Error sending display rotation command: ", e);
+		            }).catch((err) => {
+		                console.error("power settings: caught error sending display rotation command: ", err);
 		            });
 	            });
 				
@@ -802,10 +802,10 @@
 		                }
 		            ).then((body) => {
 		                if(this.debug){
-		                    console.log("set_display_rotation response: ", body);
+		                    console.log("power settings debug: set_display_rotation response: ", body);
 		                }
-		            }).catch((e) => {
-		                console.error("Error sending display rotation command: ", e);
+		            }).catch((err) => {
+		                console.error("power settings: caught error sending display rotation command: ", err);
 		            });
 	            });
 				
@@ -1169,7 +1169,7 @@
                 
                 document.getElementById('extension-power-settings-update-recovery-button').addEventListener('click', () => {
                     if(this.debug){
-                        console.log("update recovery button clicked");
+                        console.log("power settings debug: update recovery button clicked");
                     }
                     
                     document.getElementById('extension-power-settings-system-update-button').style.display = 'none';
@@ -1198,7 +1198,7 @@
                         }
                         */
                     }).catch((e) => {
-                        console.error("Error starting update of recovery partition: ", e);
+                        console.error("power settings: Error starting update of recovery partition: ", e);
                     });
                     
                 });
@@ -1290,7 +1290,7 @@
                         }
                     ).then((body) => {
                         if(this.debug){
-                            console.log("set NTP response: ", body);
+                            console.log("power settings debug: set NTP response: ", body);
                         }
                         
                         if(ntp_current_state == 0){
@@ -1300,8 +1300,8 @@
                             document.getElementById('extension-power-settings-manually-set-time-container').style.display = 'none';
                         }
                         
-                    }).catch((e) => {
-                        console.error("set ntp error: ", e);
+                    }).catch((err) => {
+                        console.error("power settings: caught set ntp error: ", err);
                     });
                 });
                 
@@ -1320,8 +1320,8 @@
                         if(this.debug){
                             console.log("sync-time response: ", body);
                         }
-                    }).catch((e) => {
-                        console.error("sync time error: ", e);
+                    }).catch((err) => {
+                        console.error("power settings: caught sync time error: ", err);
                     });
                 });
 
@@ -1357,8 +1357,8 @@
                             }
                             this.show_clock_page();
                             
-                        }).catch((e) => {
-                            console.error("time submit error: ", e);
+                        }).catch((err) => {
+                            console.error("power settings debug: caught time submit error: ", err);
                             alert("Saving failed: could not connect to the controller");
                         });
                     }
@@ -1408,11 +1408,11 @@
                 // backup more checkbox
                 document.getElementById('extension-power-settings-backup-more-checkbox').addEventListener('change', () => {
                     if(this.debug){
-                        console.log("backup more checkbox changed");
+                        console.log("power settings debug: backup more checkbox changed");
                     }
                     const total_additional_files_size = this.log_size + this.photos_size + this.uploads_size;
                     if(this.debug){
-                        console.log("total_additional_files_size: ", total_additional_files_size);
+                        console.log("power settings debug: total_additional_files_size: ", total_additional_files_size);
                     }
                     if(total_additional_files_size > 90000000){
                         document.getElementById('extension-power-settings-backup-more-tip').style.display = 'block';
@@ -1502,7 +1502,7 @@
                         }
                         if(body.state == true){
                             if(this.debug){
-                                console.log("OK response, restarting system");
+                                console.log("power settings debug: OK response, restarting system");
                             }
                             
                             this.start_poll();
@@ -1757,7 +1757,7 @@
                 
             }
             else{
-                console.error("power settings error: settings menu didn't exist yet, so cannot append additional elements");
+                console.error("power settings: caught error: settings menu didn't exist yet, so cannot append additional elements");
             }
             
             
@@ -1874,7 +1874,7 @@
        
                 document.getElementById('allow-anonymous-mqtt-checkbox').addEventListener('change', () => {
                     if(this.debug){
-                        console.log('allow anonymous MQTT checkbox value changed');
+                        console.log('power settings debug: allow anonymous MQTT checkbox value changed');
                     }
             
                     const checkbox_state = document.getElementById('allow-anonymous-mqtt-checkbox').checked;
@@ -1935,7 +1935,7 @@
 			// Kernel version
             if(typeof body.device_kernel != 'undefined'){
                 if(this.debug){
-                    console.log("power settings: device_kernel: ", body.device_kernel);
+                    console.log("power setting debugs: device_kernel: ", body.device_kernel);
                 }
 				if(body.device_kernel != ''){
 					document.getElementById('extension-power-settings-device-kernel').innerText = body.device_kernel;
@@ -1945,7 +1945,7 @@
 			// SD Card size
             if(typeof body.device_sd_card_size != 'undefined'){
                 if(this.debug){
-                    console.log("power settings: device_sd_card_size: ", body.device_sd_card_size);
+                    console.log("power settings debug: device_sd_card_size: ", body.device_sd_card_size);
                 }
 				if(body.device_sd_card_size != null && parseInt(body.device_sd_card_size) > 1000000){
 					if(document.getElementById('extension-power-settings-device-sd-card-size')){
@@ -1989,7 +1989,7 @@
                 }
 				else{
 					if(this.debug){
-						console.log("power settings: user partition seems to be fully expanded");
+						console.log("power settings debug: user partition seems to be fully expanded");
 					}
 				}
             }
@@ -2013,7 +2013,7 @@
 			if(typeof body.has_cups != 'undefined'){
 				if(body.has_cups == true){
 					if(this.debug){
-						console.log("power settings: printing via CUPS is supported");
+						console.log("power settings debug: printing via CUPS is supported");
 					}
 					document.body.classList.add('cups-printing');
 					document.getElementById('extension-power-settings-main-menu-printer-item').style.display = 'block';
@@ -2022,7 +2022,7 @@
 					document.body.classList.remove('cups-printing');
 					document.getElementById('extension-power-settings-main-menu-printer-item').style.display = 'none';
 					if(this.debug){
-						console.log("printing via CUPS is not supported");
+						console.log("power settings debug: printing via CUPS is not supported");
 					}
 				}
 			}
@@ -2094,7 +2094,7 @@
 			if(this.debug){
 				console.log("power settings debug: in render_hotspot_settings. body: ", body);
 			}
-			
+			console.log("in render_hotspot_settings");
 			try{
 				
 				
@@ -2277,11 +2277,84 @@
 							hotspot_details_header_el.textContent = 'Hotspot';
 							hotspot_details_el.appendChild(hotspot_details_header_el);
 					
+					
+							//
+							// HOTSPOT SSID
+							//
+							
+							/*
 							const hotspot_details_ssid_el = document.createElement('div');
 							hotspot_details_ssid_el.classList.add('network-settings-list-item-detail');
 							hotspot_details_ssid_el.textContent = '' + body.hotspot_ssid;
 							hotspot_details_el.appendChild(hotspot_details_ssid_el);
+							*/
+							
+							const hotspot_ssid_wrapper_el = document.createElement('div');
+							hotspot_ssid_wrapper_el.classList.add('network-settings-hotspot-left-padded-container');
+							hotspot_ssid_wrapper_el.classList.add('network-settings-flex-align-center');
 					
+							const hotspot_details_ssid_el = document.createElement('input');
+							hotspot_details_ssid_el.setAttribute('id','extension-power-settings-hotspot-ssid-input');
+							hotspot_details_ssid_el.classList.add('network-settings-list-item-detail');
+							hotspot_details_ssid_el.setAttribute('type','text');
+							hotspot_details_ssid_el.value = '' + body.hotspot_ssid;
+					
+							hotspot_ssid_wrapper_el.appendChild(hotspot_details_ssid_el);
+					
+							const hotspot_details_ssid_save_button_el = document.createElement('button');
+							hotspot_details_ssid_save_button_el.classList.add('text-button');
+							hotspot_details_ssid_save_button_el.textContent = 'Save';
+							hotspot_details_ssid_save_button_el.setAttribute('id','extension-power-settings-hotspot-ssid-save-button');
+							hotspot_details_ssid_save_button_el.classList.add('network-settings-list-item-detail');
+							hotspot_details_ssid_save_button_el.setAttribute('type','text');
+					
+							hotspot_ssid_wrapper_el.appendChild(hotspot_details_ssid_save_button_el);
+
+							hotspot_details_ssid_el.setAttribute('placeholder','Name');
+
+							hotspot_details_ssid_el.addEventListener('change', () => {
+								hotspot_details_ssid_el.value = hotspot_details_ssid_el.value.replaceAll(' ','-');
+								if(hotspot_details_ssid_el.value.length > 3 && hotspot_details_ssid_el.value != this.hotspot_ssid){
+									this.hotspot_ssid = hotspot_details_ssid_el.value;
+									//console.log("changing hotspot ssid to: ", this.hotspot_ssid);
+							
+						            window.API.postJson(
+						                `/extensions/${this.id}/api/ajax`, {
+						                    'action': 'set_hotspot_ssid', 'ssid':hotspot_details_ssid_el.value
+						                }
+						            ).then((body) => {
+						                if(this.debug){
+						                    console.log("power-settings debug: set_hotspot_ssid response: ", body);
+						                }
+						                if (body.state === true){
+											console.log("Hotspot SSID changed succesfully");
+											hotspot_details_ssid_el.classList.add('extension-power-settings-hotspot-ssid-changed');
+						                    setTimeout(() => {
+						                    	hotspot_details_ssid_el.classList.remove('extension-power-settings-hotspot-ssid-changed');
+						                    },1000);
+						                }
+						            }).catch((err) => {
+						                console.log("caught error updating hotspot ssid via API: ", err);
+										this.hotspot_ssid = '?';
+						            });
+							
+								}
+								
+								else if(hotspot_details_ssid_el.value.length < 4){
+									//console.warn("user changed hotspot ssid, but it's too short");
+									hotspot_details_ssid_el.value = '';
+									hotspot_details_ssid_el.setAttribute('placeholder','Too short');
+								}
+								else{
+									console.log("hotspot ssid is unchanged");
+								}
+						
+							});
+							
+							
+							//
+							//  HOTSPOT PASSWORD
+							//
 					
 							const hotspot_password_wrapper_el = document.createElement('div');
 							hotspot_password_wrapper_el.classList.add('network-settings-hotspot-left-padded-container');
@@ -2358,37 +2431,7 @@
 						
 							});
 					
-					
-							const hotspot_details_password_visibility_checkbox_el = document.createElement('input');
-							hotspot_details_password_visibility_checkbox_el.setAttribute('type','checkbox');
-							hotspot_details_password_visibility_checkbox_el.addEventListener('change', () => {
-					            window.API.postJson(
-					                `/extensions/${this.id}/api/ajax`, {
-					                    'action': 'set_hotspot_password_visibility', 'visibility':hotspot_details_password_visibility_checkbox_el.checked
-					                }
-					            ).then((body) => {
-					                if(this.debug){
-					                    console.log("power-settings debug: set_hotspot_password_visibility response: ", body);
-					                }
-									/*
-					                if (body.state === true){
-										hotspot_details_password_el.classList.add('extension-power-settings-hotspot-password-changed');
-					                    setTimeout(() => {
-					                    	hotspot_details_password_el.classList.remove('extension-power-settings-hotspot-password-changed');
-					                    },1000);
-					                }
-									*/
-
-					            }).catch((err) => {
-					                console.log("caught error updating hotspot password via API: ", err);
-					            });
-							})
-					
-					
-							if(hotspot_details_password_el.value != ''){
-								hotspot_details_password_visibility_checkbox_el.checked = true;
-							}
-					
+							
 							hotspot_settings_container_el.appendChild(hotspot_details_el);
 					
 					
@@ -2415,7 +2458,7 @@
 					                }
 					            ).then((body) => {
 					                if(this.debug){
-					                    console.log("set_hotspot_enabled response: ", body);
+					                    console.log("power settings debug: set_hotspot_enabled response: ", body);
 					                }
 					                if (body.state === true){
 										hotspot_enabled_checkbox_el.classList.add('extension-power-settings-hotspot-password-changed');
@@ -2425,13 +2468,13 @@
 					                }
 
 					            }).catch((err) => {
-					                console.log("caught error updating hotspot password via API: ", err);
+					                console.log("power settings: caught error updating hotspot password via API: ", err);
 					            });
 						
 							});
 					
 							hotspot_enabled_container_el.appendChild(hotspot_enabled_checkbox_el);
-					
+							
 					
 							let hotspot_enabled_label_el = document.createElement('label');
 							//hotspot_enabled_label_el.classList.add('extension-power-settings-hotspot-enabled-checkbox-container');
@@ -2459,10 +2502,81 @@
 					
 					
 							hotspot_settings_list_item_el.appendChild(hotspot_settings_container_el);
+							hotspot_settings_list_item_el.appendChild(hotspot_ssid_wrapper_el);
 							hotspot_settings_list_item_el.appendChild(hotspot_password_wrapper_el);
-						
-						
+							
+							
+							
+							
+							
+							//
+							//  BAND CHECKBOX
+							//
+							
+							let hotspot_band_container_el = document.createElement('div');
+							hotspot_band_container_el.classList.add('extension-power-settings-hotspot-band-checkbox-container');
+							hotspot_band_container_el.classList.add('extension-power-settings-form-content');
 					
+							
+							const hotspot_band_name_el = document.createElement('div');
+							hotspot_band_name_el.textContent = 'Use 5Ghz band';
+							hotspot_band_container_el.appendChild(hotspot_band_name_el);
+					
+					
+							let hotspot_band_checkbox_el = document.createElement('input');
+							hotspot_band_checkbox_el.setAttribute('type','checkbox');
+							hotspot_band_checkbox_el.setAttribute('id','extension-power-settings-hotspot-band-checkbox');
+							hotspot_band_checkbox_el.setAttribute('name','extension-power-settings-hotspot-band-checkbox');
+						
+							this.hotspot_band_5G = false;
+							if(typeof body.hotspot == 'object' && typeof body.hotspot['band'] == 'string' && body.hotspot['band'] == 'a'){
+								this.hotspot_band_5G = true;
+							}
+							if(this.debug){
+								console.log("power settings debug: this.hotspot_band_5G: ", this.hotspot_band_5G);
+							}
+							
+							if(this.hotspot_band_5G === true){
+								hotspot_band_checkbox_el.setAttribute('checked',true);
+							}
+							
+							hotspot_band_checkbox_el.addEventListener('change',() => {
+								this.hotspot_band_5G = hotspot_band_checkbox_el.checked;
+						
+					            window.API.postJson(
+					                `/extensions/${this.id}/api/ajax`, {
+					                    'action': 'set_hotspot_band', 'band':this.hotspot_band_5G
+					                }
+					            ).then((body) => {
+					                if(this.debug){
+					                    console.log("power settings debug: set_hotspot_band response: ", body);
+					                }
+					                if (body.state === true){
+										hotspot_band_checkbox_el.classList.add('extension-power-settings-hotspot-band-changed');
+					                    setTimeout(() => {
+					                    	hotspot_band_checkbox_el.classList.remove('extension-power-settings-hotspot-band-changed');
+					                    },1000);
+					                }
+
+					            }).catch((err) => {
+					                console.log("caught error updating hotspot band via API: ", err);
+					            });
+						
+							});
+					
+							hotspot_band_container_el.appendChild(hotspot_band_checkbox_el);
+					
+					
+							let hotspot_band_label_el = document.createElement('label');
+							//hotspot_band_label_el.classList.add('extension-power-settings-hotspot-band-checkbox-container');
+							hotspot_band_label_el.setAttribute('for','extension-power-settings-hotspot-band-checkbox');
+							hotspot_band_container_el.appendChild(hotspot_band_label_el);
+					
+							hotspot_settings_list_item_el.appendChild(hotspot_band_container_el);
+							
+							
+							
+							
 
 							//  ADD HOTSPOT INFO CONTAINER
 
@@ -2689,7 +2803,7 @@
 					
 					
 							//
-							// UDPATE CONNECTED HOTSPOT DEVICES LIST
+							// UPDATE CONNECTED HOTSPOT DEVICES LIST
 							//
 						
 							
