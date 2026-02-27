@@ -2094,9 +2094,14 @@
 		
 		
 		// Also renders USB tethering settings
-        render_hotspot_settings(body){
+        render_hotspot_settings(body=null){
 			if(this.debug){
 				console.log("power settings debug: in render_hotspot_settings. body: ", body);
+			}
+			
+			if(body == null){
+				console.error("power settings: render_hotspot_settings: provided body was null");
+				return
 			}
 			
 			try{
@@ -2182,7 +2187,7 @@
 						usb_tethering_enabled_checkbox_el.setAttribute('name','extension-power-settings-usb-tethering-enabled-checkbox');
 				
 						if(this.usb_tethering_enabled === true){
-							usb_tethering_enabled_checkbox_el.setAttribute('checked',true);
+							usb_tethering_enabled_checkbox_elchecked = true;
 						}
 				
 						usb_tethering_enabled_checkbox_el.addEventListener('change',() => {
@@ -2450,7 +2455,7 @@
 							hotspot_enabled_checkbox_el.setAttribute('name','extension-power-settings-hotspot-enabled-checkbox');
 					
 							if(this.hotspot_enabled === true){
-								hotspot_enabled_checkbox_el.setAttribute('checked',true);
+								hotspot_enabled_checkbox_el.checked = true;
 							}
 					
 							hotspot_enabled_checkbox_el.addEventListener('change',() => {
@@ -2540,8 +2545,8 @@
 								console.log("power settings debug: this.hotspot_band_5G: ", this.hotspot_band_5G);
 							}
 							
-							if(this.hotspot_band_5G === true){
-								hotspot_band_checkbox_el.setAttribute('checked',true);
+							if(this.hotspot_band_5G == true){
+								hotspot_band_checkbox_el.checked = true;
 							}
 							
 							hotspot_band_checkbox_el.addEventListener('change',() => {
@@ -2559,9 +2564,9 @@
 										hotspot_band_checkbox_el.classList.add('extension-power-settings-hotspot-band-changed');
 					                    setTimeout(() => {
 					                    	hotspot_band_checkbox_el.classList.remove('extension-power-settings-hotspot-band-changed');
-					                    },1000);
+					                    },2000);
 					                }
-
+									
 					            }).catch((err) => {
 					                console.log("caught error updating hotspot band via API: ", err);
 					            });
@@ -4943,7 +4948,7 @@
 					this.mouse_pointer_enabled = body.mouse_pointer_enabled;
 					const mouse_pointer_checkbox_el = document.getElementById('extension-power-settings-show-mouse-pointer');
 					if(mouse_pointer_checkbox_el){
-						mouse_pointer_checkbox_el.setAttribute('checked', this.mouse_pointer_enabled);
+						mouse_pointer_checkbox_el.checked = this.mouse_pointer_enabled;
 						document.getElementById('extension-power-settings-mouse-pointer').classList.remove('extension-power-settings-hidden');
 					}
 				}

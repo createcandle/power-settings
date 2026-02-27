@@ -1405,7 +1405,6 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 
 #extension-power-settings-hotspot-password-save-button{
 	margin:0 0 0 .5rem;
-	display:none;
 }
 
 #extension-power-settings-hotspot-password-input:focus + #extension-power-settings-hotspot-password-save-button{
@@ -1511,6 +1510,12 @@ body:not(.kiosk) #extension-power-settings-hotspot-connected-devices-container a
 }
 
 
+.extension-power-settings-hotspot-band-changed + label::before{
+    box-shadow: inset 0 0 4px 4px green;
+    border-radius: 4px;
+}
+
+
 /*
 body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a::after{
 	content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAQElEQVR42qXKwQkAIAxDUUdxtO6/RBQkQZvSi8I/pL4BoGw/XPkh4XigPmsUgh0626AjRsgxHTkUThsG2T/sIlzdTsp52kSS1wAAAABJRU5ErkJggg==);
@@ -1611,7 +1616,7 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
 		display:initial!important;
 	}
 	#settings-back-button{
-		margin-left:44rem;
+		margin-left:46rem;
 	}
 	
 	.section-title{

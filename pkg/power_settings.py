@@ -1917,11 +1917,11 @@ class PowerSettingsAPIHandler(APIHandler):
                                     #time.sleep(2)
                                     
                                 # Candle_hotspot
-                                hotspot_state = str(run_command("nmcli c s Candle_hotspot | grep GENERAL.STATE: | awk '{print $2}'"))
-                                hotspot_ipv6_addresses = str(run_command("nmcli c s Candle_hotspot | grep IP6.ADDRESS | awk '{print $2}'"))
-                                hotspot_band = str(run_command("nmcli c s Candle_hotspot | grep 802-11-wireless.band: | awk '{print $2}'"))
-                                hotspot_channel = str(run_command("nmcli c s Candle_hotspot | grep 802-11-wireless.channel: | awk '{print $2}'"))
-                                hotspot_isolation = str(run_command("nmcli c s Candle_hotspot | grep 802-11-wireless.ap-isolation: | awk '{print $2}'"))
+                                hotspot_state = str(run_command("nmcli c s Candle_hotspot | grep GENERAL.STATE: | awk '{print $2}'")).rstrip()
+                                hotspot_ipv6_addresses = str(run_command("nmcli c s Candle_hotspot | grep IP6.ADDRESS | awk '{print $2}'")).rstrip()
+                                hotspot_band = str(run_command("nmcli c s Candle_hotspot | grep 802-11-wireless.band: | awk '{print $2}'")).rstrip()
+                                hotspot_channel = str(run_command("nmcli c s Candle_hotspot | grep 802-11-wireless.channel: | awk '{print $2}'")).rstrip()
+                                hotspot_isolation = str(run_command("nmcli c s Candle_hotspot | grep 802-11-wireless.ap-isolation: | awk '{print $2}'")).rstrip()
                                 
                                 the_hotspot_password = ''
                                 #if self.persistent_data['show_hotspot_password'] == True:
