@@ -192,6 +192,11 @@ rm $BOOT_DIR/candle_swap_enabled.txt
 # If a respeaker hat is plugged in, the ReSpeaker code will recreate this file each boot
 rm /etc/asound.conf
 
+if [ -f "$BOOT_DIR/backup_of_config.txt" ] ; then
+    mv "$BOOT_DIR/backup_of_config.txt" "$BOOT_DIR/config.txt"
+fi
+
+
 # Disable the tunnel functionality
 rm $BOOT_DIR/tunnel.txt
 cp /home/pi/.webthings/etc/webthings_settings_backup.js /home/pi/.webthings/etc/webthings_settings.js
