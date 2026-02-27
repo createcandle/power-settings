@@ -5,13 +5,28 @@ import subprocess
 
 
 
+def run_safe_command(cmd, timeout_seconds=60):
+    try:
+        return subprocess.check_output(str(cmd).split()).decode('UTF-8')
+        
+        result_string = subprocess.check_output(str(cmd).split())
+        if type(result_string) == 'bytes':
+            print("run_safe_command: result string was bytes")
+            #result_string = result_string.split(b'\x00')
+            result_string = result_string.decode('UTF-8')
+        return result_string
+    except Exception as ex:
+        print("run_safe_command: caught error: "  + str(ex) + ", cmd was: " + str(cmd))
+    
 
 def run_command(cmd, timeout_seconds=60):
     try:
         my_env = os.environ.copy()
         if not 'DBUS_SESSION_BUS_ADDRESS' in my_env:
+            print("WARNING, run_command: no DBUS_SESSION_BUS_ADDRESS")
+            # TODO: create a new dbus session?
             #print("WARNING, had to add DBUS_SESSION_BUS_ADDRESS to environment variables")
-            my_env['DBUS_SESSION_BUS_ADDRESS'] = 'unix:path=/run/user/1000/bus' #str(run_command('echo $DBUS_SESSION_BUS_ADDRESS')).strip()
+            #my_env['DBUS_SESSION_BUS_ADDRESS'] = 'unix:path=/run/user/1000/bus' #str(run_command('echo $DBUS_SESSION_BUS_ADDRESS')).strip()
         if not 'XDG_RUNTIME_DIR' in my_env:
             #print("WARNING, had to add XDG_RUNTIME_DIR to environment variables")
             my_env['XDG_RUNTIME_DIR'] = '/run/user/1000'
@@ -40,8 +55,9 @@ def run_command(cmd, timeout_seconds=60):
                 return str(p.stderr) # + '\n' + "Command failed"   #.decode('utf-8'))
 
     except Exception as e:
-        print("Error running command: "  + str(e) + ", cmd was: " + str(cmd))
-        
+        print("run_command: caught error: "  + str(e) + ", cmd was: " + str(cmd))
+    
+    return None
         
 def valid_ip(ip):
     valid = False

@@ -67,6 +67,10 @@
 			
 			this.allow_password_remembering_in_this_browser = false;
 			
+			this.detected_respeaker_type = null;
+			this.selected_respeaker_type = '';
+			
+			
 			this.hostname_was_changed_here = false;
 			if(localStorage.getItem("extension_power_settings_hostname")){
 				localStorage.removeItem("extension_power_settings_hostname");
@@ -596,11 +600,11 @@
 								if(wifi_configure_button_el){
 									wifi_configure_button_el.click();
 								}
-							},2000);
+							},5000);
 						
 							setTimeout(() => {
 								rescan_wifi_button_el.classList.remove('extension-power-settings-hidden');
-							},3000);
+							},6000);
 						})
 					
 						network_rescan_container_el.appendChild(rescan_wifi_button_el);
@@ -4117,6 +4121,15 @@
 				}
 				
 				
+				if(typeof body.detected_respeaker_type == 'string' || typeof body.selected_respeaker_type == 'string'){
+					this.detected_respeaker_type = body.detected_respeaker_type;
+					this.selected_respeaker_type = body.selected_respeaker_type;
+					this.generate_respeaker_ui();
+					// set_respeaker_type
+				}
+				
+				
+				
 				//extension-power-settings-audio-sink-list-container
 				
                 
@@ -4337,11 +4350,122 @@
 				
 			}
 			catch(err){
-				console.error("power settings: error generating audio devices list: ", err);
+				console.error("power settings: caught error generating audio devices list: ", err);
 			}
 		}
 		
 		
+		
+		
+		generate_respeaker_ui(){
+            if(this.debug){
+				console.log("power settings debug: in generate_respeaker_ui");
+			}
+			try{
+				
+				
+				const respeaker_ui_container_el = document.getElementById('extension-power-settings-audio-respeaker-container');
+				
+				if(!respeaker_ui_container_el){
+					console.error("audio settings: respeaker UI container element is missing");
+					return
+				}
+				
+				respeaker_ui_container_el.innerHTML = '<h3>Respeaker Microphone hat</h3>';
+				
+				if(typeof this.detected_respeaker_type == 'string' && this.detected_respeaker_type.startsWith('2mic')){
+					let respeaker_image_el = document.createElement('img');
+					respeaker_image_el.setAttribute('id','extension-power-settings-audio-respeaker-img');
+					respeaker_image_el.src = '/extensions/power-settings/images/2mic_respeaker_hat.svg';
+					respeaker_ui_container_el.appendChild(respeaker_image_el);
+					
+					let respeaker_image_explanation_el = document.createElement('p');
+					respeaker_image_explanation_el.textContent = 'Note that there are two revisions of the 2 microphone hat. Version 2 has some extra components on the right, in the purple circle.';
+					respeaker_ui_container_el.appendChild(respeaker_image_explanation_el);
+				}
+				
+				let respeaker_options = {'':'-','2mic-v1_0':'2 microphone hat, version 1','2mic-v2_0':'2 microphone hat, version 2','4mic':'4 microphone hat','6mic':'6 microphone hat'};
+				const respeaker_options_keys = Object.keys(respeaker_options);
+				//console.log("respeaker_options_keys: ", respeaker_options_keys);
+				
+				let respeaker_select_el = document.createElement('select');
+				respeaker_select_el.setAttribute('id','extension-power-settings-audio-respeaker-type-select');
+				
+				for(let ro = 0; ro < respeaker_options_keys.length; ro++){
+					let respeaker_option_el = document.createElement('option');
+					respeaker_option_el.value = respeaker_options_keys[ro];
+					let nice_option_name = respeaker_options[ respeaker_options_keys[ro] ];
+					//console.log("this.detected_respeaker_type? ", this.detected_respeaker_type, " =?= ", respeaker_options_keys[ro]);
+					if(typeof this.detected_respeaker_type == 'string' && this.detected_respeaker_type != '' && respeaker_options_keys[ro].starstWith(this.detected_respeaker_type)){
+						nice_option_name += ' (DETECTED)';
+					}
+					//console.log("nice_option_name: ", nice_option_name);
+					respeaker_option_el.textContent = nice_option_name;
+					
+					if(typeof this.selected_respeaker_type == 'string'){
+						//console.log("is option selected_respeaker_type? ", this.selected_respeaker_type, " =?= ", respeaker_options_keys[ro]);
+						if(respeaker_options_keys[ro] == this.selected_respeaker_type){
+							respeaker_option_el.selected = true;
+						}
+					}
+					respeaker_select_el.appendChild(respeaker_option_el);
+					//console.log("respeaker_select_el with extra option: ", respeaker_select_el);
+				}
+				
+				const respeaker_reboot_hint_el = document.createElement('div');
+				respeaker_reboot_hint_el.setAttribute('id','extension-power-settings-respeaker-reboot-hint');
+				respeaker_reboot_hint_el.classList.add('extension-power-settings-hidden');
+				respeaker_reboot_hint_el.classList.add('extension-power-settings-vlak');
+				
+				
+				respeaker_select_el.addEventListener('change', () => {
+					window.API.postJson(
+						`/extensions/${this.id}/api/ajax`, {
+							'action': 'set_respeaker_type',
+							'selected_respeaker_type':respeaker_select_el.value
+                		}
+			        ).then((body) => {
+						if(this.debug){
+		                    console.log('Power settings debug: set_respeaker_type response: ', body);
+		                }
+						if(typeof body.state == 'boolean' && body.state == true){
+							respeaker_reboot_hint_el.classList.remove('extension-power-settings-hidden');
+						}
+
+			        }).catch((err) => {
+			  			console.error('Power settings: caught error during set_respeaker_type api call: ', err);
+						alert("Could not connect with controller, your respeaker preference may not have been saved");
+			        });
+				})
+				respeaker_ui_container_el.appendChild(respeaker_select_el);
+				
+				const respeaker_reboot_hint_text_el = document.createElement('p');
+				respeaker_reboot_hint_text_el.textContent = 'Your Respeaker selection has been saved. You must reboot the Candle Controller for changes to take effect.';
+				respeaker_reboot_hint_el.appendChild(respeaker_reboot_hint_text_el);
+				
+				const respeaker_reboot_button_el = document.createElement('button');
+				respeaker_reboot_button_el.classList.add('text-button');
+				respeaker_reboot_button_el.textContent = 'Reboot now';
+				respeaker_reboot_button_el.addEventListener('click', () => {
+	               
+				    window.API.postJson('/settings/system/actions', {
+	                    action: 'restartSystem'
+	                }).catch(console.error);
+
+	                this.check_if_back();
+					
+					respeaker_reboot_button_el.classList.add('extension-power-settings-hidden');
+				})
+                respeaker_reboot_hint_el.appendChild(respeaker_reboot_button_el);
+				
+				respeaker_ui_container_el.appendChild(respeaker_reboot_hint_el);
+				
+				
+			}
+			catch(err){
+				console.error("power settings: caught error generating respeaker UI: ", err);
+			}
+		}
 		
 		
 		

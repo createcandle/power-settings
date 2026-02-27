@@ -134,6 +134,16 @@ class PowerSettingsAPIHandler(APIHandler):
         if not 'display2_power' in self.persistent_data:
             self.persistent_data['display2_power'] = False
             self.persistent_changed = True
+            
+            
+        if not 'selected_respeaker_type' in self.persistent_data:
+            self.persistent_data['selected_respeaker_type'] = None
+            self.persistent_changed = True
+        
+        if not 'config_txt_lines' in self.persistent_data:
+            self.persistent_data['config_txt_lines'] = {}
+            self.persistent_changed = True
+            
         #if not 'show_hotspot_password' in self.persistent_data:
         #    self.persistent_data['show_hotspot_password'] = True
         #    self.persistent_changed = True
@@ -154,6 +164,7 @@ class PowerSettingsAPIHandler(APIHandler):
             self.boot_path = '/boot/firmware'
         
         self.config_txt_path = self.boot_path + '/config.txt'
+        self.config_txt_backup_path = self.boot_path + '/backup_of_config.txt'
         
         self.bits = 32
         try:
@@ -266,6 +277,23 @@ class PowerSettingsAPIHandler(APIHandler):
         
         # Matter adapter path
         self.matter_adapter_path = os.path.join(str(self.user_profile['addonsDir']), 'matter-adapter')
+        
+        # Respeaker check file path
+        self.detected_respeaker_type = None
+        self.respeaker_check_file_path = os.path.join(str(os.path.expanduser("~")), 'candle','respeaker_check.sh')
+        if os.path.isfile(self.respeaker_check_file_path):
+            respeaker_check_output = run_command(self.respeaker_check_file_path)
+            print("respeaker_check_output: ", respeaker_check_output)
+            if isinstance(respeaker_check_output,str):
+                if 'found 2mic' in respeaker_check_output:
+                    self.detected_respeaker_type = '2mic'
+                elif 'found 4mic' in respeaker_check_output:
+                    self.detected_respeaker_type = '4mic'
+                elif 'found 6mic' in respeaker_check_output:
+                    self.detected_respeaker_type = '6mic'
+        else:
+            print("error, could not find respeaker_check path: ", self.respeaker_check_file_path)
+        
         
         # Hardware clock
         self.hardware_clock_detected = False
@@ -462,7 +490,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
         
-        #print("actual_hotspot_ssid: -" + actual_hotspot_ssid + '-');
+        #print("actual_hotspot_ssid: -" + actual_hotspot_ssid + '-')
         self.sd_card_written_kbytes = '?'
         
         try:
@@ -511,6 +539,8 @@ class PowerSettingsAPIHandler(APIHandler):
             print("System bits: " + str(self.bits))
             print("unused volume space: " + str(self.unused_volume_space))
             print("self.pipewire_enabled: " + str(self.pipewire_enabled))
+            print("self.detected_respeaker_type: " + str(self.detected_respeaker_type))
+            
        
         
         # Remove hardware clock file if it exists and it should not be enabled
@@ -1126,6 +1156,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':state,
                                           'pipewire_enabled':self.pipewire_enabled,
                                           'pipewire_data':self.pipewire_data,
+                                          'detected_respeaker_type':self.detected_respeaker_type,
+                                          'selected_respeaker_type':self.persistent_data['selected_respeaker_type'],
                                           }),
                                 )
                             
@@ -1174,7 +1206,47 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                                 
+                            
+                            elif action == 'set_respeaker_type':
+                                state = False
+                                try:
+                                    respeaker_options_keys = ['','2mic-v1_0','2mic-v2_0','4mic','6mic']
+                                    if 'selected_respeaker_type' in request.body and isinstance(request.body['selected_respeaker_type'],str):
+                                        selected_respeaker_type = str(request.body['selected_respeaker_type'])
+                                        print("selected_respeaker_type: ", selected_respeaker_type)
+                                        if selected_respeaker_type in respeaker_options_keys:
+                                            self.persistent_data['selected_respeaker_type'] = request.body['selected_respeaker_type']
+                                            if 'respeaker' in self.persistent_data['config_txt_lines']:
+                                                del self.persistent_data['config_txt_lines']['respeaker']
+                                            if selected_respeaker_type != '':
+                                                self.persistent_data['config_txt_lines']['respeaker'] = ['dtoverlay=respeaker-' + str(self.persistent_data['selected_respeaker_type'])]
+                                            if self.DEBUG:
+                                                print("self.persistent_data['config_txt_lines']: ", json.dumps(self.persistent_data['config_txt_lines'],indent=4))
+                                                print("calling update_config_txt")
+                                            if self.update_config_txt() == True:
+                                                self.save_persistent_data()
+                                                state = True
+                                        else:
+                                            if self.DEBUG:
+                                                print("Error, invalid respeaker type provided: ", selected_respeaker_type)
+                                except Exception as ex:
+                                    if self.DEBUG:
+                                        print("caught error in set_respeaker_type: ", ex)
                                 
+                                    
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({
+                                          'state':state,
+                                          }),
+                                )
+                                
+                            
+                            
+                            
+                            
+                            
                                 
                             # GET DISPLAY INFO
                                 
@@ -1591,7 +1663,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                                 
-                            
+                            # Not currently used, and is now based on a list of lines in persistent_data instead, so would have to be rewritten
                             elif action == 'force_display_setting':
                                 state = 'error'
                                 if 'width' in request.body and 'height' in request.body:
@@ -2723,7 +2795,7 @@ class PowerSettingsAPIHandler(APIHandler):
                         
                         shell_date = ""
                         if self.DEBUG:
-                            print("\nin /init")
+                            print("\ndebug: in /init")
                         try:
                             now = datetime.datetime.now()
                             current_ntp_state = True
@@ -2825,7 +2897,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                             
                             if self.DEBUG:
-                                print("Init response: " + str(response))
+                                print("debug: init response: " + str(response))
                         except Exception as ex:
                             print("Init error: " + str(ex))
                         
@@ -3063,7 +3135,7 @@ class PowerSettingsAPIHandler(APIHandler):
             
     def set_ntp_state(self,new_state):
         if self.DEBUG:
-            print("Setting NTP state to: " + str(new_state))
+            print("debug: setting NTP state to: " + str(new_state))
         if os.path.isdir('/sys'):
             try:
                 if new_state:
@@ -3110,7 +3182,7 @@ class PowerSettingsAPIHandler(APIHandler):
     
     def get_avahi_lines(self):
         if self.DEBUG:
-            print("in get_avahi_lines")
+            print("debug: in get_avahi_lines")
         avahi_lines = []
         avahi_browse_command = ["avahi-browse","-p","-l","-a","-r","-k","-t"] # avahi-browse -p -l -a -r -k -t
         
@@ -3120,7 +3192,7 @@ class PowerSettingsAPIHandler(APIHandler):
             try:
                 avahi_encoding = chardet.detect(avahi_scan_result)['encoding']
                 if self.DEBUG:
-                    print("detected avahi output encoding: " + str(avahi_encoding))
+                    print("debug: detected avahi output encoding: " + str(avahi_encoding))
             except Exception as ex:
                 print("error getting avahi output encoding: " + str(ex))
                 
@@ -3135,7 +3207,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         except Exception as ex:
             if self.DEBUG:
-                print("Error in get_avahi_lines: " + str(ex))
+                print("debug: : error in get_avahi_lines: " + str(ex))
                 
         return avahi_lines
         
@@ -3143,7 +3215,7 @@ class PowerSettingsAPIHandler(APIHandler):
     
     def detect_printers(self):
         if self.DEBUG:
-            print("in detect_printers")
+            print("debug: in detect_printers")
 
         self.connected_printers = {}
 
@@ -3154,7 +3226,7 @@ class PowerSettingsAPIHandler(APIHandler):
             
                     lpstat_output = run_command("lpstat -v")
                     if self.DEBUG:
-                        print("detect_printers: 'lpstat -v' before: " + str(lpstat_output))
+                        print("debug: detect_printers: 'lpstat -v' before: " + str(lpstat_output))
             
                     cups_output = run_command("sudo lpinfo -l --timeout 10 -v | grep 'uri = lpd://' -A 5")
                     avahi_output = run_command("avahi-browse -p -l -a -r -k -t | grep '_printer._tcp' | grep IPv4")
@@ -3170,7 +3242,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     if avahi_output != None and cups_output != None:
                         cups_parts = str(cups_output).split('Device: uri = lpd://')
                         if self.DEBUG:
-                            print("Detected number of printers: " + str(len(cups_parts)-1))
+                            print("debug: detected number of printers: " + str(len(cups_parts)-1))
             
                         printer_counter = 0
                         found_default_printer_again = False
@@ -3179,7 +3251,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             printer_counter += 1
                             if len(str(printer_info)) > 10:
                                 if self.DEBUG:
-                                    print("\nprinter_info: " + str(printer_info))
+                                    print("\ndebug: printer_info: " + str(printer_info))
                                 printer_lines = str(printer_info).splitlines()
                                 for printer_line in printer_lines:
                                     if 'make-and-model =' in printer_line:
@@ -3190,10 +3262,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                             safe_printer_name = safe_printer_name.replace(' ','_')
                                             safe_printer_name = re.sub(r'\W+', '', safe_printer_name)
                                             if self.DEBUG:
-                                                print("\nsafe_printer_name: " + str(safe_printer_name))
+                                                print("\ndebug: safe_printer_name: " + str(safe_printer_name))
                                             for line in str(avahi_output).splitlines():
                                                 if self.DEBUG:
-                                                    print("avahi line: " + str(line))
+                                                    print("debug: avahi line: " + str(line))
                                                 ip_address_list = re.findall(r'(?:\d{1,3}\.)+(?:\d{1,3})', str(line))
                                                 if len(ip_address_list) > 0:
                                                     ip_address = str(ip_address_list[0])
@@ -3202,16 +3274,16 @@ class PowerSettingsAPIHandler(APIHandler):
                                                         self.connected_printers[safe_printer_name] = {'id':safe_printer_name,'ip':ip_address,'default':False}
                                                     
                                                         if self.DEBUG:
-                                                            print("avahi-browse line with valid IP: " + str(line))
-                                                            print("ADDING PRINTER: " + str(safe_printer_name) + "  ->  " + str(ip_address))
+                                                            print("debug: avahi-browse line with valid IP: " + str(line))
+                                                            print("debug: ADDING PRINTER: " + str(safe_printer_name) + "  ->  " + str(ip_address))
                                                         add_printer_command = "sudo lpadmin -p " + str(safe_printer_name) + " -E -v socket://" + str(ip_address) + "  -o printer-error-policy=abort-job"
                                                         if self.DEBUG:
-                                                            print("add_printer_command: " + str(add_printer_command))
+                                                            print("debug: add_printer_command: " + str(add_printer_command))
                                                         os.system(str(add_printer_command)) # -P # -o printer-error-policy=abort-job -u allow:all
                                                 
                                                         if not 'default_printer' in self.persistent_data:
                                                             if self.DEBUG:
-                                                                print("Setting initial default printer: " + str(safe_printer_name))
+                                                                print("debug: Setting initial default printer: " + str(safe_printer_name))
                                                             self.persistent_data['default_printer'] = safe_printer_name
                                                             found_default_printer_again = True
                                                         else:
@@ -3235,8 +3307,8 @@ class PowerSettingsAPIHandler(APIHandler):
         
             lpstat_output = run_command("lpstat -v")
             if self.DEBUG:
-                print("lpstat -v after printer scan: " + str(lpstat_output))
-                print("\nself.connected_printers:\n")
+                print("debug: lpstat -v after printer scan: " + str(lpstat_output))
+                print("\ndebug: self.connected_printers:\n")
                 print(json.dumps(self.connected_printers, indent=4, sort_keys=True))
         
         
@@ -3272,13 +3344,13 @@ class PowerSettingsAPIHandler(APIHandler):
     # Gets the size of files and folders for the extended backup
     def get_backup_sizes(self):
         if self.DEBUG:
-            print("in get_backup_sizes")
+            print("debug: in get_backup_sizes")
             
         # get logs file size
         if os.path.exists(self.log_db_file_path):
             self.log_size = os.path.getsize(self.log_db_file_path)
             if self.DEBUG:
-                print("log_size: " + str(self.log_size))
+                print("debug: log_size: " + str(self.log_size))
         else:
             if self.DEBUG:
                 print("Error, log database file did not exist?")
@@ -3291,7 +3363,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     fp = os.path.join(path, f)
                     photos_size += os.path.getsize(fp)
             if self.DEBUG:
-                print("photos_size: " + str(photos_size))
+                print("debug: photos_size: " + str(photos_size))
             self.photos_size = photos_size
         else:
             if self.DEBUG:
@@ -3466,17 +3538,17 @@ class PowerSettingsAPIHandler(APIHandler):
     # check what version of the recovery partition is installed
     def check_recovery_partition(self):
         if self.DEBUG:
-            print("in check_recovery_partition")
+            print("debug: in check_recovery_partition")
             
         try:
             lsblk_output = run_command('lsblk')
             if not 'mmcblk0p4' in lsblk_output:
                 if self.DEBUG:
-                    print("warning, recovery partition is not supported")
+                    print("debug: warning, recovery partition is not supported")
                 self.recovery_partition_exists = False
             else:
                 if self.DEBUG:
-                    print("mmcblk0p4 partition exists")
+                    print("debug: mmcblk0p4 partition exists")
                 self.recovery_partition_exists = True
                 
                 if not os.path.exists(self.recovery_partition_mount_point):
@@ -3485,12 +3557,12 @@ class PowerSettingsAPIHandler(APIHandler):
                 candle_recovery_text_path = os.path.join(self.recovery_partition_mount_point,'candle_recovery.txt')
                 if os.path.exists(candle_recovery_text_path):
                     if self.DEBUG:
-                        print("warning, recovery partition seems to already be mounted")
+                        print("debug: warning, recovery partition seems to already be mounted")
                 else:
                     
                     if os.path.exists(self.recovery_partition_mount_point):
                         if self.DEBUG:
-                            print("mounting recovery partition")
+                            print("debug: mounting recovery partition")
                         os.system('sudo mount -r -t auto /dev/mmcblk0p3 ' + self.recovery_partition_mount_point)
                         time.sleep(.2)
                     else:
@@ -3508,7 +3580,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     with open(candle_recovery_text_path, "r") as version_file:
                         self.recovery_version = int(version_file.read())
                         if self.DEBUG:
-                            print("recovery partition version: " + str(self.recovery_version))
+                            print("debug: recovery partition version: " + str(self.recovery_version))
                     
                     # not really needed at the moment, as a 32 bit partition is fine for both types of systems for now.
                     if os.path.exists(os.path.join(self.recovery_partition_mount_point,'64bits.txt')):
@@ -3543,13 +3615,13 @@ class PowerSettingsAPIHandler(APIHandler):
                 
                 if self.recovery_version == 0:
                     if self.DEBUG:
-                        print("unable to get recovery partition version (0)")
+                        print("debug: unable to get recovery partition version (0)")
                 elif self.recovery_version < self.latest_recovery_version:
                     if self.DEBUG:
-                        print("recovery partition should be updated")
+                        print("debug: recovery partition should be updated")
                 elif self.recovery_version >= self.latest_recovery_version:
                     if self.DEBUG:
-                        print("recovery partition is up to date")
+                        print("debug: recovery partition is up to date")
                     # recovery partition is up to date
                     
                     if os.path.exists(self.boot_path + '/cmdline-update.txt') == False:
@@ -3935,10 +4007,57 @@ class PowerSettingsAPIHandler(APIHandler):
         
     # Not currently used
     def update_config_txt(self):
+        print("in update_config_txt")
+        try:
+            if os.path.isfile(self.config_txt_path) and len(self.persistent_data['config_txt_lines'].keys()):
+                
+                if not os.path.isfile(self.config_txt_backup_path):
+                    os.system('sudo cp ' + str(self.config_txt_path) + ' ' + str(self.config_txt_backup_path))
+                
+                new_config_txt = "\n\n#POWER_SETTINGS_START\n"
+                
+                for config_origin in list(self.persistent_data['config_txt_lines'].keys()):
+                    print("config_origin: ", config_origin)
+                    new_config_txt += '\n#' + str(config_origin)
+                    for line in self.persistent_data['config_txt_lines'][config_origin]:
+                        new_config_txt = new_config_txt + '\n' + str(line)
+                    #print("updated new_config_txt: ", new_config_txt)
+            
+                if new_config_txt:
+                    new_config_txt += '\n\n\n'
+                    contents = run_safe_command('cat /boot/firmware/config.txt')
+                    
+                    print("--------------------\n\n\ncontents: \n" + str(contents) + "\n\n\n-------------------------")
+                    
+                    if isinstance(contents,str) and '#POWER_SETTINGS_START' in str(contents):
+                        #print("old config.txt contents: ", str(contents))
+                        
+                        contents = str(contents).split('#POWER_SETTINGS_START')[0]
+                        contents = str(contents).rstrip()
+            
+                        contents = contents + new_config_txt
+                        if self.DEBUG:
+                            print("writing new config.txt: \n++++++++++++++++++++++++\n\n\n" + str(contents) + "\n\n\n++++++++++++++++++++++++")
+                        
+                        #os.system("echo '" + str(repr(contents)) + "' | sudo tee " + str(self.config_txt_path))
+                        os.system("echo '" + str(contents.replace('\n','\\n')) + "' | sudo tee " + str(self.config_txt_path))
+                        #f.seek(0)
+                        #f.write(str(contents))
+                        #f.truncate()
+            
+                        return True
         
-        with open(self.config_txt_path) as f:
-            pass
-            #self.persistent_data = json.load(f)
+            if self.DEBUG:
+                print("\nWARNING, update_config_txt did not update config.txt")
+            
+        except Exception as ex:
+            print("caught error in update_config_txt: ", ex);
+        
+        if self.DEBUG:
+            print("in update_config_txt.  self.persistent_data['config_txt_lines']: \n", json.dumps(self.persistent_data['config_txt_lines'],indent=2))
+            
+        
+        return False
         
         power_settings_indicator = """# DO NOT PLACE ANYTHING BELOW POWER_SETTINGS_START LINE, IT MAY BE REMOVED BY THE POWER SETTINGS ADDON
         
@@ -3955,7 +4074,6 @@ class PowerSettingsAPIHandler(APIHandler):
         #dtparam=eth_led1=14
         """
         
-        # open( self.config_txt_path, 'w+' )
         
         
     def save_persistent_data(self):
