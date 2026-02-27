@@ -4396,7 +4396,7 @@
 					respeaker_option_el.value = respeaker_options_keys[ro];
 					let nice_option_name = respeaker_options[ respeaker_options_keys[ro] ];
 					//console.log("this.detected_respeaker_type? ", this.detected_respeaker_type, " =?= ", respeaker_options_keys[ro]);
-					if(typeof this.detected_respeaker_type == 'string' && this.detected_respeaker_type != '' && respeaker_options_keys[ro].starstWith(this.detected_respeaker_type)){
+					if(typeof this.detected_respeaker_type == 'string' && this.detected_respeaker_type != '' && respeaker_options_keys[ro].startsWith(this.detected_respeaker_type)){
 						nice_option_name += ' (DETECTED)';
 					}
 					//console.log("nice_option_name: ", nice_option_name);
