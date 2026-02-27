@@ -218,6 +218,7 @@ rm $BOOT_DIR/rotate180.txt
 rm $BOOT_DIR/keep_z2m.txt
 rm $BOOT_DIR/keep_bluetooth.txt
 rm $BOOT_DIR/write_enabled.txt
+rm $BOOT_DIR/candle_respeaker.txt
 rm $BOOT_DIR/candle_rw_once.txt
 rm $BOOT_DIR/candle_rw_keep.txt
 rm $BOOT_DIR/candle_log.txt
