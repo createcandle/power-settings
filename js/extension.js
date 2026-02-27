@@ -2908,8 +2908,23 @@
 						
 												const hotspot_info_field_value_el = document.createElement('span');
 												hotspot_info_field_value_el.classList.add('extension-power-settings-hotspot-info-value');
-												hotspot_info_field_value_el.textContent = fresh_body.hotspot[ hotspot_info_fields[hi] ]; //.replace(/(\r\n|\n|\r)/gm, " ");
-												//console.log("acivated? -->" + fresh_body[ hotspot_info_fields[hi] ] + "<--");
+												
+												if(hotspot_info_fields[hi] == 'isolation'){
+													if(fresh_body.hotspot[ hotspot_info_fields[hi] ] == -1){
+														hotspot_info_field_value_el.textContent = 'no';
+													}
+													else if(fresh_body.hotspot[ hotspot_info_fields[hi] ] == 1){
+														hotspot_info_field_value_el.textContent = 'yes';
+													}
+													else{
+														hotspot_info_field_value_el.textContent = fresh_body.hotspot[ hotspot_info_fields[hi] ];
+													}
+												}
+												else{
+													hotspot_info_field_value_el.textContent = fresh_body.hotspot[ hotspot_info_fields[hi] ]; //.replace(/(\r\n|\n|\r)/gm, " ");
+												}
+												
+												//console.log("activated? -->" + fresh_body[ hotspot_info_fields[hi] ] + "<--");
 												if(fresh_body.hotspot[ hotspot_info_fields[hi] ].startsWith('activated')){
 													hotspot_info_field_value_el.classList.add('extension-power-settings-green-text');
 												}

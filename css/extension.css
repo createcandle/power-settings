@@ -1407,6 +1407,7 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 .network-settings-hotspot-left-padded-container{
 	padding-left:10rem;
 	padding-right:2rem;
+	margin:.7rem 0;
 }
 
 .extension-power-settings-hotspot-password-changed{
