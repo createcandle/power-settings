@@ -1413,6 +1413,7 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 	background-color:green;
 }
 
+#extension-power-settings-hotspot-ssid-save-button,
 #extension-power-settings-hotspot-password-save-button{
 	margin:0 0 0 .5rem;
 }
