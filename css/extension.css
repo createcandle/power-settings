@@ -737,6 +737,16 @@
 
 
 
+/*  SECURITY  */
+
+#extension-power-settings-security-allow-password-remembering-on-this-device + label span{
+	display:inline-block;
+	max-width:80%;
+	line-height:160%;
+}
+
+
+
 /*  UPDATE  */
 
 #extension-power-settings-container-update{
@@ -1458,8 +1468,8 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 	margin-top:4rem;
 }
 
-#extension-power-settings-hotspot-connected-devices-container span,
-#extension-power-settings-hotspot-connected-devices-container a{
+#extension-power-settings-hotspot-connected-devices-container > div > span,
+#extension-power-settings-hotspot-connected-devices-container > div > a{
 	display:block;
 	padding:2rem;
 	color:white;
@@ -1612,10 +1622,16 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
 		display:none!important;
 	}
 	
-	#menu-button{
+	
+	body[id^=path-settings] #menu-button{
 		display:initial!important;
 	}
+	
 	#settings-back-button{
+		margin-left:44rem;
+	}
+		
+	body.kiosk #settings-back-button{
 		margin-left:46rem;
 	}
 	

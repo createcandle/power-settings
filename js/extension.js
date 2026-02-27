@@ -2321,7 +2321,7 @@
 
 							hotspot_details_ssid_el.setAttribute('placeholder','Name');
 
-							hotspot_details_ssid_el.addEventListener('change', () => {
+							hotspot_details_ssid_save_button_el.addEventListener('click', () => {
 								hotspot_details_ssid_el.value = hotspot_details_ssid_el.value.replaceAll(' ','-');
 								if(hotspot_details_ssid_el.value.length > 3 && hotspot_details_ssid_el.value != this.hotspot_ssid){
 									this.hotspot_ssid = hotspot_details_ssid_el.value;
@@ -2398,8 +2398,8 @@
 							else if(typeof body.hotspot_password == 'string'){
 								hotspot_details_password_el.value = '' + body.hotspot_password;
 							}
-					
-							hotspot_details_password_el.addEventListener('change', () => {
+							
+							hotspot_details_password_save_button_el.addEventListener('click', () => {
 								hotspot_details_password_el.value = hotspot_details_password_el.value.replaceAll(' ','-');
 								if((hotspot_details_password_el.value.length == 0 || hotspot_details_password_el.value.length > 7) && hotspot_details_password_el.value != this.hotspot_password){
 									this.hotspot_password = hotspot_details_password_el.value;
