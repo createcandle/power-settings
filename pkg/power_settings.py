@@ -1220,6 +1220,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 del self.persistent_data['config_txt_lines']['respeaker']
                                             if selected_respeaker_type != '':
                                                 self.persistent_data['config_txt_lines']['respeaker'] = ['dtoverlay=respeaker-' + str(self.persistent_data['selected_respeaker_type'])]
+                                                os.system('sudo touch /boot/firmware/candle_repeaker.txt')
+                                            elif os.path.isfile('/boot/firmware/candle_repeaker.txt'):
+                                                os.system('sudo rm /boot/firmware/candle_repeaker.txt')
                                             if self.DEBUG:
                                                 print("self.persistent_data['config_txt_lines']: ", json.dumps(self.persistent_data['config_txt_lines'],indent=4))
                                                 print("calling update_config_txt")
