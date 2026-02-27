@@ -226,9 +226,10 @@ rm $BOOT_DIR/debug.txt
 rm $BOOT_DIR/raspinfo.txt
 rm $BOOT_DIR/candle_hardware_clock.txt
 rm $BOOT_DIR/candle_cutting_edge.txt
-touch $BOOT_DIR/candle_hide_mouse_pointer.txt
+touch $BOOT_DIR/hide_mouse_pointer.txt
 rm $BOOT_DIR/bootup_actions.sh
 rm $BOOT_DIR/bootup_actions_failed.sh
+rm $BOOT_DIR/developer.txt
 
 # only a log of factory resets is kept internally.
 factory_resets="$(cat /home/pi/.webthings/candle.log | grep factory reset)"
@@ -270,8 +271,11 @@ echo "tail -f -n10 ~/.webthings/log/run-app.log" >> /home/pi/.bash_history
 
 #cat /dev/null > /home/pi/.bash_history
 
-if [ -f "$BOOT_DIR/developer.txt" ]; then
-  rm $BOOT_DIR/developer.txt
+
+  
+if [ -f "$BOOT_DIR/candle_zero_fill.txt" ]; then
+  rm "$BOOT_DIR/candle_zero_fill.txt"
+
   echo "filling unused space on user partition with zeros"
   echo "/home/pi/.webthings/zero.fill"
   echo "(this can safely be skipped)"
