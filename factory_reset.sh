@@ -186,7 +186,7 @@ echo "" > /etc/machine-id
 echo "machine ID after: "
 cat /etc/machine-id
 
-rm $BOOT_DIR/candle_first_run_complete.txt
+
 rm $BOOT_DIR/candle_swap_enabled.txt
 
 # If a respeaker hat is plugged in, the ReSpeaker code will recreate this file each boot
@@ -271,8 +271,13 @@ echo "tail -f -n10 ~/.webthings/log/run-app.log" >> /home/pi/.bash_history
 
 #cat /dev/null > /home/pi/.bash_history
 
+if [ -f "$BOOT_DIR/candle_ssh.txt" ] && [ ! -f $BOOT_DIR/candle_first_run_complete.txt ]; then
+    reboot
+    exit 0
+fi
 
-  
+rm $BOOT_DIR/candle_first_run_complete.txt
+
 if [ -f "$BOOT_DIR/candle_zero_fill.txt" ]; then
   rm "$BOOT_DIR/candle_zero_fill.txt"
 
