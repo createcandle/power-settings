@@ -268,6 +268,7 @@ echo "avahi-browse -p -l -a -r -k -t" >> /home/pi/.bash_history
 echo "cat /sys/class/drm/card0/*HDMI*/status" >> /home/pi/.bash_history
 echo "aplay -l && arecord -l" >> /home/pi/.bash_history
 echo "wpctl status" >> /home/pi/.bash_history
+echo "tree -d /rw/upper" >> /home/pi/.bash_history
 echo "sudo systemctl restart webthings-gateway.service" >> /home/pi/.bash_history
 echo "hostname -I" >> /home/pi/.bash_history
 #echo "sudo resolvconf -u" >> /home/pi/.bash_history
