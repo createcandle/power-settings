@@ -77,6 +77,11 @@ rm -f /home/pi/.webthings/uploads/*
 cp /home/pi/.webthings/floorplan.svg /home/pi/.webthings/uploads/floorplan.svg
 chown pi:pi /home/pi/.webthings/uploads/floorplan.svg
 
+if [ -f /home/pi/.webthings/addons/scenes/images/menu-icon.svg ] ; then
+	cp /home/pi/.webthings/addons/scenes/images/menu-icon.svg /home/pi/.webthings/uploads/NIrzLM.svg
+    chown pi:pi /home/pi/.webthings/uploads/NIrzLM.svg
+fi
+
 # remove any addons that are not the originals
 cd /home/pi/.webthings/addons && find -not -path "./candleappstore*" -not -path "./candle-theme*" -not -path "./power-settings*" -not -path "./webinterface*" -not -path "./zigbee2mqtt-adapter*" -not -path "./followers*" -not -path "./privacy-manager*" -not -path "./photo-frame*" -not -path "./tutorial*" -not -path "./internet-radio*" -not -path "./bluetoothpairing*" -not -path "./scenes*" -not -path "./dashboard*" -not -path "./hotspot*" -not -path "./matter-adapter*"  -not -path "./energyuse*" -not -path "./networkscanner*" -delete
 cd /home/pi/.webthings/data && find -not -path "./candleappstore*" -not -path "./candle-theme*" -not -path "./power-settings*" -not -path "./webinterface*" -not -path "./zigbee2mqtt-adapter*" -not -path "./followers*" -not -path "./privacy-manager*" -not -path "./photo-frame*" -not -path "./tutorial*" -not -path "./internet-radio*" -not -path "./bluetoothpairing*" -not -path "./scenes*" -not -path "./dashboard*" -not -path "./hotspot*" -not -path "./matter-adapter*"  -not -path "./energyuse*"  -not -path "./networkscanner*" -delete
