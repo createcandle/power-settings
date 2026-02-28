@@ -319,11 +319,7 @@
             const waiting = document.getElementById('extension-power-settings-waiting');
             const waiting_message = document.getElementById('extension-power-settings-waiting-message');
 
-            //pre.innerText = "";
 
-            
-            
-            
             // Hide fullscreen button on iOS devices
             var isIOS = (function () {
                 var iosQuirkPresent = function () {
