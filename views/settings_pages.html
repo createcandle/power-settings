@@ -275,9 +275,11 @@
             <div id="extension-power-settings-available-memory-container">
 				<p class="extension-power-settings-header">Memory use</p>				
 				<div id="extension-power-settings-memory-bar-container"  class="extension-power-settings-bar-container"><div id="extension-power-settings-memory-used-bar" class="extension-power-settings-bar"></div><div id="extension-power-settings-memory-purgeable-bar" class="extension-power-settings-bar"></div></div>
-                Total memory: <span id="extension-power-settings-total-memory">?</span>Mb<br/>
-                Available memory: <span id="extension-power-settings-available-memory">?</span>Mb<br/>
-                Free memory: <span id="extension-power-settings-free-memory">?</span>Mb<br/>
+				<div class="extension-power-settings-show-if-developer extension-power-settings-flex-space-between">
+                	<span><span class="extension-power-settings-memory-label">Total</span><span id="extension-power-settings-total-memory">?</span>Mb</span>
+                	<span><span class="extension-power-settings-memory-label">Available</span><span id="extension-power-settings-available-memory">?</span>Mb</span>
+                	<span><span class="extension-power-settings-memory-label">Empty</span><span id="extension-power-settings-free-memory">?</span>Mb</span>
+				</div>
             </div>
 		</div>
 			
@@ -791,11 +793,11 @@
         </div>
         
 		
-        <div id="extension-power-settings-reinstall-candleappstore-container" class="extension-power-settings-vlak">
+        <div id="extension-power-settings-reinstall-power-settings-container" class="extension-power-settings-vlak">
             <p class="extension-power-settings-header">Re-install Candle App Store</p>
 			<p>If for some reason your Candle App Store isn't working properly you can upgrade it to the very latest "cutting edge" version. This will automatically restart your controller and reload this page once complete.</p>
 			
-            <div id="extension-power-settings-reinstall-candleappstore-busy-container" class="extension-power-settings-hidden">
+            <div id="extension-power-settings-reinstall-power-settings-busy-container" class="extension-power-settings-hidden">
                 <div class="extension-power-settings-spinner">
                     <div></div>
                     <div></div>
@@ -804,12 +806,12 @@
                 </div>
 				<p>This page should automatically refresh once the process is complete.</p>
             </div>
-			<div id="extension-power-settings-reinstall-candleappstore-failed-container" class="extension-power-settings-hidden">
+			<div id="extension-power-settings-reinstall-power-settings-failed-container" class="extension-power-settings-hidden">
 				<p>Installing the latest Candle App Store version seems to have failed.<p>
 			</div>
 			
 			<div class="extension-power-settings-align-right">
-				<button id="extension-power-settings-reinstall-candleappstore-button" class="text-button">Install Candle App Store</button>
+				<button id="extension-power-settings-reinstall-power-settings-button" class="text-button">Install Candle App Store</button>
 			</div>
 		</div>
 		

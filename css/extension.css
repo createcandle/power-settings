@@ -57,10 +57,7 @@
     display:inline-block;
 }
 
-#extension-power-settings-available-memory-container{
-    /*display:none;*/
-    text-align:center;
-}
+
 
 #allow-anonymous-mqtt-item{
     display:none;
@@ -164,7 +161,7 @@
     line-height:2.5rem;
 }
 
-#extension-candleappstore-view p{
+#extension-power-settings-view p{
     word-wrap:break-word;
 }
 
@@ -734,6 +731,14 @@
 	background-color:#444;
 }
 
+.extension-power-settings-memory-label{
+	display:block;
+	opacity:.7;
+}
+
+.extension-power-settings-memory-label + span{
+	margin-right:.5rem;
+}
 
 
 
