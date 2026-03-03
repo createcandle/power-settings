@@ -307,17 +307,18 @@
             }
             this.view.innerHTML = this.content;
             
-            const content = document.getElementById('extension-power-settings-content');
+            const content = this.view.querySelector('#extension-power-settings-content');
 
-            const shutdown = document.getElementById('extension-power-settings-shutdown');
-            const reboot = document.getElementById('extension-power-settings-reboot');
-            const restart = document.getElementById('extension-power-settings-restart');
-			const close_browser = document.getElementById('extension-power-settings-close-browser');
+            const shutdown = this.view.querySelector('#extension-power-settings-shutdown');
+            const reboot = this.view.querySelector('#extension-power-settings-reboot');
+            const restart = this.view.querySelector('#extension-power-settings-restart');
+			const refresh_browser_el = this.view.querySelector('#extension-power-settings-refresh');
+			const close_browser = this.view.querySelector('#extension-power-settings-close-browser');
 			
-            const content_container = document.getElementById('extension-power-settings-content-container');
+            const content_container = this.view.querySelector('#extension-power-settings-content-container');
             
-            const waiting = document.getElementById('extension-power-settings-waiting');
-            const waiting_message = document.getElementById('extension-power-settings-waiting-message');
+            const waiting = this.view.querySelector('#extension-power-settings-waiting');
+            const waiting_message = this.view.querySelector('#extension-power-settings-waiting-message');
 
 
             // Hide fullscreen button on iOS devices
@@ -433,6 +434,12 @@
 	            });
 			}
 			
+			if(refresh_browser_el){
+	            refresh_browser_el.addEventListener('click', () => {
+					window.location.reload(true);
+	            });
+			}
+			
 			
             
 			const expansion_more_button_el = document.getElementById('extension-power-settings-expand-user-partition-more-button');
@@ -508,7 +515,7 @@
         // Mostly adds event listeners once settings_page.html has loaded in
         create_extra_settings(){
             
-            if(document.querySelector('#settings-menu > ul') != null && !document.getElementById('extension-power-settings-menu-time-button')){
+            if(document.querySelector('#settings-menu > ul') && !document.getElementById('extension-power-settings-menu-time-button')){
                 
                 const hours = document.getElementById('extension-power-settings-form-hours');
                 const minutes = document.getElementById('extension-power-settings-form-minutes');
@@ -861,6 +868,7 @@
                     this.hide_all_settings_containers();
                     document.getElementById('extension-power-settings-container-system').classList.remove('extension-power-settings-hidden');
                     document.getElementById('extension-power-settings-pages').classList.remove('hidden');
+					this.get_stats_fail_counter = 0;
 					this.get_stats();
 					
 					if(this.get_stats_interval != null){
@@ -869,7 +877,7 @@
 	                this.get_stats_interval = setInterval(() => {
 						if(this.get_stats_fail_counter <= 0){
 			                if(this.debug){
-			                    console.log("power settings: get_stats_interval: calling get_stats");
+			                    console.log("power settings debug: get_stats_interval: calling get_stats");
 			                }
 							this.get_stats();
 						}
@@ -923,53 +931,57 @@
 				
 				
 				// reinstall candle app store button
-                document.getElementById('extension-power-settings-reinstall-candleappstore-button').addEventListener('click', () => {
-					if(confirm("Are you sure?")){
-	                    document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.add('extension-power-settings-hidden');
-						document.getElementById('extension-power-settings-reinstall-candleappstore-failed-container').classList.add('extension-power-settings-hidden');
-						document.getElementById('extension-power-settings-reinstall-candleappstore-busy-container').classList.remove('extension-power-settings-hidden');
+				const reinstall_candle_app_store_button_el = document.getElementById('extension-power-settings-reinstall-candleappstore-button');
+                if(reinstall_candle_app_store_button_el){
 					
-	                    window.API.postJson(
-	                        `/extensions/${this.id}/api/ajax`, {
-	                            'action': 'reinstall_app_store'
-	                        }
-	                    ).then((body) => {
-	                        if(this.debug){
-	                            console.log("power settings: reinstall_app_store reponse: ", body);
-	                        }
-							if(typeof body.state != 'undefined'){
-								if(body.state == true){
-									if(this.debug){
-										console.log("Updating to latest version of Candle appstore seems to have been succcesfull");
+					reinstall_candle_app_store_button_el.addEventListener('click', () => {
+						if(confirm("Are you sure?")){
+		                    document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.add('extension-power-settings-hidden');
+							document.getElementById('extension-power-settings-reinstall-candleappstore-failed-container').classList.add('extension-power-settings-hidden');
+							document.getElementById('extension-power-settings-reinstall-candleappstore-busy-container').classList.remove('extension-power-settings-hidden');
+					
+		                    window.API.postJson(
+		                        `/extensions/${this.id}/api/ajax`, {
+		                            'action': 'reinstall_app_store'
+		                        }
+		                    ).then((body) => {
+		                        if(this.debug){
+		                            console.log("power settings: reinstall_app_store reponse: ", body);
+		                        }
+								if(typeof body.state != 'undefined'){
+									if(body.state == true){
+										if(this.debug){
+											console.log("Updating to latest version of Candle appstore seems to have been succcesfull");
+										}
+										document.getElementById('extension-power-settings-reinstall-candleappstore-container').style.background="green";
+										setTimeout(() => {
+											window.location.reload(true); 
+										},15000);
 									}
-									document.getElementById('extension-power-settings-reinstall-candleappstore-container').style.background="green";
-									setTimeout(() => {
-										window.location.reload(true); 
-									},15000);
+									else{
+										document.getElementById('extension-power-settings-reinstall-candleappstore-container').style.background="red";
+										document.getElementById('extension-power-settings-reinstall-candleappstore-failed-container').classList.remove('extension-power-settings-hidden');
+										document.getElementById('extension-power-settings-reinstall-candleappstore-busy-container').classList.add('extension-power-settings-hidden');
+										document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.remove('extension-power-settings-hidden');
+									}
 								}
 								else{
-									document.getElementById('extension-power-settings-reinstall-candleappstore-container').style.background="red";
-									document.getElementById('extension-power-settings-reinstall-candleappstore-failed-container').classList.remove('extension-power-settings-hidden');
-									document.getElementById('extension-power-settings-reinstall-candleappstore-busy-container').classList.add('extension-power-settings-hidden');
-									document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.remove('extension-power-settings-hidden');
+									console.error("candleappstore: reinstall_app_store: body.state was undefined? body: ", body);
 								}
-							}
-							else{
-								console.error("candleappstore: reinstall_app_store: body.state was undefined? body: ", body);
-							}
 						
 						
-	                    }).catch((e) => {
-	                    	console.error("Error: reinstall_app_store connection failed: ", e);
-						    //document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.remove('extension-power-settings-hidden');
-						    //alert("Could not connect to controller");
-							setTimeout(() => {
-								window.location.reload(true); 
-							},15000);
-	                    });
-					}
+		                    }).catch((e) => {
+		                    	console.error("Error: reinstall_app_store connection failed: ", e);
+							    //document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.remove('extension-power-settings-hidden');
+							    //alert("Could not connect to controller");
+								setTimeout(() => {
+									window.location.reload(true); 
+								},15000);
+		                    });
+						}
                     
-                });
+                	});
+				}
 				
 				
 				
@@ -1375,6 +1387,9 @@
                     minutes.value = powerSettingsCurrentTime.getMinutes();
                 });
 
+
+				// SECURITY
+				
 				const allow_password_remembering_checkbox_el = document.getElementById('extension-power-settings-security-allow-password-remembering-on-this-device');
 				if(allow_password_remembering_checkbox_el){
 					if(localStorage.getItem('candle-login-allow-password-remembering')){
@@ -1396,6 +1411,59 @@
 				}
 
 
+
+				// GET RUNNING SOFTWARE
+				const show_pstree_button_el = document.getElementById('extension-power-settings-show-pstree-button');
+				show_pstree_button_el.addEventListener('click', () => {
+					
+					show_pstree_button_el.classList.add('extension-power-settings-fade');
+					
+					window.API.postJson(
+		                `/extensions/${this.id}/api/ajax`, {
+		                    'action': 'get_command_output',
+							'command':'pstree'
+		                }
+		            ).then((body) => {
+		                if(this.debug){
+		                    console.log("power settings debug: get pstree response: ", body);
+		                }
+						if(typeof body['output'] == 'string'){
+							document.getElementById('extension-power-settings-running-software-output').textContent = body['output'];
+						}
+						show_pstree_button_el.classList.remove('extension-power-settings-fade');
+		            
+					}).catch((err) => {
+		                console.error("power settings: caught error getting pstree: ", err);
+						show_pstree_button_el.classList.remove('extension-power-settings-fade');
+		            });
+				});
+				
+				
+				
+				const show_memory_use_button_el = document.getElementById('extension-power-settings-show-memory-use-button');
+				show_memory_use_button_el.addEventListener('click', () => {
+					
+					show_memory_use_button_el.classList.add('extension-power-settings-fade');
+					
+					window.API.postJson(
+		                `/extensions/${this.id}/api/ajax`, {
+		                    'action': 'get_command_output',
+							'command':'memory_use'
+		                }
+		            ).then((body) => {
+		                if(this.debug){
+		                    console.log("power settings debug: get memory_use response: ", body);
+		                }
+						if(typeof body['output'] == 'string'){
+							document.getElementById('extension-power-settings-running-software-output').textContent = body['output'];
+						}
+						show_memory_use_button_el.classList.remove('extension-power-settings-fade');
+		            
+					}).catch((err) => {
+		                console.error("power settings: caught error getting memory_use: ", err);
+						show_memory_use_button_el.classList.remove('extension-power-settings-fade');
+		            });
+				});
 
 				
                 //this.get_init();
@@ -2135,7 +2203,7 @@
 					
 						const usb_tethering_image_el = document.createElement('img');
 						usb_tethering_image_el.setAttribute('id','extension-power-settings-usb-tethering-icon');
-						usb_tethering_image_el.classList.add('network-settings-list-item-icon');
+						usb_tethering_image_el.classList.add('network-settings-list-item-icon'); // sic
 						if(body.usb0_tethering_info == '' && body.usb1_tethering_info == ''){
 							usb_tethering_image_el.setAttribute('src','/extensions/power-settings/images/usb_tethering_disconnected_icon.svg');
 						}
@@ -2147,7 +2215,7 @@
 						usb_tethering_settings_list_item_el.appendChild(usb_tethering_image_el);
 				
 						//const usb_tethering_details_el = document.createElement('div');
-						//usb_tethering_details_el.classList.add('network-settings-list-item-container-4');
+						//usb_tethering_details_el.classList.add('extension-power-settings-list-item-container-4');
 					
 					
 						// Actual USB tethering settings container
@@ -2160,11 +2228,11 @@
 					
 						// USB tethering header with title and checkbox
 						const usb_tethering_header_el = document.createElement('div');
-						usb_tethering_header_el.classList.add('extension-power-settings-list-item-header');
+						usb_tethering_header_el.classList.add('network-settings-list-item-header'); // sic
 						usb_tethering_header_el.classList.add('extension-power-settings-flex-space-between');
 						
 						const usb_tethering_title_el = document.createElement('div');
-						usb_tethering_title_el.classList.add('network-settings-list-item-header');
+						usb_tethering_title_el.classList.add('extension-power-settings-list-item-header');
 						usb_tethering_title_el.textContent = 'USB tethering';
 						usb_tethering_header_el.appendChild(usb_tethering_title_el);
 					
@@ -2268,17 +2336,17 @@
 							let hotspot_settings_container_el = document.createElement('div');
 					
 							const hotspot_image_el = document.createElement('img');
-							hotspot_image_el.classList.add('network-settings-list-item-icon');
+							hotspot_image_el.classList.add('network-settings-list-item-icon'); // sic
 							hotspot_image_el.setAttribute('src','/extensions/power-settings/images/hotspot_shield.svg');
 							hotspot_image_el.setAttribute('alt','Candle hotspot');
 					
 							hotspot_settings_container_el.appendChild(hotspot_image_el);
 					
 							const hotspot_details_el = document.createElement('div');
-							hotspot_details_el.classList.add('network-settings-list-item-container-4');
+							hotspot_details_el.classList.add('network-settings-list-item-container-4'); // sic
 					
 							const hotspot_details_header_el = document.createElement('div');
-							hotspot_details_header_el.classList.add('network-settings-list-item-header');
+							hotspot_details_header_el.classList.add('network-settings-list-item-header'); // sic
 							hotspot_details_header_el.textContent = 'Hotspot';
 							hotspot_details_el.appendChild(hotspot_details_header_el);
 					
@@ -2289,18 +2357,18 @@
 							
 							/*
 							const hotspot_details_ssid_el = document.createElement('div');
-							hotspot_details_ssid_el.classList.add('network-settings-list-item-detail');
+							hotspot_details_ssid_el.classList.add('extension-power-settings-list-item-detail');
 							hotspot_details_ssid_el.textContent = '' + body.hotspot_ssid;
 							hotspot_details_el.appendChild(hotspot_details_ssid_el);
 							*/
 							
 							const hotspot_ssid_wrapper_el = document.createElement('div');
-							hotspot_ssid_wrapper_el.classList.add('network-settings-hotspot-left-padded-container');
-							hotspot_ssid_wrapper_el.classList.add('network-settings-flex-align-center');
+							hotspot_ssid_wrapper_el.classList.add('extension-power-settings-hotspot-left-padded-container');
+							hotspot_ssid_wrapper_el.classList.add('extension-power-settings-flex-align-center');
 					
 							const hotspot_details_ssid_el = document.createElement('input');
 							hotspot_details_ssid_el.setAttribute('id','extension-power-settings-hotspot-ssid-input');
-							hotspot_details_ssid_el.classList.add('network-settings-list-item-detail');
+							hotspot_details_ssid_el.classList.add('extension-power-settings-list-item-detail');
 							hotspot_details_ssid_el.setAttribute('type','text');
 							hotspot_details_ssid_el.value = '' + body.hotspot_ssid;
 					
@@ -2310,7 +2378,7 @@
 							hotspot_details_ssid_save_button_el.classList.add('text-button');
 							hotspot_details_ssid_save_button_el.textContent = 'Save';
 							hotspot_details_ssid_save_button_el.setAttribute('id','extension-power-settings-hotspot-ssid-save-button');
-							hotspot_details_ssid_save_button_el.classList.add('network-settings-list-item-detail');
+							hotspot_details_ssid_save_button_el.classList.add('extension-power-settings-list-item-detail');
 							hotspot_details_ssid_save_button_el.setAttribute('type','text');
 					
 							hotspot_ssid_wrapper_el.appendChild(hotspot_details_ssid_save_button_el);
@@ -2362,12 +2430,12 @@
 							//
 					
 							const hotspot_password_wrapper_el = document.createElement('div');
-							hotspot_password_wrapper_el.classList.add('network-settings-hotspot-left-padded-container');
-							hotspot_password_wrapper_el.classList.add('network-settings-flex-align-center');
+							hotspot_password_wrapper_el.classList.add('extension-power-settings-hotspot-left-padded-container');
+							hotspot_password_wrapper_el.classList.add('extension-power-settings-flex-align-center');
 					
 							const hotspot_details_password_el = document.createElement('input');
 							hotspot_details_password_el.setAttribute('id','extension-power-settings-hotspot-password-input');
-							hotspot_details_password_el.classList.add('network-settings-list-item-detail');
+							hotspot_details_password_el.classList.add('extension-power-settings-list-item-detail');
 							hotspot_details_password_el.setAttribute('type','text');
 					
 							hotspot_password_wrapper_el.appendChild(hotspot_details_password_el);
@@ -2376,7 +2444,7 @@
 							hotspot_details_password_save_button_el.classList.add('text-button');
 							hotspot_details_password_save_button_el.textContent = 'Save';
 							hotspot_details_password_save_button_el.setAttribute('id','extension-power-settings-hotspot-password-save-button');
-							hotspot_details_password_save_button_el.classList.add('network-settings-list-item-detail');
+							hotspot_details_password_save_button_el.classList.add('extension-power-settings-list-item-detail');
 							hotspot_details_password_save_button_el.setAttribute('type','text');
 					
 							hotspot_password_wrapper_el.appendChild(hotspot_details_password_save_button_el);
@@ -2493,7 +2561,7 @@
 							const hotspot_addon_view_el = document.getElementById('extension-candleappstore-view');
 							if(hotspot_addon_view_el){
 								let hotspot_addon_button_el = document.createElement('button');
-								hotspot_addon_button_el.classList.add('network-settings-list-item-button');
+								hotspot_addon_button_el.classList.add('extension-power-settings-list-item-button');
 								hotspot_addon_button_el.classList.add('text-button');
 								hotspot_addon_button_el.setAttribute('data-l10n-id','network-settings-configure');
 								hotspot_addon_button_el.textContent = 'Configure';
@@ -2587,7 +2655,7 @@
 
 							const hotspot_info_container_el = document.createElement('div');
 							hotspot_info_container_el.setAttribute('id','extension-power-settings-hotspot-info-container');
-							hotspot_info_container_el.classList.add('network-settings-hotspot-left-padded-container');
+							hotspot_info_container_el.classList.add('extension-power-settings-hotspot-left-padded-container');
 					
 							hotspot_settings_list_item_el.appendChild(hotspot_info_container_el);
 						
@@ -2649,7 +2717,7 @@
 								const usb_tethering_devices_list_el = document.getElementById('extension-power-settings-usb-tethering-devices-list');
 								if(usb_tethering_devices_list_el){
 									if(fresh_body.usb0_tethering_info === '' && fresh_body.usb1_tethering_info === ''){
-										usb_tethering_devices_list_el.innerHTML = '<span class="network-settings-list-item-detail">No phone detected</span>';
+										usb_tethering_devices_list_el.innerHTML = '<span class="extension-power-settings-list-item-detail">No phone detected</span>';
 									}
 									else{
 										let cleared_html = false;

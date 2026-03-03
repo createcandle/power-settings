@@ -7,9 +7,13 @@
 }
 
 
-.network-settings-flex-align-center{
+.extension-power-settings-flex-align-center{
 	display:flex;
 	align-items:center;
+}
+
+.extension-power-settings-flex-justify-end{
+	justify-content:flex-end;
 }
 
 /*
@@ -555,6 +559,7 @@
 
 
 
+#update-settings-link,
 .extension-power-settings-hidden{
     display:none!important;
 }
@@ -738,6 +743,28 @@
 
 .extension-power-settings-memory-label + span{
 	margin-right:.5rem;
+}
+
+
+
+/*  RUNNING SOFTWARE  */
+
+#extension-power-settings-running-software-output-button-container{
+	margin-top:4rem
+}
+#extension-power-settings-running-software-output-button-container > button{
+	margin-left:2rem;
+}
+
+#extension-power-settings-running-software-output:not(:empty){
+	font-family: monospace; 
+	white-space: pre;
+	padding:2rem;
+	border-radius:1rem;
+	margin:2rem 0;
+	background-color:rgba(0,0,0,.15);
+	font-size:12px;
+	overflow:auto;
 }
 
 
@@ -1226,7 +1253,7 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 	padding:1rem 1.5rem;
 	box-sizing:border-box;
 	width:100%;
-	background: linear-gradient(to right, rgba(0,128,0,.5) 80%, rgba(128,128,0,.5) 80%, rgba(128,128,0,.5) 90%, rgba(128,0,0,.5) 90%);
+	background: linear-gradient(to right, rgb(0 166 0) 80%, rgb(5 165 0) 80%, rgb(201 0 0) 95%, rgb(201 0 0) 99%);
 	border-radius:.5rem;
 }
 
@@ -1234,13 +1261,19 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 	width:100%;
 }
 
+.extension-power-settings-audio-item-volume-slider-container input[type="range"]{
+	background-color: #ddd;
+	-webkit-appearance: none;
+}
+
 .extension-power-settings-audio-item-volume-slider::-webkit-slider-thumb {
    -webkit-appearance: none;
    border: none;
-   height: 16px;
-   width: 16px;
+   height: 32px;
+   width: 32px;
    border-radius: 50%;
    transform:scale(2);
+   background:#fff;
    cursor:pointer;
 }
 
@@ -1289,6 +1322,10 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 /*  WIFI settings  */
 
 
+.network-settings-list-item-header{
+	font-weight:bold;
+	margin-bottom:1rem;
+}
 #network-settings-client ul.network-settings-list{
     max-height: none;
     margin-bottom: 20rem;
@@ -1306,7 +1343,10 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 }
 
 #network-settings-client .network-item{
-	padding-bottom:1rem;
+	padding-top: 1rem;
+	padding-bottom:2rem;
+    margin-bottom: 2rem;
+    border-radius: 1rem;
 }
 
 #extension-power-settings-wifi-rescan-container{
@@ -1411,7 +1451,7 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 
 /*  hotspot settings  */
 
-.network-settings-hotspot-left-padded-container{
+.extension-power-settings-hotspot-left-padded-container{
 	padding-left:10rem;
 	padding-right:2rem;
 	margin:.7rem 0;
@@ -1594,7 +1634,7 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
 		width:100%;
 	}
 	
-	.network-settings-hotspot-left-padded-container{
+	.extension-power-settings-hotspot-left-padded-container{
 		padding-left:2rem;
 	}
 }

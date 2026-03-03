@@ -11,7 +11,7 @@ def run_safe_command(cmd, timeout_seconds=60):
         
         result_string = subprocess.check_output(str(cmd).split())
         if type(result_string) == 'bytes':
-            print("run_safe_command: result string was bytes")
+            #print("run_safe_command: result string was bytes")
             #result_string = result_string.split(b'\x00')
             result_string = result_string.decode('UTF-8')
         return result_string
@@ -22,8 +22,8 @@ def run_safe_command(cmd, timeout_seconds=60):
 def run_command(cmd, timeout_seconds=60):
     try:
         my_env = os.environ.copy()
-        if not 'DBUS_SESSION_BUS_ADDRESS' in my_env:
-            print("WARNING, run_command: no DBUS_SESSION_BUS_ADDRESS")
+        #if not 'DBUS_SESSION_BUS_ADDRESS' in my_env:
+            #print("WARNING, run_command: no DBUS_SESSION_BUS_ADDRESS")
             # TODO: create a new dbus session?
             #print("WARNING, had to add DBUS_SESSION_BUS_ADDRESS to environment variables")
             #my_env['DBUS_SESSION_BUS_ADDRESS'] = 'unix:path=/run/user/1000/bus' #str(run_command('echo $DBUS_SESSION_BUS_ADDRESS')).strip()

@@ -15,6 +15,7 @@ import time
 import base64
 import shutil
 import datetime
+import threading
 import urllib.request
 import functools
 import subprocess
@@ -115,6 +116,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.update_via_recovery_aborted = False
         self.update_via_recovery_interupted = False
         
+        self.previous_lsusb = ''
         
         # Get persistent data
         self.persistent_data = {}
@@ -147,6 +149,11 @@ class PowerSettingsAPIHandler(APIHandler):
         #if not 'show_hotspot_password' in self.persistent_data:
         #    self.persistent_data['show_hotspot_password'] = True
         #    self.persistent_changed = True
+        
+        if not 'usb_gadget_mode_auto_connect' in self.persistent_data:
+            self.persistent_data['usb_gadget_mode_auto_connect'] = False
+            self.persistent_changed = True
+        
             
         if self.persistent_changed:
             self.save_persistent_data()
@@ -308,6 +315,12 @@ class PowerSettingsAPIHandler(APIHandler):
         self.has_cups = False
         if os.path.exists('/etc/cups'):
             self.has_cups = True
+        
+        
+        # USB Gadget mode
+        
+        self.usb_gadget_mode_enabled = False
+        self.usb_gadget_mode_info = run_command('sudo rpi-usb-gadget status')
         
         
         # Display
@@ -714,14 +727,11 @@ class PowerSettingsAPIHandler(APIHandler):
         
         self.detect_printers()
         
+        self.clock_thread = threading.Thread(target=self.clock)
+        self.clock_thread.daemon = True
+        self.clock_thread.start()
         
-        while self.running:
-            time.sleep(2)
-            if self.should_start_recovery_update == True:
-                if self.DEBUG:
-                    print("should_start_recovery_update was True. Calling update_recovery_partition")
-                self.should_start_recovery_update = False
-                self.update_recovery_partition()
+        
         
         
         
@@ -767,6 +777,41 @@ class PowerSettingsAPIHandler(APIHandler):
         #        print("-Show hotspot pasword preference was in config: " + str(self.show_hotspot_password))
                 
                 
+    
+    
+    def clock(self):
+        if self.DEBUG:
+            print("in clock")
+        
+        while self.running:
+            time.sleep(.5)
+            if self.should_start_recovery_update == True:
+                if self.DEBUG:
+                    print("should_start_recovery_update was True. Calling update_recovery_partition")
+                self.should_start_recovery_update = False
+                self.update_recovery_partition()
+    
+            
+            new_lsusb = str(run_command('lsusb'))
+            if new_lsusb != self.previous_lsusb:
+                
+                if self.previous_lsusb != '':
+                    if self.DEBUG:
+                        if len(new_lsusb.splitlines()) > len(self.previous_lsusb.splitlines()):
+                            print("MORE USB devices detected: \n")
+                        else:
+                            print("LESS USB devices detected: \n")
+                        print(str(new_lsusb) + '\n')
+                    self.apply_display_rotation() # The display's USB touch controller may lose it's orientation, so it must be restored
+                            
+                self.previous_lsusb = new_lsusb
+    
+    
+    
+    
+    
+    
+    
     
     def get_hotspot_arp(self,intensive_scan=False):
         result = []
@@ -1056,6 +1101,17 @@ class PowerSettingsAPIHandler(APIHandler):
                 self.ethernet_connected = not cable_needed
         except Exception as ex:
             print("Error in check_ethernet_connection: " + str(ex))
+
+    
+    def apply_display_rotation(self):
+        if self.DEBUG:
+            print("in apply_display_rotation.  self.display1_width, self.display2_width:", self.display1_width, self.display2_width)
+        
+        if self.display1_width != 0:
+            self.set_display_rotation(None,self.display1_rotation)
+            
+        if self.display2_width != 0:
+            self.set_display_rotation(None,self.display2_rotation)
 
 
 
@@ -1544,11 +1600,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                     
                                     
                                     state = 'ok'
-                                    if self.display1_width != 0:
-                                        self.set_display_rotation(None,self.display1_rotation)
-                                        
-                                    if self.display2_width != 0:
-                                        self.set_display_rotation(None,self.display2_rotation)
+                                    self.apply_display_rotation()
                                         
                                         
                                 return APIResponse(
@@ -2030,6 +2082,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                     'usb0_tethering_data':usb0_tethering_data,
                                     'usb1_tethering_info':usb1_tethering_info,
                                     'usb1_tethering_data':usb1_tethering_data,
+                                    'usb_gadget_mode_enabled':self.usb_gadget_mode_enabled,
+                                    'usb_gadget_mode_auto_connect':self.persistent_data['usb_gadget_mode_auto_connect'],
+                                    'usb_gadget_mode_info':self.usb_gadget_mode_info,
                                     'matter_adapter_installed':matter_adapter_installed,
                                 }
                                 return APIResponse(
@@ -2174,21 +2229,36 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                             
                             
-                            # Update hotspot password visibility
-                           
-                            elif action == 'set_hotspot_password_visibility':
+                            
+                            
+                            # enable or disable the hotspot
+                            elif action == 'set_usb_gadget_mode':
                                 state = False
-                                if 'visibility' in request.body:
-                                    #self.persistent_data['show_hotspot_password'] = bool(request.body['visibility'])
+                                if 'enabled' in request.body:
+                                    
+                                    self.persistent_data['usb_gadget_mode_enabled'] = bool(request.body['enabled'])
+                                    self.save_persistent_data()
+                                    
+                                    if self.persistent_data['usb_gadget_mode_enabled']:
+                                        if self.DEBUG:
+                                            print("enabling USB gadget mode")
+                                        os.system('sudo rpi-usb-gadget on')
+                                    else:
+                                        if self.DEBUG:
+                                            print("disabling USB gadget mode")
+                                        os.system('sudo rpi-usb-gadget off')
+                                    
                                     state = True
-                                
+                                            
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
                                   content=json.dumps({'state':state}),
                                 )
                             
-                                
+                            
+                            
+                            
                                 
                             # OLD SCHOOL SYSTEM UPDATE 
                             elif action == 'start_system_update':
@@ -2456,6 +2526,34 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':'ok','files_check_output':files_check_output}),
                                 )
                                 
+                            
+                            # Get information on running applications
+                            elif action == 'get_command_output':
+                                if self.DEBUG:
+                                    print("handling get_command_output")
+                                
+                                command_output = ''
+                                
+                                if request.body['command'] and isinstance(request.body['command'],str):
+                                    if request.body['command'] == 'pstree':
+                                        command_output = run_command("pstree -t -c -a -n")
+                                    elif request.body['command'] == 'memory_use':
+                                        command_output = run_command('ps -eo vsz,cmd --sort=-vsz | grep -v "   0 \["')
+                                        if isinstance(command_output,str):
+                                            command_output = command_output.replace('python3 ','')
+                                            command_output = command_output.replace('/home/pi/.webthings/','')
+                                            command_output = command_output.replace('/main.py','')
+                                            command_output = command_output.replace('/usr/lib/','')
+                                            command_output = command_output.replace('/usr/bin/','')
+                                            command_output = command_output.replace('/usr/sbin/','')
+                                            
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':True,'output':command_output}),
+                                )
+                            
                             
                             
                             # Called when the user opens the update page
@@ -2842,7 +2940,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                         print("shell_date: " + str(shell_date))
                                     #just_updated_via_recovery = self.just_updated_via_recovery
                                     #self.just_updated_via_recovery = False
-
+                                    
+                                    self.usb_gadget_mode_info = run_command('sudo rpi-usb-gadget status')
+                                    
                                     hotspot_arp_list = self.get_hotspot_arp()
                                     hotspot_arp_list = str(hotspot_arp_list)
                                     if self.DEBUG:
@@ -2892,6 +2992,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'hotspot_password_length':len(self.hotspot_password),
                                             'hotspot_connected_devices':hotspot_arp_list,
                                             'disk_errors':self.disk_errors,
+                                            'usb_gadget_mode_enabled':self.usb_gadget_mode_enabled,
+                                            'usb_gadget_mode_auto_connect':self.persistent_data['usb_gadget_mode_auto_connect'],
+                                            'usb_gadget_mode_info':self.usb_gadget_mode_info,
                                             'debug':self.DEBUG
                                         }
                                         
