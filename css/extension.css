@@ -1672,7 +1672,8 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
 	}
 	
 	
-	body[id^=path-settings] #menu-button{
+	/*body[id^=path-settings] #menu-button*/
+	body #menu-button{
 		display:initial!important;
 	}
 	

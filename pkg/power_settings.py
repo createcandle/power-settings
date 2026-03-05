@@ -155,8 +155,7 @@ class PowerSettingsAPIHandler(APIHandler):
             self.persistent_changed = True
         
             
-        if self.persistent_changed:
-            self.save_persistent_data()
+        
         
         
         
@@ -290,7 +289,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.respeaker_check_file_path = os.path.join(str(os.path.expanduser("~")), 'candle','respeaker_check.sh')
         if os.path.isfile(self.respeaker_check_file_path):
             respeaker_check_output = run_command(self.respeaker_check_file_path)
-            print("respeaker_check_output: ", respeaker_check_output)
+            #print("respeaker_check_output: ", respeaker_check_output)
             if isinstance(respeaker_check_output,str):
                 if 'found 2mic' in respeaker_check_output:
                     self.detected_respeaker_type = '2mic'
@@ -298,8 +297,28 @@ class PowerSettingsAPIHandler(APIHandler):
                     self.detected_respeaker_type = '4mic'
                 elif 'found 6mic' in respeaker_check_output:
                     self.detected_respeaker_type = '6mic'
-        else:
-            print("error, could not find respeaker_check path: ", self.respeaker_check_file_path)
+        #else:
+        #    print("error, could not find respeaker_check path: ", self.respeaker_check_file_path)
+        
+        try:
+            if self.detected_respeaker_type == None:
+                #print("No respeaker hat detected")
+                if 'config_txt_lines' in self.persistent_data and 'respeaker' in self.persistent_data['config_txt_lines']:
+                    #print("removing respeaker from config_txt_lines")
+                    del self.persistent_data['config_txt_lines']['respeaker']
+                    self.persistent_changed = True
+                
+                if os.path.isfile(self.config_txt_path):
+                    #print("config.txt exists")
+                    initial_config_txt = str(run_command('cat ' + str(self.config_txt_path)))
+                    #print("initial_config_txt: ", initial_config_txt)
+                    if 'respeaker' in initial_config_txt:
+                        self.update_config_txt()
+                
+        except Exception as ex:
+            print("caught error checking if respeaker kernel drivers should still be loaded: ", ex)
+        
+        
         
         
         # Hardware clock
@@ -554,8 +573,6 @@ class PowerSettingsAPIHandler(APIHandler):
             print("self.pipewire_enabled: " + str(self.pipewire_enabled))
             print("self.detected_respeaker_type: " + str(self.detected_respeaker_type))
             
-       
-        
         # Remove hardware clock file if it exists and it should not be enabled
         if self.do_not_use_hardware_clock:
             if os.path.isfile(self.hardware_clock_file_path):
@@ -731,7 +748,8 @@ class PowerSettingsAPIHandler(APIHandler):
         self.clock_thread.daemon = True
         self.clock_thread.start()
         
-        
+        if self.persistent_changed:
+            self.save_persistent_data()
         
         
         
@@ -1278,7 +1296,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 self.persistent_data['config_txt_lines']['respeaker'] = ['dtoverlay=respeaker-' + str(self.persistent_data['selected_respeaker_type'])]
                                                 os.system('sudo touch /boot/firmware/candle_repeaker.txt')
                                             elif os.path.isfile('/boot/firmware/candle_repeaker.txt'):
-                                                os.system('sudo rm /boot/firmware/candle_repeaker.txt')
+                                                os.system('sudo rm /boot/firmware/candle_repeaker.txt')  
                                             if self.DEBUG:
                                                 print("self.persistent_data['config_txt_lines']: ", json.dumps(self.persistent_data['config_txt_lines'],indent=4))
                                                 print("calling update_config_txt")
@@ -2539,13 +2557,54 @@ class PowerSettingsAPIHandler(APIHandler):
                                         command_output = run_command("pstree -t -c -a -n")
                                     elif request.body['command'] == 'memory_use':
                                         command_output = run_command('ps -eo vsz,cmd --sort=-vsz | grep -v "   0 \["')
+                                        
                                         if isinstance(command_output,str):
-                                            command_output = command_output.replace('python3 ','')
-                                            command_output = command_output.replace('/home/pi/.webthings/','')
-                                            command_output = command_output.replace('/main.py','')
-                                            command_output = command_output.replace('/usr/lib/','')
-                                            command_output = command_output.replace('/usr/bin/','')
-                                            command_output = command_output.replace('/usr/sbin/','')
+                                            friendly_bytes_output = 'Memory  Command\n\n'
+                                            for line in command_output.splitlines():
+                                                raw_bytes = line.split()[0]
+                                                if raw_bytes.isdigit():
+                                                    if self.DEBUG:
+                                                        print("raw line: " + str(line))
+                                                        friendly_bytes_output = friendly_bytes_output + line + '\n'
+                                                        print("raw_bytes: " + str(raw_bytes))
+                                                    raw_bytes = int(raw_bytes)
+                                                    # voco uses 1461133072
+                                                    friendly_bytes = ''
+                                                    if raw_bytes > 1000000:
+                                                        friendly_bytes = str(round(int(raw_bytes) / 1000000)) + ' MB'
+                                                    elif raw_bytes > 1000:
+                                                        friendly_bytes = str(round(int(raw_bytes) / 1000)) + ' kb'
+                                                    else:
+                                                        friendly_bytes = str(kilobyte) + ' b'
+                                                        
+                                                    while len(str(friendly_bytes)) < 7:
+                                                        friendly_bytes = ' ' + str(friendly_bytes)
+                                                    while len(str(friendly_bytes)) < 10:
+                                                        friendly_bytes = str(friendly_bytes) + ' '
+                                                        
+                                                    if self.DEBUG:
+                                                        print("-> friendly_bytes: " + str(friendly_bytes))
+                                                    friendly_bytes_output = friendly_bytes_output + line.replace(str(raw_bytes), str(friendly_bytes)) + '\n'
+
+                                            command_output = str(friendly_bytes_output)
+                                            
+                                        
+                                
+                                
+                                if isinstance(command_output,str) and command_output != '':
+                                    command_output = command_output.replace('python3 ','')
+                                    command_output = command_output.replace('/home/pi/.webthings/','')
+                                    command_output = command_output.replace('/main.py','')
+                                    command_output = command_output.replace('/usr/lib/','')
+                                    command_output = command_output.replace('/usr/bin/','')
+                                    command_output = command_output.replace('/usr/sbin/','')
+                                    command_output = command_output.replace('/home/pi/webthings/gateway/','')
+                                    command_output = command_output.replace('/home/pi/','')
+                                    command_output = command_output.replace(' --mqtt-username candle --mqtt-password smarthome','')
+                                    command_output = command_output.replace('node build/app.js','CANDLE CONTROLLER')
+                                            
+                                            
+                                            
                                             
                                 
                                 return APIResponse(
@@ -4113,27 +4172,31 @@ class PowerSettingsAPIHandler(APIHandler):
         
     # Not currently used
     def update_config_txt(self):
-        print("in update_config_txt")
+        if self.DEBUG:
+            print("in update_config_txt")
         try:
-            if os.path.isfile(self.config_txt_path) and len(self.persistent_data['config_txt_lines'].keys()):
+            if os.path.isfile(self.config_txt_path):
                 
                 if not os.path.isfile(self.config_txt_backup_path):
                     os.system('sudo cp ' + str(self.config_txt_path) + ' ' + str(self.config_txt_backup_path))
                 
                 new_config_txt = "\n\n#POWER_SETTINGS_START\n"
                 
-                for config_origin in list(self.persistent_data['config_txt_lines'].keys()):
-                    print("config_origin: ", config_origin)
-                    new_config_txt += '\n#' + str(config_origin)
-                    for line in self.persistent_data['config_txt_lines'][config_origin]:
-                        new_config_txt = new_config_txt + '\n' + str(line)
-                    #print("updated new_config_txt: ", new_config_txt)
+                if 'config_txt_lines' in self.persistent_data and len(self.persistent_data['config_txt_lines'].keys()):
+                    for config_origin in list(self.persistent_data['config_txt_lines'].keys()):
+                        if self.DEBUG:
+                            print("config_origin: ", config_origin)
+                        new_config_txt += '\n#' + str(config_origin)
+                        for line in self.persistent_data['config_txt_lines'][config_origin]:
+                            new_config_txt = new_config_txt + '\n' + str(line)
+                        #print("updated new_config_txt: ", new_config_txt)
             
                 if new_config_txt:
                     new_config_txt += '\n\n\n'
                     contents = run_safe_command('cat /boot/firmware/config.txt')
                     
-                    print("--------------------\n\n\ncontents: \n" + str(contents) + "\n\n\n-------------------------")
+                    if self.DEBUG:
+                        print("--------------------\n\n\ncontents: \n" + str(contents) + "\n\n\n-------------------------")
                     
                     if isinstance(contents,str) and '#POWER_SETTINGS_START' in str(contents):
                         #print("old config.txt contents: ", str(contents))

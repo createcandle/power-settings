@@ -15,6 +15,7 @@
 			this.developer = false;
 			this.second_init_attempted = false;
 			
+			this.extra_settings_created = false;
             
             // Kiosk?
 			this.kiosk = false;
@@ -33,6 +34,7 @@
 
             this.interval = null;
             this.recovery_interval = null;
+			this.get_stats_retried = false;
             
             this.total_memory = 0;
             this.user_partition_free_disk_space = 0;
@@ -515,8 +517,13 @@
         // Mostly adds event listeners once settings_page.html has loaded in
         create_extra_settings(){
             
-            if(document.querySelector('#settings-menu > ul') && !document.getElementById('extension-power-settings-menu-time-button')){
+            if(document.querySelector('#settings-menu > ul') && !document.getElementById('extension-power-settings-menu-time-button') && document.getElementById('extension-power-settings-back-button')){
                 
+				if(this.extra_settings_created){
+					console.error("pwoer settings: ERROR, in create_extra_settings AGAIN!");
+				}
+				this.extra_settings_created = true;
+				
                 const hours = document.getElementById('extension-power-settings-form-hours');
                 const minutes = document.getElementById('extension-power-settings-form-minutes');
                 const ntp = document.getElementById('extension-power-settings-form-ntp');
@@ -524,11 +531,14 @@
     
                 const back_button = document.getElementById('extension-power-settings-back-button');
                 
-                if(back_button == null){
-                    console.error("Error, missing power settings back button? Aborting");
-                    return;
-                }
 				
+				const main_menu_button_el = document.getElementById('menu-button');
+				if(main_menu_button_el){
+					main_menu_button_el.addEventListener('click', () => {
+						main_menu_button_el.classList.remove('hidden');
+					})
+				}
+                
                 
                 // Back button
                 document.getElementById('extension-power-settings-back-button').addEventListener('click', () => {
@@ -549,6 +559,9 @@
                     });
                     
                 });
+				
+				
+				
 				
 				
 				
@@ -5198,6 +5211,8 @@
                     console.log("power settings: get stats response: ", body);
                 }            
 
+				this.get_stats_retried = false;
+
 				if(document.body.classList.contains('developer')){
 					this.developer = true;
 				}
@@ -5471,7 +5486,21 @@
 				
             }).catch((err) => {
                 console.error("power settings: get stats failed: could not connect to controller: ", err);
-				this.get_stats_fail_counter = 6;
+				
+				// Allow for one quick retry.
+				if(this.get_stats_retried == false){
+					this.get_stats_retried = true;
+					setTimeout(() => {
+						if(this.get_stats_retried == true){
+							this.get_stats();
+						}
+					},5000);
+				}else{
+					this.get_stats_fail_counter = 6;
+				}
+				
+				
+				
             });
 		}
         
