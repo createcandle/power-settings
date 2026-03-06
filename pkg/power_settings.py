@@ -1828,11 +1828,16 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                             # Test speakers
                             elif action == 'test_speakers':
-                                self.test_speakers()
+                                state = False
+                                try:
+                                    state = self.test_speakers()
+                                except Exception as ex:
+                                    print("Caught error doing speaker test: ", ex)
+                                
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
-                                  content=json.dumps({'state':'ok'}),
+                                  content=json.dumps({'state':state}),
                                 )
                                 
                             # Reinstall candle app store from Github
@@ -4081,11 +4086,14 @@ class PowerSettingsAPIHandler(APIHandler):
     def test_speakers(self):
         if self.DEBUG:
             print("In speaker test")
-        os.system('speaker-test -c1 -twav -l1')
-        os.system('speaker-test -c2 -twav -l1')
+        run_command('speaker-test -c1 -twav -l1')
+        time.sleep(1)
+        run_command('speaker-test -c1 -twav -l1')
+        time.sleep(1)
+        #os.system('speaker-test -c2 -twav -l1')
         os.system('speaker-test -c4 -twav -l1')
-        
-        
+        #os.system('speaker-test -t sine -c 2 --nloops 1')
+        return True
         
         
         
