@@ -252,10 +252,11 @@
 
 #extension-power-settings-waiting{
     background-color:rgba(0,0,0,.2);
-    border-radius:.5rem;
+    border-radius:1rem;
     padding:2rem;
     margin: 2rem;
     text-align:center;
+	line-height:170%;
 }
 #extension-power-settings-waiting > img{
     margin: 2rem auto;
@@ -1639,6 +1640,12 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
 	}
 }
 
+
+@media screen and (min-width: 641px) {
+	#extension-power-settings-waiting{
+		padding:4rem;
+	}
+}
 
 @media screen and (min-width: 1024px) {
 

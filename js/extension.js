@@ -393,7 +393,13 @@
             shutdown.addEventListener('click', () => {
                 content_container.style.display = 'none';
                 waiting.style.display = 'block';
-                waiting_message.innerHTML = '<h2>Shutting down...</h2><p>Please wait at least 15 seconds before unplugging the controller.</p>';
+                waiting_message.innerHTML = '<h2>Shutting down...</h2><p>Please wait at least 15 seconds<br>before unplugging the controller.</p>';
+				setTimeout(() => {
+					const shutdown_spinner_el = document.querySelector('#extension-power-settings-waiting .extension-power-settings-spinner');
+					if(shutdown_spinner_el){
+						shutdown_spinner_el.classList.add('extension-power-settings-hidden');
+					}
+				},15000);
                 window.API.postJson(
                     `/extensions/${this.id}/api/shutdown`, {}
                 )
