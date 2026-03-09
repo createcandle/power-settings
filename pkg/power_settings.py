@@ -2560,6 +2560,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if request.body['command'] and isinstance(request.body['command'],str):
                                     if request.body['command'] == 'pstree':
                                         command_output = run_command("pstree -t -c -a -n")
+                                        
                                     elif request.body['command'] == 'memory_use':
                                         command_output = run_command('ps -eo vsz,cmd --sort=-vsz | grep -v "   0 \["')
                                         
@@ -2594,7 +2595,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                             command_output = str(friendly_bytes_output)
                                             
                                         
-                                
+                                            
+                                        
                                 
                                 if isinstance(command_output,str) and command_output != '':
                                     command_output = command_output.replace('python3 ','')
@@ -2609,7 +2611,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                     command_output = command_output.replace('node build/app.js','CANDLE CONTROLLER')
                                             
                                             
-                                            
+                                if os.path.exists('/rw/upper') and request.body['command'] and isinstance(request.body['command'],str) and request.body['command'] == 'memory_use':
+                                    upper_overlay_command_output = run_command('sudo du -h /rw/upper')
+                                    if isinstance(upper_overlay_command_output,str) and upper_overlay_command_output != '':
+                                        command_output = str(command_output) + "\n\n\nFILE SYSTEM CHANGES IN MEMORY:\n" + str(upper_overlay_command_output)
                                             
                                 
                                 return APIResponse(

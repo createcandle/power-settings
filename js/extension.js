@@ -1988,6 +1988,7 @@
                     console.log("power settings debug: system bits: ", this.bits);
                 }
                 document.getElementById('extension-power-settings-bits').innerText = this.bits + 'bit';
+				document.getElementById('extension-power-settings-info-bits').innerText = this.bits + 'bit';
                 //document.getElementById('extension-power-settings-bits2').innerText = this.bits + 'bit';
             }
 			
@@ -2118,6 +2119,7 @@
             // Show Candle version
             if(typeof body.candle_version != 'undefined'){
                 document.getElementById('extension-power-settings-candle-version').innerText = body.candle_version;
+				document.getElementById('extension-power-settings-candle-info-version').innerText = body.candle_version;
                 //document.getElementById('extension-power-settings-candle-version2').innerText = body.candle_version;
             }
             
@@ -3757,10 +3759,10 @@
                         }
                     }
                     
-                    if(body.candle_version == '2.0.2'){ // on the latest version
+                    if(body.candle_version == '3.0.0'){ // on the latest version
                         this.update_available_text = ""
                         if(this.debug){
-                            console.log("power settings debug: running on latest available 2.0.2 version");
+                            console.log("power settings debug: running on latest available 3.0.0 version");
                         }
                     }
                     
@@ -5227,32 +5229,34 @@
 				}
 
                 // Show the total memory
-                if(typeof body['total_memory'] != 'undefined'){
-                    document.getElementById('extension-power-settings-total-memory').innerText = body['total_memory'];
+                if(typeof body['total_memory'] == 'number'){
+                    //document.getElementById('extension-power-settings-total-memory').innerText = body['total_memory'];
                 
 					// temperature
 	                if(typeof body['board_temperature'] == 'string' ){
 	                    if(this.debug){
 	                        console.log("power settings: board_temperature: ", body.board_temperature);
 	                    }
-	                    document.getElementById('extension-power-settings-device-temperature').innerText = body.board_temperature;
+						const device_temperture_el = document.getElementById('extension-power-settings-device-temperature');
+						if(device_temperture_el){
+		                    device_temperture_el.innerText = body.board_temperature;
 						
-						if(body.board_temperature.endsWith("'C")){
-							const temp = parseInt(body.board_temperature.replace("'C",""));
-							if(this.debug){
-								console.log("power settings debug: board temperature: ",temp);
-							}
-							if(temp < 60){
-								document.getElementById('extension-power-settings-device-temperature').style.color = 'green';
-							}
-							else if(temp < 80){
-								document.getElementById('extension-power-settings-device-temperature').style.color = 'orange';
-							}
-							else{
-								document.getElementById('extension-power-settings-device-temperature').style.color = 'red';
+							if(body.board_temperature.endsWith("'C")){
+								const temp = parseInt(body.board_temperature.replace("'C",""));
+								if(this.debug){
+									console.log("power settings debug: board temperature: ",temp);
+								}
+								if(temp < 60){
+									document.getElementById('extension-power-settings-device-temperature').style.color = 'green';
+								}
+								else if(temp < 80){
+									document.getElementById('extension-power-settings-device-temperature').style.color = 'orange';
+								}
+								else{
+									document.getElementById('extension-power-settings-device-temperature').style.color = 'red';
+								}
 							}
 						}
-						
 						
 	                }
 				
@@ -5260,55 +5264,86 @@
 	                if(this.debug){
 	                    console.log("power settings debug: total_memory: ", total_memory);
 	                }     
-					if(total_memory > 600){
-						document.getElementById('extension-power-settings-device-model-memory').innerText = Math.round(total_memory/1000 ) + 'GB ';
-					}
-					else{
-						document.getElementById('extension-power-settings-device-model-memory').innerText = '500MB';
+					const device_model_memory_el = document.getElementById('extension-power-settings-device-model-memory');
+					if(device_model_memory_el){
+						if(total_memory > 600){
+							device_model_memory_el.innerText = Math.round(total_memory/1000 ) + 'GB ';
+						}
+						else{
+							device_model_memory_el.innerText = '500MB';
+						}
 					}
 					
+					
 					if(typeof body['sd_card_written_kbytes'] != 'undefined'){
-						document.getElementById('extension-power-settings-sd-card-written-bytes').innerText = body['sd_card_written_kbytes'];
+						const total_written_to_sd_el = document.getElementById('extension-power-settings-sd-card-written-bytes');
+						if(total_written_to_sd_el){
+							total_written_to_sd_el.innerText = body['sd_card_written_kbytes'];
+						}
+						
 					}
 
 	                // Show the available memory. This is different from "free" memory
-	                if(typeof body['available_memory'] != 'undefined'){
-	                    document.getElementById('extension-power-settings-available-memory').innerText = body['available_memory'];
+	                if(typeof body['available_memory'] == 'number' && typeof body['free_memory'] == 'number'){
+	                    //document.getElementById('extension-power-settings-available-memory').innerText = body['available_memory'];
 						
-		                // Show the free memory.
-		                if(typeof body['free_memory'] != 'undefined'){
-		                    document.getElementById('extension-power-settings-free-memory').innerText = body['free_memory'];
-							
-							
-							let total_mem = parseFloat(body['total_memory']);
-							let avail_mem = parseFloat(body['available_memory']);
-							let free_mem = parseFloat(body['free_memory']);
-							
-							let low_mem_el = document.getElementById('extension-power-settings-low-memory-warning');
+						let total_mem = parseFloat(body['total_memory']);
+						let avail_mem = parseFloat(body['available_memory']);
+						let free_mem = parseFloat(body['free_memory']);
 						
-							if(low_mem_el){
-			                    if(free_mem < 100){
-			                        low_mem_el.style.display = 'block';
-			                    }
-			                    if(free_mem < 50){
-			                        low_mem_el.style.background = 'red';
-			                    }
+						let low_mem_el = document.getElementById('extension-power-settings-low-memory-warning');
+						if(low_mem_el){
+		                    if(free_mem < 100){
+		                        low_mem_el.style.display = 'block';
+		                    }
+		                    if(free_mem < 50){
+		                        low_mem_el.style.background = 'red';
+		                    }
+						}
+						
+						let used_mem_percentage = ( (total_mem - avail_mem) / total_mem) * 100;
+						if(this.debug){
+							console.log("power settings debug: used_mem_percentage: ", used_mem_percentage);
+						}
+						let purgeable_mem_percentage = ( (avail_mem - free_mem) / total_mem) * 100;
+						if(this.debug){
+							console.log("power settings debug: purgeable_mem_percentage: ", purgeable_mem_percentage);
+						}
+						const memory_use_bar_el = document.getElementById('extension-power-settings-memory-used-bar');
+						if(memory_use_bar_el){
+							memory_use_bar_el.style.width = used_mem_percentage + '%';
+							document.getElementById('extension-power-settings-memory-purgeable-bar').style.width = purgeable_mem_percentage + '%';
+						}
+						
+						
+						/*
+						let total_mem = parseFloat(body['total_memory']);
+						let avail_mem = Math.floor(parseFloat(body['available_memory']) / 1000);
+						let free_mem = parseFloat(body['free_memory']);
+			
+						const available_memory_mb = Math.round(this.available_memory/1000);
+						*/
+			
+						const total_memory_el = document.getElementById('extension-power-settings-total-memory');
+		                if(total_memory_el){
+							if(total_mem > 3000){
+								total_memory_el.textContent = Math.round(total_mem/1000) + "GB ";
+							}else{
+								total_memory_el.textContent = total_mem + "MB ";
+							}
+							const used_memory_el = document.getElementById('extension-power-settings-used-memory');
+							if(used_memory_el){
+								used_memory_el.textContent = Math.round(total_mem - avail_mem);
+								document.getElementById('extension-power-settings-available-memory').textContent = Math.round(avail_mem - free_mem);
+								document.getElementById('extension-power-settings-free-memory').textContent = free_mem;
 							}
 							
-							
-							let used_mem = ( (total_mem - avail_mem) / total_mem) * 100;
-							if(this.debug){
-								console.log("power settings debug: used_mem: ", used_mem);
-							}
-							let purgeable_mem = ( (avail_mem-free_mem) / total_mem) * 100;
-							if(this.debug){
-								console.log("power settings debug: purgeable_mem: ", purgeable_mem);
-							}
-							document.getElementById('extension-power-settings-memory-used-bar').style.width = used_mem + '%';
-							document.getElementById('extension-power-settings-memory-purgeable-bar').style.width = purgeable_mem + '%';
 		                }
+						else{
+							console.error("could not find #extension-power-settings-total-memory");
+						}
+						
 	                }
-				
 				
 				}            
                 
