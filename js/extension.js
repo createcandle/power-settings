@@ -2435,12 +2435,16 @@
 								}
 								
 								else if(hotspot_details_ssid_el.value.length < 4){
-									//console.warn("user changed hotspot ssid, but it's too short");
+									if(this.debug){
+										console.warn("user changed hotspot ssid, but it's too short");
+									}
 									hotspot_details_ssid_el.value = '';
 									hotspot_details_ssid_el.setAttribute('placeholder','Too short');
 								}
 								else{
-									console.log("hotspot ssid is unchanged");
+									if(this.debug){
+										console.log("hotspot ssid is unchanged");
+									}
 								}
 						
 							});
@@ -2511,16 +2515,22 @@
 							
 								}
 								else if(hotspot_details_password_el.value.length == 0){
-									//console.warn("user changed hotspot password. It's not empty.");
+									if(this.debug){
+										console.warn("user changed hotspot password. It's not empty.");
+									}
 									hotspot_details_password_el.setAttribute('placeholder','No password required');
 								}
 								else if(hotspot_details_password_el.value.length < 8){
-									//console.warn("user changed hotspot password, but it's too short");
+									if(this.debug){
+										console.warn("user changed hotspot password, but it's too short");
+									}
 									hotspot_details_password_el.value = '';
 									hotspot_details_password_el.setAttribute('placeholder','Too short');
 								}
 								else{
-									//console.log("hotspot password is unchanged");
+									if(this.debug){
+										console.log("hotspot password is unchanged");
+									}
 								}
 						
 							});
@@ -5291,15 +5301,16 @@
 						let avail_mem = parseFloat(body['available_memory']);
 						let free_mem = parseFloat(body['free_memory']);
 						
-						let low_mem_el = document.getElementById('extension-power-settings-low-memory-warning');
-						if(low_mem_el){
-		                    if(free_mem < 100){
-		                        low_mem_el.style.display = 'block';
-		                    }
-		                    if(free_mem < 50){
-		                        low_mem_el.style.background = 'red';
-		                    }
+						if(avail_mem < 100){
+							let low_mem_el = document.getElementById('extension-power-settings-low-memory-warning');
+							if(low_mem_el){
+			                    low_mem_el.style.display = 'block';
+			                    if(avail_mem < 50){
+			                        low_mem_el.style.background = 'red';
+			                    }
+							}
 						}
+						
 						
 						let used_mem_percentage = ( (total_mem - avail_mem) / total_mem) * 100;
 						if(this.debug){

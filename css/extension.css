@@ -1458,6 +1458,7 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 	margin:.7rem 0;
 }
 
+.extension-power-settings-hotspot-ssid-changed,
 .extension-power-settings-hotspot-password-changed{
 	background-color:green;
 }
@@ -1467,9 +1468,11 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 	margin:0 0 0 .5rem;
 }
 
+/*
 #extension-power-settings-hotspot-password-input:focus + #extension-power-settings-hotspot-password-save-button{
 	display:inline-block;
 }
+*/
 
 #network-settings-client #extension-power-settings-hotspot-container{
 	padding-bottom:2rem;
