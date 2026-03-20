@@ -83,6 +83,10 @@ class PowerSettingsAPIHandler(APIHandler):
             print("ERROR, Failed load manifest.json: " + str(e))
         """
         
+        
+        self.show_hotspot_password = False
+        
+        
         try:
             APIHandler.__init__(self, self.addon_id) # manifest['id']
             self.manager_proxy.add_api_handler(self)
@@ -90,7 +94,16 @@ class PowerSettingsAPIHandler(APIHandler):
             print('Power settings: error adding api handler to manager_proxy: ' + str(ex))
         
         #print("\n\n\n")
-        #print("self.user_profile: ", self.user_profile)
+        try:
+            print("self.user_profile: ", self.user_profile)
+        except:
+            print("\n\nERRORr, no self.user_profile?\n\n")
+            self.user_profile = {}
+            self.user_profile['baseDir'] = '/home/pi/.webthings'
+            self.user_profile['addonsDir'] = '/home/pi/.webthings/addons'
+            self.user_profile['dataDir'] = '/home/pi/.webthings/data'
+        
+            
         
         self.addon_dir = os.path.join(str(self.user_profile['addonsDir']), self.addon_id)
         self.data_dir = os.path.join(str(self.user_profile['dataDir']), self.addon_id)
@@ -213,6 +226,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.backup_photos_failed = False
         self.uploads_dir_path = os.path.join(str(self.user_profile['baseDir']), 'uploads')
         self.photos_dir_path = os.path.join(str(self.user_profile['dataDir']),'photo-frame','photos')
+        self.addon_backups = []
         self.photo_frame_installed = False
         self.photos_size = 0
         self.log_size = 0
@@ -244,6 +258,8 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
         #edid = pyedid.parse_edid(edid_hex)
+
+        
         
 
         # Bootup actions
@@ -252,6 +268,14 @@ class PowerSettingsAPIHandler(APIHandler):
         self.post_actions_file_path = self.boot_path + '/post_bootup_actions.sh' # run 'after' the gateway starts
         
         self.system_update_error_detected = False
+        
+        # Candle will boot into safe mode if this file exists
+        self.safe_mode_is_active = False
+        self.safe_mode_path = os.path.join(self.boot_path,'candle_safe_mode.txt')
+        if os.path.exists(self.safe_mode_path):
+            self.safe_mode_is_active = True
+            print("removing safe mode file")
+            os.system('sudo rm ' + str(self.safe_mode_path))
         
         # Factory reset
         self.keep_z2m_file_path = self.boot_path + '/keep_z2m.txt'
@@ -269,6 +293,8 @@ class PowerSettingsAPIHandler(APIHandler):
         # Backup data dir paths
         self.backup_dir = os.path.join(self.data_dir, "backup") 
         self.backup_file_path = os.path.join(self.backup_dir, "candle_backup.tar")
+        
+        self.addon_backups_dir = os.path.join(str(self.user_profile['baseDir']), 'backups','addons')
         
         # Backup data logs path
         self.log_db_file_path = os.path.join(str(self.user_profile['baseDir']), 'log','logs.sqlite3')
@@ -328,9 +354,9 @@ class PowerSettingsAPIHandler(APIHandler):
         
         # Printers
         self.connected_printers = {}
-        self.printing_allowed = True
-        if os.path.exists(self.boot_path + '/candle_disable_printing.txt'):
-            self.printing_allowed = False
+        self.printing_allowed = False
+        if not os.path.exists(self.boot_path + '/candle_disable_printing.txt'):
+            self.printing_allowed = True
         self.has_cups = False
         if os.path.exists('/etc/cups'):
             self.has_cups = True
@@ -524,6 +550,11 @@ class PowerSettingsAPIHandler(APIHandler):
         
         #print("actual_hotspot_ssid: -" + actual_hotspot_ssid + '-')
         self.sd_card_written_kbytes = '?'
+        
+        
+        # Troubleshooting
+        self.force_reboot_time = 0 # can be set to a time when the controllest must at the latest be restarted. Used by booting into safe mode as backup.
+        
         
         try:
             if self.user_profile and os.path.isdir(str(self.user_profile['baseDir'])):
@@ -744,6 +775,10 @@ class PowerSettingsAPIHandler(APIHandler):
         
         self.detect_printers()
         
+        
+        
+        
+        
         self.clock_thread = threading.Thread(target=self.clock)
         self.clock_thread.daemon = True
         self.clock_thread.start()
@@ -824,6 +859,13 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                 self.previous_lsusb = new_lsusb
     
+            
+            if self.force_reboot_time > 0 and self.force_reboot_time < time.time():
+                self.force_reboot_time = 0
+                if self.DEBUG:
+                    print("FORCING REBOOT based on self.force_reboot_time")
+                os.system('sudo reboot now')
+                
     
     
     
@@ -1151,7 +1193,134 @@ class PowerSettingsAPIHandler(APIHandler):
                     print("-API request at: " + str(request.path))
 
                 try:
-                    if request.path == '/ajax':
+                    
+                    if request.path == '/init':
+                        response = {}
+                        
+                        shell_date = ""
+                        if self.DEBUG:
+                            print("\ndebug: in /init")
+                        try:
+                            now = datetime.datetime.now()
+                            current_ntp_state = True
+                        
+                            try:
+                                local_update_via_recovery_aborted = self.update_via_recovery_aborted
+                                self.update_via_recovery_aborted = False
+                            
+                                local_update_via_recovery_interupted = self.update_via_recovery_interupted
+                                self.update_via_recovery_interupted = False
+                                
+                                
+                                dmesg_output = run_command("dmesg --level=err,warn")
+                                if isinstance(dmesg_output,str):
+                                    self.disk_errors = 0
+                                    for line in str(dmesg_output).splitlines():
+                                        if 'I/O error, dev mmcblk0' in line:
+                                            self.disk_errors += 2
+                                        elif 'mmc0: timeout waiting for hardware interrupt' in line:
+                                             self.disk_errors += 1
+                                        
+                                the_hotspot_password = ''
+                                #if self.persistent_data['show_hotspot_password'] == True:
+                                if self.show_hotspot_password and self.show_hotspot_password == True:
+                                    the_hotspot_password = self.hotspot_password
+                                
+                                if os.path.isdir(self.boot_path):
+                                    self.check_update_processes()
+                                    self.update_backup_info()
+
+                                    timedate_check = run_command("timedatectl show")
+                                    if timedate_check != None:
+                                        for line in str(timedate_check).splitlines():
+                                            if self.DEBUG:
+                                                print("timedate_check line: " + str(line))
+                                            if line.startswith( 'NTP=no' ):
+                                                current_ntp_state = False
+                                        
+                                    shell_date = run_command("date")
+                                    if self.DEBUG:
+                                        print("shell_date: " + str(shell_date))
+                                    #just_updated_via_recovery = self.just_updated_via_recovery
+                                    #self.just_updated_via_recovery = False
+                                    
+                                    self.usb_gadget_mode_info = run_command('sudo rpi-usb-gadget status')
+                                    
+                                    hotspot_arp_list = self.get_hotspot_arp()
+                                    hotspot_arp_list = str(hotspot_arp_list)
+                                    if self.DEBUG:
+                                        print("hotspot_arp_list: " + str(hotspot_arp_list))
+                                
+                                response = {'hours':now.hour,
+                                            'minutes':now.minute,
+                                            'shell_date':shell_date,
+                                            'ntp':current_ntp_state,
+                                            'backup_exists':self.backup_file_exists,
+                                            'restore_exists':self.restore_file_exists,
+                                            'disk_usage':self.disk_usage,
+                                            'allow_anonymous_mqtt':self.allow_anonymous_mqtt, 
+                                            'hardware_clock_detected':self.hardware_clock_detected,
+                                            'exhibit_mode':self.exhibit_mode,
+                                            'candle_version':self.candle_version,
+                                            'candle_original_version':self.candle_original_version,
+                                            'bootup_actions_failed':self.bootup_actions_failed,
+                                            'system_update_in_progress':self.system_update_in_progress,
+                                            'files_check_exists':self.files_check_exists,
+                                            'live_update_attempted':self.live_update_attempted,
+                                            'ro_exists':self.ro_exists,
+                                            'old_overlay_active':self.old_overlay_active,
+                                            'post_bootup_actions_supported':self.post_bootup_actions_supported,
+                                            'update_needs_two_reboots':self.update_needs_two_reboots,
+                                            'bits':self.bits,
+                                            'recovery_version':self.recovery_version,
+                                            'latest_recovery_version':self.latest_recovery_version,
+                                            'busy_updating_recovery':self.busy_updating_recovery,
+                                            'recovery_partition_exists':self.recovery_partition_exists,
+                                            'allow_update_via_recovery':self.allow_update_via_recovery,
+                                            'updating_recovery_failed':self.updating_recovery_failed,
+                                            'update_via_recovery_aborted':local_update_via_recovery_aborted,
+                                            'update_via_recovery_interupted':local_update_via_recovery_interupted,
+                                            'user_partition_expanded':self.user_partition_expanded,
+                                            'unused_volume_space': self.unused_volume_space,
+                                            'device_model':str(self.device_model).rstrip(),
+                                            'device_kernel':str(self.device_kernel).rstrip(),
+                                            'device_linux':str(self.device_linux).rstrip(),
+                                            'device_sd_card_size':self.device_sd_card_size,
+                                            'has_cups':self.has_cups,
+                                            'pipewire_enabled':self.pipewire_enabled,
+                                            'user_partition_expansion_failed': self.user_partition_expansion_failed,
+                                            'hotspot_enabled':self.hotspot_enabled,
+                                            'hotspot_ssid':self.hotspot_ssid,
+                                            'hotspot_password':the_hotspot_password,
+                                            'hotspot_password_length':len(self.hotspot_password),
+                                            'hotspot_connected_devices':hotspot_arp_list,
+                                            'disk_errors':self.disk_errors,
+                                            'usb_gadget_mode_enabled':self.usb_gadget_mode_enabled, # deprecated, not really all that useful for a normal Raspberry Pi
+                                            'usb_gadget_mode_auto_connect':self.persistent_data['usb_gadget_mode_auto_connect'],
+                                            'usb_gadget_mode_info':self.usb_gadget_mode_info,
+                                            'safe_mode_is_active':self.safe_mode_is_active,
+                                            'debug':self.DEBUG
+                                        }
+                                        
+                            except Exception as ex:
+                                print("Error in /init response preparation: " + str(ex))
+                            
+                            
+                            if self.DEBUG:
+                                print("debug: init response: " + str(response))
+                        except Exception as ex:
+                            print("Init error: " + str(ex))
+                        
+                        return APIResponse(
+                          status=200,
+                          content_type='application/json',
+                          content=json.dumps(response),
+                        )
+                    
+                    
+                    
+                    
+                    elif request.path == '/ajax':
                         if 'action' in request.body:
                             action = request.body['action']
                         
@@ -1971,7 +2140,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                     print("power settings: in rescan_wifi")
                                 #os.system('nmcli dev wifi list --rescan yes')
                                 os.system('nmcli dev wifi rescan ifname wlan0')
-                                os.system('nmcli dev wifi list | cat')
+                                os.system('nmcli dev wifi list ifname wlan0 | cat')
                                 
                                 return APIResponse(
                                   status=200,
@@ -1990,7 +2159,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                     #os.system('nmcli device wifi list ifname wlan0 &')
                                     
                                     #time.sleep(2)
-                                    
+                                
                                 # Candle_hotspot
                                 hotspot_state = str(run_command("nmcli c s Candle_hotspot | grep GENERAL.STATE: | awk '{print $2}'")).rstrip()
                                 hotspot_ipv6_addresses = str(run_command("nmcli c s Candle_hotspot | grep IP6.ADDRESS | awk '{print $2}'")).rstrip()
@@ -2686,6 +2855,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'log_size':int(self.log_size),
                                                       'photos_size':int(self.photos_size),
                                                       'uploads_size':int(self.uploads_size),
+                                                      'addon_backups':self.addon_backups,
+                                                      'safe_mode_is_active':self.safe_mode_is_active,
                                                       'bits':self.bits
                                                   }),
                                 )
@@ -2817,7 +2988,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         self.update_backup_info()
                                     
                                     except Exception as ex:
-                                        print("Error checking free memory: " + str(ex))
+                                        print("caught error checking free memory: " + str(ex))
                                 
                                     # check if power supply is strong enough (lwo voltage)
                                     try:
@@ -2901,7 +3072,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'connected_printers':self.connected_printers,
                                                       'attached_cameras':self.attached_cameras,
                                                       'user_partition_expanded': self.user_partition_expanded,
-                                                      'user_partition_expansion_failed': self.user_partition_expansion_failed
+                                                      'user_partition_expansion_failed': self.user_partition_expansion_failed,
+                                                      'safe_mode_is_active':self.safe_mode_is_active
                                             })
                                 )
                                 
@@ -2947,7 +3119,22 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                             
-                            
+                            elif action == 'boot_into_safe_mode':
+                                state = False
+                                if self.DEBUG:
+                                    print("boot into safe mode requested")
+                                self.force_reboot_time = int(time.time()) + 10
+                                os.system('sudo touch ' + str(self.safe_mode_path))
+                                if(os.path.isfile(str(self.safe_mode_path))):
+                                    state = True
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':True}),
+                                )
+                                
+                                
                             
                             else:
                                 return APIResponse(
@@ -2960,128 +3147,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             )
                         
                         
-                    elif request.path == '/init':
-                        response = {}
-                        
-                        shell_date = ""
-                        if self.DEBUG:
-                            print("\ndebug: in /init")
-                        try:
-                            now = datetime.datetime.now()
-                            current_ntp_state = True
-                        
-                            try:
-                                local_update_via_recovery_aborted = self.update_via_recovery_aborted
-                                self.update_via_recovery_aborted = False
-                            
-                                local_update_via_recovery_interupted = self.update_via_recovery_interupted
-                                self.update_via_recovery_interupted = False
-                                
-                                
-                                dmesg_output = run_command("dmesg --level=err,warn")
-                                if isinstance(dmesg_output,str):
-                                    self.disk_errors = 0
-                                    for line in str(dmesg_output).splitlines():
-                                        if 'I/O error, dev mmcblk0' in line:
-                                            self.disk_errors += 2
-                                        elif 'mmc0: timeout waiting for hardware interrupt' in line:
-                                             self.disk_errors += 1
-                                        
-                                the_hotspot_password = ''
-                                #if self.persistent_data['show_hotspot_password'] == True:
-                                if self.show_hotspot_password and self.show_hotspot_password == True:
-                                    the_hotspot_password = self.hotspot_password
-                                
-                                if os.path.isdir(self.boot_path):
-                                    self.check_update_processes()
-                                    self.update_backup_info()
-
-                                    timedate_check = run_command("timedatectl show")
-                                    if timedate_check != None:
-                                        for line in str(timedate_check).splitlines():
-                                            if self.DEBUG:
-                                                print("timedate_check line: " + str(line))
-                                            if line.startswith( 'NTP=no' ):
-                                                current_ntp_state = False
-                                        
-                                    shell_date = run_command("date")
-                                    if self.DEBUG:
-                                        print("shell_date: " + str(shell_date))
-                                    #just_updated_via_recovery = self.just_updated_via_recovery
-                                    #self.just_updated_via_recovery = False
-                                    
-                                    self.usb_gadget_mode_info = run_command('sudo rpi-usb-gadget status')
-                                    
-                                    hotspot_arp_list = self.get_hotspot_arp()
-                                    hotspot_arp_list = str(hotspot_arp_list)
-                                    if self.DEBUG:
-                                        print("hotspot_arp_list: " + str(hotspot_arp_list))
-                                
-                                response = {'hours':now.hour,
-                                            'minutes':now.minute,
-                                            'shell_date':shell_date,
-                                            'ntp':current_ntp_state,
-                                            'backup_exists':self.backup_file_exists,
-                                            'restore_exists':self.restore_file_exists,
-                                            'disk_usage':self.disk_usage,
-                                            'allow_anonymous_mqtt':self.allow_anonymous_mqtt, 
-                                            'hardware_clock_detected':self.hardware_clock_detected,
-                                            'exhibit_mode':self.exhibit_mode,
-                                            'candle_version':self.candle_version,
-                                            'candle_original_version':self.candle_original_version,
-                                            'bootup_actions_failed':self.bootup_actions_failed,
-                                            'system_update_in_progress':self.system_update_in_progress,
-                                            'files_check_exists':self.files_check_exists,
-                                            'live_update_attempted':self.live_update_attempted,
-                                            'ro_exists':self.ro_exists,
-                                            'old_overlay_active':self.old_overlay_active,
-                                            'post_bootup_actions_supported':self.post_bootup_actions_supported,
-                                            'update_needs_two_reboots':self.update_needs_two_reboots,
-                                            'bits':self.bits,
-                                            'recovery_version':self.recovery_version,
-                                            'latest_recovery_version':self.latest_recovery_version,
-                                            'busy_updating_recovery':self.busy_updating_recovery,
-                                            'recovery_partition_exists':self.recovery_partition_exists,
-                                            'allow_update_via_recovery':self.allow_update_via_recovery,
-                                            'updating_recovery_failed':self.updating_recovery_failed,
-                                            'update_via_recovery_aborted':local_update_via_recovery_aborted,
-                                            'update_via_recovery_interupted':local_update_via_recovery_interupted,
-                                            'user_partition_expanded':self.user_partition_expanded,
-                                            'unused_volume_space': self.unused_volume_space,
-                                            'device_model':str(self.device_model).rstrip(),
-                                            'device_kernel':str(self.device_kernel).rstrip(),
-                                            'device_linux':str(self.device_linux).rstrip(),
-                                            'device_sd_card_size':self.device_sd_card_size,
-                                            'has_cups':self.has_cups,
-                                            'pipewire_enabled':self.pipewire_enabled,
-                                            'user_partition_expansion_failed': self.user_partition_expansion_failed,
-                                            'hotspot_enabled':self.hotspot_enabled,
-                                            'hotspot_ssid':self.hotspot_ssid,
-                                            'hotspot_password':the_hotspot_password,
-                                            'hotspot_password_length':len(self.hotspot_password),
-                                            'hotspot_connected_devices':hotspot_arp_list,
-                                            'disk_errors':self.disk_errors,
-                                            'usb_gadget_mode_enabled':self.usb_gadget_mode_enabled,
-                                            'usb_gadget_mode_auto_connect':self.persistent_data['usb_gadget_mode_auto_connect'],
-                                            'usb_gadget_mode_info':self.usb_gadget_mode_info,
-                                            'debug':self.DEBUG
-                                        }
-                                        
-                            except Exception as ex:
-                                print("Error in /init response preparation: " + str(ex))
-                            
-                            
-                            if self.DEBUG:
-                                print("debug: init response: " + str(response))
-                        except Exception as ex:
-                            print("Init error: " + str(ex))
-                        
-                        return APIResponse(
-                          status=200,
-                          content_type='application/json',
-                          content=json.dumps(response),
-                        )
-                        
+                    
                     
                     
                     elif request.path == '/set-time':
@@ -3506,6 +3572,10 @@ class PowerSettingsAPIHandler(APIHandler):
         try:
             if directory == None:
                 directory = self.user_profile['baseDir']
+                
+            if os.path.isdir(self.addon_backups_dir):
+                self.addon_backups = os.listdir(self.addon_backups_dir)
+                
             self.backup_file_exists = os.path.isfile(self.backup_file_path)
             self.restore_file_exists = os.path.isfile(self.restore_file_path)
             self.photo_frame_installed = os.path.isdir(self.photos_dir_path)

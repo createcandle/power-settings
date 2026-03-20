@@ -162,9 +162,8 @@
 .extension-power-settings-container p,
 .extension-power-settings-container ul,
 .extension-power-settings-container ol{
-    line-height:2.5rem;
+    line-height:180%
 }
-
 #extension-power-settings-view p{
     word-wrap:break-word;
 }
@@ -342,7 +341,7 @@
 }
 
 
-.extension-power-settings-vlak{
+.extension-power-settings-area{
     max-width:60rem;
     margin:0 auto;
     background-color:rgba(0,0,0,.15);
@@ -476,6 +475,11 @@
     display:none;
 }
 
+#extension-power-settings-menu-troubleshooting-button{
+    cursor:pointer;
+    background-image:url('../images/troubleshooting.svg');
+}
+
 #extension-power-settings-menu-security-button{
     cursor:pointer;
     background-image:url('../images/security.svg');
@@ -563,6 +567,11 @@
 #update-settings-link,
 .extension-power-settings-hidden{
     display:none!important;
+}
+
+.extension-power-settings-faded{
+	opacity:.3!important;
+	pointer-events:none!important;
 }
 
 #extension-power-settings-scroll-container{
@@ -674,6 +683,12 @@
     padding:2rem;
     margin:2rem 0;
 }
+.extension-power-settings-info-tip{
+    background-color:#026402;
+    border-radius:.5rem;
+    padding:2rem;
+    margin:2rem 0;
+}
 
 
 .photo-frame-detail{
@@ -697,6 +712,28 @@
 }
 
 
+
+/*  RESTORE ADDON BACKUPS  */
+
+#extension-power-settings-addon-backups-container{
+	padding-left:0;
+}
+#extension-power-settings-addon-backups-container li{
+	background-color: rgba(0, 0, 0, .15);
+    padding: 2rem;
+    margin:2rem 0;
+    border-radius: 1rem;
+}
+#extension-power-settings-addon-backups-container li h4{
+	margin-top:1rem;
+}
+#extension-power-settings-addon-backups-container li h4::first-letter { 
+	text-transform: uppercase; 
+}
+
+#extension-power-settings-addon-backups-container li button{
+	background-color: rgba(128, 0, 0, .7);
+}
 
 /*  Memory and Disk use  */
 
@@ -955,6 +992,11 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 }
 .extension-power-settings-flex-wrap{
 	flex-wrap:wrap;
+}
+
+.extension-power-settings-flex-column{
+	display:flex;
+	flex-direction:column;
 }
 
 .extension-power-settings-display-info-flex img{
@@ -1350,9 +1392,14 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
     border-radius: 1rem;
 }
 
-#extension-power-settings-wifi-rescan-container{
-	display:none;
+
+#network-settings-wifi-network-list:empty::after{
+	content:'No WiFi networks found (yet)';
+	padding:2rem;
+	opacity:.5;
+	font-style:italic;
 }
+
 #network-settings-wifi .network-settings-wrap #extension-power-settings-wifi-rescan-container > button{
 	margin-top:0;
 	margin-bottom:10rem;

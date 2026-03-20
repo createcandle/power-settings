@@ -7,6 +7,8 @@
             
             this.interval = null;
             
+			document.body.classList.add(location.protocol.replace(':',''));
+			
             document.querySelector('#main-menu> ul').insertAdjacentHTML('beforeend', '<li id="extension-power-settings-menu-item-li"><a id="extension-power-settings-menu-item" href="/extensions/power-settings">Power</a></li>');
             
             //console.log(window.API);
@@ -71,6 +73,8 @@
 			
 			this.detected_respeaker_type = null;
 			this.selected_respeaker_type = '';
+			
+			this.safe_mode_is_active = false;
 			
 			
 			this.hostname_was_changed_here = false;
@@ -229,8 +233,8 @@
                     //}, 100);
                     
                 })
-                .catch((e) => {
-                    console.error('Failed to fetch settings pages content:', e);
+                .catch((err) => {
+                    console.error('power settings: caught error fetching settings pages content:', err);
                 });
 			
 			
@@ -252,10 +256,10 @@
 								if(!hostname_changed_warning_el){
 									const new_hostname_changed_warning_el = document.createElement('div');
 									new_hostname_changed_warning_el.setAttribute('id','extension-power-settings-hostname-changed-warning');
-									//new_hostname_changed_warning_el.innerHTML = '<div class="extension-power-settings-vlak"><div id="extension-power-settings-hostname-changed-warning-close-button"><h1>Hostname changed</h1><p>The hostname of this Candle Controller seems to have changed from ' + window.location.hostname + ' to ' + localstorage_hostname_data['hostname'] + '.</p><p>If this is intentional, then you should continue using Candle at the new hostname.</p><p></p><a class="text-button" href="' + (location.protocol + '//' + localstorage_hostname_data['hostname']) + '">Switch to ' + localstorage_hostname_data['hostname'] + '</a></div>';
+									//new_hostname_changed_warning_el.innerHTML = '<div class="extension-power-settings-area"><div id="extension-power-settings-hostname-changed-warning-close-button"><h1>Hostname changed</h1><p>The hostname of this Candle Controller seems to have changed from ' + window.location.hostname + ' to ' + localstorage_hostname_data['hostname'] + '.</p><p>If this is intentional, then you should continue using Candle at the new hostname.</p><p></p><a class="text-button" href="' + (location.protocol + '//' + localstorage_hostname_data['hostname']) + '">Switch to ' + localstorage_hostname_data['hostname'] + '</a></div>';
 									
 									const hostname_changed_warning_inner_el = document.createElement('div');
-									hostname_changed_warning_inner_el.classList.add('extension-power-settings-vlak');
+									hostname_changed_warning_inner_el.classList.add('extension-power-settings-area');
 									
 									const close_hostname_change_warning_button_el = document.createElement('div');
 									close_hostname_change_warning_button_el.classList.add('extension-power-settings-top-right-close-button');
@@ -526,7 +530,7 @@
             if(document.querySelector('#settings-menu > ul') && !document.getElementById('extension-power-settings-menu-time-button') && document.getElementById('extension-power-settings-back-button')){
                 
 				if(this.extra_settings_created){
-					console.error("pwoer settings: ERROR, in create_extra_settings AGAIN!");
+					console.error("power settings: ERROR, create_extra_settings was called AGAIN!");
 				}
 				this.extra_settings_created = true;
 				
@@ -653,6 +657,7 @@
 				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item" id="extension-power-settings-main-menu-printer-item" style="display:none"><a id="extension-power-settings-menu-printer-button">Printer</a></li>';
 				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-system-button">System Information</a></li>';
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-backup-button">Backup & Restore</a></li>';
+				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-troubleshooting-button">Troubleshooting</a></li>';
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-update-button">Update <span id="extension-power-settings-menu-update-button-indicator">' + this.update_available_text + '</span></a></li>';
                 document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-reset-button">Factory reset</a></li>';
                 
@@ -924,7 +929,9 @@
 				
 				// test speakers button
                 document.getElementById('extension-power-settings-test-speakers-button').addEventListener('click', () => {
-					console.log("clicked on test speaker button");
+	                if(this.debug){
+	                    console.log("power settings debug: clicked on test speaker button");
+					}
 					
                     document.getElementById('extension-power-settings-test-speakers-button').setAttribute("disabled", true); //.classList.add('extension-power-settings-hidden');
                     /*
@@ -944,7 +951,7 @@
                     }).catch((e) => {
                        console.error("Error: speaker test connection failed: ", e);
 					   document.getElementById('extension-power-settings-test-speakers-button').removeAttribute("disabled");
-					   alert("Could not connect to controller");
+					   this.flash_message("Could not connect to controller");
                     });
                 });
 				
@@ -992,7 +999,7 @@
 		                    }).catch((e) => {
 		                    	console.error("Error: reinstall_app_store connection failed: ", e);
 							    //document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.remove('extension-power-settings-hidden');
-							    //alert("Could not connect to controller");
+							    //this.flash_message("Could not connect to controller");
 								setTimeout(() => {
 									window.location.reload(true); 
 								},15000);
@@ -1043,13 +1050,280 @@
                                 document.getElementById('extension-power-settings-container-backup').classList.remove('extension-power-settings-photo-frame-installed');
                             }
                         }
+						
+						if(typeof body.addon_backups != 'undefined'){
+							const addons_backups_container_el = document.getElementById('extension-power-settings-addon-backups-container');
+							if(addons_backups_container_el){
+								addons_backups_container_el.innerHTML = '';
+								for(let ab = 0; ab < body.addon_backups.length; ab++){
+									const addon_id = body.addon_backups[ab];
+									let addon_backup_item_el = document.createElement('li');
+									addon_backup_item_el.classList.add('extension-power-settings-flex-column');
+									
+									let addon_backup_item_title_el = document.createElement('h4');
+									addon_backup_item_title_el.textContent = addon_id.replaceAll('-',' ').replaceAll('_',' ');
+									addon_backup_item_el.appendChild(addon_backup_item_title_el);
+									
+									
+									let addon_backup_item_buttons_container_el = document.createElement('div');
+									addon_backup_item_buttons_container_el.classList.add('extension-power-settings-flex-center-space-between');
+									
+									
+									// BACKUPS: DELETE ADDON DATA BUTTON
+									let addon_backup_item_delete_data_button_el = document.createElement('button');
+									addon_backup_item_delete_data_button_el.classList.add('text-button');
+									addon_backup_item_delete_data_button_el.textContent = 'Delete settings data';
+									addon_backup_item_delete_data_button_el.addEventListener('click', () => {
+										
+										addon_backup_item_delete_data_button_el.classList.add('extension-power-settings-faded');
+										
+										window.API.setAddonSetting(addon_id, false)
+                                        .then((result) => {
+											this.flash_message(addon_id + " addon stopped succesfully");
+                                        })
+										.catch((err) => {
+											if(this.debug){
+												console.error("power settings debug: caught error stopping addon before: ", release_addon_id, err);
+											}
+											this.flash_message("Failed to stop " + addon_id + "addon first. Will now delete its data anyway, but this may not succeed.");
+										})
+										.finally(() => {
+						                    window.API.postJson(
+						                        `/extensions/${this.id}/api/ajax`, {
+						                            'action': 'delete_addon_data',
+													'addon_id': addon_id
+						                        }
+						                    ).then((body) => {
+						                    	if(this.debug){
+													console.log("power settings debug: delete_addon_data: response body: ", body);
+												}
+												this.flash_message("Addon data deleted for " + addon_id);
+						                    })
+											.catch((err) => {
+												if(this.debug){
+													console.error("power settings debug: caught error calling delete_addon_data: ", err);
+												}
+												this.flash_message("Connection error while requesting to delete data for " + addon_id);
+											})
+										})
+										
+									})
+									addon_backup_item_buttons_container_el.appendChild(addon_backup_item_delete_data_button_el);
+									
+									
+									// BACKUPS: RESTORE ADDON BUTTON
+									let addon_backup_item_restore_addon_button_el = document.createElement('button');
+									addon_backup_item_restore_addon_button_el.classList.add('text-button');
+									addon_backup_item_restore_addon_button_el.textContent = 'Restore older version';
+									
+									addon_backup_item_restore_addon_button_el.addEventListener('click', () => {
+										
+										addon_backup_item_restore_addon_button_el.classList.add('extension-power-settings-faded');
+										
+										window.API.setAddonSetting(addon_id, false)
+                                        .then((result) => {
+											this.flash_message("Addon stopped succesfully");
+                                        })
+										.catch((err) => {
+											if(this.debug){
+												console.error("power settings debug: caught error stopping addon before: ", release_addon_id, err);
+											}
+											this.flash_message("Failed to stop addon first. Will now delete addon data anyway.");
+										})
+										.finally(() => {
+										    window.API.postJson(
+						                        `/extensions/${this.id}/api/ajax`, {
+						                            'action': 'restore_addon_backup',
+													'addon_id': addon_id
+						                        }
+						                    ).then((body) => {
+						                    	if(this.debug){
+													console.log("power settings debug: restore_addon_backup: response body: ", body);
+												}
+												this.flash_message("Restored addon " + addon_id);
+						                    })
+											.catch((err) => {
+												if(this.debug){
+													console.error("power settings debug: caught error calling restore_addon_backup: ", err);
+												}
+												this.flash_message("Connection error while requesting to delete addon " + addon_id);
+											});
+										});
+									    
+									})
+									addon_backup_item_buttons_container_el.appendChild(addon_backup_item_restore_addon_button_el);
+									
+									addon_backup_item_el.appendChild(addon_backup_item_buttons_container_el);
+									
+									addons_backups_container_el.appendChild(addon_backup_item_el);
+								}
+							}
+						}
                         
-                    }).catch((e) => {
-                        console.error("Error: backup init could not connect to controller: ", e);
+                    }).catch((err) => {
+                        console.error("Error: backup init could not connect to controller: ", err);
                     });
                     
                 });
                 
+				
+                // Show troubleshooting page button
+                document.getElementById('extension-power-settings-menu-troubleshooting-button').addEventListener('click', () => {
+                    //console.log('troubleshooting menu button clicked');
+            
+                    this.hide_all_settings_containers();
+                    document.getElementById('extension-power-settings-container-troubleshooting').classList.remove('extension-power-settings-hidden');
+                    document.getElementById('extension-power-settings-pages').classList.remove('hidden');
+                    
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'backup_init'
+                        }
+                    ).then((body) => {
+                        if(this.debug){
+                            console.log("power settings debug: backup init response: ", body);
+                        }
+                        
+                        if(typeof body.log_size != 'undefined'){
+                            this.log_size = body.log_size;
+                            document.getElementById('extension-power-settings-log-size').innerText = Math.round(this.log_size / 1000000);
+                        }
+                        if(typeof body.photos_size != 'undefined'){
+                            this.photos_size = body.photos_size;
+                            document.getElementById('extension-power-settings-photos-size').innerText = Math.round(this.photos_size / 1000000);
+                        }
+                        if(typeof body.uploads_size != 'undefined'){
+                            this.uploads_size = body.uploads_size;
+                            document.getElementById('extension-power-settings-uploads-size').innerText = Math.round(this.uploads_size / 1000000);
+                        }
+                        
+                        if(typeof body.photo_frame_installed != 'undefined'){
+                            if(body.photo_frame_installed){
+                                document.getElementById('extension-power-settings-container-backup').classList.add('extension-power-settings-photo-frame-installed');
+                            }
+                            else{
+                                document.getElementById('extension-power-settings-container-backup').classList.remove('extension-power-settings-photo-frame-installed');
+                            }
+                        }
+						
+						if(typeof body.addon_backups != 'undefined'){
+							const addons_backups_container_el = document.getElementById('extension-power-settings-addon-backups-container');
+							if(addons_backups_container_el){
+								addons_backups_container_el.innerHTML = '';
+								for(let ab = 0; ab < body.addon_backups.length; ab++){
+									const addon_id = body.addon_backups[ab];
+									let addon_backup_item_el = document.createElement('li');
+									addon_backup_item_el.classList.add('extension-power-settings-flex-column');
+									
+									let addon_backup_item_title_el = document.createElement('h4');
+									addon_backup_item_title_el.textContent = addon_id.replaceAll('-',' ').replaceAll('_',' ');
+									addon_backup_item_el.appendChild(addon_backup_item_title_el);
+									
+									
+									let addon_backup_item_buttons_container_el = document.createElement('div');
+									addon_backup_item_buttons_container_el.classList.add('extension-power-settings-flex-center-space-between');
+									
+									
+									// BACKUPS: DELETE ADDON DATA BUTTON
+									let addon_backup_item_delete_data_button_el = document.createElement('button');
+									addon_backup_item_delete_data_button_el.classList.add('text-button');
+									addon_backup_item_delete_data_button_el.textContent = 'Delete settings data';
+									addon_backup_item_delete_data_button_el.addEventListener('click', () => {
+										
+										addon_backup_item_delete_data_button_el.classList.add('extension-power-settings-faded');
+										
+										window.API.setAddonSetting(addon_id, false)
+                                        .then((result) => {
+											this.flash_message(addon_id + " addon stopped succesfully");
+                                        })
+										.catch((err) => {
+											if(this.debug){
+												console.error("power settings debug: caught error stopping addon before: ", release_addon_id, err);
+											}
+											this.flash_message("Failed to stop " + addon_id + "addon first. Will now delete its data anyway, but this may not succeed.");
+										})
+										.finally(() => {
+						                    window.API.postJson(
+						                        `/extensions/${this.id}/api/ajax`, {
+						                            'action': 'delete_addon_data',
+													'addon_id': addon_id
+						                        }
+						                    ).then((body) => {
+						                    	if(this.debug){
+													console.log("power settings debug: delete_addon_data: response body: ", body);
+												}
+												this.flash_message("Addon data deleted for " + addon_id);
+						                    })
+											.catch((err) => {
+												if(this.debug){
+													console.error("power settings debug: caught error calling delete_addon_data: ", err);
+												}
+												this.flash_message("Connection error while requesting to delete data for " + addon_id);
+											})
+										})
+										
+									})
+									addon_backup_item_buttons_container_el.appendChild(addon_backup_item_delete_data_button_el);
+									
+									
+									// BACKUPS: RESTORE ADDON BUTTON
+									let addon_backup_item_restore_addon_button_el = document.createElement('button');
+									addon_backup_item_restore_addon_button_el.classList.add('text-button');
+									addon_backup_item_restore_addon_button_el.textContent = 'Restore older version';
+									
+									addon_backup_item_restore_addon_button_el.addEventListener('click', () => {
+										
+										addon_backup_item_restore_addon_button_el.classList.add('extension-power-settings-faded');
+										
+										window.API.setAddonSetting(addon_id, false)
+                                        .then((result) => {
+											this.flash_message("Addon stopped succesfully");
+                                        })
+										.catch((err) => {
+											if(this.debug){
+												console.error("power settings debug: caught error stopping addon before: ", release_addon_id, err);
+											}
+											this.flash_message("Failed to stop addon first. Will now delete addon data anyway.");
+										})
+										.finally(() => {
+										    window.API.postJson(
+						                        `/extensions/${this.id}/api/ajax`, {
+						                            'action': 'restore_addon_backup',
+													'addon_id': addon_id
+						                        }
+						                    ).then((body) => {
+						                    	if(this.debug){
+													console.log("power settings debug: restore_addon_backup: response body: ", body);
+												}
+												this.flash_message("Restored addon " + addon_id);
+						                    })
+											.catch((err) => {
+												if(this.debug){
+													console.error("power settings debug: caught error calling restore_addon_backup: ", err);
+												}
+												this.flash_message("Connection error while requesting to delete addon " + addon_id);
+											});
+										});
+									    
+									})
+									addon_backup_item_buttons_container_el.appendChild(addon_backup_item_restore_addon_button_el);
+									
+									addon_backup_item_el.appendChild(addon_backup_item_buttons_container_el);
+									
+									addons_backups_container_el.appendChild(addon_backup_item_el);
+								}
+							}
+						}
+                        
+                    }).catch((err) => {
+                        console.error("Error: backup init could not connect to controller: ", err);
+                    });
+                    
+                });
+				
+				
+				
+				
                 
                 // Show factory reset page button
                 document.getElementById('extension-power-settings-menu-reset-button').addEventListener('click', () => {
@@ -1137,7 +1411,7 @@
                     }
         
                     if( document.getElementById('extension-power-settings-factory-reset-understand').value != 'I understand'){
-                        alert("You must type 'I understand' before the factory reset process can start.");
+                        this.flash_message("You must type 'I understand' before the factory reset process can start.");
                     }
                     else{
                         
@@ -1164,7 +1438,7 @@
                                         });
                                     }
                                     else{
-                                        alert("Something went wrong! Try rebooting manually and see what happens.");
+                                        this.flash_message("Something went wrong! Try rebooting manually and see what happens.");
                                     }
                                 }
                             }
@@ -1179,13 +1453,13 @@
                                     });
                                 }
                                 else{
-                                    alert("Something went wrong! Try rebooting manually and see what happens.");
+                                    this.flash_message("Something went wrong! Try rebooting manually and see what happens.");
                                 }
                             }
                             
                 
                         }).catch((e) => {
-                            alert("Error while attempting to start factory reset: could not connect?");
+                            this.flash_message("Error while attempting to start factory reset: could not connect?");
                         });
                 
                     }
@@ -1264,13 +1538,13 @@
                             }).catch(console.error);
                         }
                         else{
-                            alert("Error, could not prepare sytem for manual update! Try rebooting and see what happens.");
+                            this.flash_message("Error, could not prepare sytem for manual update! Try rebooting and see what happens.");
                             document.getElementById('extension-power-settings-back-button').style.display = 'block';
                             document.getElementById('connectivity-scrim').classList.add('hidden');
                         }
             
                     }).catch((e) => {
-                        alert("Error while attempting to start manual update: could not connect?");
+                        this.flash_message("Error while attempting to start manual update: could not connect?");
                         document.getElementById('extension-power-settings-back-button').style.display = 'block';
                         document.getElementById('connectivity-scrim').classList.add('hidden');
                     });
@@ -1290,7 +1564,7 @@
                         }
                         if (body.state == false){
                             document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
-                            alert("Starting the update seems to have failed");
+                            this.flash_message("Starting the update seems to have failed");
                         }
                         else{
                             this.overlay_exists = false;
@@ -1384,13 +1658,13 @@
                                 }, 2000);
                             }
                             else{
-                                alert("Sorry, something went wrong while setting the time");
+                                this.flash_message("Sorry, something went wrong while setting the time");
                             }
                             this.show_clock_page();
                             
                         }).catch((err) => {
                             console.error("power settings debug: caught time submit error: ", err);
-                            alert("Saving failed: could not connect to the controller");
+                            this.flash_message("Saving failed: could not connect to the controller");
                         });
                     }
                 });
@@ -1531,7 +1805,7 @@
                             window.location.pathname = "/extensions/power-settings/backup/candle_backup.tar";
                         }
                         else{
-                             alert("Sorry, an error occured while creating the backup");
+                             this.flash_message("Sorry, an error occured while creating the backup");
                         }
                         document.getElementById('extension-power-settings-create-backup-button').style.display = 'block';
                         document.getElementById('extension-power-settings-backuping-spinner').style.display = 'none';
@@ -1544,15 +1818,18 @@
                         }
                         
                     }).catch((e) => {
-                        alert("Error, could not create backup: could not connect?");
+                        this.flash_message("Error, could not create backup: could not connect?");
                         document.getElementById('extension-power-settings-create-backup-button').style.display = 'block';
                         document.getElementById('extension-power-settings-backuping-spinner').style.display = 'none';
                     });
                     
                 });
-                
-                
-                // Upload
+				
+				document.getElementById('extension-power-settings-addon-backups-refresh-page-button').addEventListener('click', () => {
+					window.location.reload(true);
+				});
+				
+                // Upload backup
                 
     			document.getElementById("extension-power-settings-backup-file-selector").addEventListener('change', () => {
     				var filesSelected = document.getElementById("extension-power-settings-backup-file-selector").files;
@@ -1561,6 +1838,40 @@
     			});
                 
                 
+				
+				// TROUBLESHOOTING
+				
+				document.getElementById('extension-power-settings-enable-safe-mode-button').addEventListener('click', () => {
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'boot_into_safe_mode'
+                        }
+                    ).then((body) => {
+                        if(this.debug){
+                            console.log("boot_into_safe_mode response: ", body);
+                        }
+                        if(body.state == true){
+                            if(this.debug){
+                                console.log("power settings debug: OK response, restarting system");
+                            }
+                            
+                            //this.start_poll();
+                            
+                            window.API.postJson('/settings/system/actions', {
+                                action: 'restartSystem'
+                            }).catch(console.error);
+                        }
+                        
+                    }).catch((e) => {
+                        document.getElementById('extension-power-settings-system-update-disable-overlay-button').style.display = 'block';
+                        document.getElementById('extension-power-settings-system-update-disable-overlay-spinner').style.display = 'none';
+                        this.flash_message("Error, connection issue");
+                    });
+				});
+				
+				document.getElementById('extension-power-settings-troubleshooting-refresh-page-button').addEventListener('click', () => {
+					window.location.reload(true);
+				});
                 
                 
                 // Get the latest time for the clock page
@@ -1606,7 +1917,7 @@
                     }).catch((e) => {
                         document.getElementById('extension-power-settings-system-update-disable-overlay-button').style.display = 'block';
                         document.getElementById('extension-power-settings-system-update-disable-overlay-spinner').style.display = 'none';
-                        alert("Error, connection issue");
+                        this.flash_message("Error, connection issue");
                     });
                     
                 });
@@ -1616,7 +1927,7 @@
                 // Start update button
                 document.getElementById('extension-power-settings-system-update-button').addEventListener('click', () => {
                     if( document.getElementById('extension-power-settings-system-update-understand').value != 'I understand'){
-                        alert("You must type 'I understand' before the system update can start.");
+                        this.flash_message("You must type 'I understand' before the system update can start.");
                     }
                     else{
                         this.start_update();
@@ -1655,7 +1966,7 @@
                     }
                 
                     if( document.getElementById('extension-power-settings-switch-to-recovery-understand').value != 'I understand'){
-                        alert("You must type 'I understand' before the system update can start.");
+                        this.flash_message("You must type 'I understand' before the system update can start.");
                     }
                     else{
                         document.getElementById('extension-power-settings-switch-to-recovery-start-container').style.display = 'none';
@@ -1724,13 +2035,13 @@
                                 }).catch(console.error);
                             }
                             else{
-                                alert("Please upgrade the Update & Recovery system first");
+                                this.flash_message("Please upgrade the Update & Recovery system first");
                             }
                         
                         }).catch((e) => {
                             console.error("Could not start upgrade - connection error");
                             document.getElementById('extension-power-settings-switch-to-recovery-start-container').style.display = 'block';
-                            alert("Could not start upgrade - connection error");
+                            this.flash_message("Could not start upgrade - connection error");
                         });
                     }
                     
@@ -1768,7 +2079,7 @@
                         
                         
                     }).catch((e) => {
-                        alert("Error, could not run files check, connection issue");
+                        this.flash_message("Error, could not run files check, connection issue");
                     });
                     
                 });
@@ -1898,17 +2209,38 @@
 				}
             }
             else{
-                console.error("power settings: handle_init: init response: body.debug was undefined. Body: ", body);
+                if(this.debug){
+					console.error("power settings debug: handle_init: init response: body.debug was undefined. Body: ", body);
+				}
 				if(this.second_init_attempted == false){
-					console.warn("power settings: will attempt power settings init again in 10 seconds");
+					if(this.debug){
+						console.warn("power settings debug: will attempt power settings init again in 10 seconds");
+					}
 					setTimeout(() => {
 						this.second_init_attempted = true
 						this.get_init();
 					},10000);
-					return
 				}
+				return
             }
             
+			
+			if(typeof body.safe_mode_is_active == 'boolean'){
+				this.safe_mode_is_active = body.safe_mode_is_active;
+				if(this.safe_mode_is_active){
+					this.flash_message("IN SAFE MODE");
+					
+					const menu_ul_el = document.querySelector('#settings-menu > ul');
+					let safe_mode_active_hint_el = document.querySelector('#extension-power-settings-safe-mode-active-hint');
+					
+					if(!safe_mode_active_hint_el && menu_ul_el){
+						safe_mode_active_hint_el = document.createElement('div');
+						safe_mode_active_hint_el.setAttribute('id','extension-power-settings-safe-mode-active-hint');
+						safe_mode_active_hint_el.textContent = 'SAFE MODE';
+						menu_ul_el.insertAdjacentElement('beforebegin', safe_mode_active_hint_el);
+					}
+				}
+			}
             
             // Does the recovery partition exist?
             if(typeof body.recovery_partition_exists != 'undefined'){
@@ -1975,7 +2307,7 @@
                         }                                    
                 
                     }).catch((e) => {
-                        alert("Error, allow_anonymous MQTT setting was not changed: could not connect to controller: ", e);
+                        this.flash_message("Error, allow_anonymous MQTT setting was not changed: could not connect to controller: ", e);
                     });
                 });
             }
@@ -3241,7 +3573,7 @@
                 
                 if (body.state == false){
                     document.getElementById('extension-power-settings-update-progress-container').style.display = 'none';
-                    alert("Starting the update seems to have failed");
+                    this.flash_message("Starting the update seems to have failed");
                 }
                 else{
                     this.overlay_exists = false;
@@ -4119,7 +4451,7 @@
                             }
                             if(body.state == 'ok'){
 								document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<p>Restoring and restarting...</p>';
-								alert("The system will be unavailable for a few minutes while the backup is being restored");
+								this.flash_message("The system will be unavailable for a few minutes while the backup is being restored");
 								/*
                                 if(confirm("The system will be unavailable for a few minutes while the backup is being restored")){
 									window.API.postJson('/settings/system/actions', {
@@ -4181,7 +4513,7 @@
                     if(body.state == false){
                         document.getElementById("extension-power-settings-busy-expanding-user-partition").style.display = 'none';
                         //document.getElementById("extension-power-settings-expand-user-partition-explanation").style.display = 'block';
-                        alert("Error, disk expansion could not be started");
+                        this.flash_message("Error, disk expansion could not be started");
 						document.getElementById('connectivity-scrim').classList.add('hidden');
                     }
                 }
@@ -4337,7 +4669,7 @@
 						
 						let audio_item_el = document.createElement('div');
 						audio_item_el.classList.add('extension-power-settings-audio-item');
-						audio_item_el.classList.add('extension-power-settings-vlak');
+						audio_item_el.classList.add('extension-power-settings-area');
 						audio_item_el.classList.add('extension-power-settings-audio-item-' + dev_type);
 						audio_item_el.innerHTML = '<div class="extension-power-settings-audio-item-icon"></div><h2>' + details.nice_name + ' </h2><p>' + details.node_description + '</p><p class="extension-power-settings-show-if-developer">Pipewire ID: ' + details.id + '<br/>' + alsa_path + '</p><p class="extension-power-settings-show-if-developer">' + node_name  + '</p>';
 						
@@ -4380,7 +4712,7 @@
 
 					        }).catch((err) => {
 					  			console.error('Power settings: error during set_audio api call: ', err);
-								alert("Could not connect with controller, your audio device preference may not have been saved");
+								this.flash_message("Could not connect with controller, your audio device preference may not have been saved");
 					        });	
 						
 						});
@@ -4426,7 +4758,7 @@
 
 						        }).catch((err) => {
 						  			console.error('Power settings: error during set_audio api call: ', err);
-									alert("Could not connect with controller, your audio device preference may not have been saved");
+									this.flash_message("Could not connect with controller, your audio device preference may not have been saved");
 						        });	
 							});
 							
@@ -4530,7 +4862,7 @@
 				const respeaker_reboot_hint_el = document.createElement('div');
 				respeaker_reboot_hint_el.setAttribute('id','extension-power-settings-respeaker-reboot-hint');
 				respeaker_reboot_hint_el.classList.add('extension-power-settings-hidden');
-				respeaker_reboot_hint_el.classList.add('extension-power-settings-vlak');
+				respeaker_reboot_hint_el.classList.add('extension-power-settings-area');
 				
 				
 				respeaker_select_el.addEventListener('change', () => {
@@ -4549,7 +4881,7 @@
 
 			        }).catch((err) => {
 			  			console.error('Power settings: caught error during set_respeaker_type api call: ', err);
-						alert("Could not connect with controller, your respeaker preference may not have been saved");
+						this.flash_message("Could not connect with controller, your respeaker preference may not have been saved");
 			        });
 				})
 				respeaker_ui_container_el.appendChild(respeaker_select_el);
@@ -5556,6 +5888,21 @@
             });
 		}
         
+		
+		
+		flash_message(message){
+			if(typeof message == 'string' && message.length){
+				const flash_message_el = document.getElementById('extension-candleappstore-flash-message-container');
+				if(flash_message_el){
+					flash_message_el.innerHTML = '<h3>' + message + '</h3>';
+					setTimeout(() => {
+						flash_message_el.innerHTML = '';
+					},3000);
+				}
+			}
+		}
+		
+		
         
     }
 

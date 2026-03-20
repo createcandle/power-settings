@@ -11,7 +11,7 @@
 
         <div id="extension-power-settings-shell-date" style="text-align: center;"></div>
 
-        <div class="extension-power-settings-vlak extension-power-settings-show-if-hardware-clock-detected">
+        <div class="extension-power-settings-area extension-power-settings-show-if-hardware-clock-detected">
             <p class="extension-power-settings-header">Hardware clock module detected</p>
             <p>
                 A hardware clock module is providing the time to the system instead of an internet time server. If you unplug the module, or if you disable it in the settings of the Power Settings addon, then the system will fall back to
@@ -21,7 +21,7 @@
             <button id="extension-power-settings-hardware-clock-sync-button" class="text-button">Synchronise with internet</button>
         </div>
 
-        <div class="extension-power-settings-vlak extension-power-settings-hide-if-hardware-clock-detected">
+        <div class="extension-power-settings-area extension-power-settings-hide-if-hardware-clock-detected">
             <p class="extension-power-settings-header">Internet time</p>
             <p>If your system does not have a hardware clock module installed, every time the system starts it will try to get the current date and time from an internet server.</p>
             <p>If enabled, as soon as there is an internet connection, any manually provided time will be overridden by an internet NTP server.</p>
@@ -33,7 +33,7 @@
             <br />
         </div>
 
-        <div id="extension-power-settings-manually-set-time-container" class="extension-power-settings-vlak" style="display: none;">
+        <div id="extension-power-settings-manually-set-time-container" class="extension-power-settings-area" style="display: none;">
             <p class="extension-power-settings-header">Manually set the time</p>
             <p class="extension-power-settings-hide-if-hardware-clock-detected">
                 Most smart home devices connect to the internet get the current time. This can share your IP address with third parties who provide that service. Since nothing is free, you might want to set the time manually instead.
@@ -72,7 +72,7 @@
             <div class="section-title-right-flex"></div>
         </div>
 
-		<div id="extension-power-settings-general-security-container" class="extension-power-settings-vlak">
+		<div id="extension-power-settings-general-security-container" class="extension-power-settings-area">
 			<div class="extension-power-settings-form-content">
 				<input type="checkbox" name="extension-power-settings-security-allow-password-remembering-on-this-device" id="extension-power-settings-security-allow-password-remembering-on-this-device">
 				<label for="extension-power-settings-security-allow-password-remembering-on-this-device"><span>Allow remembering the password on the login page in this browser</span></label>
@@ -94,7 +94,7 @@
             <div class="section-title-right-flex"></div>
         </div>
 
-        <div class="extension-power-settings-vlak">
+        <div class="extension-power-settings-area">
             <!--<p class="extension-power-settings-header">Factory reset</p>-->
 
             <p>This will:</p>
@@ -145,14 +145,14 @@
             <div class="section-title-right-flex"></div>
         </div>
 		
-        <div id="extension-power-settings-no-display" class="extension-power-settings-vlak extension-power-settings-hidden">
+        <div id="extension-power-settings-no-display" class="extension-power-settings-area extension-power-settings-hidden">
 			<div>
 				<h2 style="text-align:center">No display detected</h2>
 			</div>
             <!--<p class="extension-power-settings-header">Factory reset</p>-->
 		</div>
 		
-		<div id="extension-power-settings-rpi-display-info" class="extension-power-settings-vlak extension-power-settings-hidden">
+		<div id="extension-power-settings-rpi-display-info" class="extension-power-settings-area extension-power-settings-hidden">
 			<h3>Official Raspberry Pi Display</h3>
             <div>
                 <input type="checkbox" name="extension-power-settings-rpi-display-rotate-checkbox" id="extension-power-settings-rpi-display-rotate-checkbox" />
@@ -163,7 +163,7 @@
 		</div>
 		
 		
-        <div id="extension-power-settings-display1-info" class="extension-power-settings-vlak extension-power-settings-hidden">
+        <div id="extension-power-settings-display1-info" class="extension-power-settings-area extension-power-settings-hidden">
 			<div class="extension-power-settings-display-info-flex">
 				<div style="position:relative"><img alt="Display 1" src="/extensions/power-settings/images/big_display.svg"/><div class="extension-power-settings-display-number">1</div></div>
 				<div style="text-align:left"> 
@@ -195,7 +195,7 @@
 			</div>
 		</div>
 		
-        <div id="extension-power-settings-display2-info" class="extension-power-settings-vlak extension-power-settings-hidden">
+        <div id="extension-power-settings-display2-info" class="extension-power-settings-area extension-power-settings-hidden">
 			<div class="extension-power-settings-display-info-flex">
 				<div style="position:relative"><img alt="Display 2" src="/extensions/power-settings/images/big_display.svg"/><div class="extension-power-settings-display-number">2</div></div>
 				<div style="text-align:left"> 
@@ -227,7 +227,7 @@
 		</div>
 		
 		
-        <div id="extension-power-settings-mouse-pointer" class="extension-power-settings-vlak extension-power-settings-hidden">
+        <div id="extension-power-settings-mouse-pointer" class="extension-power-settings-area extension-power-settings-hidden">
 			<div class="extension-power-settings-form-content">
 				<input type="checkbox" name="extension-power-settings-show-mouse-pointer" id="extension-power-settings-show-mouse-pointer">
 				<label for="extension-power-settings-show-mouse-pointer">Show mouse pointer</label>
@@ -252,7 +252,7 @@
             <div class="section-title-right-flex"></div>
         </div>
 
-        <div class="extension-power-settings-vlak">
+        <div class="extension-power-settings-area">
             <div id="extension-power-settings-candle-details-container">
 				<p class="extension-power-settings-header">Candle</p>
 				<p style="text-align:center"><span id="extension-power-settings-info-bits">32bit</span> Candle Controller version <span id="extension-power-settings-candle-info-version">...</span></p>
@@ -260,7 +260,7 @@
 			
 		</div>
 		
-        <div class="extension-power-settings-vlak" style="margin-bottom:1px">
+        <div class="extension-power-settings-area" style="margin-bottom:1px">
             <div id="extension-power-settings-specifications-container">
 				<p class="extension-power-settings-header">Specifications</p>
 				<div class="extension-power-settings-display-info-flex">
@@ -278,7 +278,7 @@
 		</div>
 			
 
-        <div class="extension-power-settings-vlak">
+        <div class="extension-power-settings-area">
             <div id="extension-power-settings-available-memory-container">
 				<p class="extension-power-settings-header"><span id="extension-power-settings-total-memory"></span>Memory</p>				
 				<div id="extension-power-settings-memory-bar-container"  class="extension-power-settings-bar-container"><div id="extension-power-settings-memory-used-bar" class="extension-power-settings-bar"></div><div id="extension-power-settings-memory-purgeable-bar" class="extension-power-settings-bar"></div></div>
@@ -298,7 +298,7 @@
 			
 		<p></p>
 			
-		<div class="extension-power-settings-vlak">
+		<div class="extension-power-settings-area">
             <div id="extension-power-settings-disk-space-container" style="text-align:center">
 				<p class="extension-power-settings-header">Storage space</p>
 				
@@ -309,17 +309,17 @@
 						<div id="extension-power-settings-disk-bar-container"  class="extension-power-settings-bar-container"><div id="extension-power-settings-disk-used-bar" class="extension-power-settings-bar"></div></div>
 		                <span id="extension-power-settings-free-disk">?</span>MB of <span id="extension-power-settings-total-disk">?</span>MB available<br/>				
 						<p style="font-style:italic">Over <span id="extension-power-settings-sd-card-written-bytes">...</span> has been written to the SD card</p>
-						<div id="extension-power-settings-user-partition-expansion-hint" class="extension-power-settings-vlak" style="display:none; text-align:left">
+						<div id="extension-power-settings-user-partition-expansion-hint" class="extension-power-settings-area" style="display:none; text-align:left">
 							<p>Your SD card has some unused space that could be made available, increasing your available storage space. The process will automatically reboot your controller.</p>
 							<div style="text-align:right;margin-top:2rem">
 			                    <button id="extension-power-settings-user-partition-expansion-button" class="text-button">Make more space</button>
 			                </div>
 						</div>
-		                <div id="extension-power-settings-busy-expanding-user-partition" class="extension-power-settings-low-warning extension-power-settings-vlak" style="display:none">
+		                <div id="extension-power-settings-busy-expanding-user-partition" class="extension-power-settings-low-warning extension-power-settings-area" style="display:none">
 		                    <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
 		                    <p style="text-align:center">Increasing space</p>
 		                </div>
-		                <div id="extension-power-settings-partition-expansion-failed" class="extension-power-settings-low-warning extension-power-settings-vlak" style="display:none">
+		                <div id="extension-power-settings-partition-expansion-failed" class="extension-power-settings-low-warning extension-power-settings-area" style="display:none">
 		                    <p style="text-align:center">Increasing space failed</p>
 		                </div>
 						
@@ -335,9 +335,9 @@
 		
 		
 		
-		<div id="extension-power-settings-attached-network-cable-container" class="extension-power-settings-vlak"></div>
+		<div id="extension-power-settings-attached-network-cable-container" class="extension-power-settings-area"></div>
 		
-		<div class="extension-power-settings-vlak">
+		<div class="extension-power-settings-area">
             <div id="extension-power-settings-attached-devices-container" style="text-align:center">
 				<p class="extension-power-settings-header">USB devices</p>
 				
@@ -353,7 +353,7 @@
             </div>
         </div>
 		
-		<div class="extension-power-settings-vlak">
+		<div class="extension-power-settings-area">
             <div id="extension-power-settings-attached-cameras-container" style="text-align:center">
 				<p class="extension-power-settings-header">Cameras</p>
 				
@@ -370,7 +370,7 @@
         </div>
 		
 		<!--
-		<div class="extension-power-settings-vlak">
+		<div class="extension-power-settings-area">
             <div id="extension-power-settings-other-container" style="text-align:center">
 				<p class="extension-power-settings-header">Other</p>
 				
@@ -393,7 +393,7 @@
             <div class="section-title-right-flex"></div>
         </div>
 
-		<div id="extension-power-settings-general-audio-container" class="extension-power-settings-vlak">
+		<div id="extension-power-settings-general-audio-container" class="extension-power-settings-area">
 	        
 			<!--
 			<div>
@@ -410,17 +410,17 @@
 			
 		</div>
 		
-        <div id="extension-power-settings-audio-respeaker-container" class="extension-power-settings-vlak extension-power-settings-hide-if-empty"></div>
+        <div id="extension-power-settings-audio-respeaker-container" class="extension-power-settings-area extension-power-settings-hide-if-empty"></div>
 		
-        <div id="extension-power-settings-audio-sink-list-container" class="extension-power-settings-vlak">
+        <div id="extension-power-settings-audio-sink-list-container" class="extension-power-settings-area">
             <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
         </div>
 		
-        <div id="extension-power-settings-audio-source-list-container" class="extension-power-settings-vlak">
+        <div id="extension-power-settings-audio-source-list-container" class="extension-power-settings-area">
             <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
         </div>
 		
-        <div id="extension-power-settings-audio-no-devices" class="extension-power-settings-vlak extension-power-settings-hidden">
+        <div id="extension-power-settings-audio-no-devices" class="extension-power-settings-area extension-power-settings-hidden">
 			<div>
 				<h2 style="text-align:center">No audio devices detected</h2>
 			</div>
@@ -448,7 +448,7 @@
             <div class="section-title-right-flex"></div>
         </div>
 
-		<div id="extension-power-settings-general-printing-container" class="extension-power-settings-vlak">
+		<div id="extension-power-settings-general-printing-container" class="extension-power-settings-area">
 	        <div>
 	            <input type="checkbox" name="extension-power-settings-allow-printing-checkbox" id="extension-power-settings-allow-printing-checkbox" />
 	            <label for="extension-power-settings-allow-printing-checkbox">Allow printing</label>
@@ -456,7 +456,7 @@
 	        </div>
 		</div>
 
-        <div id="extension-power-settings-printers-list-container" class="extension-power-settings-vlak">
+        <div id="extension-power-settings-printers-list-container" class="extension-power-settings-area">
             <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
         </div>
     </div>
@@ -478,7 +478,7 @@
             <div class="section-title-right-flex"></div>
         </div>
 
-        <div class="extension-power-settings-vlak">
+        <div class="extension-power-settings-area">
             <p class="extension-power-settings-header">Create backup</p>
             <p>This will create a downloadable backup file. It contains:</p>
 
@@ -512,7 +512,7 @@
             <div id="extension-power-settings-backup-more-photos-too-big-tip" class="extension-power-settings-warning-tip" style="display:none">Too many photos, could not back them up, sorry.</div>
         </div>
 
-        <div class="extension-power-settings-vlak">
+        <div class="extension-power-settings-area">
             <p class="extension-power-settings-header">Restore backup</p>
             <p>This will replace your existing:</p>
 
@@ -544,7 +544,58 @@
                 <input id="extension-power-settings-backup-file-selector" accept=".tar" type="file" value="Upload backup" />
             </div>
         </div>
+		
+		
+		
+		
     </div>
+
+	<div id="extension-power-settings-container-troubleshooting" class="extension-power-settings-container">
+		
+        <div class="section-title">
+            <div class="section-title-back-flex"></div>
+            <div class="section-title-container">
+                <img class="section-title-icon" alt="Backup icon" src="/extensions/power-settings/images/troubleshooting.svg" />
+                <span class="section-title-name">Troubleshooting</span>
+            </div>
+            <div class="section-title-right-flex"></div>
+        </div>
+		
+		<div class="extension-power-settings-area">
+            <p class="extension-power-settings-header">Restore original addons</p>
+            <p>If for some reason one of the original addons isn't loading or working properly, then you can choose to revert to a backup of the originally installed version.</p>
+			<p>You also have the option to delete an addon's stored settings data. This will cause the addon to regenerate it's default settings the next time it starts.</p>
+			<p>When you revert, you should probably do both, so that the settings data won't be for a later version of the addon. Such a version mismatch could cause issues.</p>
+			<p>Either option will first (attempt to) disable the current version of the addon.</p>
+			<ul id="extension-power-settings-addon-backups-container"></ul>
+			<p>It's wise to reboot the controller after reverting an addon to complete the process.</p>
+			<p>After the reboot you'll have to go to the <a class="text-button" href="/extensions/candleappstore">Candle store</a> to manually enable the addon again. Only the Candle Store itself is automatically re-enabled at boot, since it's vital to managing all other addons.</p>
+			<p class="extension-power-settings-show-if-developer">You should also <span class="text-button" id="extension-power-settings-addon-backups-refresh-page-button">refresh the page</span> once the old version is restored.</p>
+		</div>
+		
+		<div class="extension-power-settings-area">
+			<p class="extension-power-settings-header">Safe mode</p>
+			<p>When your candle Controller boots into 'safe mode', only the original versions of three addons will seem to be installed:</p>
+			<ul>
+				<li>Candle store</li>
+				<li>Candle theme</li>
+				<li>Power settings</li>
+			</ul>
+			<p>While in safe mode any misbehaving addons will no longer be loadedd, and thus won't affect your controller. You can then try to solve any issues with them. For example, you can then manually disable addons, so they won't be a problem anymore when you boot back into normal mode.</p>
+			<p>Important tip: you can always enable safe mode manually by placing a text file called 'candle_safe_mode.txt' on the controller's SD card.</p>
+			<div class="extension-power-settings-align-right">
+				<button id="extension-power-settings-enable-safe-mode-button" class="text-button">Reboot into safe mode</button>
+			</div>
+		</div>
+		
+		<div class="extension-power-settings-area">
+			<p>If you disable addons or enter safe more, then after the reboot is complete, you'll need to refresh this page so that HTML from addons that are no longer running is removed.</p>
+			<div class="extension-power-settings-align-right">
+				<button id="extension-power-settings-troubleshooting-refresh-page-button" class="text-button">Refresh page</button>
+			</div>
+		</div>
+	</div>
+
 
     <div id="extension-power-settings-container-update" class="extension-power-settings-container">
         <div class="section-title">
@@ -556,14 +607,14 @@
             <div class="section-title-right-flex"></div>
         </div>
 
-        <div id="extension-power-settings-update-general-container" class="extension-power-settings-vlak">
+        <div id="extension-power-settings-update-general-container" class="extension-power-settings-area">
             <p>You are running <span id="extension-power-settings-bits">32bit</span> Candle Controller version <span id="extension-power-settings-candle-version">...</span></p>
             <p class="extension-power-settings-developer-only">You originally started with Candle version: <span id="extension-power-settings-candle-original-version">unknown</span></p>
             <div id="extension-power-settings-no-updates" style="display: none;">
                 <p>Your system is up-to-date.</p>
             </div>
             
-            <div id="extension-power-settings-update-recovery-not-supported" class="extension-power-settings-vlak" style="display:none; margin:2rem 0">
+            <div id="extension-power-settings-update-recovery-not-supported" class="extension-power-settings-area" style="display:none; margin:2rem 0">
                 <p>Thank you for being such an early adopter of Candle!</p>
                 <p>Unfortunately your Candle Controller cannot support the new, more robust update system. It's recommended to take the following steps:</p>
                 <ol>
@@ -578,13 +629,13 @@
             </div>
         </div>
         
-        <div id="extension-power-settings-update-no-space-available" class="extension-power-settings-vlak" style="display:none; background-color:#600">
+        <div id="extension-power-settings-update-no-space-available" class="extension-power-settings-area" style="display:none; background-color:#600">
             <h3>Not enough memory or disk space</h3>
             <p>Your user data partition is too full to run updates.</p>
         </div>
         
         
-        <div id="extension-power-settings-update-developer-options-container" class="extension-power-settings-vlak extension-power-settings-developer-only" style="background-color:#555">
+        <div id="extension-power-settings-update-developer-options-container" class="extension-power-settings-area extension-power-settings-developer-only" style="background-color:#555">
             <p class="extension-power-settings-header">Developer options</p>
             <p>Your Update & Recovery system has version: <span id="extension-power-settings-update-recovery-version">...</span></p>
             <p>Memory size: <span id="extension-power-settings-update-total-memory">...</span>Mb</p>
@@ -625,8 +676,8 @@
         </div>
         
 
-        <div id="extension-power-settings-system-update-available-container" class="extension-power-settings-vlak extension-power-settings-developer-only" style="display: none;">
-        <!--<div id="extension-power-settings-system-update-container" class="extension-power-settings-vlak">-->
+        <div id="extension-power-settings-system-update-available-container" class="extension-power-settings-area extension-power-settings-developer-only" style="display: none;">
+        <!--<div id="extension-power-settings-system-update-container" class="extension-power-settings-area">-->
             <p class="extension-power-settings-header">System update</p>
             
             <div id="extension-power-settings-update-failed" style="display: none;">
@@ -644,13 +695,13 @@
                     <li>The update can take up to two hours.</li>
                     <li>Visit candlesmarthome.com/troubleshooting in case something goes wrong.</li>
                 </ul>
-                <p id="extension-power-settings-system-update-needs-two-reboots" class="extension-power-settings-vlak" style="display: none;">
+                <p id="extension-power-settings-system-update-needs-two-reboots" class="extension-power-settings-area" style="display: none;">
                     NOTE: because you're running an older version of Candle you will need to run the update process twice.
                 </p>
                 <br/>
                 <br/>
 
-                <div id="extension-power-settings-system-update-overlay-still-enabled-container" class="extension-power-settings-vlak" style="display: none;">
+                <div id="extension-power-settings-system-update-overlay-still-enabled-container" class="extension-power-settings-area" style="display: none;">
                     <p>Before you can install the update the system's disk protection must first be disabled. After the system update is complete this protection will automatically be re-enabled.</p>
                     <p>This step will reboot your sytem.</p>
                     <div class="extension-power-settings-form-system-update">
@@ -698,7 +749,7 @@
                 </div>
             </div>
 
-            <div id="extension-power-settings-update-progress-container" class="extension-power-settings-vlak" style="display: none;">
+            <div id="extension-power-settings-update-progress-container" class="extension-power-settings-area" style="display: none;">
                 <p>SYSTEM UPDATE IN PROGRESS</p>
                 <p style="margin-top: 0; font-style: italic;">This can take 2 hours</p>
                 <div id="extension-power-settings-update-process-progress-bar-container" class="extension-power-settings-progress-bar-container">
@@ -725,7 +776,7 @@
         </div>
         
         
-        <div id="extension-power-settings-update-recovery-container" class="extension-power-settings-vlak">
+        <div id="extension-power-settings-update-recovery-container" class="extension-power-settings-area">
             <p class="extension-power-settings-header">Update & Recovery</p>
             <div id="extension-power-settings-update-recovery-supported">
                 <p>Your Candle Controller has an update and recovery system. This should also be kept up to date. Doing so can be done in the background, and does not require a reboot.</p>
@@ -756,7 +807,7 @@
         </div>
         
         
-        <div id="extension-power-settings-switch-to-recovery-container" class="extension-power-settings-vlak">
+        <div id="extension-power-settings-switch-to-recovery-container" class="extension-power-settings-area">
             <p class="extension-power-settings-header">Upgrade Candle</p>
             
             <p>A new version of the Candle Controller is available.</p>
@@ -806,9 +857,9 @@
         </div>
         
 		
-        <div id="extension-power-settings-reinstall-power-settings-container" class="extension-power-settings-vlak">
+        <div id="extension-power-settings-reinstall-power-settings-container" class="extension-power-settings-area">
             <p class="extension-power-settings-header">Re-install Candle App Store</p>
-			<p>If for some reason your Candle Store isn't working properly you can upgrade it to the very latest "cutting edge" version. This will automatically restart your controller and reload this page once complete.</p>
+			<p>If for some reason your Candle Store isn't working properly you can upgrade it to the very latest "cutting edge" version.</p>
 			
             <div id="extension-power-settings-reinstall-candleappstore-busy-container" class="extension-power-settings-hidden">
                 <div class="extension-power-settings-spinner">
@@ -817,7 +868,7 @@
                     <div></div>
                     <div></div>
                 </div>
-				<p>This page should automatically refresh once the process is complete.</p>
+				<p>This will automatically restart your controller and reload this page once complete.</p>
             </div>
 			<div id="extension-power-settings-reinstall-candleappstore-failed-container" class="extension-power-settings-hidden">
 				<p>Installing the latest Candle Store version seems to have failed.<p>
@@ -830,7 +881,7 @@
 		
 		
         <!--
-        <div id="extension-power-settings-manual-update-container" class="extension-power-settings-vlak extension-power-settings-developer-only">
+        <div id="extension-power-settings-manual-update-container" class="extension-power-settings-area extension-power-settings-developer-only">
             <p class="extension-power-settings-header">Manual security update</p>
             <p>This will update all installed programs to the latest version, which may, for example, help alleviate urgent security worries. However, it may also cause unexpected issues, since these updates are not tested.</p>
             <p>It basically runs <span style="font-weight:bold">apt upgrade</span> on the system.</p>
