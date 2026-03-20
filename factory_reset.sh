@@ -244,6 +244,14 @@ touch $BOOT_DIR/hide_mouse_pointer.txt
 rm $BOOT_DIR/bootup_actions.sh
 rm $BOOT_DIR/bootup_actions_failed.sh
 rm $BOOT_DIR/developer.txt
+rm $BOOT_DIR/candle_set_wifi.txt
+rm $BOOT_DIR/candle_set_wifi_detected_networks.txt
+rm $BOOT_DIR/candle_safe_mode.txt
+rm $BOOT_DIR/candle_update.txt
+rm $BOOT_DIR/emergency.txt
+rm $BOOT_DIR/candle_recovery_type.txt
+rm $BOOT_DIR/candle_stay_in_recovery.txt
+rm $BOOT_DIR/candle_last_known_ip_address.txt
 
 # only a log of factory resets is kept internally.
 factory_resets="$(cat /home/pi/.webthings/candle.log | grep factory reset)"
