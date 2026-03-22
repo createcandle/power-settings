@@ -294,6 +294,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.backup_dir = os.path.join(self.data_dir, "backup") 
         self.backup_file_path = os.path.join(self.backup_dir, "candle_backup.tar")
         
+        self.safe_mode_addons_dir = '/home/pi/safe_mode'
         self.addon_backups_dir = os.path.join(str(self.user_profile['baseDir']), 'backups','addons')
         
         # Backup data logs path
@@ -308,6 +309,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.original_version_file_path = self.boot_path + '/candle_original_version.txt'
         
         # Matter adapter path
+        self.candleappstore_path = os.path.join(str(self.user_profile['addonsDir']), 'candleappstore')
         self.matter_adapter_path = os.path.join(str(self.user_profile['addonsDir']), 'matter-adapter')
         
         # Respeaker check file path
@@ -2018,6 +2020,14 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':state}),
                                 )
                                 
+                            elif action == 'install_cutting_edge_app_store':
+                                state = self.install_cutting_edge_app_store()
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
+                            
                             
                             
                             # UPDATE RECOVERY PARTITION
@@ -4172,11 +4182,21 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
         
-    
     def reinstall_app_store(self):
         if self.DEBUG:
             print("In reinstall_app_store")
-            
+        safe_mode_appstore_dir_path = os.path.join(self.safe_mode_addons_dir,'candleappstore')
+        if os.path.isdir(str(safe_mode_appstore_dir_path))
+            if os.path.isdir(self.candleappstore_path):
+                os.system('rm -rf ' + str(self.candleappstore_path))
+            os.system('cp -r ' + str(safe_mode_appstore_dir_path) + ' ' + str(self.candleappstore_path))
+            if os.path.isdir(self.candleappstore_path):
+                run_command('sleep 1; sudo systemctl restart webthings-gateway.service')
+                return True
+        return False
+    
+    
+    def install_cutting_edge_app_store(self):
         try:
             git_command = "git clone https://github.com/createcandle/candleappstore.git /tmp/candleappstore"
             target_dir = os.path.join(self.user_profile['addonsDir'], 'candleappstore')
@@ -4201,13 +4221,25 @@ class PowerSettingsAPIHandler(APIHandler):
                         print(" - GIT cloning candleappstore into /tmp/candleappstore")
                     os.system(git_command)
             
-                    if os.path.isdir('/tmp/candleappstore/pkg') and os.path.isdir('/tmp/candleappstore/js') and os.path.isdir('/tmp/candleappstore/views'):
-                        os.system("mv /tmp/candleappstore " + str(target_dir))
-                        if self.DEBUG:
-                            print("in theory the candleappstore addon has been moved into place")
-                        run_command('sleep 1; sudo systemctl restart webthings-gateway.service')
-                        return True
-                        
+                    if os.path.isdir('/tmp/candleappstore/pkg') and os.path.isdir('/tmp/candleappstore/js') and os.path.isdir('/tmp/candleappstore/views' and os.path.isfile('/tmp/candleappstore/package.sh')):
+                        os.system('chmod +x /tmp/candleappstore/package.sh')
+                        create_appstore_package = run_command('/tmp/candleappstore/package.sh')
+                        if isinstance(create_appstore_package,str) and os.path.isdir('/tmp/candleappstore/lib'):
+                            if os.path.isdir(target_dir):
+                                os.system('rm -rf ' + str(target_dir))
+                            if os.path.isdir(target_dir) == False
+                                os.system("mv /tmp/candleappstore " + str(target_dir))
+                                if self.DEBUG:
+                                    print("in theory the candleappstore addon has been moved into place")
+                                run_command('sleep 1; sudo systemctl restart webthings-gateway.service')
+                                return True
+                            else:
+                                if self.DEBUG:
+                                    print("was unable to delete the old version of candleappstore")
+                        else:
+                            if self.DEBUG:
+                                print("running package.sh to create cutting edge candleappstore seems to have failed")
+                            os.system('rm -rf /tmp/candleappstore')
                     else:
                         if self.DEBUG:
                             print("GIT download of candleappstore seems to have failed")

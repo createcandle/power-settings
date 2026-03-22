@@ -11,7 +11,7 @@
 			
             document.querySelector('#main-menu> ul').insertAdjacentHTML('beforeend', '<li id="extension-power-settings-menu-item-li"><a id="extension-power-settings-menu-item" href="/extensions/power-settings">Power</a></li>');
             
-            //console.log(window.API);
+            console.log(window.API);
 
             this.debug = false;
 			this.developer = false;
@@ -650,7 +650,7 @@
 				//
                 
                 // Add buttons to settings menu
-                document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-security-button">Security</a></li>';
+                document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-security-button">Security<span class="extension-power-settings-hide-if-https extension-power-settings-menu-notification-icon"><span></a></li>';
 				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-time-button">Clock</a></li>';
 				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item"><a id="extension-power-settings-menu-display-button">Display</a></li>';
 				document.querySelector('#settings-menu > ul').innerHTML += '<li class="settings-item extension-power-settings-settings-item" id="extension-power-settings-main-menu-audio-item"><a id="extension-power-settings-menu-audio-button">Audio</a></li>';
@@ -947,11 +947,14 @@
                         if(this.debug){
                             console.log("power settings: speaker test complete: ", body);
                         }
+						this.flash_message("Testing speaker now");
 						document.getElementById('extension-power-settings-test-speakers-button').removeAttribute("disabled");
-                    }).catch((e) => {
-                       console.error("Error: speaker test connection failed: ", e);
+                    }).catch((err) => {
+                       if(this.debug){
+						   console.error("Error: speaker test connection failed: ", err);
+					   }
 					   document.getElementById('extension-power-settings-test-speakers-button').removeAttribute("disabled");
-					   this.flash_message("Could not connect to controller");
+					   this.flash_message("Could not connect to controller to perform speaker test");
                     });
                 });
 				
@@ -968,11 +971,11 @@
 					
 		                    window.API.postJson(
 		                        `/extensions/${this.id}/api/ajax`, {
-		                            'action': 'reinstall_app_store'
+		                            'action': 'install_cutting_edge_app_store'
 		                        }
 		                    ).then((body) => {
 		                        if(this.debug){
-		                            console.log("power settings: reinstall_app_store reponse: ", body);
+		                            console.log("power settings: install_cutting_edge_app_store reponse: ", body);
 		                        }
 								if(typeof body.state != 'undefined'){
 									if(body.state == true){
@@ -980,7 +983,15 @@
 											console.log("Updating to latest version of Candle appstore seems to have been succcesfull");
 										}
 										document.getElementById('extension-power-settings-reinstall-candleappstore-container').style.background="green";
+										this.flash_message("Cutting edge Candle Store installed. Reloading this page in 15 seconds...");
 										setTimeout(() => {
+											this.flash_message("Reloading this page in 10 seconds...");
+										},5000);
+										setTimeout(() => {
+											this.flash_message("Reloading this page in 5 seconds...");
+										},10000);
+										setTimeout(() => {
+											this.flash_message("Reloading this page...");
 											window.location.reload(true); 
 										},15000);
 									}
@@ -992,14 +1003,14 @@
 									}
 								}
 								else{
-									console.error("candleappstore: reinstall_app_store: body.state was undefined? body: ", body);
+									console.error("candleappstore: install_cutting_edge_app_store: body.state was undefined? body: ", body);
 								}
 						
-						
-		                    }).catch((e) => {
-		                    	console.error("Error: reinstall_app_store connection failed: ", e);
+		                    }).catch((err) => {
+		                    	console.error("Error: install_cutting_edge_app_store connection failed: ", err);
 							    //document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.remove('extension-power-settings-hidden');
 							    //this.flash_message("Could not connect to controller");
+								this.flash_message("Installing cutting-edge Candle Store failed, connection issue?");
 								setTimeout(() => {
 									window.location.reload(true); 
 								},15000);
@@ -1009,6 +1020,8 @@
                 	});
 				}
 				
+				
+				// TODO: install_cutting_edge_app_store
 				
 				
 				
@@ -1162,6 +1175,7 @@
                         
                     }).catch((err) => {
                         console.error("Error: backup init could not connect to controller: ", err);
+						this.flash_message("Start backup: connection error");
                     });
                     
                 });
@@ -1316,7 +1330,7 @@
 						}
                         
                     }).catch((err) => {
-                        console.error("Error: backup init could not connect to controller: ", err);
+                        console.error("Error: troubleshooting init (which is backup init) could not connect to controller: ", err);
                     });
                     
                 });
@@ -1685,23 +1699,60 @@
 				
 				const allow_password_remembering_checkbox_el = document.getElementById('extension-power-settings-security-allow-password-remembering-on-this-device');
 				if(allow_password_remembering_checkbox_el){
-					if(localStorage.getItem('candle-login-allow-password-remembering')){
-						this.allow_password_remembering_in_this_browser = true;
+					let allow_password_remembering_check = localStorage.getItem('candle-login-allow-password-remembering');
+					
+					if(allow_password_remembering_check == null){
+						// On the kiosk password remembering is enabled by default
+						if(this.kiosk){
+							this.allow_password_remembering_in_this_browser = true;
+							localStorage.setItem('candle-login-allow-password-remembering','true');
+						}
 					}
+					else if(typeof allow_password_remembering_check == 'string'){
+						if(allow_password_remembering_check == 'true'){
+							this.allow_password_remembering_in_this_browser = true;
+						}
+						else{
+							this.allow_password_remembering_in_this_browser = false;
+						}
+					}
+					
 					//console.log("this.allow_password_remembering_in_this_browser: ", this.allow_password_remembering_in_this_browser);
 					allow_password_remembering_checkbox_el.checked = this.allow_password_remembering_in_this_browser;
 					allow_password_remembering_checkbox_el.addEventListener('change', () => {
 						if(allow_password_remembering_checkbox_el.checked){
+							this.allow_password_remembering_in_this_browser = true;
 							localStorage.setItem('candle-login-allow-password-remembering','true');
 						}
 						else{
-							if(localStorage.getItem('candle-login-allow-password-remembering')){
-								localStorage.removeItem('candle-login-allow-password-remembering');
-							}
+							this.allow_password_remembering_in_this_browser = false;
+							localStorage.setItem('candle-login-allow-password-remembering','false');
 						}
 						//console.log("allow_password_remembering_in_this_browser: localstorage item: ", localStorage.getItem('candle-login-allow-password-remembering'));
 					})
 				}
+
+				const security_logout_button_el = document.getElementById('extension-power-settings-security-logout-button');
+				if(security_logout_button_el){
+					security_logout_button_el.addEventListener('click', () => {
+						window.API.logout()
+						.then((body) => {
+							if(this.debug){
+								console.log("logout response body: ", body);
+							}
+							this.flash_message("Logging out...");
+						})
+						.catch((err) => {
+							if(this.debug){
+								console.error("caught error calling API.logout: ", err);
+							}
+							this.flash_message("Failed to log out - connection error");
+						})
+					});
+				}
+					
+				
+
 
 
 
@@ -3446,7 +3497,9 @@
 		
 		
         show_security_page(){
-			//console.log("in show_security_page");
+			if(this.debug){
+				console.log("in show_security_page");
+			}
 			const allow_password_remembering_checkbox_el = document.getElementById('extension-power-settings-security-allow-password-remembering-on-this-device');
 			if(allow_password_remembering_checkbox_el){
 				if(localStorage.getItem('candle-login-allow-password-remembering')){
@@ -3457,6 +3510,21 @@
 				}
 				allow_password_remembering_checkbox_el.checked = this.allow_password_remembering_in_this_browser;
 			}
+			
+			const hostname_els = document.querySelectorAll('.extension-power-settings-current-hostname');
+			if(hostname_els){
+				for(let x = 0; x < hostname_els.length; x++){
+					hostname_els[x].textContent = window.location.hostname;
+				}
+			}
+			
+			const switch_to_encrypted_connection_button_el = document.getElementById('extension-power-settings-switch-to-encrypted-connection-link')
+			if(switch_to_encrypted_connection_button_el){
+				const encrypted_url = 'https://' + window.location.hostname;
+				switch_to_encrypted_connection_button_el.setAttribute('href',encrypted_url);
+			}
+			
+			
 			
 			/*
             window.API.postJson(
@@ -5892,12 +5960,20 @@
 		
 		flash_message(message){
 			if(typeof message == 'string' && message.length){
-				const flash_message_el = document.getElementById('extension-candleappstore-flash-message-container');
+				let flash_message_el = document.getElementById('extension-candleappstore-flash-message-container');
+				if(!flash_message_el){
+					flash_message_el = document.createElement('div');
+					flash_message_el.setAttribute('id','extension-candleappstore-flash-message-container');
+					document.body.appendChild(flash_message_el);
+				}
 				if(flash_message_el){
 					flash_message_el.innerHTML = '<h3>' + message + '</h3>';
 					setTimeout(() => {
 						flash_message_el.innerHTML = '';
 					},3000);
+				}
+				else{
+					alert(message);
 				}
 			}
 		}

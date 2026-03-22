@@ -16,6 +16,29 @@
 	justify-content:flex-end;
 }
 
+
+body:not(.https) .extension-power-settings-show-if-https,
+body.kiosk .extension-power-settings-show-if-https,
+body.kiosk .extension-power-settings-hide-if-https,
+body:not(.kiosk):not(.http).https .extension-power-settings-hide-if-https{
+	display:none!important;
+}
+
+
+
+#extension-power-settings-pages img{
+	max-width:100%;
+}
+
+
+#extension-power-settings-pages details summary::-webkit-details-marker {
+	display:none;
+}
+#extension-power-settings-pages details summary{
+	list-style: none;
+}
+
+
 /*
 #extension-power-settings-show-reset-settings-button{
     display:none!important;
@@ -809,12 +832,42 @@
 
 /*  SECURITY  */
 
+.extension-power-settings-menu-notification-icon::after{
+	content:'🔔';
+	position:relative;
+	top:-.5rem;
+	right:-0.5rem;
+}
+
+#extension-power-settings-using-encrypted-connection-hint{
+	background-color:green;
+	text-align:center;
+}
+
 #extension-power-settings-security-allow-password-remembering-on-this-device + label span{
 	display:inline-block;
 	max-width:80%;
 	line-height:160%;
 }
 
+#extension-power-settings-container-security > div.extension-power-settings-hide-if-https > p:first-of-type{
+	font-size:2rem;
+	margin-bottom:4rem;
+}
+
+.extension-power-settings-side-by-side-image-wrapper{
+	width:200px;
+	min-width:200px;
+	flex-grow:1;
+}
+
+.extension-power-settings-image-caption{
+	font-size:85%;
+	font-style:italic;
+	padding:0 2rem 2rem 2rem;
+	margin-top:0;
+	opacity:.8;
+}
 
 
 /*  UPDATE  */
@@ -869,6 +922,7 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-button{
     font-size: 1.8rem;
 }
 
+.extension-power-settings-italic,
 #extension-power-settings-show-mouse-pointer-hint,
 #extension-power-settings-low-memory-hint{
     font-style:italic;
@@ -986,10 +1040,25 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
     border-radius:.5rem;
 }
 
-
+.extension-power-settings-flex,
 .extension-power-settings-display-info-flex{
 	display:flex;
 }
+.extension-power-settings-flex-space-between{
+	display:flex;
+	justify-content:space-between;
+}
+
+.extension-power-settings-flex-center-space-between{
+	display:flex;
+	align-items:center;
+	justify-content:space-between;
+}
+
+.extension-power-settings-flex-grow{
+	flex-grow:1;
+}
+
 .extension-power-settings-flex-wrap{
 	flex-wrap:wrap;
 }
@@ -1101,23 +1170,7 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 	display:none;
 }
 
-.extension-power-settings-flex{
-	display:flex;
-}
-.extension-power-settings-flex-space-between{
-	display:flex;
-	justify-content:space-between;
-}
 
-.extension-power-settings-flex-center-space-between{
-	display:flex;
-	align-items:center;
-	justify-content:space-between;
-}
-
-.extension-power-settings-flex-grow{
-	flex-grow:1;
-}
 
 
 
@@ -1786,4 +1839,40 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
 }
 #extension-power-settings-container-reset ul li{
 	display: list-item;
+}
+
+
+
+/*  FLASH MESSAGE  */
+
+/*  NOTE: this css is a copy of the css in the Candle Store addon. Any changes made here should be made there too. */
+#extension-candleappstore-flash-message-container{
+	position:fixed;
+	top:0;
+	left:0;
+	width:100%;
+	min-height:0;
+	height:9.6rem;
+	max-height:9.6rem;
+	pointer-events:none;
+	background-color:#0a273c;
+	color:white;
+	font-weight:bold;
+	text-align:center;
+	overflow:hidden;
+	transition: all 0.1s ease-out;
+	padding:1rem;
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	font-size:1.6rem;
+	line-height:160%;
+	z-index:1111;
+}
+#extension-candleappstore-flash-message-container:empty{
+	min-height:0;
+	height:0;
+	max-height:0;
+	padding:0;
+	transition: all 0.1s ease-in; /*cubic-bezier(0, 1, 0, 1);*/
 }
