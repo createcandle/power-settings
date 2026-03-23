@@ -4186,7 +4186,7 @@ class PowerSettingsAPIHandler(APIHandler):
         if self.DEBUG:
             print("In reinstall_app_store")
         safe_mode_appstore_dir_path = os.path.join(self.safe_mode_addons_dir,'candleappstore')
-        if os.path.isdir(str(safe_mode_appstore_dir_path))
+        if os.path.isdir(str(safe_mode_appstore_dir_path)):
             if os.path.isdir(self.candleappstore_path):
                 os.system('rm -rf ' + str(self.candleappstore_path))
             os.system('cp -r ' + str(safe_mode_appstore_dir_path) + ' ' + str(self.candleappstore_path))
@@ -4227,7 +4227,7 @@ class PowerSettingsAPIHandler(APIHandler):
                         if isinstance(create_appstore_package,str) and os.path.isdir('/tmp/candleappstore/lib'):
                             if os.path.isdir(target_dir):
                                 os.system('rm -rf ' + str(target_dir))
-                            if os.path.isdir(target_dir) == False
+                            if os.path.isdir(target_dir) == False:
                                 os.system("mv /tmp/candleappstore " + str(target_dir))
                                 if self.DEBUG:
                                     print("in theory the candleappstore addon has been moved into place")
