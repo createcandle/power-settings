@@ -11,7 +11,7 @@
 			
             document.querySelector('#main-menu> ul').insertAdjacentHTML('beforeend', '<li id="extension-power-settings-menu-item-li"><a id="extension-power-settings-menu-item" href="/extensions/power-settings">Power</a></li>');
             
-            console.log(window.API);
+            //console.log(window.API);
 
             this.debug = false;
 			this.developer = false;
