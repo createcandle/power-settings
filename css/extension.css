@@ -359,6 +359,11 @@ body:not(.kiosk):not(.http).https .extension-power-settings-hide-if-https{
 /*  BUTTONS  */
 
 
+#extension-power-settings-view button{
+	cursor:pointer;
+	text-decoration:none;
+}
+
 #extension-power-settings-main-buttons{
     text-align:center;
 }
