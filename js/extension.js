@@ -2251,7 +2251,10 @@
             const ntp = document.getElementById('extension-power-settings-form-ntp');
 			
             // If the Candle overlay was active, then it shouldn't be anymmore.
-            document.getElementById('candle-tools').style.display = 'none';
+			const candle_tools_overlay = document.getElementById('candle-tools');
+            if(candle_tools_overlay){
+            	candle_tools_overlay.style.display = 'none';
+            }
 			
             if(typeof body.debug != 'undefined'){
                 this.debug = body.debug;

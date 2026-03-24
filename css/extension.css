@@ -1576,11 +1576,13 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 
 #network-settings-client #extension-power-settings-hotspot-container{
 	padding-bottom:2rem;
+	flex-direction:column;
 }
 	
 #extension-power-settings-hotspot-container > div{
 	display:flex;
 	width:100%;
+	box-sizing:border-box;
 }
 
 #extension-power-settings-hotspot-container .network-settings-list-item-container-4{
