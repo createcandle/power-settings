@@ -573,6 +573,26 @@
 				
 				
 				
+				// SSH checkbox
+                document.getElementById('enable-ssh-checkbox').addEventListener('change', () => {
+                    if(this.debug){
+                        console.log('power settings debug: enable-ssh-checkbox alue changed');
+                    }
+            
+                    const checkbox_state = document.getElementById('enable-ssh-checkbox').checked;
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'set_ssh_state','state': checkbox_state
+                        }
+                    ).then((body) => {
+                        if(this.debug){
+                            console.log("power settings debug: set_ssh_state response: ", body);
+                        }                                    
+                
+                    }).catch((e) => {
+                        this.flash_message("Error, SSH setting was not changed: could not connect to controller: ");
+                    });
+                });
 				
 				
 				
@@ -2246,6 +2266,10 @@
         
 		handle_init(body){
 			
+			if(this.debug){
+				console.log("power settings debug: in handle_init. body: ", body);
+			}
+			
             const hours = document.getElementById('extension-power-settings-form-hours');
             const minutes = document.getElementById('extension-power-settings-form-minutes');
             const ntp = document.getElementById('extension-power-settings-form-ntp');
@@ -2346,22 +2370,22 @@
                 document.getElementById('allow-anonymous-mqtt-item').innerHTML = '<input id="allow-anonymous-mqtt-checkbox" class="developer-checkbox" type="checkbox" '  + mqtt_checked + '> <label for="allow-anonymous-mqtt-checkbox" title="This can pose a security risk, so only enable this if you really need to.">Allow anonymous MQTT</label>';
        
                 document.getElementById('allow-anonymous-mqtt-checkbox').addEventListener('change', () => {
+					const checkbox_state = document.getElementById('allow-anonymous-mqtt-checkbox').checked;
                     if(this.debug){
-                        console.log('power settings debug: allow anonymous MQTT checkbox value changed');
+                        console.log('power settings debug: allow anonymous MQTT checkbox value changed to: ', checkbox_state);
                     }
-            
-                    const checkbox_state = document.getElementById('allow-anonymous-mqtt-checkbox').checked;
                     window.API.postJson(
                         `/extensions/${this.id}/api/ajax`, {
                             'action': 'anonymous_mqtt','allow_anonymous_mqtt': checkbox_state
                         }
                     ).then((body) => {
                         if(this.debug){
-                            console.log("allow_anonymous MQTT response: ", body);
+                            console.log("power settings debug: allow_anonymous MQTT response: ", body);
                         }                                    
                 
-                    }).catch((e) => {
-                        this.flash_message("Error, allow_anonymous MQTT setting was not changed: could not connect to controller: ", e);
+                    }).catch((err) => {
+						console.error("power settings: caught error changing anonymous MQTT setting: ", err);
+                        this.flash_message("Error, allow_anonymous MQTT setting was not changed: could not connect to controller");
                     });
                 });
             }
@@ -2560,6 +2584,16 @@
 			}
 			
 			this.render_hotspot_settings(body);
+			
+			const ssh_checkbox_el = document.getElementById('enable-ssh-checkbox');
+			if(ssh_checkbox_el){
+				ssh_checkbox_el.disabled = false;
+				
+				if(typeof body.ssh_state == 'boolean'){
+					ssh_checkbox_el.checked = body.ssh_state;
+				}		
+			}
+			
 			
 		}
 		
@@ -3652,8 +3686,8 @@
                     document.getElementById('extension-power-settings-update-progress-container').style.display = 'block';
                 }
         
-            }).catch((e) => {
-                console.log("Error, could not start system update: could not connect to controller: ", e);
+            }).catch((err) => {
+                console.log("Error, could not start system update: could not connect to controller: ", err);
             });
             
             

@@ -277,6 +277,8 @@ class PowerSettingsAPIHandler(APIHandler):
             print("removing safe mode file")
             os.system('sudo rm ' + str(self.safe_mode_path))
         
+        self.ssh_state = os.path.isfile('/boot/firmware/candle_ssh.txt')
+        
         # Factory reset
         self.keep_z2m_file_path = self.boot_path + '/keep_z2m.txt'
         self.keep_bluetooth_file_path = self.boot_path + '/keep_bluetooth.txt'
@@ -1213,6 +1215,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 local_update_via_recovery_interupted = self.update_via_recovery_interupted
                                 self.update_via_recovery_interupted = False
                                 
+                                self.ssh_state = os.path.isfile('/boot/firmware/candle_ssh.txt')
                                 
                                 dmesg_output = run_command("dmesg --level=err,warn")
                                 if isinstance(dmesg_output,str):
@@ -1301,6 +1304,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'usb_gadget_mode_auto_connect':self.persistent_data['usb_gadget_mode_auto_connect'],
                                             'usb_gadget_mode_info':self.usb_gadget_mode_info,
                                             'safe_mode_is_active':self.safe_mode_is_active,
+                                            'ssh_state':self.ssh_state,
                                             'debug':self.DEBUG
                                         }
                                         
@@ -2932,7 +2936,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if os.path.isfile(str(self.mosquitto_conf_file_path)):
                                     
                                     if 'allow_anonymous_mqtt' in request.body:
-                                         if request.body['allow_anonymous_mqtt'] == True:
+                                         if bool(request.body['allow_anonymous_mqtt']) == True:
                                              allow_anonymous_mqtt = "true"
                                              if self.DEBUG:
                                                  print("set allow_anonymous_mqtt to true")
@@ -2954,6 +2958,26 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':True}),
                                 )
+                            
+                            
+                            elif action == 'set_ssh_state':
+                                state = False
+                                if self.DEBUG:
+                                    print("API got set_ssh_state request")
+                                    
+                                if 'state' in request.body and os.path.isdir('/boot/firmware/'):
+                                    if bool(request.body['state']) == True:
+                                        os.system('sudo touch /boot/firmware/candle_ssh.txt')
+                                    elif os.path.isfile('/boot/firmware/candle_ssh.txt'):
+                                        os.system('sudo rm /boot/firmware/candle_ssh.txt')
+                                    state = True
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
+                            
                             
                             
                             
@@ -3128,6 +3152,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':'ok'}),
                                 )
                                 
+                                
+                            
                             
                             elif action == 'boot_into_safe_mode':
                                 state = False
