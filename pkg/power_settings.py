@@ -989,7 +989,8 @@ class PowerSettingsAPIHandler(APIHandler):
         if os.path.isdir('/sys'):
             # Display rotation
             if int(rotation) == 0:
-                os.system('sudo rm ' + str(self.rotate_display_path))
+                if os.path.isfile(self.rotate_display_path):
+                    os.system('sudo rm ' + str(self.rotate_display_path))
                 if self.display1_width != 0:
                     os.system('DISPLAY=:0 xrandr --output ' + str(self.display_port1_name) + ' --rotate normal')
             
