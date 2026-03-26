@@ -1386,8 +1386,8 @@
                 // Force-reveal the recovery update options, for developers
                 document.getElementById('extension-power-settings-force-reveal-recovery-update-button').addEventListener('click', () => {
                     console.log('force show recovery update options button clicked');
-                    document.getElementById('extension-power-settings-update-recovery-container').classList.add('extension-power-settings-developer-only');
-                    document.getElementById('extension-power-settings-switch-to-recovery-container').classList.add('extension-power-settings-developer-only');
+                    document.getElementById('extension-power-settings-update-recovery-container').classList.add('extension-power-settings-show-if-developer');
+                    document.getElementById('extension-power-settings-switch-to-recovery-container').classList.add('extension-power-settings-show-if-developer');
                 });
                 
                 

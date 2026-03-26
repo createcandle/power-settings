@@ -881,11 +881,10 @@ body:not(.kiosk):not(.http).https .extension-power-settings-hide-if-https{
     margin-bottom:30vh;
 }
 
-.extension-power-settings-developer-only{
-    display:none;
+.extension-power-settings-developer-show-if-developer{
     background-color:#555;
 }
-.developer .extension-power-settings-developer-only{
+body:not(.developer) .extension-power-settings-show-if-developer{
     display:block;
 }
 

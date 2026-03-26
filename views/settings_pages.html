@@ -533,9 +533,9 @@
                 <li>General settings for controller and your addons</li>
             </ul>
             <p>By default this does NOT contain <span class="photo-frame-detail">photos or </span>data logs in order to keep file size small.</p>
-            <p class="extension-power-settings-developer-only">Log size: <span id="extension-power-settings-log-size">unknown</span>Mb</p>
-            <p class="extension-power-settings-developer-only">Photos size: <span id="extension-power-settings-photos-size">unknown</span>Mb</p>
-            <p class="extension-power-settings-developer-only">Uploads size: <span id="extension-power-settings-uploads-size">unknown</span>Mb</p>
+            <p class="extension-power-settings-show-if-developer">Log size: <span id="extension-power-settings-log-size">unknown</span>Mb</p>
+            <p class="extension-power-settings-show-if-developer">Photos size: <span id="extension-power-settings-photos-size">unknown</span>Mb</p>
+            <p class="extension-power-settings-show-if-developer">Uploads size: <span id="extension-power-settings-uploads-size">unknown</span>Mb</p>
             
             <input type="checkbox" name="extension-power-settings-backup-more-checkbox" id="extension-power-settings-backup-more-checkbox" />
             <label for="extension-power-settings-backup-more-checkbox">Also backup logs<span class="photo-frame-detail"> and photos</span></label>
@@ -682,7 +682,7 @@
 
         <div id="extension-power-settings-update-general-container" class="extension-power-settings-area">
             <p>You are running <span id="extension-power-settings-bits">32bit</span> Candle Controller version <span id="extension-power-settings-candle-version">...</span></p>
-            <p class="extension-power-settings-developer-only">You originally started with Candle version: <span id="extension-power-settings-candle-original-version">unknown</span></p>
+            <p>You originally started with version: <span id="extension-power-settings-candle-original-version">unknown</span></p>
             <div id="extension-power-settings-no-updates" style="display: none;">
                 <p>Your system is up-to-date.</p>
             </div>
@@ -708,7 +708,7 @@
         </div>
         
         
-        <div id="extension-power-settings-update-developer-options-container" class="extension-power-settings-area extension-power-settings-developer-only" style="background-color:#555">
+        <div id="extension-power-settings-update-developer-options-container" class="extension-power-settings-area extension-power-settings-show-if-developer" style="background-color:#555">
             <p class="extension-power-settings-header">Developer options</p>
             <p>Your Update & Recovery system has version: <span id="extension-power-settings-update-recovery-version">...</span></p>
             <p>Memory size: <span id="extension-power-settings-update-total-memory">...</span>Mb</p>
@@ -749,7 +749,7 @@
         </div>
         
 
-        <div id="extension-power-settings-system-update-available-container" class="extension-power-settings-area extension-power-settings-developer-only" style="display: none;">
+        <div id="extension-power-settings-system-update-available-container" class="extension-power-settings-area extension-power-settings-show-if-developer" style="display: none;">
         <!--<div id="extension-power-settings-system-update-container" class="extension-power-settings-area">-->
             <p class="extension-power-settings-header">System update</p>
             
@@ -759,7 +759,7 @@
                 <p>Visit candlesmarthome.com/troubleshooting if you want to figure out what happened.</p>
             </div>
             
-            <div class="extension-power-settings-developer-only">
+            <div class="extension-power-settings-show-if-developer">
                 <p>A system update is available.</p>
                 <ul>
                     <li>Always make a backup first!</li>
@@ -793,14 +793,14 @@
                 </div>
 
                 <div id="extension-power-settings-system-update-overlay-disabled-container" style="display: none;">
-                    <div class="extension-power-settings-developer-only">
+                    <div class="extension-power-settings-show-if-developer">
                         <input type="checkbox" name="extension-power-settings-cutting-edge-checkbox" id="extension-power-settings-cutting-edge-checkbox" />
                         <label for="extension-power-settings-cutting-edge-checkbox">Update to the cutting edge build (RISKY!)</label>
                         <p class="extension-power-settings-field-description">This option is available because you have enabled developer mode.</p>
                     </div>
 
                     <!--
-                    <div id="extension-power-settings-live-update-option" class="extension-power-settings-developer-only" style="display: none;">
+                    <div id="extension-power-settings-live-update-option" class="extension-power-settings-show-if-developer" style="display: none;">
                         <input type="checkbox" name="extension-power-settings-live-update-checkbox" id="extension-power-settings-live-update-checkbox" />
                         <label for="extension-power-settings-live-update-checkbox">Update while the system is running</label>
                         <p class="extension-power-settings-field-description">
@@ -845,11 +845,11 @@
                 </div>
             </div>
 
-            <pre id="extension-power-settings-update-process-output" class="extension-power-settings-developer-only"></pre>
+            <pre id="extension-power-settings-update-process-output" class="extension-power-settings-show-if-developer"></pre>
         </div>
         
         
-        <div id="extension-power-settings-update-recovery-container" class="extension-power-settings-area">
+        <div id="extension-power-settings-update-recovery-container" class="extension-power-settings-area extension-power-settings-show-if-developer">
             <p class="extension-power-settings-header">Update & Recovery</p>
             <div id="extension-power-settings-update-recovery-supported">
                 <p>Your Candle Controller has an update and recovery system. This should also be kept up to date. Doing so can be done in the background, and does not require a reboot.</p>
@@ -880,7 +880,7 @@
         </div>
         
         
-        <div id="extension-power-settings-switch-to-recovery-container" class="extension-power-settings-area">
+        <div id="extension-power-settings-switch-to-recovery-container" class="extension-power-settings-area extension-power-settings-hidden">
             <p class="extension-power-settings-header">Upgrade Candle</p>
             
             <p>A new version of the Candle Controller is available.</p>
@@ -934,7 +934,7 @@
 		
 		
         <!--
-        <div id="extension-power-settings-manual-update-container" class="extension-power-settings-area extension-power-settings-developer-only">
+        <div id="extension-power-settings-manual-update-container" class="extension-power-settings-area extension-power-settings-show-if-developer">
             <p class="extension-power-settings-header">Manual security update</p>
             <p>This will update all installed programs to the latest version, which may, for example, help alleviate urgent security worries. However, it may also cause unexpected issues, since these updates are not tested.</p>
             <p>It basically runs <span style="font-weight:bold">apt upgrade</span> on the system.</p>

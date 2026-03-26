@@ -108,7 +108,8 @@ class PowerSettingsAPIHandler(APIHandler):
         self.addon_dir = os.path.join(str(self.user_profile['addonsDir']), self.addon_id)
         self.data_dir = os.path.join(str(self.user_profile['dataDir']), self.addon_id)
         # baseDir is another useful option in user_profile
-
+        
+        
         self.mosquitto_conf_file_path = os.path.join(str(self.user_profile['baseDir']), 'etc','mosquitto','mosquitto.conf')
         self.late_sh_path = os.path.join(str(self.user_profile['baseDir']).replace('/.webthings',''), 'candle','late.sh')
         #print("self.late_sh_path: ", self.late_sh_path)
@@ -171,7 +172,10 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
         
-        
+        # Addon backups
+        self.start_timestamp = time.time()
+        self.created_addon_backups = False
+
         
         
         # MQTT
@@ -754,8 +758,8 @@ class PowerSettingsAPIHandler(APIHandler):
         self.update_backup_info()
         
         # get recovery partition version
-        self.check_recovery_partition()
-        
+        if str(self.candle_version).startswith('2') or os.path.isfile('/boot/firmware/developer.txt'):
+            self.check_recovery_partition()
         
         
         # Check if anonymous MQTT access is currently allowed
@@ -847,7 +851,6 @@ class PowerSettingsAPIHandler(APIHandler):
                     print("should_start_recovery_update was True. Calling update_recovery_partition")
                 self.should_start_recovery_update = False
                 self.update_recovery_partition()
-    
             
             new_lsusb = str(run_command('lsusb'))
             if new_lsusb != self.previous_lsusb:
@@ -863,14 +866,21 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                 self.previous_lsusb = new_lsusb
     
-            
             if self.force_reboot_time > 0 and self.force_reboot_time < time.time():
                 self.force_reboot_time = 0
                 if self.DEBUG:
                     print("FORCING REBOOT based on self.force_reboot_time")
                 os.system('sudo reboot now')
-                
-    
+                break
+            
+            #self.start_timestamp = time.time()
+            #self.created_addon_backups = False
+            #self.addon_backups_dir
+            if self.created_addon_backups == False and time.time() - self.start_timestamp > 3600:
+                if self.DEBUG:
+                    print("clock: time to create an initial backup of any (new) addons")
+                self.created_addon_backups = True
+                self.initial_addons_backup()
     
     
     
@@ -3616,8 +3626,10 @@ class PowerSettingsAPIHandler(APIHandler):
             self.backup_file_exists = os.path.isfile(self.backup_file_path)
             self.restore_file_exists = os.path.isfile(self.restore_file_path)
             self.photo_frame_installed = os.path.isdir(self.photos_dir_path)
-            self.disk_usage = shutil.disk_usage(directory)
+            self.disk_usage = shutil.disk_usage(directory) # TODO: it makes no sense to query other directories, as that would create a mismatched self.disk_usage
             self.get_backup_sizes()
+            if self.DEBUG:
+                print("update_backup_info: self.disk_usage for: ", directory, self.disk_usage)
         except Exception as ex:
             print("error in update_backup_info: " + str(ex))
 
@@ -3776,7 +3788,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     if self.DEBUG:
                         print("self.backup_more was false, skipping logs, photos and uploads")
                 
-                backup_command = 'cd ' + str(self.user_profile['baseDir']) + '; find ./config ./data -maxdepth 2 -name "*.json" -o -name "*.xtt" -o -name "*.yaml" -o -name "*.xml" -o -name "*.sqlite3" -o -name "*.blacklisted_devices" -o -name "*.trusted_devices" -o -name "*.ignored_devices" -o -name "*.db" -o -name "*.txt" | tar -cf ' + str(self.backup_file_path) + ' -T -' 
+                backup_command = 'cd ' + str(self.user_profile['baseDir']) + '; find ./config ./data ./hasdata -maxdepth 2 -name "*.json" -o -name "*.xtt" -o -name "*.yaml" -o -name "*.xml" -o -name "*.sqlite3" -o -name "*.blacklisted_devices" -o -name "*.trusted_devices" -o -name "*.ignored_devices" -o -name "*.db" -o -name "*.txt" -o -name "*.ini" -o -name "*.backup" -o -name "*.data" -o -name "chip*" | tar -cf ' + str(self.backup_file_path) + ' -T -' 
                 backup_command += extra_tar_commands
                 
                 
@@ -3817,10 +3829,39 @@ class PowerSettingsAPIHandler(APIHandler):
 
 
 
+    def initial_addons_backup(self):
+        if self.DEBUG:
+            print("debug: in initial_addons_backup")
+
+        for path, dirs, files in os.walk(self.addon_backups_dir):
+            for d in dirs:
+                if len(str(d)) > 2 and str(s) != 'package':
+                    source_dir = os.path.join(str(self.user_profile['addonsDir']),str(d))
+                    target_dir = os.path.join(str(self.addon_backups_dir),str(d))
+                    
+                    if os.path.isdir(source_dir) and not os.path.isdir(target_dir):
+                        
+                        if os.path.exists('/dev/mmcblk0p4'):
+                            free_space = str(run_command('df -h --output=avail /dev/mmcblk0p4 | tail -1')).strip().rstrip()
+                            if self.DEBUG:
+                                print("initial_addons_backup: free_space: ", free_space)
+                            if not free_space.endswith('G'):
+                                if self.DEBUG:
+                                    print("not enough disk space remaining to create an addon backup")
+                                continue
+                                
+                        if self.DEBUG:
+                            print("debug: initial_addons_backup: creating a backup copy of: ", d, " at: ", target_dir)
+                        copy_result = run_command('cp -r ' + str(source_dir) + ' ' + str(self.addon_backups_dir) + str(os.sep))
+                        if self.DEBUG:
+                            print("initial_addons_backup: copy result: ", copy_result)
+                        time.sleep(10)
+
     # check what version of the recovery partition is installed
     def check_recovery_partition(self):
         if self.DEBUG:
-            print("debug: in check_recovery_partition")
+            print("debug: in check_recovery_partition (BLOCKED)")
+        return
             
         try:
             lsblk_output = run_command('lsblk')
@@ -4200,7 +4241,7 @@ class PowerSettingsAPIHandler(APIHandler):
             print("In speaker test")
         run_command('speaker-test -c1 -twav -l1')
         time.sleep(1)
-        run_command('speaker-test -c1 -twav -l1')
+        run_command('sudo speaker-test -c1 -twav -l1')
         time.sleep(1)
         #os.system('speaker-test -c2 -twav -l1')
         os.system('speaker-test -c4 -twav -l1')
