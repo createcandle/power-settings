@@ -349,7 +349,7 @@
 				<p class="extension-power-settings-header">Storage space</p>
 				
 				<div class="extension-power-settings-display-info-flex">
-					<div style="position:relative;width:25%"><img alt="Micro SD card" src="/extensions/power-settings/images/micro_sd_card.svg"/><div class="extension-power-settings-sd-card-size"><span id="extension-power-settings-device-sd-card-size">?</span></div></div>
+					<div style="position:relative;width:25%"><img id="extension-power-settings-disk-space-sd-card-image" alt="Micro SD card" src="/extensions/power-settings/images/micro_sd_card.svg"/><div class="extension-power-settings-sd-card-size"><span id="extension-power-settings-device-sd-card-size">?</span></div></div>
 					<div style="text-align:left;width:75%">
 						
 						<div id="extension-power-settings-disk-bar-container"  class="extension-power-settings-bar-container"><div id="extension-power-settings-disk-used-bar" class="extension-power-settings-bar"></div></div>
@@ -692,22 +692,106 @@
                 <p>Unfortunately your Candle Controller cannot support the new, more robust update system. It's recommended to take the following steps:</p>
                 <ol>
                     <li>Create a backup of your system (settings -> backup).</li>
-                    <li>Flash the latest version of the Candle controller to an SD card. It's recommended to use a new SD card for this. The steps to do this are explained on candlesmarthome.com.</li>
+                    <li>Flash the latest version of the Candle controller to an SD card. The steps to do this are explained on candlesmarthome.com.</li>
                     <li>Turn off the Candle controller.
                     <li>Replace the current SD card in your Candle controller with the new one.</li>
-                    <li>Turn on the Candle controller. Connect it to your network, and create an account again. This is only a temporary account.</li>
+                    <li>Turn on the Candle controller. If it's not connected via a network cable, then connect to it's WiFi hotspot using password 'smarthome'.</li>
+					<li>Open 'candle.local' in your browser, then create an account again. This is only a temporary account, as the backup will overwrite it later.</li>
                     <li>Restore the backup (settings -> backup). This will also restore your original network settings and user account.</li>
                 </ol>
                 <p>If everything went well, then you can use the old SD card for something else. If not, then you can simply go back to your "old" Candle system by plugging that SD card back in.</p>
             </div>
         </div>
         
+       
+        
+		
+        <div id="extension-power-settings-partitions-info-container">
+        <!--<div id="extension-power-settings-system-update-container" class="extension-power-settings-area">-->
+            <p class="extension-power-settings-header">Currently installed</p>
+            
+			<div id="extension-power-settings-update-sd-card-container" class="extension-power-settings-flex">
+				
+				<div id="extension-power-settings-update-sd-card-left" class="extension-power-settings-flex-column">
+					<div id="extension-power-settings-update-sd-card-left-empty1"></div>
+					<div id="extension-power-settings-update-sd-card-left-diagonal1"></div>
+					<div id="extension-power-settings-update-sd-card-left-black1"></div>
+					<div id="extension-power-settings-update-sd-card-left-empty2" class="extension-power-settings-flex">
+						<div id="extension-power-settings-update-sd-card-left-empty2-left"></div><div id="extension-power-settings-update-sd-card-left-empty2-right"></div>
+					</div>
+					<div id="extension-power-settings-update-sd-card-left-diagonal2"></div>
+					<div id="extension-power-settings-update-sd-card-left-black2"></div>
+				</div>
+				<div id="extension-power-settings-update-sd-card-right" class="extension-power-settings-flex-column">
+					<div id="extension-power-settings-update-sd-card-pins">
+						<div></div>
+						<div></div>
+						<div></div>
+						<div></div>
+						<div></div>
+						<div></div>
+						<div></div>
+						<div></div>
+					</div>
+					<div id="extension-power-settings-update-sd-card-content" class="extension-power-settings-flex-column">
+						<div id="extension-power-settings-update-sd-card-boot">
+							<div>
+								<h3>Boot partition <span class="extension-power-settings-update-sd-card-partition-size">0.5GB</span></h3>
+								<p>This is the one you see when you plug the SD card into your computer. It's tiny and mostly stores settings, such as which system partition is the active one.</p>
+								<div id="extension-power-settings-update-sd-card-boot-info"></div>
+							</div>
+						</div>
+						<div id="extension-power-settings-update-sd-card-a">
+							<div>
+								<h3>System A partition <span class="extension-power-settings-update-sd-card-partition-size">7GB</span></h3>
+								<div id="extension-power-settings-update-sd-card-a-info">
+									<p>ACTIVE - Candle 3.0.0</p>
+								</div>
+							</div>
+						</div>
+						<div id="extension-power-settings-update-sd-card-b">
+							<div>
+								<h3>System B partition <span class="extension-power-settings-update-sd-card-partition-size">7GB</span></h3>
+								<div id="extension-power-settings-update-sd-card-b-info">
+									<p>Inactive and mostly empty. Contains an emergency recovery system for now. Waiting for Candle 3.1.</p>
+								</div>
+							</div>
+						</div>
+						<div id="extension-power-settings-update-sd-card-user">
+							<div>
+								<h3>User partition  <span id="extension-power-settings-update-sd-card-user-partition-size" class="extension-power-settings-update-sd-card-partition-size"></span></h3>
+								<p>Stores your installed addons and personal data</p>
+								<div id="extension-power-settings-update-sd-card-user-info"></div>
+							</div>
+						</div>
+					</div>
+					<div id="extension-power-settings-update-sd-card-footer"></div>
+				</div>
+				
+			</div>
+			
+		</div>
+		<div class="extension-power-settings-area">
+			
+			<h3>How a system update works</h3>
+			<p>Your Candle Controller has three main partitions: two 'system partitions', and one 'user partition'. Think of them as large chunks of storage space.</p>
+			<p>Your installed addons and personal data is on the user partition, and is perfectly safe there. The update process doesn't touch it.</p>
+			<p>The version of Candle you're using is running on the A system partition. The other system partition, B, is not being used.</p>
+			<p>When a big Candle update is installed, the new version is downloaded to the inactive B partition. Once the download is complete you can try to switch over to the B system partiton. If that's succesful, then the B partition becomes the active one.</p>
+			<p>And so on</p>
+			<p>Then if there's another update available, then it will be downloaded to whichever partition is inactive. And so the system keeps switching between A and B.</p>
+			<p>The nice thing about this "A-B method" is that it's very robust and safe. If switching to the new version fails for some reason, then the system automatically falls back to using the 'old' version.</p>
+
+		</div>
+        
+		
+		
+		
         <div id="extension-power-settings-update-no-space-available" class="extension-power-settings-area" style="display:none; background-color:#600">
             <h3>Not enough memory or disk space</h3>
             <p>Your user data partition is too full to run updates.</p>
         </div>
-        
-        
+		
         <div id="extension-power-settings-update-developer-options-container" class="extension-power-settings-area extension-power-settings-show-if-developer" style="background-color:#555">
             <p class="extension-power-settings-header">Developer options</p>
             <p>Your Update & Recovery system has version: <span id="extension-power-settings-update-recovery-version">...</span></p>

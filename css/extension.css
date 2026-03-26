@@ -885,7 +885,7 @@ body:not(.kiosk):not(.http).https .extension-power-settings-hide-if-https{
     background-color:#555;
 }
 body:not(.developer) .extension-power-settings-show-if-developer{
-    display:block;
+    display:none;
 }
 
 /*  TODO: REMOVE THIS BLOCK
@@ -980,6 +980,121 @@ body > #extension-power-settings-update-process-progress-bar-container{
     padding: 2rem;
     margin: 4rem 0;
     border-radius:.5rem;
+}
+
+
+
+
+#extension-power-settings-no-updates{
+	color:#00ee00;
+	font-weight:bold;
+}
+
+
+/*  UPDATE MEGA MICRO SD CARD */
+
+#extension-power-settings-partitions-info-container{
+	margin:6rem 0;
+}
+
+#extension-power-settings-update-sd-card-container{
+    box-shadow: 5px 5px 0px rgba(0, 0, 0, .3);
+    border-radius: 3rem;
+}
+
+#extension-power-settings-update-sd-card-left,
+#extension-power-settings-update-sd-card-left > div{
+	width:10rem;
+	box-sizing:border-box;
+}
+
+#extension-power-settings-update-sd-card-left-empty1{
+	height:15rem;
+}
+
+#extension-power-settings-update-sd-card-left-diagonal1,
+#extension-power-settings-update-sd-card-left-diagonal2{
+	height:10rem;
+	background: linear-gradient(315deg,#1f1574 50%, rgba(255, 255, 255, 0) 50%);
+}
+
+#extension-power-settings-update-sd-card-left-diagonal2{
+	height:10rem;
+	border-right:5rem solid #1f1574;
+}
+#extension-power-settings-update-sd-card-left-empty2{
+	height:10rem;
+}
+#extension-power-settings-update-sd-card-left-empty2-left{
+	box-shadow: inset 0 5px 0px rgba(0, 0, 0, .3);
+	width:5rem;
+	height:10rem;
+}
+#extension-power-settings-update-sd-card-left-empty2-right{
+	width:5rem;
+	height:10rem;
+	background-color:#1f1574;
+}
+#extension-power-settings-update-sd-card-left-black1,
+#extension-power-settings-update-sd-card-left-black2{
+	background-color:#1f1574;
+}
+
+#extension-power-settings-update-sd-card-left-black1{
+	height:10rem;
+}
+
+#extension-power-settings-update-sd-card-left-black2{
+	flex-grow:1;
+	border-bottom-left-radius:3rem;
+	min-height:20rem;
+}
+
+
+#extension-power-settings-update-sd-card-right{
+	background-color:#1f1574;
+	border-top-left-radius: 3rem;
+	border-top-right-radius:3rem;
+	border-bottom-right-radius:3rem;
+	overflow:hidden;
+	flex-grow:1;
+}
+
+#extension-power-settings-update-sd-card-pins{
+	padding: 2rem 5rem;
+	display:flex;
+	justify-content:space-around;
+}
+
+#extension-power-settings-update-sd-card-pins > div{
+	height:10rem;
+	width:10%;
+	border-radius:1rem;
+	background-color:#FFD700;
+}
+
+#extension-power-settings-update-sd-card-content{
+	padding:2rem;
+}
+
+#extension-power-settings-update-sd-card-content > div{
+	padding:2rem;
+	background-color:rgba(255,255,255,.05);
+	border-radius:1rem;
+	margin-bottom:1rem;
+}
+
+#extension-power-settings-update-sd-card-content h3{
+	margin-top:0;
+}
+
+#extension-power-settings-update-sd-card-content p{
+	opacity:.8;
+}
+
+.extension-power-settings-update-sd-card-partition-size{
+	opacity:.6;
+	float: right;
 }
 
 
@@ -1113,6 +1228,9 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 	font-weight: bolder;
 }
 
+#extension-power-settings-disk-space-sd-card-image{
+	cursor:pointer;
+}
 
 .extension-power-settings-sd-card-size{
 	position:absolute;
@@ -1122,6 +1240,8 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 	font-size: 1.8rem;
 	font-weight: bolder;
 }
+
+
 
 /*
 #extension-power-settings-display1-resolution-container,

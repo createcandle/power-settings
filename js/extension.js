@@ -1372,6 +1372,16 @@
                 });
                 
                 
+				
+                document.getElementById('extension-power-settings-disk-space-sd-card-image').addEventListener('click', () => {
+                    //console.log('show reset menu button clicked');
+                    this.hide_all_settings_containers();
+                    document.getElementById('extension-power-settings-container-update').classList.remove('extension-power-settings-hidden');
+                    document.getElementById('extension-power-settings-pages').classList.remove('hidden');
+                    
+                    this.update_checks();
+                });
+				
                 
                 // Show update page button
                 document.getElementById('extension-power-settings-menu-update-button').addEventListener('click', () => {
@@ -4239,6 +4249,9 @@
                             console.log("power settings debug: /ro exists");
                         }
                     }
+					
+					
+					
                     
 
                     if(this.system_update_in_progress == false){
@@ -4456,7 +4469,14 @@
                         }
                     }
                 }
+				
+				
+				if(typeof body.alt_original_version != 'undefined' && typeof body.recovery_version == 'number'){
+					// TODO: let user select disk images fron a list, which will them be installed onto the unused partition. Then users can switch between them.
+					
+				}
                 
+				this.get_stats();
                 
                 // dealing with recovery_partition_bits is no longer needed, as having the recovery partition be 32 bits works for both 32 and 64 bit kernels
                 
@@ -5817,6 +5837,10 @@
 					const total_disk_space = Math.floor(body['disk_usage'][0] / 1024000);
                     const free_disk_space = Math.floor(body['disk_usage'][2] / 1024000);
 					const used_disk_space = total_disk_space - free_disk_space;
+					
+					
+					document.getElementById('extension-power-settings-update-sd-card-user-partition-size').innerText = Math.round(total_disk_space / 1024) + 'GB';
+					
 					
                     document.getElementById('extension-power-settings-total-disk').innerText = total_disk_space;
                     document.getElementById('extension-power-settings-free-disk').innerText = free_disk_space;

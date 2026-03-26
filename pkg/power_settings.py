@@ -476,6 +476,7 @@ class PowerSettingsAPIHandler(APIHandler):
         # Recovery partition
         #self.recovery_not_supported = None
         self.recovery_version = 0
+        self.alt_candle_version = 0
         self.recovery_partition_bits = 32
         self.latest_recovery_version = 2
         self.busy_updating_recovery = 0  # higher values indicate steps in the process. 5 is a likely succesfull upgrade.
@@ -758,8 +759,8 @@ class PowerSettingsAPIHandler(APIHandler):
         self.update_backup_info()
         
         # get recovery partition version
-        if str(self.candle_version).startswith('2') or os.path.isfile('/boot/firmware/developer.txt'):
-            self.check_recovery_partition()
+        #if str(self.candle_version).startswith('2') or os.path.isfile('/boot/firmware/developer.txt'):
+        self.check_recovery_partition()
         
         
         # Check if anonymous MQTT access is currently allowed
@@ -1289,6 +1290,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'update_needs_two_reboots':self.update_needs_two_reboots,
                                             'bits':self.bits,
                                             'recovery_version':self.recovery_version,
+                                            'alt_candle_version':self.alt_candle_version,
                                             'latest_recovery_version':self.latest_recovery_version,
                                             'busy_updating_recovery':self.busy_updating_recovery,
                                             'recovery_partition_exists':self.recovery_partition_exists,
@@ -2846,6 +2848,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       
                                                       'recovery_partition_exists':self.recovery_partition_exists,
                                                       'recovery_version':self.recovery_version,
+                                                      'alt_candle_version':self.alt_candle_version,
                                                       'latest_recovery_version':self.latest_recovery_version,
                                                       'allow_update_via_recovery':self.allow_update_via_recovery,
                                                       'busy_updating_recovery':self.busy_updating_recovery,
@@ -3860,8 +3863,8 @@ class PowerSettingsAPIHandler(APIHandler):
     # check what version of the recovery partition is installed
     def check_recovery_partition(self):
         if self.DEBUG:
-            print("debug: in check_recovery_partition (BLOCKED)")
-        return
+            print("debug: in check_recovery_partition")
+        #return
             
         try:
             lsblk_output = run_command('lsblk')
@@ -3877,10 +3880,11 @@ class PowerSettingsAPIHandler(APIHandler):
                 if not os.path.exists(self.recovery_partition_mount_point):
                     os.system('sudo mkdir -p ' + str(self.recovery_partition_mount_point))
                 
+                candle_version_text_path = os.path.join(self.recovery_partition_mount_point,'candle_version.txt')
                 candle_recovery_text_path = os.path.join(self.recovery_partition_mount_point,'candle_recovery.txt')
-                if os.path.exists(candle_recovery_text_path):
+                if os.path.exists(candle_recovery_text_path) or os.path.exists(candle_version_text_path):
                     if self.DEBUG:
-                        print("debug: warning, recovery partition seems to already be mounted")
+                        print("debug: warning, partition 3 seems to already be mounted")
                 else:
                     
                     if os.path.exists(self.recovery_partition_mount_point):
@@ -3894,19 +3898,27 @@ class PowerSettingsAPIHandler(APIHandler):
                         return
                     
                 # Check if the recovery partition was mounted properly
-                if os.path.exists(candle_recovery_text_path) == False:
+                if os.path.exists(candle_recovery_text_path) == False and os.path.exists(candle_version_text_path) == False:
                     if self.DEBUG:
                         print("ERROR, mounting recovery partition failed") # could be a rare occurance of an unformatted recovery partition
                         if os.path.exists(os.path.join(self.recovery_partition_mount_point,'bin')):
-                            print("However, /bin does exist, so the partition is mounted?")
+                            print("However, /bin does exist, so the partition is mounted? Very strange")
+                            # TODO: inform user that there's a squatter
+                            
                 else:
-                    with open(candle_recovery_text_path, "r") as version_file:
-                        self.recovery_version = int(version_file.read())
-                        if self.DEBUG:
-                            print("debug: recovery partition version: " + str(self.recovery_version))
+                    if os.path.exists(candle_version_text_path):
+                        with open(candle_version_text_path, "r") as version_file:
+                            self.alt_candle_version = int(version_file.read())
+                            if self.DEBUG:
+                                print("debug: alt candle partition version: " + str(self.alt_candle_version))
+                    elif os.path.exists(candle_recovery_text_path):
+                        with open(candle_recovery_text_path, "r") as version_file:
+                            self.recovery_version = int(version_file.read())
+                            if self.DEBUG:
+                                print("debug: recovery partition version: " + str(self.recovery_version))
                     
                     # not really needed at the moment, as a 32 bit partition is fine for both types of systems for now.
-                    if os.path.exists(os.path.join(self.recovery_partition_mount_point,'64bits.txt')):
+                    if os.path.exists(os.path.join(self.recovery_partition_mount_point,'64bits.txt')) or os.path.exists(os.path.join(self.recovery_partition_mount_point,'candle_64bits.txt')):
                         self.recovery_partition_bits = 64
                     
                     
