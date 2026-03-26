@@ -240,71 +240,75 @@
 			
 			if(!this.kiosk){
 				setInterval(() => {
-					if(this.hostname_was_changed_here === false){
-						let localstorage_hostname_data = localStorage.getItem('extension_power_settings_hostname');
-						if(localstorage_hostname_data && typeof localstorage_hostname_data == 'string'){
-							localstorage_hostname_data = JSON.parse(localstorage_hostname_data);
-							console.log("parsed localstorage_hostname_data: ", localstorage_hostname_data);
-							if(typeof localstorage_hostname_data['change_timestamp'] == 'number' && localstorage_hostname_data['change_timestamp'] < Date.now() - (38400 * 1000)){
-								localStorage.removeItem("extension_power_settings_hostname");
-							}
-							if(typeof localstorage_hostname_data['hostname'] == 'string' && localstorage_hostname_data['hostname'] != window.location.hostname){
-								console.log("detected a hostname mismatch between the current URL and the data in localstorage: ", window.location.hostname, localstorage_hostname_data['hostname']);
-							
-								let hostname_changed_warning_el = document.getElementById('extension-power-settings-hostname-changed-warning');
-								console.log("hostname_changed_warning_el: ", hostname_changed_warning_el);
-								if(!hostname_changed_warning_el){
-									const new_hostname_changed_warning_el = document.createElement('div');
-									new_hostname_changed_warning_el.setAttribute('id','extension-power-settings-hostname-changed-warning');
-									//new_hostname_changed_warning_el.innerHTML = '<div class="extension-power-settings-area"><div id="extension-power-settings-hostname-changed-warning-close-button"><h1>Hostname changed</h1><p>The hostname of this Candle Controller seems to have changed from ' + window.location.hostname + ' to ' + localstorage_hostname_data['hostname'] + '.</p><p>If this is intentional, then you should continue using Candle at the new hostname.</p><p></p><a class="text-button" href="' + (location.protocol + '//' + localstorage_hostname_data['hostname']) + '">Switch to ' + localstorage_hostname_data['hostname'] + '</a></div>';
-									
-									const hostname_changed_warning_inner_el = document.createElement('div');
-									hostname_changed_warning_inner_el.classList.add('extension-power-settings-area');
-									
-									const close_hostname_change_warning_button_el = document.createElement('div');
-									close_hostname_change_warning_button_el.classList.add('extension-power-settings-top-right-close-button');
-									close_hostname_change_warning_button_el.textContent = '✕';
-									close_hostname_change_warning_button_el.addEventListener('click', () => {
-										localStorage.removeItem('extension_power_settings_hostname');
-										new_hostname_changed_warning_el.remove();
-									});
-									hostname_changed_warning_inner_el.appendChild(close_hostname_change_warning_button_el);
-									
-									const hostname_changed_warning_content_el = document.createElement('div');
-									hostname_changed_warning_content_el.innerHTML = '<h1>Hostname changed</h1><p>The hostname of this Candle Controller seems to have changed from <strong>' + window.location.hostname + '</strong> to <strong>' + localstorage_hostname_data['hostname'] + '</strong>.</p><p>If this is intentional and correct, then you should continue using Candle at the new hostname.</p><p></p><a class="text-button" href="' + (location.protocol + '//' + localstorage_hostname_data['hostname']) + '">Switch to ' + localstorage_hostname_data['hostname'] + '</a>';
-									
-									hostname_changed_warning_inner_el.appendChild(hostname_changed_warning_content_el);
-									
-									
-									new_hostname_changed_warning_el.appendChild(hostname_changed_warning_inner_el);
-									
-									
-									document.body.appendChild(new_hostname_changed_warning_el);
-								}
-							
-								
-								/*
-								const connectivity_scrim_el = document.getElementById('connectivity-scrim');
-								if(connectivity_scrim_el && connectivity_scrim_el.classList.contains('hidden') == false){
-									console.log("it seems the hostname was recently changed, and this window is not on the new hostname yet");
-								
-									if(connectivity_scrim_el.innerHTML == ''){
-										console.log("connectivity_scrim is empty");
-										let test_el = document.createElement('h1');
-										test_el.textContent = 'Hostname changed';
-										connectivity_scrim_el.appendChild(test_el);
-									}
-								
-								
-									//connectivity_scrim_el.innerHTML == '<h1>Hostname changed</h1><p>The hostname of this Candle Controller seems to have changed from ' + window.location.hostname + ' to ' + localstorage_hostname_data['hostname'] + '.</p><p>If this is correct, then you can continue using Candle at the new hostname.</p><p></p><a class="text-button" href="' + location.protocol + '//' + localstorage_hostname_data['hostname'] + '">Go to ' + localstorage_hostname_data['hostname'] + '</a>';
-								}
-								*/
-							}
-						}
-					}
+					
 				},1000);
 			}
         }
+
+		hostname_change_check(){
+			if(this.hostname_was_changed_here === false){
+				let localstorage_hostname_data = localStorage.getItem('extension_power_settings_hostname');
+				if(localstorage_hostname_data && typeof localstorage_hostname_data == 'string'){
+					localstorage_hostname_data = JSON.parse(localstorage_hostname_data);
+					console.log("parsed localstorage_hostname_data: ", localstorage_hostname_data);
+					if(typeof localstorage_hostname_data['change_timestamp'] == 'number' && localstorage_hostname_data['change_timestamp'] < Date.now() - (38400 * 1000)){
+						localStorage.removeItem("extension_power_settings_hostname");
+					}
+					if(typeof localstorage_hostname_data['hostname'] == 'string' && localstorage_hostname_data['hostname'] != window.location.hostname){
+						console.log("detected a hostname mismatch between the current URL and the data in localstorage: ", window.location.hostname, localstorage_hostname_data['hostname']);
+					
+						let hostname_changed_warning_el = document.getElementById('extension-power-settings-hostname-changed-warning');
+						console.log("hostname_changed_warning_el: ", hostname_changed_warning_el);
+						if(!hostname_changed_warning_el){
+							const new_hostname_changed_warning_el = document.createElement('div');
+							new_hostname_changed_warning_el.setAttribute('id','extension-power-settings-hostname-changed-warning');
+							//new_hostname_changed_warning_el.innerHTML = '<div class="extension-power-settings-area"><div id="extension-power-settings-hostname-changed-warning-close-button"><h1>Hostname changed</h1><p>The hostname of this Candle Controller seems to have changed from ' + window.location.hostname + ' to ' + localstorage_hostname_data['hostname'] + '.</p><p>If this is intentional, then you should continue using Candle at the new hostname.</p><p></p><a class="text-button" href="' + (location.protocol + '//' + localstorage_hostname_data['hostname']) + '">Switch to ' + localstorage_hostname_data['hostname'] + '</a></div>';
+							
+							const hostname_changed_warning_inner_el = document.createElement('div');
+							hostname_changed_warning_inner_el.classList.add('extension-power-settings-area');
+							
+							const close_hostname_change_warning_button_el = document.createElement('div');
+							close_hostname_change_warning_button_el.classList.add('extension-power-settings-top-right-close-button');
+							close_hostname_change_warning_button_el.textContent = '✕';
+							close_hostname_change_warning_button_el.addEventListener('click', () => {
+								localStorage.removeItem('extension_power_settings_hostname');
+								new_hostname_changed_warning_el.remove();
+							});
+							hostname_changed_warning_inner_el.appendChild(close_hostname_change_warning_button_el);
+							
+							const hostname_changed_warning_content_el = document.createElement('div');
+							hostname_changed_warning_content_el.innerHTML = '<h1>Hostname changed</h1><p>The hostname of this Candle Controller seems to have changed from <strong>' + window.location.hostname + '</strong> to <strong>' + localstorage_hostname_data['hostname'] + '</strong>.</p><p>If this is intentional and correct, then you should continue using Candle at the new hostname.</p><p></p><a class="text-button" href="' + (location.protocol + '//' + localstorage_hostname_data['hostname']) + '">Switch to ' + localstorage_hostname_data['hostname'] + '</a>';
+							
+							hostname_changed_warning_inner_el.appendChild(hostname_changed_warning_content_el);
+							
+							
+							new_hostname_changed_warning_el.appendChild(hostname_changed_warning_inner_el);
+							
+							
+							document.body.appendChild(new_hostname_changed_warning_el);
+						}
+					
+						
+						/*
+						const connectivity_scrim_el = document.getElementById('connectivity-scrim');
+						if(connectivity_scrim_el && connectivity_scrim_el.classList.contains('hidden') == false){
+							console.log("it seems the hostname was recently changed, and this window is not on the new hostname yet");
+						
+							if(connectivity_scrim_el.innerHTML == ''){
+								console.log("connectivity_scrim is empty");
+								let test_el = document.createElement('h1');
+								test_el.textContent = 'Hostname changed';
+								connectivity_scrim_el.appendChild(test_el);
+							}
+						
+						
+							//connectivity_scrim_el.innerHTML == '<h1>Hostname changed</h1><p>The hostname of this Candle Controller seems to have changed from ' + window.location.hostname + ' to ' + localstorage_hostname_data['hostname'] + '.</p><p>If this is correct, then you can continue using Candle at the new hostname.</p><p></p><a class="text-button" href="' + location.protocol + '//' + localstorage_hostname_data['hostname'] + '">Go to ' + localstorage_hostname_data['hostname'] + '</a>';
+						}
+						*/
+					}
+				}
+			}
+		}
 
 
         show() {
@@ -1913,7 +1917,14 @@
 				// TROUBLESHOOTING
 				
 				document.getElementById('extension-power-settings-enable-safe-mode-button').addEventListener('click', () => {
-                    window.API.postJson(
+                    
+					const connectivity_scrim_el = document.getElementById('connectivity-scrim');
+					if(connectivity_scrim_el){
+						connectivity_scrim_el.classList.remove('hidden');
+					}
+					this.flash_message("Rebooting into safe mode");
+						
+					window.API.postJson(
                         `/extensions/${this.id}/api/ajax`, {
                             'action': 'boot_into_safe_mode'
                         }
@@ -1936,7 +1947,10 @@
                     }).catch((e) => {
                         document.getElementById('extension-power-settings-system-update-disable-overlay-button').style.display = 'block';
                         document.getElementById('extension-power-settings-system-update-disable-overlay-spinner').style.display = 'none';
-                        this.flash_message("Error, connection issue");
+                        this.flash_message("Error, connection issue.");
+						if(connectivity_scrim_el){
+							connectivity_scrim_el.classList.add('hidden');
+						}
                     });
 				});
 				
