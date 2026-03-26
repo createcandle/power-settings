@@ -61,7 +61,12 @@ find /home/pi/.webthings/data -type f -name 'persistence.json'  -delete
 # Clear the wifi password
 echo -e 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=NL\n' | tee /etc/wpa_supplicant/wpa_supplicant.conf
 
-echo "candle" > /etc/hostname
+if [ -f $BOOT_DIR/webthings_gateway_version.txt ]; then
+	echo "gateway" > /etc/hostname
+else
+	echo "candle" > /etc/hostname
+fi
+
 
 # restore basic database
 rm /home/pi/.webthings/config/db.sqlite3
@@ -121,6 +126,7 @@ if [ -f /home/pi/.webthings/addons/dashboard/persistence.json ]; then
     chmod 755 /home/pi/.webthings/data/dashboard/persistence.json
 fi
 rm -rf /home/pi/.webthings/data/matter-adapter/*
+rm -rf /home/pi/.webthings/hasdata/*
 rm -rf /home/pi/.webthings/data/energyuse/*
 rm -rf /home/pi/.webthings/data/networkscanner/*
 
