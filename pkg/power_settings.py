@@ -287,6 +287,9 @@ class PowerSettingsAPIHandler(APIHandler):
         self.factory_reset_script_path = os.path.join(self.addon_dir, "factory_reset.sh") 
         self.manual_update_script_path = os.path.join(self.addon_dir, "manual_update.sh") 
         
+        self.audio_test1_path = os.path.join(self.addon_dir, "audio", "test1.wav")
+        self.audio_test2_path = os.path.join(self.addon_dir, "audio", "test2.wav")
+        
         self.system_update_script_path = os.path.join(self.data_dir, "create_latest_candle.sh") 
         self.live_system_update_script_path = os.path.join(self.data_dir, "live_system_update.sh") # deprecated
         
@@ -781,10 +784,6 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
         self.detect_printers()
-        
-        
-        
-        
         
         self.clock_thread = threading.Thread(target=self.clock)
         self.clock_thread.daemon = True
@@ -4323,13 +4322,30 @@ class PowerSettingsAPIHandler(APIHandler):
         
     def test_speakers(self):
         if self.DEBUG:
-            print("In speaker test")
-        run_command('speaker-test -c1 -twav -l1')
-        time.sleep(1)
-        run_command('sudo speaker-test -c1 -twav -l1')
-        time.sleep(1)
+            print("In test_speakers")
+            print("pw-dump: ", str(run_command('strace -e connect pw-dump >/dev/null ')))
+        # strace -e connect pw-dump >/dev/null    
+        # printenv | grep -E 'PULSE|DBUS'
+        
+        if self.pipewire_enabled:
+            if os.path.isfile(str(self.audio_test1_path)):
+                print("playing test1.wav")
+                run_command('pw-play ' + str(self.audio_test1_path))
+                #if self.DEBUG:
+                if self.DEBUG and os.path.isfile(str(self.audio_test2_path)):
+                    time.sleep(1)
+                    print("playing test2.wav")
+                    os.system('dbus-run-session pw-play ' + str(self.audio_test2_path))
+            else:
+                print("error. missing audio test1 file: ", str(self.audio_test1_path))
+                run_command('speaker-test -c1 -twav -l1')
+        else:
+            run_command('speaker-test -c1 -twav -l1')
+        #time.sleep(1)
+        #run_command('sudo speaker-test -c1 -twav -l1')
+        #time.sleep(1)
         #os.system('speaker-test -c2 -twav -l1')
-        os.system('speaker-test -c4 -twav -l1')
+        #os.system('speaker-test -c4 -twav -l1')
         #os.system('speaker-test -t sine -c 2 --nloops 1')
         return True
         
