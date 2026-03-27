@@ -1488,6 +1488,7 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 .extension-power-settings-audio-item-volume-slider-container input[type="range"]{
 	background-color: #ddd;
 	-webkit-appearance: none;
+	height:1.5rem;
 }
 
 .extension-power-settings-audio-item-volume-slider::-webkit-slider-thumb {
