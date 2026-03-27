@@ -112,6 +112,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         self.mosquitto_conf_file_path = os.path.join(str(self.user_profile['baseDir']), 'etc','mosquitto','mosquitto.conf')
         self.late_sh_path = os.path.join(str(self.user_profile['baseDir']).replace('/.webthings',''), 'candle','late.sh')
+        self.ssl_certificate_file_path = os.path.join(str(self.user_profile['baseDir']), 'ssl','certificate.pem')
         #print("self.late_sh_path: ", self.late_sh_path)
         self.display_manufacturers_csv_path = os.path.join(self.addon_dir, 'display_manufacturers.csv')
         
@@ -167,9 +168,6 @@ class PowerSettingsAPIHandler(APIHandler):
         if not 'usb_gadget_mode_auto_connect' in self.persistent_data:
             self.persistent_data['usb_gadget_mode_auto_connect'] = False
             self.persistent_changed = True
-        
-            
-        
         
         
         # Addon backups
@@ -3072,6 +3070,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                         print("Error checking low voltage: " + str(ex))
                                 
                                 
+                                    
+                                
+                                
                                     try:
                                         self.attached_devices = []
                                         lsusb_output = run_command("lsusb | cut -d' ' -f 7,8,9,10,11,12,13,14,15") # get all words beyond the 7th..
@@ -3081,6 +3082,11 @@ class PowerSettingsAPIHandler(APIHandler):
                                         if lsusb_output != None:
                                             self.attached_devices = str(lsusb_output).splitlines()
                                     
+                                        extra_usb_power = False
+                                        extra_usb_power_check = str(run_command("cat /boot/firmware/config.txt | grep 'max_usb_current'"))
+                                        if'max_usb_current=1' in extra_usb_power_check:
+                                             extra_usb_power = True
+                                            
                                     
                                         self.attached_cameras = []
                                         camera_binary = 'libcamera-still'
@@ -3114,6 +3120,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'low_voltage':self.low_voltage,
                                                       'board_temperature':board_temperature,
                                                       'attached_devices':self.attached_devices,
+                                                      'extra_usb_power':extra_usb_power,
                                                       'ethernet_connected':self.ethernet_connected,
                                                       'has_cups':self.has_cups,
                                                       'printing_allowed':self.printing_allowed,
@@ -3183,6 +3190,72 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':True}),
                                 )
+                                
+                                
+                            elif action == 'extra_usb_power':
+                                state = False
+                                if self.DEBUG:
+                                    print("got call to extra_usb_power")
+                                
+                                if 'state' in request.body and isinstance(request.body['state'],bool):
+                                    if not 'config_txt_lines' in self.persistent_data:
+                                        self.persistent_data['config_txt_lines'] = {}
+                                    if bool(request.body['state']) == True:
+                                        if self.DEBUG:
+                                            print("enabling extra USB power")
+                                        self.persistent_data['config_txt_lines']['extra_usb_power'] = ['max_usb_current=1']
+                                        self.persistent_changed = True
+                                    elif 'extra_usb_power' in self.persistent_data['config_txt_lines']:
+                                        if self.DEBUG:
+                                            print("disabling extra USB power")
+                                        del self.persistent_data['config_txt_lines']['extra_usb_power']
+                                        self.persistent_changed = True
+                                    else:
+                                        if self.DEBUG:
+                                            print("extra_usb_power was already disabled")
+                                    
+                                    self.update_config_txt()
+                                    
+                                    state = True
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
+                                
+                                
+                            elif action == 'get_certificate':
+                                state = False
+                                if self.DEBUG:
+                                    print("got call to get_certificate")
+                                    
+                                certificate = None
+                                if os.path.isfile(self.ssl_certificate_file_path):
+                                    certificate = str(run_command('cat ' + str(self.ssl_certificate_file_path))).strip().rstrip()
+                                    if '-----END CERTIFICATE-----' in certificate:
+                                        state = True
+                                    else:
+                                        if self.DEBUG:
+                                            print("Error: get_certificate: missing -----END CERTIFICATE----- in certificate")
+                                        certificate = None
+                                
+                                else:
+                                    if self.DEBUG:
+                                        print("Error: get_certificate: missing certificate file: ", str(self.ssl_certificate_file_path))
+                                    
+                                    
+                                    
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state, 'certificate':certificate}),
+                                )
+                                
+                                
+                                
+                                
                                 
                                 
                             

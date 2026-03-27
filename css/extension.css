@@ -874,6 +874,10 @@ body:not(.kiosk):not(.http).https .extension-power-settings-hide-if-https{
 	opacity:.8;
 }
 
+#extension-power-settings-switch-to-encrypted-connection-link{
+	background-color:#026d06;
+}
+
 
 /*  UPDATE  */
 
@@ -1589,6 +1593,10 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 
 #network-settings-wifi-network-list:not(:empty) + #network-settings-wifi-wrap.hidden + #extension-power-settings-wifi-rescan-container{
 	display:block;
+}
+
+#network-settings-wifi-connect{
+	margin:5rem auto;
 }
 
 .wireless-network-info-ssid{

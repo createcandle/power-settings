@@ -87,7 +87,7 @@
 			
 			<p>This will unfortunately result in some warnings that the security certificate is 'self-signed', which you will have to choose to ignore, and 'connect anyway'.</p>
 			
-			<img id="extension-power-settings-using-encrypted-connection-example-animation" src="/extensions/power-settings/images/candle_chrome_https_example.gif" alt="Example of allowing an encrypted connection">
+			<img id="extension-power-settings-using-encrypted-connection-example-animation" src="/extensions/power-settings/images/https_example_chrome.gif" alt="Example of allowing an encrypted connection">
 			<p class="extension-power-settings-image-caption">An example of allowing an encrypted connection</p>
 			
 			<details>
@@ -111,6 +111,15 @@
 				<a id="extension-power-settings-switch-to-encrypted-connection-link" href="https://candle.local" class="text-button">Switch to an encrypted connection</a>
 			</div>
 			
+		</div>
+		
+		<div id="extension-power-settings-security-certificate-container" class="extension-power-settings-area extension-power-settings-hidden">
+			<h3>Install a security certificate (optional)</h3>
+			<p>If you install a 'security certificate' from this controller, then your browser will trust it completely from now on.</p>
+			<p>It's a more permanent solution, but the warnings you'll get are even scarier.</p>
+			<div class="extension-power-settings-align-right" style="margin-top:4rem; margin-bottom:1.5rem">
+				<button id="extension-power-settings-download-certificate-button" class="text-button">Get certificate</button>
+			</div>
 		</div>
 
 		<div id="extension-power-settings-general-security-container" class="extension-power-settings-area">
@@ -395,6 +404,11 @@
 						</div>
 					</div>
 				</div>
+                <div class="extension-power-settings-area">
+                    <input type="checkbox" name="extension-power-settings-extra-usb-power-checkbox" id="extension-power-settings-extra-usb-power-checkbox" />
+                    <label for="extension-power-settings-extra-usb-power-checkbox">Extra power for USB ports</label>
+                    <p class="extension-power-settings-field-description">Recommended to only enable if your power supply can output more than 3 amps at 5v</p>
+                </div>
 				
             </div>
         </div>

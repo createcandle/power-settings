@@ -76,26 +76,71 @@
 			
 			this.safe_mode_is_active = false;
 			
+			this.is_safari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 			
 			this.hostname_was_changed_here = false;
 			if(localStorage.getItem("extension_power_settings_hostname")){
 				localStorage.removeItem("extension_power_settings_hostname");
 			}
 			
-			let addon_settings_link_el = document.getElementById('addon-settings-link');
-			if(addon_settings_link_el){
-				addon_settings_link_el.parentNode.classList.add('extension-power-settings-hidden');
-			}
+			//let addon_settings_link_el = document.getElementById('addon-settings-link');
+			//if(addon_settings_link_el){
+			//	addon_settings_link_el.parentNode.classList.add('extension-power-settings-hidden');
+			//}
 			setTimeout(() => {
-				addon_settings_link_el = document.getElementById('addon-settings-link');
-				if(addon_settings_link_el){
-					addon_settings_link_el.parentNode.classList.add('extension-power-settings-hidden');
-				}
+				//addon_settings_link_el = document.getElementById('addon-settings-link');
+				//if(addon_settings_link_el){
+				//	addon_settings_link_el.parentNode.classList.add('extension-power-settings-hidden');
+				//}
 				
 				const network_settings_ssid_hidden_input_el = document.getElementById('network-settings-wifi-ssid');
 				if(network_settings_ssid_hidden_input_el){
 					network_settings_ssid_hidden_input_el.setAttribute('type','text');
 					network_settings_ssid_hidden_input_el.setAttribute('disabled',true);
+				}
+				
+				
+				const network_settings_wifi_connect_button_el = document.getElementById('network-settings-wifi-connect');
+				if(network_settings_wifi_connect_button_el){
+					if(this.debug){
+						console.log("power settings debug: clicked on connect to wifi button");
+					}
+					network_settings_wifi_connect_button_el.addEventListener('click', () => {
+					
+						setTimeout(() => {
+							if(this.debug){
+								console.log("power settings debug: calling window.API.getNetworkAddresses");
+							}
+						    window.API.getNetworkAddresses()
+							.then((body) => {
+					        	if (!body) {
+									if(this.debug){
+										console.error('power settings debug: API.getNetworkAddresses response had no body?');
+									}
+									return;
+								}
+								const ethernet_ip_el = document.getElementById('network-settings-list-item-ethernet-ip');
+								if(ethernet_ip_el){
+									ethernet_ip_el.textContent = body.lan;
+									document.getElementById('network-settings-list-item-wifi-ssid').textContent = body.wlan.ssid;
+									document.getElementById('network-settings-list-item-wifi-ip').textContent = body.wlan.ip;
+								}
+							})
+							.catch((err) => {
+								if(this.debug){
+									console.error('power settings debug: caught error getting network addresses from window.API:', err);
+								}
+							});
+						
+						},7000);
+					
+					
+					});
+				}
+				else{
+					if(this.debug){
+						console.error("power-settings debug: network-settings-wifi-connect button does not exist (yet)");
+					}
 				}
 				
 			},1000);
@@ -125,7 +170,7 @@
 				}
 				if(event.target.tagName == 'A'){
 					if(this.debug){
-						console.log("user clicked on link in main settings menu");
+						console.log("power-settings debug: user clicked on settings link in main settings menu");
 					}
 					const menu_item_els = document.querySelectorAll('#settings-view section.settings-section');
 					for(let mi = 0; mi < menu_item_els.length; mi++){
@@ -141,7 +186,7 @@
 				
 					if(event.target.getAttribute('id') == 'network-settings-link'){
 						if(this.debug){
-							console.log("user clicked on network settings button in main settings menu");
+							console.log("power settings debug: user clicked on network settings button in main settings menu");
 						}
 						
 			            window.API.postJson(
@@ -152,7 +197,9 @@
 			                this.render_hotspot_settings(body);
             
 			            }).catch((err) => {
-			                console.error("power-settings get_hotspot_details error: ", err);
+			                if(this.debug){
+								console.error("power-settings debug: caught get_hotspot_details error: ", err);
+							}
 			            });
 					}
 					
@@ -173,34 +220,8 @@
 				console.error("power-settings: network_settings_link_el does not exist (yet)");
 			}
 			*/
-			const network_settings_wifi_connect_button_el = document.getElementById('network-settings-wifi-connect');
-			if(network_settings_wifi_connect_button_el){
-				network_settings_wifi_connect_button_el.addEventListener('click', () => {
-					const wifi_ssid_el = document.getElementById('network-settings-list-item-wifi-ssid');
-					if(wifi_ssid_el && wifi_ssid_el.textContent == ''){
-						wifi_ssid_el.textContent = 'Connecting...';
-						setTimeout(() => {
-							if(window.location.href.endsWith('/settings/network') && wifi_ssid_el.textContent == 'Connecting...'){
-								if(this.debug){
-									console.log("power settings debug: clicking on network button in menu to update wifi info being displayed");
-								}
-								const network_settings_link_el = document.getElementById('network-settings-link');
-								if(network_settings_link_el){
-									network_settings_link_el.click();
-								}
-							}
-						},7000);
-					}
-				});
-			}
-			else{
-				console.error("power-settings: network_settings_link_el does not exist (yet)");
-			}
 			
-			
-			
-			
-			
+
 
             this.content = '';
             fetch(`/extensions/${this.id}/views/content.html`)
@@ -593,10 +614,44 @@
                             console.log("power settings debug: set_ssh_state response: ", body);
                         }                                    
                 
-                    }).catch((e) => {
-                        this.flash_message("Error, SSH setting was not changed: could not connect to controller: ");
+                    }).catch((err) => {
+						if(this.debug){
+							console.error("power settings debug: caught error calling set_ssh_state: ", err)
+						}
+                        this.flash_message("Error, SSH setting was not changed: could not connect to controller");
                     });
                 });
+				
+				
+				document.getElementById('extension-power-settings-download-certificate-button').addEventListener('click', () => {
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'get_certificate'
+                        }
+                    ).then((body) => {
+                        if(this.debug){
+                            console.log("power settings debug: get_certificate response: ", body);
+                        }          
+						if(typeof body.certificate == 'string'){
+							let element = document.createElement('a');
+							element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(body.certificate));
+							element.setAttribute('download', 'certificate.crt');
+							element.style.display = 'none';
+							document.body.appendChild(element);
+	                        if(this.debug){
+	                            console.log("power settings debug: clicking on temporary download-as-text button");
+	                        }
+							element.click();
+							document.body.removeChild(element);
+						}                          
+                
+                    }).catch((err) => {
+						if(this.debug){
+							console.error("power settings debug: caught error loading ssl certificate from controller: ", err)
+						}
+                        this.flash_message("Could not connect to controller. Try again?");
+                    });
+				});
 				
 				
 				
@@ -1848,6 +1903,34 @@
                 
                 
                 
+				
+				// EXTRA USB POWER
+				
+                document.getElementById('extension-power-settings-extra-usb-power-checkbox').addEventListener('change', () => {
+                    let extra_power = document.getElementById('extension-power-settings-extra-usb-power-checkbox').checked;
+					if(this.debug){
+                        console.log("power settings debug: extra-usb-power checkbox changed to: ", extra_power);
+                    }
+					window.API.postJson(
+		                `/extensions/${this.id}/api/ajax`, {
+		                    'action': 'extra_usb_power',
+							'state': extra_power
+		                }
+		            ).then((body) => {
+		                if(this.debug){
+		                    console.log("power settings debug: extra-usb-power response: ", body);
+		                }
+		            
+					}).catch((err) => {
+		                console.error("power settings: caught error setting extra-usb-power: ", err);
+						this.flash_message('Connection error while setting extra usb power preference');
+		            });
+                   
+                    
+                });
+				
+				
+				
                 
                 // BACKUP
                 
@@ -3559,7 +3642,7 @@
 		
         show_security_page(){
 			if(this.debug){
-				console.log("in show_security_page");
+				console.log("power settings debug: in show_security_page");
 			}
 			const allow_password_remembering_checkbox_el = document.getElementById('extension-power-settings-security-allow-password-remembering-on-this-device');
 			if(allow_password_remembering_checkbox_el){
@@ -3579,13 +3662,28 @@
 				}
 			}
 			
-			const switch_to_encrypted_connection_button_el = document.getElementById('extension-power-settings-switch-to-encrypted-connection-link')
+			const switch_to_encrypted_connection_button_el = document.getElementById('extension-power-settings-switch-to-encrypted-connection-link');
 			if(switch_to_encrypted_connection_button_el){
 				const encrypted_url = 'https://' + window.location.hostname;
 				switch_to_encrypted_connection_button_el.setAttribute('href',encrypted_url);
 			}
 			
+			if(this.is_safari){
+				const example_image_animation_el = document.getElementById('extension-power-settings-using-encrypted-connection-example-animation');
+				if(example_image_animation_el){
+					example_image_animation_el.src = '/extensions/power-settings/images/https_example_safari.gif';
+				}
+			}
 			
+			if(this.debug){
+				console.log("power settings debug:  window.location.hostname:", window.location.hostname);
+			}
+			if(window.location.hostname == 'candle.local'){
+				const certificate_container_el = document.getElementById('extension-power-settings-security-certificate-container');
+				if(certificate_container_el){
+					certificate_container_el.classList.remove('extension-power-settings-hidden');
+				}
+			}
 			
 			/*
             window.API.postJson(
@@ -6007,6 +6105,12 @@
 					}
 				}
 				
+                if(typeof body['extra_usb_power'] == 'boolean'){
+					const extra_usb_power_checkbox_el = document.getElementById('extension-power-settings-extra-usb-power-checkbox');
+					if(extra_usb_power_checkbox_el){
+						extra_usb_power_checkbox_el.checked = body['extra_usb_power'];
+					}
+                }
 				
 				
 				
@@ -6025,8 +6129,6 @@
 				}else{
 					this.get_stats_fail_counter = 6;
 				}
-				
-				
 				
             });
 		}
