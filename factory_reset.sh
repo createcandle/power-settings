@@ -62,17 +62,30 @@ find /home/pi/.webthings/data -type f -name 'persistence.json'  -delete
 echo -e 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=NL\n' | tee /etc/wpa_supplicant/wpa_supplicant.conf
 
 if [ -f $BOOT_DIR/webthings_gateway_version.txt ]; then
-	echo "gateway" > /etc/hostname
+	echo "gateway" > /home/pi/.webthings/etc/hostname
+	echo "127.0.0.1	localhost\n::1		localhost ip6-localhost ip6-loopback\nff02::1		ip6-allnodes\nff02::2		ip6-allrouters\n\n127.0.1.1	gateway" > /home/pi/.webthings/etc/hosts
+	touch $BOOT_DIR/tunnel.txt
+	
 else
-	echo "candle" > /etc/hostname
+	echo "candle" > /home/pi/.webthings/etc/hostname
+	echo "127.0.0.1	localhost\n::1		localhost ip6-localhost ip6-loopback\nff02::1		ip6-allnodes\nff02::2		ip6-allrouters\n\n127.0.1.1	candle" > /home/pi/.webthings/etc/hosts
+
+	if [ -f /home/pi/safe_mode/addons/power-settings/db.sqlite3 ]; then
+		# restore basic database
+		if [ -f /home/pi/.webthings/config/db.sqlite3 ]; then
+			rm /home/pi/.webthings/config/db.sqlite3
+		fi
+		cp /home/pi/safe_mode/addons/power-settings/db.sqlite3 /home/pi/.webthings/config/db.sqlite3
+		chown pi:pi /home/pi/.webthings/config/db.sqlite3
+	fi
+
+	# Disable the tunnel functionality
+	rm $BOOT_DIR/tunnel.txt
+
 fi
 
 
-# restore basic database
-rm /home/pi/.webthings/config/db.sqlite3
-cp /home/pi/.webthings/addons/power-settings/db.sqlite3 /home/pi/.webthings/config/db.sqlite3
-chown pi:pi /home/pi/.webthings/config/db.sqlite3
-
+	
 # remove logs
 rm -rf /home/pi/.webthings/log/{*,.*}
 
@@ -172,10 +185,10 @@ fi
 
 
 # Try to create the hostname symbolic links
-if [ -f /home/pi/.webthings/etc/hosts-bak ]; then
-  echo "candle" > /home/pi/.webthings/etc/hostname
-  cp /home/pi/.webthings/etc/hosts-bak /home/pi/.webthings/etc/hosts
-fi
+#if [ -f /home/pi/.webthings/etc/hosts-bak ]; then
+#  echo "candle" > /home/pi/.webthings/etc/hostname
+#  cp /home/pi/.webthings/etc/hosts-bak /home/pi/.webthings/etc/hosts
+#fi
 #echo "127.0.0.1	localhost\n::1		localhost ip6-localhost ip6-loopback\nff02::1		ip6-allnodes\nff02::2		ip6-allrouters\n\n127.0.1.1	candle" > /home/pi/.webthings/etc/hosts
 #rm /etc/hostname
 #rm /etc/hosts
@@ -213,14 +226,13 @@ rm $BOOT_DIR/candle_swap_enabled.txt
 rm /etc/asound.conf
 
 if [ -f "$BOOT_DIR/backup_of_config.txt" ] ; then
-    mv "$BOOT_DIR/backup_of_config.txt" "$BOOT_DIR/config.txt"
+    cp "$BOOT_DIR/backup_of_config.txt" "$BOOT_DIR/config.txt"
 fi
 
 
-# Disable the tunnel functionality
-rm $BOOT_DIR/tunnel.txt
-cp /home/pi/.webthings/etc/webthings_settings_backup.js /home/pi/.webthings/etc/webthings_settings.js
-
+if [ -f /home/pi/.webthings/etc/webthings_settings_backup.js ]; then
+	cp /home/pi/.webthings/etc/webthings_settings_backup.js /home/pi/.webthings/etc/webthings_settings.js
+fi
 
 
 # Disable SSH access
