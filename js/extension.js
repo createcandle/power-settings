@@ -119,6 +119,9 @@
 									}
 									return;
 								}
+								if(this.debug){
+									console.log('power settings debug: fresh getNetworkAddresses: ', body);
+								}
 								const ethernet_ip_el = document.getElementById('network-settings-list-item-ethernet-ip');
 								if(ethernet_ip_el){
 									ethernet_ip_el.textContent = body.lan;

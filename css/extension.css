@@ -1595,7 +1595,7 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 	display:block;
 }
 
-#network-settings-wifi-connect{
+#network-settings-wifi #network-settings-wifi-connect{
 	margin:5rem auto;
 }
 
