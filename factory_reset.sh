@@ -267,8 +267,10 @@ rm $BOOT_DIR/candle_set_wifi_detected_networks.txt
 rm $BOOT_DIR/candle_safe_mode.txt
 rm $BOOT_DIR/candle_update.txt
 rm $BOOT_DIR/emergency.txt
-rm $BOOT_DIR/candle_recovery_type.txt
-rm $BOOT_DIR/candle_stay_in_recovery.txt
+if [ -f $BOOT_DIR/candle_first_run_complete.txt ]; then
+	rm $BOOT_DIR/candle_recovery_type.txt
+	rm $BOOT_DIR/candle_stay_in_recovery.txt
+fi
 rm $BOOT_DIR/candle_last_known_ip_address.txt
 
 # only a log of factory resets is kept internally.
@@ -319,7 +321,9 @@ fi
 
 rm $BOOT_DIR/candle_first_run_complete.txt
 
-if [ -f "$BOOT_DIR/candle_zero_fill.txt" ]; then
+
+
+if [ -f "$BOOT_DIR/candle_zero_fill.txt" ] || [ -f $BOOT_DIR/candle_first_run_complete.txt ]; then
   rm "$BOOT_DIR/candle_zero_fill.txt"
 
   echo "filling unused space on user partition with zeros"
