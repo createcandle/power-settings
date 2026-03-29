@@ -3911,7 +3911,7 @@ class PowerSettingsAPIHandler(APIHandler):
 
         for path, dirs, files in os.walk(self.addon_backups_dir):
             for d in dirs:
-                if len(str(d)) > 2 and str(s) != 'package':
+                if len(str(d)) > 2 and str(d) != 'package':
                     source_dir = os.path.join(str(self.user_profile['addonsDir']),str(d))
                     target_dir = os.path.join(str(self.addon_backups_dir),str(d))
                     

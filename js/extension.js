@@ -102,11 +102,11 @@
 				
 				const network_settings_wifi_connect_button_el = document.getElementById('network-settings-wifi-connect');
 				if(network_settings_wifi_connect_button_el){
-					if(this.debug){
-						console.log("power settings debug: clicked on connect to wifi button");
-					}
-					network_settings_wifi_connect_button_el.addEventListener('click', () => {
 					
+					network_settings_wifi_connect_button_el.addEventListener('click', () => {
+						if(this.debug){
+							console.log("power settings debug: clicked on connect to wifi button");
+						}
 						setTimeout(() => {
 							if(this.debug){
 								console.log("power settings debug: calling window.API.getNetworkAddresses");

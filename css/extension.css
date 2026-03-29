@@ -1906,6 +1906,28 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
 }
 
 
+body.safe-mode #extension-power-settings-menu-troubleshooting-button{
+	background-color:#b77600;
+	position:relative;
+	border-radius: 0.5rem;
+}
+
+body.safe-mode #extension-power-settings-menu-troubleshooting-button::after{
+	content:'';
+	width:4rem;
+	height: 100%;
+	background-image: url(/images/right-arrow.png);
+	background-size: auto 2rem;
+	background-repeat: no-repeat;
+	background-position: right 2.8rem center;
+	position:absolute;
+	right:0;
+	top:0;
+	z-index:1;
+}
+
+
+
 
 @media screen and (max-width: 640px) {
 	#extension-power-settings-display1-info,
