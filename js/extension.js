@@ -2418,6 +2418,8 @@
 				if(this.safe_mode_is_active){
 					this.flash_message("IN SAFE MODE");
 					
+					document.body.classList.add('safe-mode');
+					
 					const menu_ul_el = document.querySelector('#settings-menu > ul');
 					let safe_mode_active_hint_el = document.querySelector('#extension-power-settings-safe-mode-active-hint');
 					
@@ -2426,6 +2428,14 @@
 						safe_mode_active_hint_el.setAttribute('id','extension-power-settings-safe-mode-active-hint');
 						safe_mode_active_hint_el.textContent = 'SAFE MODE';
 						menu_ul_el.insertAdjacentElement('beforebegin', safe_mode_active_hint_el);
+					}
+					
+					let safe_mode_indicator_el = document.getElementById('extension-power-settings-safe-mode-active-indicator');
+					if (!safe_mode_indicator_el){
+						safe_mode_indicator_el = document.createElement('div');
+						safe_mode_indicator_el.setAttribute('id','extension-power-settings-safe-mode-active-indicator');
+						safe_mode_indicator_el.textContent = 'SAFE MODE';
+						document.body.appendChild(safe_mode_indicator_el);
 					}
 				}
 			}

@@ -287,6 +287,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.factory_reset_script_path = os.path.join(self.addon_dir, "factory_reset.sh") 
         self.manual_update_script_path = os.path.join(self.addon_dir, "manual_update.sh") 
         
+        self.audio_test_index = 0
         self.audio_test1_path = os.path.join(self.addon_dir, "audio", "test1.wav")
         self.audio_test2_path = os.path.join(self.addon_dir, "audio", "test2.wav")
         
@@ -4327,18 +4328,22 @@ class PowerSettingsAPIHandler(APIHandler):
         # strace -e connect pw-dump >/dev/null    
         # printenv | grep -E 'PULSE|DBUS'
         
-        if self.pipewire_enabled:
-            if os.path.isfile(str(self.audio_test1_path)):
-                print("playing test1.wav")
-                run_command('pw-play ' + str(self.audio_test1_path))
-                #if self.DEBUG:
-                if self.DEBUG and os.path.isfile(str(self.audio_test2_path)):
-                    time.sleep(1)
-                    print("playing test2.wav")
-                    os.system('dbus-run-session pw-play ' + str(self.audio_test2_path))
-            else:
-                print("error. missing audio test1 file: ", str(self.audio_test1_path))
+        if self.pipewire_enabled and os.path.isfile(str(self.audio_test1_path)):
+            if self.audio_test_index == 0:
                 run_command('speaker-test -c1 -twav -l1')
+                self.audio_test_index += 1
+            elif self.audio_test_index == 1:
+                run_command('pw-play ' + str(self.audio_test1_path))
+                self.audio_test_index += 1
+            elif self.audio_test_index == 2:
+                run_command('pw-play ' + str(self.audio_test2_path))
+                self.audio_test_index = 0
+            
+            #if self.DEBUG:
+            #if self.DEBUG and os.path.isfile(str(self.audio_test2_path)):
+            #    time.sleep(1)
+            #    print("playing test2.wav")
+            #    os.system('dbus-run-session pw-play ' + str(self.audio_test2_path))
         else:
             run_command('speaker-test -c1 -twav -l1')
         #time.sleep(1)
