@@ -1041,13 +1041,16 @@
                 });
 				
 				
+				
+				
+				
 				// reinstall candle app store button
 				const reinstall_candle_app_store_button_el = document.getElementById('extension-power-settings-reinstall-candleappstore-button');
                 if(reinstall_candle_app_store_button_el){
 					
 					reinstall_candle_app_store_button_el.addEventListener('click', () => {
-						if(confirm("Are you sure?")){
-		                    document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.add('extension-power-settings-hidden');
+						if(confirm("Are you sure you want to go back to the initial version of the Candle store?")){
+		                    reinstall_candle_app_store_button_el.classList.add('extension-power-settings-hidden');
 							document.getElementById('extension-power-settings-reinstall-candleappstore-failed-container').classList.add('extension-power-settings-hidden');
 							document.getElementById('extension-power-settings-reinstall-candleappstore-busy-container').classList.remove('extension-power-settings-hidden');
 					
@@ -1064,7 +1067,7 @@
 										if(this.debug){
 											console.log("Updating to latest version of Candle appstore seems to have been succcesfull");
 										}
-										document.getElementById('extension-power-settings-reinstall-candleappstore-container').style.background="green";
+										document.getElementById('extension-power-settings-reinstall-candleappstore-container').style.background="#050";
 										this.flash_message("Cutting edge Candle Store installed. Reloading this page in 15 seconds...");
 										setTimeout(() => {
 											this.flash_message("Reloading this page in 10 seconds...");
@@ -1078,10 +1081,10 @@
 										},15000);
 									}
 									else{
-										document.getElementById('extension-power-settings-reinstall-candleappstore-container').style.background="red";
+										document.getElementById('extension-power-settings-reinstall-candleappstore-container').style.background="#600";
 										document.getElementById('extension-power-settings-reinstall-candleappstore-failed-container').classList.remove('extension-power-settings-hidden');
 										document.getElementById('extension-power-settings-reinstall-candleappstore-busy-container').classList.add('extension-power-settings-hidden');
-										document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.remove('extension-power-settings-hidden');
+										reinstall_candle_app_store_button_el.classList.remove('extension-power-settings-hidden');
 									}
 								}
 								else{
@@ -1093,9 +1096,11 @@
 							    //document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.remove('extension-power-settings-hidden');
 							    //this.flash_message("Could not connect to controller");
 								this.flash_message("Installing cutting-edge Candle Store failed, connection issue?");
+								/*
 								setTimeout(() => {
 									window.location.reload(true); 
 								},15000);
+								*/
 		                    });
 						}
                     
@@ -1103,8 +1108,70 @@
 				}
 				
 				
-				// TODO: install_cutting_edge_app_store
-				
+				// Install cutting-edge version of Candle store from github
+				const get_latest_candle_app_store_button_el = document.getElementById('extension-power-settings-get-latest-candleappstore-button');
+                if(get_latest_candle_app_store_button_el){
+					
+					get_latest_candle_app_store_button_el.addEventListener('click', () => {
+						if(confirm("Are you sure you want to install the very latest version of the Candle store?")){
+		                    get_latest_candle_app_store_button_el.classList.add('extension-power-settings-hidden');
+							document.getElementById('extension-power-settings-reinstall-candleappstore-failed-container').classList.add('extension-power-settings-hidden');
+							document.getElementById('extension-power-settings-reinstall-candleappstore-busy-container').classList.remove('extension-power-settings-hidden');
+					
+		                    window.API.postJson(
+		                        `/extensions/${this.id}/api/ajax`, {
+		                            'action': 'install_cutting_edge_app_store'
+		                        }
+		                    ).then((body) => {
+		                        if(this.debug){
+		                            console.log("power settings: install_cutting_edge_app_store reponse: ", body);
+		                        }
+								if(typeof body.state != 'undefined'){
+									if(body.state == true){
+										if(this.debug){
+											console.log("Updating to latest version of Candle appstore seems to have been succcesful");
+										}
+										document.getElementById('extension-power-settings-reinstall-candleappstore-container').style.background="#050";
+										this.flash_message("Cutting edge Candle Store installed. Reloading this page in 90 seconds...");
+										setTimeout(() => {
+											this.flash_message("Reloading this page in 60 seconds...");
+										},30000);
+										setTimeout(() => {
+											this.flash_message("Reloading this page in 30 seconds...");
+										},60000);
+										setTimeout(() => {
+											this.flash_message("Reloading this page in 5 seconds...");
+											window.location.reload(true); 
+										},85000);
+										setTimeout(() => {
+											this.flash_message("Reloading this page...");
+											window.location.reload(true); 
+										},90000);
+									}
+									else{
+										document.getElementById('extension-power-settings-reinstall-candleappstore-container').style.background="#600";
+										document.getElementById('extension-power-settings-reinstall-candleappstore-failed-container').classList.remove('extension-power-settings-hidden');
+										document.getElementById('extension-power-settings-reinstall-candleappstore-busy-container').classList.add('extension-power-settings-hidden');
+										get_latest_candle_app_store_button_el.classList.remove('extension-power-settings-hidden');
+									}
+								}
+								else{
+									console.error("candleappstore: install_cutting_edge_app_store: body.state was undefined? body: ", body);
+								}
+						
+		                    }).catch((err) => {
+		                    	console.error("Error: install_cutting_edge_app_store connection failed: ", err);
+							    //document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.remove('extension-power-settings-hidden');
+							    //this.flash_message("Could not connect to controller");
+								this.flash_message("Connection issue while installing cutting-edge Candle Store. Keep calm and carry on.");
+								setTimeout(() => {
+									window.location.reload(true); 
+								},90000);
+		                    });
+						}
+                    
+                	});
+				}
 				
 				
                 // Show backup page button
