@@ -1019,17 +1019,17 @@ class PowerSettingsAPIHandler(APIHandler):
             if pointer_output != None:
                 for line in str(pointer_output).splitlines():
                     if self.DEBUG:
-                        print("pointer_output line: " + str(line))
+                        print("set_display_rotation: pointer_output line: " + str(line))
                 
                     input_name = re.split(r'\t+', line)[0]
                     if self.DEBUG:
-                        print("input_name again: " + str(input_name))
+                        print("set_display_rotation: input_name again: " + str(input_name))
                 
                     input_name = input_name[5:].strip()
                 
                     if self.DEBUG:
-                        print("input_name again2: " + str(input_name))
-                        print("int(rotation): " + str(int(rotation)))
+                        print("set_display_rotation: input_name again2: " + str(input_name))
+                        print("set_display_rotation: int(rotation): " + str(int(rotation)))
                 
                     if int(rotation) == 0:
                         os.system("DISPLAY=:0 xinput --set-prop '" + str(input_name) + "' 'Coordinate Transformation Matrix' 1 0 0 0 1 0 0 0 1")

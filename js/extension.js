@@ -650,7 +650,7 @@
                 
                     }).catch((err) => {
 						if(this.debug){
-							console.error("power settings debug: caught error loading ssl certificate from controller: ", err)
+							console.error("power settings debug: caught error loading ssl certificate from controller: ", err);
 						}
                         this.flash_message("Could not connect to controller. Try again?");
                     });
@@ -672,7 +672,9 @@
 					
 						const wifi_configure_button_el = document.getElementById('network-settings-list-item-wifi-configure');
 						if(wifi_configure_button_el == null){
-							console.error("power settings: could not find wifi configure button");
+							if(this.debug){
+								console.error("power settings debug: could not find wifi configure button");
+							}
 							return
 						}
 					
@@ -834,7 +836,9 @@
 						}
 						
 		            }).catch((err) => {
-		                console.error("power settings: error, changing printing_allowed setting (connection) error: ", err);
+		                if(this.debug){
+							console.error("power settings debug: error, changing printing_allowed setting (connection) error: ", err);
+						}
 		            });
 				});
 				
@@ -858,8 +862,10 @@
 		                if(this.debug){
 		                    console.log("power settings debug: set_rpi_display_rotation response: ", body);
 		                }
-		            }).catch((e) => {
-		                console.error("Error sending rpi display rotation command: ", e);
+		            }).catch((err) => {
+						if(this.debug){
+		                	console.error("power settings debug: caught error sending rpi display rotation command: ", err);
+						}
 		            });
 				});
 				
@@ -889,7 +895,9 @@
 		                    console.log("power settings debug: set_display_rotation response: ", body);
 		                }
 		            }).catch((err) => {
-		                console.error("power settings: caught error sending display rotation command: ", err);
+		                if(this.debug){
+							console.error("power settings debug: caught error sending display rotation command: ", err);
+						}
 		            });
 	            });
 				
@@ -938,10 +946,12 @@
 		                }
 		            ).then((body) => {
 		                if(this.debug){
-		                    console.log("set_display_power response: ", body);
+		                    console.log("power settings debug: set_display_power response: ", body);
 		                }
-		            }).catch((e) => {
-		                console.error("Error sending display power command: ", e);
+		            }).catch((err) => {
+		                if(this.debug){
+							console.error("power settings debug: caught error sending display power command: ", err);
+						}
 		            });
 	            });
 				
@@ -961,10 +971,12 @@
 		                }
 		            ).then((body) => {
 		                if(this.debug){
-		                    console.log("set_display_power response: ", body);
+		                    console.log("power settings debug: set_display_power response: ", body);
 		                }
-		            }).catch((e) => {
-		                console.error("Error sending display power command: ", e);
+		            }).catch((err) => {
+		                if(this.debug){
+							console.error("power settings debug: caught error sending display power command: ", err);
+						}
 		            });
 	            });
 				
@@ -1045,7 +1057,7 @@
 				
 				
 				// reinstall candle app store button
-				const reinstall_candle_app_store_button_el = document.getElementById('extension-power-settings-reinstall-candleappstore-button');
+				const reinstall_candle_app_store_button_el = document.getElementById('extension-power-settings-reinstall-candle-store-button');
                 if(reinstall_candle_app_store_button_el){
 					
 					reinstall_candle_app_store_button_el.addEventListener('click', () => {
@@ -1060,12 +1072,12 @@
 		                        }
 		                    ).then((body) => {
 		                        if(this.debug){
-		                            console.log("power settings: install_cutting_edge_app_store reponse: ", body);
+		                            console.log("power settings debug: install_cutting_edge_app_store reponse: ", body);
 		                        }
 								if(typeof body.state != 'undefined'){
 									if(body.state == true){
 										if(this.debug){
-											console.log("Updating to latest version of Candle appstore seems to have been succcesfull");
+											console.log("power settings debug: updating to latest version of Candle appstore seems to have been succcesfull");
 										}
 										document.getElementById('extension-power-settings-reinstall-candleappstore-container').style.background="#050";
 										this.flash_message("Cutting edge Candle Store installed. Reloading this page in 15 seconds...");
@@ -1081,18 +1093,25 @@
 										},15000);
 									}
 									else{
-										document.getElementById('extension-power-settings-reinstall-candleappstore-container').style.background="#600";
-										document.getElementById('extension-power-settings-reinstall-candleappstore-failed-container').classList.remove('extension-power-settings-hidden');
-										document.getElementById('extension-power-settings-reinstall-candleappstore-busy-container').classList.add('extension-power-settings-hidden');
-										reinstall_candle_app_store_button_el.classList.remove('extension-power-settings-hidden');
+										const reinstall_container_el = document.getElementById('extension-power-settings-reinstall-candle-store-container');
+										if(reinstall_container_el){
+											reinstall_container_el.style.background="#600";
+											document.getElementById('extension-power-settings-reinstall-candle-store-failed-container').classList.remove('extension-power-settings-hidden');
+											document.getElementById('extension-power-settings-reinstall-candle-store-busy-container').classList.add('extension-power-settings-hidden');
+											reinstall_candle_app_store_button_el.classList.remove('extension-power-settings-hidden');
+										}
 									}
 								}
 								else{
-									console.error("candleappstore: install_cutting_edge_app_store: body.state was undefined? body: ", body);
+									if(this.debug){
+										console.error("power settings debug: install_cutting_edge_app_store: body.state was undefined? body: ", body);
+									}
 								}
 						
 		                    }).catch((err) => {
-		                    	console.error("Error: install_cutting_edge_app_store connection failed: ", err);
+		                    	if(this.debug){
+									console.error("power settings debug: caught error: install_cutting_edge_app_store connection failed: ", err);
+								}
 							    //document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.remove('extension-power-settings-hidden');
 							    //this.flash_message("Could not connect to controller");
 								this.flash_message("Installing cutting-edge Candle Store failed, connection issue?");
@@ -1109,7 +1128,7 @@
 				
 				
 				// Install cutting-edge version of Candle store from github
-				const get_latest_candle_app_store_button_el = document.getElementById('extension-power-settings-get-latest-candleappstore-button');
+				const get_latest_candle_app_store_button_el = document.getElementById('extension-power-settings-get-latest-candle-store-button');
                 if(get_latest_candle_app_store_button_el){
 					
 					get_latest_candle_app_store_button_el.addEventListener('click', () => {
@@ -1149,9 +1168,9 @@
 										},90000);
 									}
 									else{
-										document.getElementById('extension-power-settings-reinstall-candleappstore-container').style.background="#600";
-										document.getElementById('extension-power-settings-reinstall-candleappstore-failed-container').classList.remove('extension-power-settings-hidden');
-										document.getElementById('extension-power-settings-reinstall-candleappstore-busy-container').classList.add('extension-power-settings-hidden');
+										document.getElementById('extension-power-settings-reinstall-candle-store-container').style.background="#600";
+										document.getElementById('extension-power-settings-reinstall-candle-store-failed-container').classList.remove('extension-power-settings-hidden');
+										document.getElementById('extension-power-settings-reinstall-candle-store-busy-container').classList.add('extension-power-settings-hidden');
 										get_latest_candle_app_store_button_el.classList.remove('extension-power-settings-hidden');
 									}
 								}
@@ -1160,7 +1179,9 @@
 								}
 						
 		                    }).catch((err) => {
-		                    	console.error("Error: install_cutting_edge_app_store connection failed: ", err);
+		                    	if(this.debug){
+									console.error("power settings debug: caught error: install_cutting_edge_app_store connection failed: ", err);
+								}
 							    //document.getElementById('extension-power-settings-reinstall-candleappstore-button').classList.remove('extension-power-settings-hidden');
 							    //this.flash_message("Could not connect to controller");
 								this.flash_message("Connection issue while installing cutting-edge Candle Store. Keep calm and carry on.");
