@@ -1018,18 +1018,15 @@ class PowerSettingsAPIHandler(APIHandler):
             pointer_output = run_command("DISPLAY=:0 xinput | grep pointer | tail -n +2 | grep -v ' XTEST '") #  | cut -f1 -d$'\t'     # | grep -v ' XTEST '
             if pointer_output != None:
                 for line in str(pointer_output).splitlines():
-                    if self.DEBUG:
-                        print("set_display_rotation: pointer_output line: " + str(line))
+                    print("pointer_output line: " + str(line))
                 
                     input_name = re.split(r'\t+', line)[0]
-                    if self.DEBUG:
-                        print("set_display_rotation: input_name again: " + str(input_name))
+                    print("input_name again: " + str(input_name))
                 
                     input_name = input_name[5:].strip()
                 
-                    if self.DEBUG:
-                        print("set_display_rotation: input_name again2: " + str(input_name))
-                        print("set_display_rotation: int(rotation): " + str(int(rotation)))
+                    print("input_name again2: " + str(input_name))
+                    print("int(rotation): " + str(int(rotation)))
                 
                     if int(rotation) == 0:
                         os.system("DISPLAY=:0 xinput --set-prop '" + str(input_name) + "' 'Coordinate Transformation Matrix' 1 0 0 0 1 0 0 0 1")
@@ -3914,7 +3911,7 @@ class PowerSettingsAPIHandler(APIHandler):
 
         for path, dirs, files in os.walk(self.addon_backups_dir):
             for d in dirs:
-                if len(str(d)) > 2 and str(d) != 'package':
+                if len(str(d)) > 2 and str(s) != 'package':
                     source_dir = os.path.join(str(self.user_profile['addonsDir']),str(d))
                     target_dir = os.path.join(str(self.addon_backups_dir),str(d))
                     
@@ -4393,21 +4390,26 @@ class PowerSettingsAPIHandler(APIHandler):
                         print(" - warning, had to clean up existing temporary dir /tmp/candleappstore")
             
                 os.system('mkdir -p /tmp/candleappstore')
+                os.system('rm -rf /tmp/candleappstore/*')
+                
                 if os.path.isdir('/tmp/candleappstore'):
                     if self.DEBUG:
                         print(" - GIT cloning candleappstore into /tmp/candleappstore")
-                    os.system(git_command)
-            
-                    if os.path.isdir('/tmp/candleappstore/pkg') and os.path.isdir('/tmp/candleappstore/js') and os.path.isdir('/tmp/candleappstore/views' and os.path.isfile('/tmp/candleappstore/package.sh')):
+                    git_check = run_command(git_command)
+                    if self.DEBUG:
+                        print("git_check: ", git_check)
+                    if os.path.isdir('/tmp/candleappstore/pkg') and os.path.isdir('/tmp/candleappstore/js') and os.path.isdir('/tmp/candleappstore/views') and os.path.isfile('/tmp/candleappstore/package.sh'):
                         os.system('chmod +x /tmp/candleappstore/package.sh')
-                        create_appstore_package = run_command('/tmp/candleappstore/package.sh')
+                        create_appstore_package = run_command('cd /tmp/candleappstore;./package.sh')
+                        if self.DEBUG:
+                            print("create_appstore_package check: ", create_appstore_package)
                         if isinstance(create_appstore_package,str) and os.path.isdir('/tmp/candleappstore/lib'):
                             if os.path.isdir(target_dir):
                                 os.system('rm -rf ' + str(target_dir))
                             if os.path.isdir(target_dir) == False:
                                 os.system("mv /tmp/candleappstore " + str(target_dir))
                                 if self.DEBUG:
-                                    print("in theory the candleappstore addon has been moved into place")
+                                    print("in theory the candleappstore addon has been moved into place at: ", str(target_dir))
                                 run_command('sleep 1; sudo systemctl restart webthings-gateway.service')
                                 return True
                             else:
@@ -4420,7 +4422,9 @@ class PowerSettingsAPIHandler(APIHandler):
                     else:
                         if self.DEBUG:
                             print("GIT download of candleappstore seems to have failed")
-        
+            if os.path.isdir('/tmp/candleappstore'):
+                os.system('rm -rf /tmp/candleappstore')
+                    
             if self.DEBUG:
                 print("reinstall_app_store failed")
                 

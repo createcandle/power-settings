@@ -1114,12 +1114,17 @@
 								}
 							    //document.getElementById('extension-power-settings-reinstall-candle-store-button').classList.remove('extension-power-settings-hidden');
 							    //this.flash_message("Could not connect to controller");
-								this.flash_message("Installing cutting-edge Candle Store failed, connection issue?");
-								/*
+								this.flash_message("Reloading this page in 30 seconds...");
+								setTimeout(() => {
+									this.flash_message("Reloading this page in 15 seconds...");
+								},15000);
+								setTimeout(() => {
+									this.flash_message("Reloading this page in 5 seconds...");
+								},25000);
 								setTimeout(() => {
 									window.location.reload(true); 
-								},15000);
-								*/
+								},30000);
+								
 		                    });
 						}
                     
@@ -1160,7 +1165,6 @@
 										},60000);
 										setTimeout(() => {
 											this.flash_message("Reloading this page in 5 seconds...");
-											window.location.reload(true); 
 										},85000);
 										setTimeout(() => {
 											this.flash_message("Reloading this page...");
@@ -1184,10 +1188,23 @@
 								}
 							    //document.getElementById('extension-power-settings-reinstall-candle-store-button').classList.remove('extension-power-settings-hidden');
 							    //this.flash_message("Could not connect to controller");
-								this.flash_message("Connection issue while installing cutting-edge Candle Store. Keep calm and carry on.");
+								this.flash_message("Reloading this page in 60 seconds...");
 								setTimeout(() => {
+									this.flash_message("Reloading this page in 45 seconds...");
+								},15000);
+								setTimeout(() => {
+									this.flash_message("Reloading this page in 30 seconds...");
+								},30000);
+								setTimeout(() => {
+									this.flash_message("Reloading this page in 15 seconds...");
+								},45000);
+								setTimeout(() => {
+									this.flash_message("Reloading this page in 5 seconds...");
+								},55000);
+								setTimeout(() => {
+									this.flash_message("Reloading this page...");
 									window.location.reload(true); 
-								},90000);
+								},60000);
 		                    });
 						}
                     
