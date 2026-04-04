@@ -1114,12 +1114,17 @@
 								}
 							    //document.getElementById('extension-power-settings-reinstall-candle-store-button').classList.remove('extension-power-settings-hidden');
 							    //this.flash_message("Could not connect to controller");
-								this.flash_message("Installing cutting-edge Candle Store failed, connection issue?");
-								/*
+								this.flash_message("Reloading this page in 30 seconds...");
+								setTimeout(() => {
+									this.flash_message("Reloading this page in 15 seconds...");
+								},15000);
+								setTimeout(() => {
+									this.flash_message("Reloading this page in 5 seconds...");
+								},25000);
 								setTimeout(() => {
 									window.location.reload(true); 
-								},15000);
-								*/
+								},30000);
+								
 		                    });
 						}
                     
@@ -1160,7 +1165,6 @@
 										},60000);
 										setTimeout(() => {
 											this.flash_message("Reloading this page in 5 seconds...");
-											window.location.reload(true); 
 										},85000);
 										setTimeout(() => {
 											this.flash_message("Reloading this page...");
@@ -1184,10 +1188,23 @@
 								}
 							    //document.getElementById('extension-power-settings-reinstall-candle-store-button').classList.remove('extension-power-settings-hidden');
 							    //this.flash_message("Could not connect to controller");
-								this.flash_message("Connection issue while installing cutting-edge Candle Store. Keep calm and carry on.");
+								this.flash_message("Reloading this page in 60 seconds...");
 								setTimeout(() => {
+									this.flash_message("Reloading this page in 45 seconds...");
+								},15000);
+								setTimeout(() => {
+									this.flash_message("Reloading this page in 30 seconds...");
+								},30000);
+								setTimeout(() => {
+									this.flash_message("Reloading this page in 15 seconds...");
+								},45000);
+								setTimeout(() => {
+									this.flash_message("Reloading this page in 5 seconds...");
+								},55000);
+								setTimeout(() => {
+									this.flash_message("Reloading this page...");
 									window.location.reload(true); 
-								},90000);
+								},60000);
 		                    });
 						}
                     
@@ -5886,12 +5903,323 @@
 
 				this.get_stats_retried = false;
 
-				this.parse_get_stats(body);
+				if(document.body.classList.contains('developer')){
+					this.developer = true;
+				}
+				else{
+					this.developer = false;
+				}
+
+                // Show the total memory
+                if(typeof body['total_memory'] == 'number'){
+                    //document.getElementById('extension-power-settings-total-memory').innerText = body['total_memory'];
+                
+					// temperature
+	                if(typeof body['board_temperature'] == 'string' ){
+	                    if(this.debug){
+	                        console.log("power settings: board_temperature: ", body.board_temperature);
+	                    }
+						const device_temperture_el = document.getElementById('extension-power-settings-device-temperature');
+						if(device_temperture_el){
+		                    device_temperture_el.innerText = body.board_temperature;
+						
+							if(body.board_temperature.endsWith("'C")){
+								const temp = parseInt(body.board_temperature.replace("'C",""));
+								if(this.debug){
+									console.log("power settings debug: board temperature: ",temp);
+								}
+								if(temp < 60){
+									document.getElementById('extension-power-settings-device-temperature').style.color = 'green';
+								}
+								else if(temp < 80){
+									document.getElementById('extension-power-settings-device-temperature').style.color = 'orange';
+								}
+								else{
+									document.getElementById('extension-power-settings-device-temperature').style.color = 'red';
+								}
+							}
+						}
+						
+	                }
+				
+					let total_memory = parseInt(body['total_memory']);
+	                if(this.debug){
+	                    console.log("power settings debug: total_memory: ", total_memory);
+	                }     
+					const device_model_memory_el = document.getElementById('extension-power-settings-device-model-memory');
+					if(device_model_memory_el){
+						if(total_memory > 600){
+							device_model_memory_el.innerText = Math.round(total_memory/1000 ) + 'GB ';
+						}
+						else{
+							device_model_memory_el.innerText = '500MB';
+						}
+					}
+					
+					
+					if(typeof body['sd_card_written_kbytes'] != 'undefined'){
+						const total_written_to_sd_el = document.getElementById('extension-power-settings-sd-card-written-bytes');
+						if(total_written_to_sd_el){
+							total_written_to_sd_el.innerText = body['sd_card_written_kbytes'];
+						}
+						
+					}
+
+	                // Show the available memory. This is different from "free" memory
+	                if(typeof body['available_memory'] == 'number' && typeof body['free_memory'] == 'number'){
+	                    //document.getElementById('extension-power-settings-available-memory').innerText = body['available_memory'];
+						
+						let total_mem = parseFloat(body['total_memory']);
+						let avail_mem = parseFloat(body['available_memory']);
+						let free_mem = parseFloat(body['free_memory']);
+						
+						if(avail_mem < 100){
+							let low_mem_el = document.getElementById('extension-power-settings-low-memory-warning');
+							if(low_mem_el){
+			                    low_mem_el.style.display = 'block';
+			                    if(avail_mem < 50){
+			                        low_mem_el.style.background = 'red';
+			                    }
+							}
+						}
+						
+						
+						let used_mem_percentage = ( (total_mem - avail_mem) / total_mem) * 100;
+						if(this.debug){
+							console.log("power settings debug: used_mem_percentage: ", used_mem_percentage);
+						}
+						let purgeable_mem_percentage = ( (avail_mem - free_mem) / total_mem) * 100;
+						if(this.debug){
+							console.log("power settings debug: purgeable_mem_percentage: ", purgeable_mem_percentage);
+						}
+						const memory_use_bar_el = document.getElementById('extension-power-settings-memory-used-bar');
+						if(memory_use_bar_el){
+							memory_use_bar_el.style.width = used_mem_percentage + '%';
+							document.getElementById('extension-power-settings-memory-purgeable-bar').style.width = purgeable_mem_percentage + '%';
+						}
+						
+						
+						/*
+						let total_mem = parseFloat(body['total_memory']);
+						let avail_mem = Math.floor(parseFloat(body['available_memory']) / 1000);
+						let free_mem = parseFloat(body['free_memory']);
+			
+						const available_memory_mb = Math.round(this.available_memory/1000);
+						*/
+			
+						const total_memory_el = document.getElementById('extension-power-settings-total-memory');
+		                if(total_memory_el){
+							if(total_mem > 3000){
+								total_memory_el.textContent = Math.round(total_mem/1000) + "GB ";
+							}else{
+								total_memory_el.textContent = total_mem + "MB ";
+							}
+							const used_memory_el = document.getElementById('extension-power-settings-used-memory');
+							if(used_memory_el){
+								used_memory_el.textContent = Math.round(total_mem - avail_mem);
+								document.getElementById('extension-power-settings-available-memory').textContent = Math.round(avail_mem - free_mem);
+								document.getElementById('extension-power-settings-free-memory').textContent = free_mem;
+							}
+							
+		                }
+						else{
+							console.error("could not find #extension-power-settings-total-memory");
+						}
+						
+	                }
+				
+				}            
+                
+                
+                
+                // Show the total and available disk space
+                if(typeof body['disk_usage'] != 'undefined'){
+					
+					const total_disk_space = Math.floor(body['disk_usage'][0] / 1024000);
+                    const free_disk_space = Math.floor(body['disk_usage'][2] / 1024000);
+					const used_disk_space = total_disk_space - free_disk_space;
+					
+					
+					document.getElementById('extension-power-settings-update-sd-card-user-partition-size').innerText = Math.round(total_disk_space / 1024) + 'GB';
+					
+					
+                    document.getElementById('extension-power-settings-total-disk').innerText = total_disk_space;
+                    document.getElementById('extension-power-settings-free-disk').innerText = free_disk_space;
+                    
+					let low_storage_el = document.getElementById('extension-power-settings-low-storage-warning');
+					if(low_storage_el){
+	                    if(free_disk_space < 1000){
+	                        document.getElementById('extension-power-settings-low-storage-warning').style.display = 'block';
+	                    }
+                    
+	                    if(free_disk_space < 500){
+	                        document.getElementById('extension-power-settings-low-storage-warning').style.background = 'red';
+	                    }
+					}
+					
+					let used_disk_percentage = (used_disk_space / total_disk_space) * 100;
+					if(this.debug){
+						console.log("power settings debug: used_disk_percentage: ", used_disk_percentage);
+					}
+					document.getElementById('extension-power-settings-disk-used-bar').style.width = used_disk_percentage + '%';
+                    
+                }
+				
+				
+				if(typeof body['ethernet_connected'] != 'undefined'){
+					if(body['ethernet_connected']){
+						document.getElementById('extension-power-settings-attached-network-cable-container').classList.add('extension-power-settings-network-cable-plugged');
+						document.getElementById('extension-power-settings-attached-network-cable-container').classList.remove('extension-power-settings-network-cable-unplugged');
+					}
+					else{
+						document.getElementById('extension-power-settings-attached-network-cable-container').classList.add('extension-power-settings-network-cable-unplugged');
+						document.getElementById('extension-power-settings-attached-network-cable-container').classList.remove('extension-power-settings-network-cable-plugged');
+					}
+				}
+				
+				
+                // Show attached devices
+                if(typeof body['attached_devices'] != 'undefined'){
+					
+					this.attached_devices = body['attached_devices'];
+					if(this.debug){
+						console.log("power settings debug: this.attached_devices: ", this.attached_devices);
+					}
+					let attached_list_el = document.getElementById('extension-power-settings-attached-devices-list-container');
+					
+					var real_usb_devices_count = 0;
+					if(attached_list_el){
+	                    
+						if(typeof this.attached_devices == 'object' && this.attached_devices.length){
+							attached_list_el.innerHTML = '';
+							for (var r = 0; r < this.attached_devices.length; r++) {
+								let attached_item_el = document.createElement('div');
+								if(this.attached_devices[r].endsWith(' Hub') || this.attached_devices[r].endsWith(' hub')){
+									if(this.developer == false){
+										continue
+									}
+									else{
+										attached_item_el.style.opacity = '.5';
+									}
+								}
+								else{
+									real_usb_devices_count++;
+								}
+								
+								
+								attached_item_el.classList.add('extension-power-settings-attached-item');
+								attached_item_el.innerHTML = '<p>' + this.attached_devices[r] + '</p>';
+								attached_list_el.appendChild(attached_item_el)
+							}
+						}
+						
+						if(real_usb_devices_count == 0){
+							if(!document.body.classList.contains('developer')){
+								attached_list_el.innerHTML = '<div class="extension-power-settings-attached-item"><p>None</p></div>';
+							}
+						}
+						
+					}
+					else{
+						console.warn("power settings: usb devices list element not found");
+					}
+				}
+				
+				
+				// Show attached devices
+				if(typeof body['attached_cameras'] != 'undefined'){
+					
+					this.attached_cameras = body['attached_cameras'];
+					if(this.debug){
+						console.log("power settings debug: this.attached_cameras: ", this.attached_cameras);
+					}
+					let cameras_list_el = document.getElementById('extension-power-settings-attached-cameras-list-container');
+					
+					if(cameras_list_el){
+	                    
+						if(typeof this.attached_cameras == 'object' && Array.isArray(this.attached_cameras) && this.attached_cameras.length){
+							cameras_list_el.innerHTML = '<div class="extension-power-settings-attached-item"><p>A camera was detected</p></div>';
+						}
+						else{
+							cameras_list_el.innerHTML = '<div class="extension-power-settings-attached-item"><p>None</p></div>';
+						}
+						
+					}
+					else{
+						console.warn("power settings: cameras list element not found");
+					}
+                    
+                }
+				
+				
+                // User partition expanded
+                if(typeof body.user_partition_expanded != 'undefined'){
+                    if(body.user_partition_expanded == false){
+                        if(this.debug){
+							console.log("power settings debug: user partition not yet expanded");
+						}
+                        if(document.getElementById('extension-power-settings-user-partition-expansion-hint') != null){
+							document.getElementById('extension-power-settings-user-partition-expansion-hint').style.display = 'block';
+                        }
+                    }
+					else{
+						if(this.debug){
+							console.log("power settings debug: user partition seems to be fully expanded");
+						}
+                        if(document.getElementById('extension-power-settings-user-partition-expansion-hint') != null){
+							document.getElementById('extension-power-settings-user-partition-expansion-hint').style.display = 'none';
+                        }
+					}
+                }
+				
+                // Show user_partition_expansion_failed
+                if(typeof body['user_partition_expansion_failed'] != 'undefined'){
+					let partition_expansion_failed_el = document.getElementById('extension-power-settings-partition-expansion-failed');
+					if(partition_expansion_failed_el){
+						if(body['user_partition_expansion_failed'] == true){
+							partition_expansion_failed_el.style.display = 'block';
+							document.getElementById('extension-power-settings-user-partition-expansion-hint').style.display = 'block';
+							document.getElementById('extension-power-settings-user-partition-expansion-button').style.display = 'block';
+							document.getElementById('extension-power-settings-busy-expanding-user-partition').style.display = 'none';
+						}
+						else{
+							partition_expansion_failed_el.style.display = 'none';
+						}
+					}
+                }
+				
+               
+                // Show low voltage warning
+                if(typeof body['low_voltage'] != 'undefined'){
+                    if(body['low_voltage'] == true){
+						let low_voltage_el = document.getElementById('extension-power-settings-low-voltage-warning');
+						if(low_voltage_el){
+							low_voltage_el.style.display = 'block';
+						}
+                    }
+                }
+				
+				// Show disk errors warning
+				if(typeof body['disk_errors'] == 'number' && body['disk_errors'] > 0){
+					let disk_errors_warning_el = document.getElementById('extension-power-settings-disk-errors-warning');
+					if(disk_errors_warning_el){
+						disk_errors_warning.innerHTML = '<p>' + body['disk_errors'] + ' disk errors detected</p><p>Consider making a backup and then rebooting, which could fix small disk errors. If the SD card that Candle is running on is quite old, and these errors keep appearing, then you should consider switching to a new or more durable SD card.</p>';
+						disk_errors_warning_el.style.display = 'block';
+					}
+				}
+				
+                if(typeof body['extra_usb_power'] == 'boolean'){
+					const extra_usb_power_checkbox_el = document.getElementById('extension-power-settings-extra-usb-power-checkbox');
+					if(extra_usb_power_checkbox_el){
+						extra_usb_power_checkbox_el.checked = body['extra_usb_power'];
+					}
+                }
+				
+				
+				
 				
             }).catch((err) => {
-                if(this.debug){
-					console.error("power settings: caught error calling get_stats: could not connect to controller: ", err);
-				}
+                console.error("power settings: get stats failed: could not connect to controller: ", err);
 				
 				// Allow for one quick retry.
 				if(this.get_stats_retried == false){
@@ -5908,322 +6236,6 @@
             });
 		}
         
-		parse_get_stats(body){
-			if(document.body.classList.contains('developer')){
-				this.developer = true;
-			}
-			else{
-				this.developer = false;
-			}
-
-            // Show the total memory
-            if(typeof body['total_memory'] == 'number'){
-                //document.getElementById('extension-power-settings-total-memory').innerText = body['total_memory'];
-            
-				// temperature
-                if(typeof body['board_temperature'] == 'string' ){
-                    if(this.debug){
-                        console.log("power settings: board_temperature: ", body.board_temperature);
-                    }
-					const device_temperture_el = document.getElementById('extension-power-settings-device-temperature');
-					if(device_temperture_el){
-	                    device_temperture_el.innerText = body.board_temperature;
-					
-						if(body.board_temperature.endsWith("'C")){
-							const temp = parseInt(body.board_temperature.replace("'C",""));
-							if(this.debug){
-								console.log("power settings debug: board temperature: ",temp);
-							}
-							if(temp < 60){
-								document.getElementById('extension-power-settings-device-temperature').style.color = 'green';
-							}
-							else if(temp < 80){
-								document.getElementById('extension-power-settings-device-temperature').style.color = 'orange';
-							}
-							else{
-								document.getElementById('extension-power-settings-device-temperature').style.color = 'red';
-							}
-						}
-					}
-					
-                }
-			
-				let total_memory = parseInt(body['total_memory']);
-                if(this.debug){
-                    console.log("power settings debug: total_memory: ", total_memory);
-                }     
-				const device_model_memory_el = document.getElementById('extension-power-settings-device-model-memory');
-				if(device_model_memory_el){
-					if(total_memory > 600){
-						device_model_memory_el.innerText = Math.round(total_memory/1000 ) + 'GB ';
-					}
-					else{
-						device_model_memory_el.innerText = '500MB';
-					}
-				}
-				
-				
-				if(typeof body['sd_card_written_kbytes'] != 'undefined'){
-					const total_written_to_sd_el = document.getElementById('extension-power-settings-sd-card-written-bytes');
-					if(total_written_to_sd_el){
-						total_written_to_sd_el.innerText = body['sd_card_written_kbytes'];
-					}
-					
-				}
-
-                // Show the available memory. This is different from "free" memory
-                if(typeof body['available_memory'] == 'number' && typeof body['free_memory'] == 'number'){
-                    //document.getElementById('extension-power-settings-available-memory').innerText = body['available_memory'];
-					
-					let total_mem = parseFloat(body['total_memory']);
-					let avail_mem = parseFloat(body['available_memory']);
-					let free_mem = parseFloat(body['free_memory']);
-					
-					if(avail_mem < 100){
-						let low_mem_el = document.getElementById('extension-power-settings-low-memory-warning');
-						if(low_mem_el){
-		                    low_mem_el.style.display = 'block';
-		                    if(avail_mem < 50){
-		                        low_mem_el.style.background = 'red';
-		                    }
-						}
-					}
-					
-					
-					let used_mem_percentage = ( (total_mem - avail_mem) / total_mem) * 100;
-					if(this.debug){
-						console.log("power settings debug: used_mem_percentage: ", used_mem_percentage);
-					}
-					let purgeable_mem_percentage = ( (avail_mem - free_mem) / total_mem) * 100;
-					if(this.debug){
-						console.log("power settings debug: purgeable_mem_percentage: ", purgeable_mem_percentage);
-					}
-					const memory_use_bar_el = document.getElementById('extension-power-settings-memory-used-bar');
-					if(memory_use_bar_el){
-						memory_use_bar_el.style.width = used_mem_percentage + '%';
-						document.getElementById('extension-power-settings-memory-purgeable-bar').style.width = purgeable_mem_percentage + '%';
-					}
-					
-					
-					/*
-					let total_mem = parseFloat(body['total_memory']);
-					let avail_mem = Math.floor(parseFloat(body['available_memory']) / 1000);
-					let free_mem = parseFloat(body['free_memory']);
-		
-					const available_memory_mb = Math.round(this.available_memory/1000);
-					*/
-		
-					const total_memory_el = document.getElementById('extension-power-settings-total-memory');
-	                if(total_memory_el){
-						if(total_mem > 3000){
-							total_memory_el.textContent = Math.round(total_mem/1000) + "GB ";
-						}else{
-							total_memory_el.textContent = total_mem + "MB ";
-						}
-						const used_memory_el = document.getElementById('extension-power-settings-used-memory');
-						if(used_memory_el){
-							used_memory_el.textContent = Math.round(total_mem - avail_mem);
-							document.getElementById('extension-power-settings-available-memory').textContent = Math.round(avail_mem - free_mem);
-							document.getElementById('extension-power-settings-free-memory').textContent = free_mem;
-						}
-						
-	                }
-					else{
-						console.error("could not find #extension-power-settings-total-memory");
-					}
-					
-                }
-			
-			}            
-            
-            
-            
-            // Show the total and available disk space
-            if(typeof body['disk_usage'] != 'undefined'){
-				
-				const total_disk_space = Math.floor(body['disk_usage'][0] / 1024000);
-                const free_disk_space = Math.floor(body['disk_usage'][2] / 1024000);
-				const used_disk_space = total_disk_space - free_disk_space;
-				
-				
-				document.getElementById('extension-power-settings-update-sd-card-user-partition-size').innerText = Math.round(total_disk_space / 1024) + 'GB';
-				
-				
-                document.getElementById('extension-power-settings-total-disk').innerText = total_disk_space;
-                document.getElementById('extension-power-settings-free-disk').innerText = free_disk_space;
-                
-				let low_storage_el = document.getElementById('extension-power-settings-low-storage-warning');
-				if(low_storage_el){
-                    if(free_disk_space < 1000){
-                        document.getElementById('extension-power-settings-low-storage-warning').style.display = 'block';
-                    }
-                
-                    if(free_disk_space < 500){
-                        document.getElementById('extension-power-settings-low-storage-warning').style.background = 'red';
-                    }
-				}
-				
-				let used_disk_percentage = (used_disk_space / total_disk_space) * 100;
-				if(this.debug){
-					console.log("power settings debug: used_disk_percentage: ", used_disk_percentage);
-				}
-				document.getElementById('extension-power-settings-disk-used-bar').style.width = used_disk_percentage + '%';
-                
-            }
-			
-			
-			if(typeof body['ethernet_connected'] != 'undefined'){
-				if(body['ethernet_connected']){
-					document.getElementById('extension-power-settings-attached-network-cable-container').classList.add('extension-power-settings-network-cable-plugged');
-					document.getElementById('extension-power-settings-attached-network-cable-container').classList.remove('extension-power-settings-network-cable-unplugged');
-				}
-				else{
-					document.getElementById('extension-power-settings-attached-network-cable-container').classList.add('extension-power-settings-network-cable-unplugged');
-					document.getElementById('extension-power-settings-attached-network-cable-container').classList.remove('extension-power-settings-network-cable-plugged');
-				}
-			}
-			
-			
-            // Show attached devices
-            if(typeof body['attached_devices'] != 'undefined'){
-				
-				this.attached_devices = body['attached_devices'];
-				if(this.debug){
-					console.log("power settings debug: this.attached_devices: ", this.attached_devices);
-				}
-				let attached_list_el = document.getElementById('extension-power-settings-attached-devices-list-container');
-				
-				var real_usb_devices_count = 0;
-				if(attached_list_el){
-                    
-					if(typeof this.attached_devices == 'object' && this.attached_devices.length){
-						attached_list_el.innerHTML = '';
-						for (var r = 0; r < this.attached_devices.length; r++) {
-							let attached_item_el = document.createElement('div');
-							if(this.attached_devices[r].endsWith(' Hub') || this.attached_devices[r].endsWith(' hub')){
-								if(this.developer == false){
-									continue
-								}
-								else{
-									attached_item_el.style.opacity = '.5';
-								}
-							}
-							else{
-								real_usb_devices_count++;
-							}
-							
-							
-							attached_item_el.classList.add('extension-power-settings-attached-item');
-							attached_item_el.innerHTML = '<p>' + this.attached_devices[r] + '</p>';
-							attached_list_el.appendChild(attached_item_el)
-						}
-					}
-					
-					if(real_usb_devices_count == 0){
-						if(!document.body.classList.contains('developer')){
-							attached_list_el.innerHTML = '<div class="extension-power-settings-attached-item"><p>None</p></div>';
-						}
-					}
-					
-				}
-				else{
-					console.warn("power settings: usb devices list element not found");
-				}
-			}
-			
-			
-			// Show attached devices
-			if(typeof body['attached_cameras'] != 'undefined'){
-				
-				this.attached_cameras = body['attached_cameras'];
-				if(this.debug){
-					console.log("power settings debug: this.attached_cameras: ", this.attached_cameras);
-				}
-				let cameras_list_el = document.getElementById('extension-power-settings-attached-cameras-list-container');
-				
-				if(cameras_list_el){
-                    
-					if(typeof this.attached_cameras == 'object' && Array.isArray(this.attached_cameras) && this.attached_cameras.length){
-						cameras_list_el.innerHTML = '<div class="extension-power-settings-attached-item"><p>A camera was detected</p></div>';
-					}
-					else{
-						cameras_list_el.innerHTML = '<div class="extension-power-settings-attached-item"><p>None</p></div>';
-					}
-					
-				}
-				else{
-					console.warn("power settings: cameras list element not found");
-				}
-                
-            }
-			
-			
-            // User partition expanded
-            if(typeof body.user_partition_expanded != 'undefined'){
-                if(body.user_partition_expanded == false){
-                    if(this.debug){
-						console.log("power settings debug: user partition not yet expanded");
-					}
-                    if(document.getElementById('extension-power-settings-user-partition-expansion-hint') != null){
-						document.getElementById('extension-power-settings-user-partition-expansion-hint').style.display = 'block';
-                    }
-                }
-				else{
-					if(this.debug){
-						console.log("power settings debug: user partition seems to be fully expanded");
-					}
-                    if(document.getElementById('extension-power-settings-user-partition-expansion-hint') != null){
-						document.getElementById('extension-power-settings-user-partition-expansion-hint').style.display = 'none';
-                    }
-				}
-            }
-			
-            // Show user_partition_expansion_failed
-            if(typeof body['user_partition_expansion_failed'] != 'undefined'){
-				let partition_expansion_failed_el = document.getElementById('extension-power-settings-partition-expansion-failed');
-				if(partition_expansion_failed_el){
-					if(body['user_partition_expansion_failed'] == true){
-						partition_expansion_failed_el.style.display = 'block';
-						document.getElementById('extension-power-settings-user-partition-expansion-hint').style.display = 'block';
-						document.getElementById('extension-power-settings-user-partition-expansion-button').style.display = 'block';
-						document.getElementById('extension-power-settings-busy-expanding-user-partition').style.display = 'none';
-					}
-					else{
-						partition_expansion_failed_el.style.display = 'none';
-					}
-				}
-            }
-			
-           
-            // Show low voltage warning
-            if(typeof body['low_voltage'] != 'undefined'){
-                if(body['low_voltage'] == true){
-					let low_voltage_el = document.getElementById('extension-power-settings-low-voltage-warning');
-					if(low_voltage_el){
-						low_voltage_el.style.display = 'block';
-					}
-                }
-            }
-			
-			// Show disk errors warning
-			if(typeof body['disk_errors'] == 'number' && body['disk_errors'] > 0){
-				let disk_errors_warning_el = document.getElementById('extension-power-settings-disk-errors-warning');
-				if(disk_errors_warning_el){
-					disk_errors_warning.innerHTML = '<p>' + body['disk_errors'] + ' disk errors detected</p><p>Consider making a backup and then rebooting, which could fix small disk errors. If the SD card that Candle is running on is quite old, and these errors keep appearing, then you should consider switching to a new or more durable SD card.</p>';
-					disk_errors_warning_el.style.display = 'block';
-				}
-			}
-			
-            if(typeof body['extra_usb_power'] == 'boolean'){
-				const extra_usb_power_checkbox_el = document.getElementById('extension-power-settings-extra-usb-power-checkbox');
-				if(extra_usb_power_checkbox_el){
-					extra_usb_power_checkbox_el.checked = body['extra_usb_power'];
-				}
-            }
-			
-		}
-		
-		
 		
 		
 		flash_message(message){
