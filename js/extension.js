@@ -159,7 +159,9 @@
 	                this.render_hotspot_settings(body);
         
 	            }).catch((err) => {
-	                console.error("power-settings get_hotspot_details error: ", err);
+	                if(this.debug){
+						console.error("power-settings debug: power-settings caught get_hotspot_details error: ", err);
+					}
 	            });
 			}
 			
@@ -169,7 +171,7 @@
 			
 			document.getElementById('settings-menu').addEventListener('click', (event) => {
 				if(this.debug){
-					console.log("user clicked on main settings menu");
+					console.log("power-settings debug: user clicked on main settings menu");
 				}
 				if(event.target.tagName == 'A'){
 					if(this.debug){

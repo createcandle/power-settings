@@ -1698,7 +1698,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                     if manufacturer != None:
                                                         display_name = manufacturer + ' ' + display_name
                                             
-                                                    # TODO: should have a better, mmore flexible datastructure for display data..
+                                                    # TODO: should have a better, more flexible datastructure for display data..
                                                     if x == 0:
                                                         self.display1_details = edid_data
                                                         if len(str(display_name)) > 3:
@@ -2327,7 +2327,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         state = True
                                     else:
                                         # don't disable the hotspot if there are no remaining network connections
-                                        # TODO could also check if a thatouch screne is connected, in which case that can still be used to keep access.
+                                        # TODO could also check if a touch screen is connected, in which case that can still be used to govern access.
                                         active_connections = run_command("nmcli -t connection show --active | tail -n +2 | grep -v 'Candle_hotspot' | grep -v 'loopback:lo'") # filter out the hotspot and lo interfaces
                                         if active_connections != None:
                                             if isinstance(active_connections,str) and len(str(active_connections).strip()) > 10:
@@ -2342,6 +2342,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             else:
                                                 if self.DEBUG:
                                                     print("error, not disabling Hotspot: no other connection would remain. ")
+                                                self.send_pairing_prompt("Create another network connection first")
                                         else:
                                             if self.DEBUG:
                                                 print("\nERROR, not disabling Hotspot: nmcli show command returned null. ")
@@ -3916,7 +3917,6 @@ class PowerSettingsAPIHandler(APIHandler):
                     target_dir = os.path.join(str(self.addon_backups_dir),str(d))
                     
                     if os.path.isdir(source_dir) and not os.path.isdir(target_dir):
-                        
                         if os.path.exists('/dev/mmcblk0p4'):
                             free_space = str(run_command('df -h --output=avail /dev/mmcblk0p4 | tail -1')).strip().rstrip()
                             if self.DEBUG:
@@ -3932,6 +3932,8 @@ class PowerSettingsAPIHandler(APIHandler):
                         if self.DEBUG:
                             print("initial_addons_backup: copy result: ", copy_result)
                         time.sleep(10)
+
+
 
     # check what version of the recovery partition is installed
     def check_recovery_partition(self):
