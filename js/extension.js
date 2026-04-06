@@ -427,7 +427,7 @@
             shutdown.addEventListener('click', () => {
                 content_container.style.display = 'none';
                 waiting.style.display = 'block';
-                waiting_message.innerHTML = '<h2>Shutting down...</h2><p>Please wait at least 15 seconds<br>before unplugging the controller.</p>';
+                waiting_message.innerHTML = '<h2>Shutting down...</h2><p>Please wait at least 15 seconds<br>before unplugging the controller</p>';
 				setTimeout(() => {
 					const shutdown_spinner_el = document.querySelector('#extension-power-settings-waiting .extension-power-settings-spinner');
 					if(shutdown_spinner_el){
@@ -4874,8 +4874,6 @@
 		
 		
         show_audio_page(){
-			
-			this.debug = true; // TODO: REMOVE THIS
 			
             if(this.debug){
 				console.log("power settings debug: in show_audio_page");

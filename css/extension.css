@@ -1605,11 +1605,13 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 #network-settings-wifi .network-settings-wrap #extension-power-settings-wifi-rescan-container > button{
 	margin-top:0;
 	margin-bottom:10rem;
-	font-size:1.8rem;
+	font-size:1.6rem;
 	padding: 1rem 1.5rem;
-	letter-spacing: 0.8px;
     border: none;
     border-radius: 0.5rem;
+}
+body#path-settings-network-wifi-configure #extension-power-settings-wifi-rescan-container{
+	display:none;
 }
 
 #network-settings-wifi-network-list:not(:empty) + #network-settings-wifi-wrap.hidden + #extension-power-settings-wifi-rescan-container{
