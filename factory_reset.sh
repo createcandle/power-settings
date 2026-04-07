@@ -143,8 +143,10 @@ rm -rf /home/pi/.webthings/hasdata/*
 rm -rf /home/pi/.webthings/data/energyuse/*
 rm -rf /home/pi/.webthings/data/networkscanner/*
 
+rm $BOOT_DIR/candle_hotspot_net_number.txt
 touch $BOOT_DIR/candle_hotspot.txt
 echo "smarthome" > $BOOT_DIR/candle_hotspot_password.txt
+
 
 # clear logs
 systemd-tmpfiles --clean
