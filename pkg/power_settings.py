@@ -2199,6 +2199,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 # Candle_hotspot
                                 hotspot_state = str(run_command("nmcli c s Candle_hotspot | grep GENERAL.STATE: | awk '{print $2}'")).rstrip()
+                                hotspot_ipv4_addresses = str(run_command("nmcli c s Candle_hotspot | grep IP4.ADDRESS | awk '{print $2}'")).rstrip()
                                 hotspot_ipv6_addresses = str(run_command("nmcli c s Candle_hotspot | grep IP6.ADDRESS | awk '{print $2}'")).rstrip()
                                 hotspot_band = str(run_command("nmcli c s Candle_hotspot | grep 802-11-wireless.band: | awk '{print $2}'")).rstrip()
                                 hotspot_channel = str(run_command("nmcli c s Candle_hotspot | grep 802-11-wireless.channel: | awk '{print $2}'")).rstrip()
@@ -2301,7 +2302,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                     'hotspot_enabled':self.hotspot_enabled,
                                     'hotspot':{
                                         'state':hotspot_state,
-                                        'ipv4_address':'192.168.12.1',
+                                        'ipv4_address':hotspot_ipv4_addresses,
                                         'ipv6_addresses':hotspot_ipv6_addresses,
                                         'band':hotspot_band,
                                         'channel':hotspot_channel,
