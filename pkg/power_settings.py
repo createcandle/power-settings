@@ -529,6 +529,8 @@ class PowerSettingsAPIHandler(APIHandler):
         self.candle_hotspot_password_file_path = os.path.join(self.boot_path, 'candle_hotspot_password.txt')
         self.candle_hotspot_ssid_file_path = os.path.join(self.boot_path, 'candle_hotspot_name.txt')
         self.candle_hotspot_5G_file_path = os.path.join(self.boot_path, 'candle_hotspot_5G.txt')
+        self.candle_hotspot_net_number_file_path = os.path.join(self.boot_path, 'candle_hotspot_net_number.txt')
+
         #self.performed_initial_wifi_scan = False
         self.hotspot_enabled = os.path.exists(self.candle_hotspot_file_path)
         self.hotspot_password = ""
@@ -888,21 +890,31 @@ class PowerSettingsAPIHandler(APIHandler):
     
     def get_hotspot_arp(self,intensive_scan=False):
         result = []
-        hotspot_arp_list = run_command("cat /proc/net/arp | tail -n +2 | grep '192.168.12.'")
-        if hotspot_arp_list != None:
+        
+        hotspot_base_ip = '192.168.12'
+        if os.path.isfile(self.candle_hotspot_net_number_file_path):
+            net_number = str(run_command('cat ' + str(self.candle_hotspot_net_number_file_path)))
+            if net_number.isdigit():
+                hotspot_base_ip = '172.16.' + str(net_number)
+        if self.DEBUG:
+            print("get_hotspot_arp: hotspot IP address base: ", hotspot_base_ip)
+        
+        hotspot_arp_list = run_command("cat /proc/net/arp | tail -n +2 | grep '" + str(hotspot_base_ip) + ".'")
+        if isinstance(hotspot_arp_list,str):
             for line in str(hotspot_arp_list).splitlines():
-                if "192.168.12." in str(line):
-                    if "192.168.12.1 " in str(line):
+                if hotspot_base_ip in str(line):
+                    if hotspot_base_ip + ".1 " in str(line):
                         pass
                     else:
                         
                         ip = str(line).split(' ')[0]
                         if valid_ip(ip):
                             name = ip
-                            if intensive_scan:
-                                lookup_result = str(run_command("timeout 1 nmblookup -A " + str(ip) + " | grep '<00>' | awk '{print $1}'"))
-                                if len(lookup_result) > 3 and lookup_result != 'None' and 'No reply from' not in lookup_result:
-                                    name = lookup_result
+                            # nmblookup is only installed if Samba is installed. And even then, it's not a great source.
+                            #if intensive_scan:
+                            #    lookup_result = str(run_command("timeout 1 nmblookup -A " + str(ip) + " | grep '<00>' | awk '{print $1}'"))
+                            #    if len(lookup_result) > 3 and lookup_result != 'None' and 'No reply from' not in lookup_result:
+                            #        name = lookup_result
                         
                             result.append({'ip':ip ,'name':name})
         return result

@@ -1778,6 +1778,12 @@ body#path-settings-network-wifi-configure #extension-power-settings-wifi-rescan-
 	margin-top:4rem;
 }
 
+.extension-power-settings-hotspot-connected-device-name{
+	margin-left:2rem;
+	opacity:.7;
+	font-style:italic;
+}
+
 #extension-power-settings-hotspot-connected-devices-container > div > span,
 #extension-power-settings-hotspot-connected-devices-container > div > a{
 	display:block;
