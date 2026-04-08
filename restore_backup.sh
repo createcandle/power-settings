@@ -3,9 +3,17 @@
 # This script tries to restore a backup
 # It doesn't care about the RO system, since if only acts on the user data partition
 
+BOOT_DIR="/boot"
+if lsblk | grep -q $BOOT_DIR/firmware; then
+    #echo "firmware partition is mounted at $BOOT_DIR/firmware"
+    BOOT_DIR="$BOOT_DIR/firmware"
+fi
+
+if [ -f $BOOT_DIR/emergency.txt ]; then
+	exit 0
+fi
 
 
-# Restore the data directories
 echo "$(date) - restoring Candle backup" >> /home/pi/.webthings/candle.log
 
 sudo systemctl stop webthings-gateway.service
@@ -19,6 +27,8 @@ if [ $BIT_TYPE -eq 64 ]; then
     ARCHSTRING=linux-arm64
 fi
 
+PYTHON_VERSION=$(python3 --version | cut -d. -f2)
+NODE_VERSION=$(node --version | cut -d. -f1)
 COUNTER=0
 
 if [ ! -f /home/pi/.webthings/data/power-settings/candle_restore.tar ]; then
@@ -36,7 +46,8 @@ else
 	for i in {1..3}
 	do
 	    #echo "current hostname: $(hostname -I)"
-		IPS=$(hostname -I | sed -r 's/192.168.12.1//' | xargs)
+		# For now this filters out the old 192.168.12.1 address of the hotspot, and the newer variable address
+		IPS=$(hostname -I | sed -r 's/192.168.12.1//' | sed -r 's/172.16.[0-9]\+.1//' | xargs)
 	    if [ "$IPS" = "" ]
 	    then
 			echo "Candle: late.sh: no network yet $i"
@@ -90,20 +101,29 @@ else
                 if [[ $URLS == *"linux-arm64"* ]]; then
                     echo "linux-arm64 spotted"
                     if [ $BIT_TYPE -eq 64 ]; then
-                        URLS=$(echo "$URLS" | grep "linux-arm64")
+                        URLS=$(echo "$URLS" | grep "linux-arm64" | grep -v ".shasum")
                 
                     else
-                        URLS=$(echo "$URLS" | grep -v "linux-arm64")
+                        URLS=$(echo "$URLS" | grep -v "linux-arm64 | grep -v ".shasum")
                     fi
                 fi
-            
-               	if [[ $URLS == *"v3.11."* ]]; then
+
+				if [[ $URLS == *"v3.15."* ]]; then
+                    echo "v3.15. spotted"
+                    URLS=$(echo "$URLS" | grep "v3.15.")
+				elif [[ $PYTHON_VERSION == '13' ]] && [[ $URLS == *"v3.13."* ]]; then
+                    echo "v3.13. spotted"
+                    URLS=$(echo "$URLS" | grep "v3.13.")
+               	elif [[ $PYTHON_VERSION == '11' ]] && [[ $URLS == *"v3.11."* ]]; then
                     echo "v3.11. spotted"
                     URLS=$(echo "$URLS" | grep "v3.11.")
 	            elif [[ $URLS == *"v3.9."* ]]; then
 	            	echo "v3.9. spotted"
 	            	URLS=$(echo "$URLS" | grep "v3.9.")
-                fi
+                elif [[ $URLS == *"$NODE_VERSION.t"* ]]
+					echo "NODE JS version spotted: $NODE_VERSION"
+	            	URLS=$(echo "$URLS" | grep "$NODE_VERSION.t")
+				fi
             
                 if [ -n "$URLS" ]; then
                     echo "selecting first URL from remaining list:"
@@ -114,6 +134,7 @@ else
             
                 else
                     echo "Did not find a download URL - does addon exist?"
+					echo "- restoring Candle backup: could not find a download URL for $directory" >> /home/pi/.webthings/candle.log
                 fi
 
                 if [ -f missing.tar ]; then
