@@ -2083,28 +2083,6 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                             
                             
-                            
-                            # UPDATE RECOVERY PARTITION
-                            
-                            #elif action == 'update_recovery_partition':
-                            #    
-                            #    if self.DEBUG:
-                            #        print("start of update_recovery_partition requested")
-                            #    state = False
-                            #    if self.exhibit_mode == False:
-                            #        self.busy_updating_recovery = 0
-                            #        self.should_start_recovery_update = True
-                            #        state = True
-                            #    #self.system_update_in_progress = True
-                            #    
-                            #    return APIResponse(
-                            #      status=200,
-                            #      content_type='application/json',
-                            #      content=json.dumps({'state':state}),
-                            #    )
-                            
-                                
-                                
                             # EXPAND USER PARTITION
                             elif action == 'expand_user_partition':
                                 
