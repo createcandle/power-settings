@@ -7,6 +7,19 @@
             
             this.interval = null;
             
+			
+            // Kiosk?
+			this.kiosk = false;
+            if(document.getElementById('virtualKeyboardChromeExtension') != null){
+                document.body.classList.add('kiosk');
+                this.kiosk = true;
+            }
+			
+			if(this.kiosk == false && location.protocol == 'http:' && !location.pathname.startsWith('/settings') && localStorage.getItem('extension_power_settings_switch_to_https') === 'true'){
+				console.warn("power settings: upgrading to https");
+				location.replace(location.href.replace('http:','https:'));
+			}
+			
 			document.body.classList.add(location.protocol.replace(':',''));
 			
             document.querySelector('#main-menu> ul').insertAdjacentHTML('beforeend', '<li id="extension-power-settings-menu-item-li"><a id="extension-power-settings-menu-item" href="/extensions/power-settings">Power</a></li>');
@@ -19,12 +32,7 @@
 			
 			this.extra_settings_created = false;
             
-            // Kiosk?
-			this.kiosk = false;
-            if(document.getElementById('virtualKeyboardChromeExtension') != null){
-                document.body.classList.add('kiosk');
-                this.kiosk = true;
-            }
+            
 			
             this.exhibit_mode = false;
             
@@ -75,6 +83,7 @@
 			this.selected_respeaker_type = '';
 			
 			this.safe_mode_is_active = false;
+			this.candle_ran_out_of_memory = false;
 			
 			this.is_safari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 			
@@ -1378,6 +1387,13 @@
                     document.getElementById('extension-power-settings-container-troubleshooting').classList.remove('extension-power-settings-hidden');
                     document.getElementById('extension-power-settings-pages').classList.remove('hidden');
                     
+					if(document.body.classList.contains('developer')){
+						this.developer = true;
+					}
+					else{
+						this.developer = false;
+					}
+					
                     window.API.postJson(
                         `/extensions/${this.id}/api/ajax`, {
                             'action': 'backup_init'
@@ -1519,9 +1535,155 @@
 						}
                         
                     }).catch((err) => {
-                        console.error("Error: troubleshooting init (which is backup init) could not connect to controller: ", err);
+                        if(this.debug){
+							console.error("power settings debug: caught error: troubleshooting init (which is backup init) could not connect to controller: ", err);
+						}
                     });
-                    
+					
+					
+					
+					const render_addon_settings = (body) => {
+						if(this.debug){
+							console.log("power settings debug: in render_addon_settings");
+						}
+						if(typeof body['state'] == 'boolean' && body['state'] == true){
+							if(typeof body['addon_settings'] != 'undefined' && body['addon_settings'] != null){
+								const disable_addons_list_el = document.getElementById('extension-power-settings-addon-troubleshooting-disable-addons-list');
+								if(disable_addons_list_el){
+									disable_addons_list_el.innerHTML = '';
+								}
+								if(this.debug){
+									console.warn("power settings debug: addon_settings: ", body['addon_settings']);
+								}
+								let sorted_addon_ids = Object.keys(body['addon_settings']);
+								sorted_addon_ids.sort();
+								console.log("sorted_addon_ids: ", sorted_addon_ids);
+								
+								//for (let [setting_name, details] of Object.entries(body['addon_settings'])) {
+								for (let sa = 0; sa < sorted_addon_ids.length; sa++){
+									let setting_name = sorted_addon_ids[sa];
+									let details = body['addon_settings'][setting_name];
+									try{
+										if(setting_name.startsWith('addons.') && !setting_name.startsWith('addons.config.') && typeof details.enabled == 'boolean'){
+											const addon_id = setting_name.replace('addons.','');
+											
+											const disable_addon_item_el = document.createElement('li');
+											disable_addon_item_el.classList.add('extension-power-settings-flex-space-between');
+											disable_addon_item_el.classList.add('extension-power-settings-flex-align-center');
+											
+											
+											const disable_addon_item_name_el = document.createElement('span');
+											disable_addon_item_name_el.textContent = addon_id.replaceAll('-',' ');
+											disable_addon_item_el.appendChild(disable_addon_item_name_el);
+									
+											const disable_addon_item_button_el = document.createElement('button');
+											disable_addon_item_button_el.classList.add('text-button');
+											disable_addon_item_button_el.textContent = 'Disable';
+											
+											disable_addon_item_button_el.addEventListener('click', () => {
+												disable_addon_item_button_el.classList.add('extension-power-settings-faded');
+												
+												
+												// try the official way first
+		                                        window.API.setAddonSetting( addon_id, false)
+		                                        .then((result) => {
+													if(this.debug){
+														console.log("power settings debug: got response from disabling the addon via the official way: ", body);
+													}
+												}).catch((err) => {
+													if(this.debug){
+														console.log("power settings debug: caught error disabling the addon via the official way: ", err);
+													}
+												})
+												.finally(() => {
+													if(this.debug){
+														console.log("power settings debug: disabling addon: in finally");
+													}
+													
+													// Also disable by modifying the database, just in case
+													details['enabled'] = false;
+												
+								                    window.API.postJson(
+								                        `/extensions/${this.id}/api/ajax`, {
+								                            'action': 'set_addon_settings',
+															'addon_id': addon_id,
+															'settings': details
+								                        }
+								                    ).then((body) => {
+														if(this.debug){
+															console.log("power settings debug: set_addon_settings response: ", body);
+														}
+														get_addon_settings();
+					
+								                    }).catch((err) => {
+								                        if(this.debug){
+															console.error("power settings debug: power settings: caught error calling get_addon_settings: ", err);
+														}
+														disable_addon_item_button_el.classList.remove('extension-power-settings-faded');
+														this.flash_message("Disabling addon failed: connection error?");
+								                    });
+												});
+												
+											});
+											
+											if(details.enabled === true && addon_id != 'candleappstore'){
+												
+												
+												
+											}
+											else{
+												
+												if(this.developer){
+													disable_addon_item_button_el.style.backgroundColor = '#000';
+													disable_addon_item_button_el.style.opacity = '.5';
+												}
+												else{
+													disable_addon_item_button_el.classList.add('extension-power-settings-faded');
+												}
+												if(addon_id == 'candleappstore'){
+													disable_addon_item_button_el.textContent = 'Enabled';
+												}
+												
+												//const disable_addon_item_state_el = document.createElement('span');
+												//disable_addon_item_state_el.textContent = 'Disabled';
+												//disable_addon_item_el.appendChild(disable_addon_item_state_el);
+											}
+											disable_addon_item_el.appendChild(disable_addon_item_button_el);
+									
+											disable_addons_list_el.appendChild(disable_addon_item_el);
+										}
+									}
+									catch(err){
+										if(this.debug){
+											console.error("power settings debug: troubleshooting: caught error checking addon's enabled state: ", err);
+										}
+									}
+									
+								}
+							}
+						}
+					}
+					
+					const get_addon_settings = () => {
+	                    window.API.postJson(
+	                        `/extensions/${this.id}/api/ajax`, {
+	                            'action': 'get_addon_settings'
+	                        }
+	                    ).then((body) => {
+							if(this.debug){
+								console.log("power settings debug: get_addon_settings response: ", body);
+							}
+							render_addon_settings(body);
+						
+	                    }).catch((err) => {
+	                        if(this.debug){
+								console.error("power settings debug: power settings: caught error calling get_addon_settings: ", err);
+							}
+	                    });
+					}
+					
+                    get_addon_settings();
+					
                 });
 				
 				
@@ -2546,6 +2708,33 @@
 					}
 				}
 			}
+			
+			if(typeof body.ran_out_of_memory == 'boolean'){
+				this.ran_out_of_memory = body.ran_out_of_memory;
+				if(this.ran_out_of_memory){
+					const menu_ul_el = document.querySelector('#settings-menu > ul');
+					let ran_out_of_memory_hint_el = document.querySelector('#extension-power-settings-ran-out-of-memory-hint');
+					if(!ran_out_of_memory_hint_el && menu_ul_el){
+	                    if(this.debug){
+	                        console.warn('power settings debug: creating ran-out-of-memory hint');
+	                    }
+						ran_out_of_memory_hint_el = document.createElement('div');
+						ran_out_of_memory_hint_el.setAttribute('id','extension-power-settings-ran-out-of-memory-hint');
+						ran_out_of_memory_hint_el.innerHTML = '<h4>RAN OUT OF MEMORY</h4><p>You should open the Troubleshooting page and disable any addons that use a lot of memory, such as Voco, Matter or Zigbee2MQTT</p>';
+						menu_ul_el.insertAdjacentElement('beforebegin', ran_out_of_memory_hint_el);
+						
+						setTimeout(() => {
+							this.flash_message("PLEASE DISABLE SOME ADDONS");
+						},3000);
+						
+					}
+				}
+			}
+			
+			
+			
+			
+			
             
             // Does the recovery partition exist?
             if(typeof body.recovery_partition_exists != 'undefined'){
@@ -3769,8 +3958,13 @@
 			
 			const switch_to_encrypted_connection_button_el = document.getElementById('extension-power-settings-switch-to-encrypted-connection-link');
 			if(switch_to_encrypted_connection_button_el){
-				const encrypted_url = 'https://' + window.location.hostname;
-				switch_to_encrypted_connection_button_el.setAttribute('href',encrypted_url);
+				
+				//switch_to_encrypted_connection_button_el.setAttribute('href',encrypted_url);
+				switch_to_encrypted_connection_button_el.addEventListener('click', () => {
+					const encrypted_url = 'https://' + window.location.hostname;
+					localStorage.setItem("extension_power_settings_switch_to_https","true");
+					location.assign(encrypted_url);
+				})
 			}
 			
 			if(this.is_safari){
@@ -3790,6 +3984,14 @@
 				}
 			}
 			
+			
+			const go_to_unsecure_version_button_el = document.getElementById('extension-power-settings-security-go-to-unsecure-button');
+			if(go_to_unsecure_version_button_el){
+				go_to_unsecure_version_button_el.addEventListener('click', () => {
+					const unencrypted_url = 'http://' + window.location.hostname + '/settings';
+					location.assign(unencrypted_url);
+				});
+			}
 			/*
             window.API.postJson(
                 `/extensions/${this.id}/api/ajax`, {
@@ -4343,8 +4545,6 @@
                     this.check_if_back(); // the cycle continues
                 });
                 
-
-
             }, 5000);
         }
         

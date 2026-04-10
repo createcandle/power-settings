@@ -279,6 +279,14 @@ class PowerSettingsAPIHandler(APIHandler):
             print("removing safe mode file")
             os.system('sudo rm ' + str(self.safe_mode_path))
         
+        self.ran_out_of_memory = False
+        self.ran_out_of_memory_path = os.path.join(self.boot_path,'candle_ran_out_of_memory.txt')
+        if os.path.exists(self.ran_out_of_memory_path):
+            self.ran_out_of_memory = True
+            print("removing candle_ran_out_of_memory.txt file")
+            os.system('sudo rm ' + str(self.ran_out_of_memory_path))
+        
+        
         self.ssh_state = os.path.isfile('/boot/firmware/candle_ssh.txt')
         
         # Factory reset
@@ -308,6 +316,9 @@ class PowerSettingsAPIHandler(APIHandler):
         # Backup data logs path
         self.log_db_file_path = os.path.join(str(self.user_profile['baseDir']), 'log','logs.sqlite3')
         self.log_meta_file_path = os.path.join(self.data_dir, "logs_meta.sqlite3")
+        
+        # Main database file path
+        self.db_file_path = os.path.join(str(self.user_profile['baseDir']), 'config','db.sqlite3')
         
         # Restore
         self.restore_file_path = os.path.join(self.data_dir, "candle_restore.tar")
@@ -552,11 +563,14 @@ class PowerSettingsAPIHandler(APIHandler):
         #    #elif ":" in self.hotspot_mac_address:
         #    #    self.hotspot_ssid = self.hotspot_ssid + " " + self.hotspot_mac_address[-5:].replace(":", "")
         
+        self.hotspot_ssid_base = 'Candle'
         self.hotspot_ssid = 'Candle'
+        if os.path.isfile(os.path.join(self.boot_path,'/webthings_gateway_version.txt')):
+            self.hotspot_ssid = 'Gateway'
         #actual_hotspot_ssid = run_command("nmcli con show Candle_hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | sed 's/,*$//g' | xargs")
         actual_hotspot_ssid = run_command("nmcli con show Candle_hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | sed 's/,*$//g' | xargs")
         actual_hotspot_ssid = str(actual_hotspot_ssid).rstrip()
-        if actual_hotspot_ssid.startswith('Candle '):
+        if actual_hotspot_ssid.startswith(self.hotspot_ssid_base):
             self.hotspot_ssid = actual_hotspot_ssid
         
         
@@ -589,7 +603,7 @@ class PowerSettingsAPIHandler(APIHandler):
                 #
             
         except Exception as ex:
-            print("Error getting total memory or free user partition disk space: " + str(ex))
+            print("caught error getting total memory or free user partition disk space: " + str(ex))
         
         self.ro_exists = False
         if os.path.isdir('/ro'):
@@ -864,7 +878,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             print("LESS USB devices detected: \n")
                         print(str(new_lsusb) + '\n')
                     self.apply_display_rotation() # The display's USB touch controller may lose it's orientation, so it must be restored
-                            
+                    
                 self.previous_lsusb = new_lsusb
     
             if self.force_reboot_time > 0 and self.force_reboot_time < time.time():
@@ -998,7 +1012,8 @@ class PowerSettingsAPIHandler(APIHandler):
                     if 'inverted' in display2_rotation_output:
                         self.display2_rotation = 180
         except Exception as ex:
-            print("caught exception in find_display_rotation: ", ex)
+            if self.DEBUG:
+                print("caught exception in find_display_rotation: ", ex)
        
             
     
@@ -1030,15 +1045,17 @@ class PowerSettingsAPIHandler(APIHandler):
             pointer_output = run_command("DISPLAY=:0 xinput | grep pointer | tail -n +2 | grep -v ' XTEST '") #  | cut -f1 -d$'\t'     # | grep -v ' XTEST '
             if pointer_output != None:
                 for line in str(pointer_output).splitlines():
-                    print("pointer_output line: " + str(line))
+                    if self.DEBUG:
+                        print("pointer_output line: " + str(line))
                 
                     input_name = re.split(r'\t+', line)[0]
-                    print("input_name again: " + str(input_name))
+                    #print("input_name again: " + str(input_name))
                 
                     input_name = input_name[5:].strip()
                 
-                    print("input_name again2: " + str(input_name))
-                    print("int(rotation): " + str(int(rotation)))
+                    if self.DEBUG:
+                        print("input_name again2: " + str(input_name))
+                        print("intended int(rotation): " + str(int(rotation)))
                 
                     if int(rotation) == 0:
                         os.system("DISPLAY=:0 xinput --set-prop '" + str(input_name) + "' 'Coordinate Transformation Matrix' 1 0 0 0 1 0 0 0 1")
@@ -1186,7 +1203,8 @@ class PowerSettingsAPIHandler(APIHandler):
                         print("Ethernet cable seems connected")
                 self.ethernet_connected = not cable_needed
         except Exception as ex:
-            print("Error in check_ethernet_connection: " + str(ex))
+            if self.DEBUG:
+                print("caught error in check_ethernet_connection: " + str(ex))
 
     
     def apply_display_rotation(self):
@@ -1327,18 +1345,20 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'usb_gadget_mode_auto_connect':self.persistent_data['usb_gadget_mode_auto_connect'],
                                             'usb_gadget_mode_info':self.usb_gadget_mode_info,
                                             'safe_mode_is_active':self.safe_mode_is_active,
+                                            'ran_out_of_memory':self.ran_out_of_memory,
                                             'ssh_state':self.ssh_state,
                                             'debug':self.DEBUG
                                         }
                                         
                             except Exception as ex:
-                                print("Error in /init response preparation: " + str(ex))
-                            
+                                if self.DEBUG:
+                                    print("caught error in /init response preparation: " + str(ex))
                             
                             if self.DEBUG:
                                 print("debug: init response: " + str(response))
+                                
                         except Exception as ex:
-                            print("Init error: " + str(ex))
+                            print("caught general error handling call to /init: " + str(ex))
                         
                         return APIResponse(
                           status=200,
@@ -1356,62 +1376,64 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                             # FACTORY RESET
                             if action == 'reset':
+                                state = False
+                                if self.exhibit_mode == False:
+                                    reset_z2m = True
+                                    if 'keep_z2m' in request.body:
+                                        reset_z2m = not bool(request.body['keep_z2m'])
                                 
-                                reset_z2m = True
-                                if 'keep_z2m' in request.body:
-                                    reset_z2m = not bool(request.body['keep_z2m'])
+                                    reset_bluetooth = True
+                                    if 'keep_bluetooth' in request.body:
+                                         reset_bluetooth = not bool(request.body['keep_bluetooth'])
                                 
-                                reset_bluetooth = True
-                                if 'keep_bluetooth' in request.body:
-                                     reset_bluetooth = not bool(request.body['keep_bluetooth'])
-                                
-                                if self.DEBUG:
-                                    print("creating/removing keep files")
-                                
-                                # Set the preference files about keeping Z2M and Bluetooth in the boot folder
-                                if reset_z2m:
                                     if self.DEBUG:
-                                        print("removing keep_z2m.txt")
-                                    os.system('sudo rm ' + self.keep_z2m_file_path)
-                                else:
-                                    if self.DEBUG:
-                                        print("creating keep_z2m.txt")
-                                    os.system('sudo touch ' + self.keep_z2m_file_path)
+                                        print("creating/removing keep files")
+                                
+                                    # Set the preference files about keeping Z2M and Bluetooth in the boot folder
+                                    if reset_z2m:
+                                        if self.DEBUG:
+                                            print("removing keep_z2m.txt")
+                                        os.system('sudo rm ' + self.keep_z2m_file_path)
+                                    else:
+                                        if self.DEBUG:
+                                            print("creating keep_z2m.txt")
+                                        os.system('sudo touch ' + self.keep_z2m_file_path)
                                     
-                                if reset_bluetooth:
-                                    if self.DEBUG:
-                                        print("removing keep_bluetooth.txt")
-                                    os.system('sudo rm ' + self.keep_bluetooth_file_path)
-                                else:
-                                    if self.DEBUG:
-                                        print("creating keep_bluetooth.txt")
-                                    os.system('sudo touch ' + self.keep_bluetooth_file_path)
+                                    if reset_bluetooth:
+                                        if self.DEBUG:
+                                            print("removing keep_bluetooth.txt")
+                                        os.system('sudo rm ' + self.keep_bluetooth_file_path)
+                                    else:
+                                        if self.DEBUG:
+                                            print("creating keep_bluetooth.txt")
+                                        os.system('sudo touch ' + self.keep_bluetooth_file_path)
                                     
                                 
-                                # Place the factory reset file in the correct location so that it will be activated at boot.
-                                os.system('sudo cp ' + str(self.factory_reset_script_path) + ' ' + str(self.actions_file_path))
-                                #textfile = open(self.actions_file_path, "w")
-                                #a = textfile.write(reset_z2m)
-                                #textfile.close()
+                                    # Place the factory reset file in the correct location so that it will be activated at boot.
+                                    os.system('sudo cp ' + str(self.factory_reset_script_path) + ' ' + str(self.actions_file_path))
+                                    state = True
+                                    #textfile = open(self.actions_file_path, "w")
+                                    #a = textfile.write(reset_z2m)
+                                    #textfile.close()
                                 
-                                #os.spawnve(os.P_NOWAIT, "/bin/bash", ["-c", "/home/pi/longrun.sh"])
-                                #os.spawnve(os.P_NOWAIT, "/bin/bash", ["-c", "/home/pi/longrun.sh"], os.environ)
-                                #os.spawnlpe(os.P_DETACH,"/bin/bash", "/bin/bash", '/home/pi/longrun.sh','&')        
-                                #subprocess.Popen(["nohup", "/bin/bash", "~/.webthings/addons/power-settings/factory_reset.sh"])
+                                    #os.spawnve(os.P_NOWAIT, "/bin/bash", ["-c", "/home/pi/longrun.sh"])
+                                    #os.spawnve(os.P_NOWAIT, "/bin/bash", ["-c", "/home/pi/longrun.sh"], os.environ)
+                                    #os.spawnlpe(os.P_DETACH,"/bin/bash", "/bin/bash", '/home/pi/longrun.sh','&')        
+                                    #subprocess.Popen(["nohup", "/bin/bash", "~/.webthings/addons/power-settings/factory_reset.sh"])
                                 
-                                #DETACHED_PROCESS = 0x00000008
-                                #CREATE_NEW_PROCESS_GROUP = 0x00000200
-                                #pid = Popen([script, param], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                                #            creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
-                                #subprocess.Popen(["nohup", "/bin/bash", "/home/pi/longrun.sh", reset_z2m], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                                #            creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
-                                #os.system('sudo chmod +x ~/.webthings/addons/power-settings/factory_reset.sh') 
-                                #os.system('/home/pi/.webthings/addons/power-settings/factory_reset.sh ' + str(reset_z2m) + " &")
+                                    #DETACHED_PROCESS = 0x00000008
+                                    #CREATE_NEW_PROCESS_GROUP = 0x00000200
+                                    #pid = Popen([script, param], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                                    #            creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
+                                    #subprocess.Popen(["nohup", "/bin/bash", "/home/pi/longrun.sh", reset_z2m], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                                    #            creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
+                                    #os.system('sudo chmod +x ~/.webthings/addons/power-settings/factory_reset.sh') 
+                                    #os.system('/home/pi/.webthings/addons/power-settings/factory_reset.sh ' + str(reset_z2m) + " &")
                                 
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
-                                  content=json.dumps({'state':'ok'}),
+                                  content=json.dumps({'state':state}),
                                 )
                                 
                                 
@@ -1437,7 +1459,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             elif action == 'set_audio':
                                 state = False
                                 response = ''
-                                if self.pipewire_enabled:
+                                if self.exhibit_mode == False and self.pipewire_enabled:
                                     state = True
                                 
                                     if 'default_id' in request.body:
@@ -1483,7 +1505,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 state = False
                                 try:
                                     respeaker_options_keys = ['','2mic-v1_0','2mic-v2_0','4mic','6mic']
-                                    if 'selected_respeaker_type' in request.body and isinstance(request.body['selected_respeaker_type'],str):
+                                    if self.exhibit_mode == False and 'selected_respeaker_type' in request.body and isinstance(request.body['selected_respeaker_type'],str):
                                         selected_respeaker_type = str(request.body['selected_respeaker_type'])
                                         print("selected_respeaker_type: ", selected_respeaker_type)
                                         if selected_respeaker_type in respeaker_options_keys:
@@ -1787,7 +1809,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             elif action == 'set_mouse_pointer':
                                 
                                 state = False
-                                if 'mouse_pointer_enabled' in request.body:
+                                if self.exhibit_mode == False and 'mouse_pointer_enabled' in request.body:
                                     self.mouse_pointer_enabled = bool(request.body['mouse_pointer_enabled'])
                                     if self.mouse_pointer_enabled == True:
                                         os.system('sudo rm /boot/firmware/candle_hide_mouse_pointer.txt')
@@ -1807,7 +1829,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             # DISPLAY ROTATION
                             elif action == 'set_display_rotation':
                                 state = 'error'
-                                if 'display1_rotation' in request.body and 'display2_rotation' in request.body:
+                                if self.exhibit_mode == False and 'display1_rotation' in request.body and 'display2_rotation' in request.body:
                                     self.display1_rotation = int(request.body['display1_rotation'])
                                     self.display2_rotation = int(request.body['display2_rotation'])
                                     if self.DEBUG:
@@ -1829,8 +1851,8 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                             # DISPLAY ROTATION
                             elif action == 'set_rpi_display_rotation':
-                                state = 'error'
-                                if 'rpi_display_rotation' in request.body:
+                                state = False
+                                if self.exhibit_mode == False and 'rpi_display_rotation' in request.body:
                                     if os.path.isdir('/sys'):
                                         self.rpi_display_rotation = int(request.body['rpi_display_rotation'])
                                     
@@ -1838,7 +1860,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         if self.DEBUG:
                                             print("new Rpi Display rotation: " + str(self.rpi_display_rotation))
                                     
-                                        state = 'ok'
+                                        state = True
                                     
                                         if self.rpi_display_rotation == 0:
                                             os.system('sudo rm ' + str(self.rotate_display_path))
@@ -1859,9 +1881,9 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                             # DISPLAY POWER MANAGEMENT
                             elif action == 'set_display_power':
-                                state = 'error'
+                                state = False
                                 try:
-                                    if os.path.isdir('/sys'):
+                                    if self.exhibit_mode == False and os.path.isdir('/sys'):
                                         if 'display1_power' in request.body and 'display2_power' in request.body:
                                     
                                             self.persistent_data['display1_power'] = bool(request.body['display1_power'])
@@ -1900,7 +1922,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             """
                                             
                                             if self.save_persistent_data():
-                                                state = 'ok'
+                                                state = True
                                 
                                 except Exception as ex:
                                     print("Error saving/setting display power management preferences")
@@ -1914,13 +1936,14 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                             # DISPLAY POWER MANAGEMENT
                             elif action == 'set_display_resolution':
-                                state = 'error'
+                                state = False
                                 try:
-                                    if 'port' in request.body and 'resolution' in request.body:
+                                    
+                                    if self.exhibit_mode == False and 'port' in request.body and 'resolution' in request.body:
                                         if os.path.isdir('/sys'):
                                             self.persistent_data['display_resolution_' + str(request.body['port'])] = str(request.body['resolution'])
                                             if self.save_persistent_data():
-                                                state = 'ok'
+                                                state = True
                                 
                                             self.set_display_resolutions()
                                 
@@ -2040,7 +2063,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                             # Reinstall candle app store from Github
                             elif action == 'reinstall_app_store':
-                                state = self.reinstall_app_store()
+                                state = False
+                                if self.exhibit_mode == False:
+                                    state = self.reinstall_app_store()
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
@@ -2048,7 +2073,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                             elif action == 'install_cutting_edge_app_store':
-                                state = self.install_cutting_edge_app_store()
+                                state = False
+                                if self.exhibit_mode == False:
+                                    state = self.install_cutting_edge_app_store()
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
@@ -2058,21 +2085,24 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                             
                             # UPDATE RECOVERY PARTITION
+                            """
                             elif action == 'update_recovery_partition':
                                 
                                 if self.DEBUG:
                                     print("start of update_recovery_partition requested")
-                                
-                                self.busy_updating_recovery = 0
-                                self.should_start_recovery_update = True
+                                state = False
+                                if self.exhibit_mode == False:
+                                    self.busy_updating_recovery = 0
+                                    self.should_start_recovery_update = True
+                                    state = True
                                 #self.system_update_in_progress = True
                                 
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
-                                  content=json.dumps({'state':'ok'}),
+                                  content=json.dumps({'state':state}),
                                 )
-                            
+                            """
                                 
                                 
                                 
@@ -2081,8 +2111,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 if self.DEBUG:
                                     print("request to expand_user_partition")
-                                
-                                state = self.expand_user_partition()
+                                state = False
+                                if self.exhibit_mode == False:
+                                    state = self.expand_user_partition()
                                 
                                 # because this reboots the system this will likely not be called
                                 return APIResponse(
@@ -2097,8 +2128,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                             # MANUAL UPDATE
                             elif action == 'manual_update':
-                                
-                                if os.path.isdir(self.boot_path):
+                                if self.exhibit_mode == False and os.path.isdir(self.boot_path):
                                     
                                     if self.DEBUG:
                                         print("copying manual update script into position")
@@ -2120,6 +2150,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 
                             # /disable_overlay - Disable old RO overlay on older Candle systems.
+                            """
                             elif action == 'disable_overlay':
                                 if self.DEBUG:
                                     print("APi request to disable_overlay")
@@ -2168,7 +2199,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':state}),
                                 )
-                                
+                            """  
                                 
                                 
                             # force a wifi rescan
@@ -2328,7 +2359,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             # enable or disable the hotspot
                             elif action == 'set_hotspot_enabled':
                                 state = False
-                                if 'enabled' in request.body:
+                                if self.exhibit_mode == False and 'enabled' in request.body:
                                     self.hotspot_enabled = bool(request.body['enabled'])
                                     if self.hotspot_enabled:
                                         if self.DEBUG:
@@ -2355,7 +2386,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             else:
                                                 if self.DEBUG:
                                                     print("error, not disabling Hotspot: no other connection would remain. ")
-                                                self.send_pairing_prompt("Create another network connection first")
+                                                #self.send_pairing_prompt("Create another network connection first")
                                         else:
                                             if self.DEBUG:
                                                 print("\nERROR, not disabling Hotspot: nmcli show command returned null. ")
@@ -2370,7 +2401,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             # select 2.4 or 5ghz mode
                             elif action == 'set_hotspot_band':
                                 state = False
-                                if 'band' in request.body:
+                                if self.exhibit_mode == False and 'band' in request.body:
                                     self.hotspot_band_5G = bool(request.body['band'])
                                     if self.hotspot_band_5G == True:
                                         if self.DEBUG:
@@ -2441,6 +2472,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':state}),
                                 )
                             
+                            
                             # Update hotspot password
                             elif action == 'get_hotspot_password':
                                 state = False
@@ -2462,7 +2494,9 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                             
                             
-                            # enable or disable the hotspot
+                            # enable or disable USB gadget mode
+                            # NOT USED, turned out to not work on normal Raspberry Pi's.
+                            """
                             elif action == 'set_usb_gadget_mode':
                                 state = False
                                 if 'enabled' in request.body:
@@ -2487,7 +2521,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':state}),
                                 )
                             
-                            
+                             """
                             
                             
                                 
@@ -2658,7 +2692,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 
                                 
-                            # /poll
+                            # /poll 
+                            # DEPRECATED, was used for updating through an update script
                             elif action == 'poll':
                                 if self.DEBUG:
                                     print("handling poll action")
@@ -2689,7 +2724,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                                     self.system_update_error_detected = False
                                         
                                 except Exception as ex:
-                                    print("Error getting dmsg output: " + str(ex))
+                                    if self.DEBUG:
+                                        print("caught error getting system update dmsg output: " + str(ex))
                                 
                                 return APIResponse(
                                   status=200,
@@ -2726,7 +2762,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if self.DEBUG:
                                     print("handling switch_to_recovery action")
                                 
-                                state = self.switch_to_recovery()
+                                state = False
+                                if self.exhibit_mode == False:
+                                    state = self.switch_to_recovery()
                                 
                                 return APIResponse(
                                   status=200,
@@ -2908,15 +2946,15 @@ class PowerSettingsAPIHandler(APIHandler):
                                     print("API: in create_backup")
                                 state = 'error'
                                 try:
+                                    if self.exhibit_mode == False:
+                                        if 'backup_more' in request.body:
+                                            self.backup_more = bool(request.body['backup_more'])
                                     
-                                    if 'backup_more' in request.body:
-                                        self.backup_more = bool(request.body['backup_more'])
-                                    
-                                    backup_result = self.backup()
-                                    if self.DEBUG:
-                                        print("backup result: " + str(backup_result))
-                                    if backup_result:
-                                        state = 'ok'
+                                        backup_result = self.backup()
+                                        if self.DEBUG:
+                                            print("backup result: " + str(backup_result))
+                                        if backup_result:
+                                            state = 'ok'
                                         
                                 except Exception as ex:
                                     print("Error creating backup: " + str(ex))
@@ -2956,33 +2994,34 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                             
                             elif action == 'anonymous_mqtt':
-                                
+                                state = False
                                 allow_anonymous_mqtt = False
+                                if self.exhibit_mode == False:
+                                    if os.path.isfile(str(self.mosquitto_conf_file_path)):
+                                    
+                                        if 'allow_anonymous_mqtt' in request.body:
+                                             if bool(request.body['allow_anonymous_mqtt']) == True:
+                                                 allow_anonymous_mqtt = "true"
+                                                 if self.DEBUG:
+                                                     print("set allow_anonymous_mqtt to true")
                                 
-                                if os.path.isfile(str(self.mosquitto_conf_file_path)):
+                                        # sed -i 's/allow_anonymous false/allow_anonymous true/' /home/pi/.webthings/etc/mosquitto/mosquitto.conf
+                                        if allow_anonymous_mqtt:
+                                            os.system("sudo sed -i 's/allow_anonymous false/allow_anonymous true/' " + str(self.mosquitto_conf_file_path))
+                                        else:
+                                            os.system("sudo sed -i 's/allow_anonymous true/allow_anonymous false/' " + str(self.mosquitto_conf_file_path))
                                     
-                                    if 'allow_anonymous_mqtt' in request.body:
-                                         if bool(request.body['allow_anonymous_mqtt']) == True:
-                                             allow_anonymous_mqtt = "true"
-                                             if self.DEBUG:
-                                                 print("set allow_anonymous_mqtt to true")
-                                
-                                    # sed -i 's/allow_anonymous false/allow_anonymous true/' /home/pi/.webthings/etc/mosquitto/mosquitto.conf
-                                    if allow_anonymous_mqtt:
-                                        os.system("sudo sed -i 's/allow_anonymous false/allow_anonymous true/' " + str(self.mosquitto_conf_file_path))
-                                    else:
-                                        os.system("sudo sed -i 's/allow_anonymous true/allow_anonymous false/' " + str(self.mosquitto_conf_file_path))
-                                    
-                                    if self.DEBUG:
-                                        print("restarting mosquitto")
-                                    os.system('sudo systemctl restart mosquitto.service')
-                                    
-                                self.allow_anonymous_mqtt = allow_anonymous_mqtt
+                                        if self.DEBUG:
+                                            print("restarting mosquitto")
+                                        os.system('sudo systemctl restart mosquitto.service')
+                                        state = True
+                                        
+                                    self.allow_anonymous_mqtt = allow_anonymous_mqtt
                             
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
-                                  content=json.dumps({'state':True}),
+                                  content=json.dumps({'state':state}),
                                 )
                             
                             
@@ -2990,8 +3029,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                 state = False
                                 if self.DEBUG:
                                     print("API got set_ssh_state request")
-                                    
-                                if 'state' in request.body and os.path.isdir('/boot/firmware/'):
+                                
+                                if self.exhibit_mode == False and 'state' in request.body and os.path.isdir('/boot/firmware/'):
                                     if bool(request.body['state']) == True:
                                         os.system('sudo touch /boot/firmware/candle_ssh.txt')
                                     elif os.path.isfile('/boot/firmware/candle_ssh.txt'):
@@ -3194,15 +3233,16 @@ class PowerSettingsAPIHandler(APIHandler):
                                 state = False
                                 if self.DEBUG:
                                     print("boot into safe mode requested")
-                                self.force_reboot_time = int(time.time()) + 10
-                                os.system('sudo touch ' + str(self.safe_mode_path))
-                                if(os.path.isfile(str(self.safe_mode_path))):
-                                    state = True
+                                if self.exhibit_mode == False:
+                                    self.force_reboot_time = int(time.time()) + 10
+                                    os.system('sudo touch ' + str(self.safe_mode_path))
+                                    if(os.path.isfile(str(self.safe_mode_path))):
+                                        state = True
                                 
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
-                                  content=json.dumps({'state':True}),
+                                  content=json.dumps({'state':state}),
                                 )
                                 
                                 
@@ -3268,10 +3308,102 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                                 
                                 
+                            elif action == 'get_addon_settings':
+                                state = False
+                                addon_settings = {}
+                                if os.path.isfile(str(self.db_file_path)):
+                                    raw_addon_settings = run_command("sqlite3 " + str(self.db_file_path) + " 'SELECT * FROM settings;'")
+                                    if raw_addon_settings and isinstance(raw_addon_settings,str) and len(raw_addon_settings) > 10:
+                                        for line in str(raw_addon_settings).splitlines():
+                                            if len(str(line)) and line.startswith('addons.') and not line.startswith('addons.config.') and '|' in line:
+                                                try:
+                                                    setting_name = str(line.split('|',1)[0])
+                                                    loaded_settings = json.loads(line.split('|',1)[1])
+                                                    if str(setting_name).startswith('addons.') and not str(setting_name).startswith('addons.config.') and 'enabled' in loaded_settings:
+                                                        addon_settings[setting_name] = {"enabled":loaded_settings['enabled']}
+                                                except Exception as ex:
+                                                    if self.DEBUG:
+                                                        print("get_addon_settings: caught error parsing settings line: ", ex, "\nfailed line: ", line)
+                                            #else:
+                                            #    if self.DEBUG:
+                                            #        print("empty line, or no | in it: ", line)
+                                        if addon_settings and len(addon_settings.keys()):
+                                            state = True
                                 
+                                if self.DEBUG:
+                                    print("get_addon_settings: final addon_settings: ", addon_settings)
                                 
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state, 'addon_settings':addon_settings}),
+                                )
                                 
-                                
+                            elif action == 'set_addon_settings':
+                                state = False
+                                if self.DEBUG:
+                                    print("in set_addon_settings")
+                                if self.exhibit_mode == False and 'addon_id' in request.body and isinstance(request.body['addon_id'],str) and 'settings' in request.body and 'enabled' in request.body['settings'] and isinstance(request.body['settings']['enabled'],bool):
+                                    if self.DEBUG:
+                                        print("set_addon_settings: provided addon_id: ", request.body['addon_id'])
+                                    
+                                    
+                                    #UPDATE settings
+                                    #SET value = REPLACE(value, '\\\"enabled\\\":true', '\\\"enabled\\\":false');
+                                    
+                                    
+                                    
+                                    raw_addon_setting = str(run_command("sqlite3 " + str(self.db_file_path) + " \"SELECT value FROM settings WHERE key='addons." + str(request.body['addon_id']) + "';\""))
+                                    if '"enabled":true' in raw_addon_setting:
+                                        
+                                        sqlite_save_command = "sqlite3 " + str(self.db_file_path) + " \"UPDATE settings SET value=REPLACE(value, '\\\"enabled\\\":true', '\\\"enabled\\\":false') WHERE key='addons." + str(request.body['addon_id']) + "';\""
+                                        
+                                        """
+                                        raw_addon_setting = raw_addon_setting.replace('"enabled":true','"enabled":false')
+                                        raw_addon_setting = raw_addon_setting.replace('\n','')
+                                        raw_addon_setting = raw_addon_setting.replace('\r','')
+                                        raw_addon_setting = raw_addon_setting.replace('\033', '')
+                                        raw_addon_setting = raw_addon_setting.replace('\\','\\\\\\')
+                                        raw_addon_setting = raw_addon_setting.replace('/','\\\\/)')
+                                        raw_addon_setting = raw_addon_setting.replace('%','\\\\%')
+                                        raw_addon_setting = raw_addon_setting.replace('(','\\(')
+                                        raw_addon_setting = raw_addon_setting.replace(')','\\)')
+                                        raw_addon_setting = raw_addon_setting.replace("'","\\\'")
+                                        raw_addon_setting = raw_addon_setting.replace('"','\\"')
+                                        if self.DEBUG:
+                                            print("")
+                                            print("===")
+                                            print(str(raw_addon_setting))
+                                            print("===")
+                                            print("")
+                                            
+                                        sqlite_save_command = "sqlite3 " + str(self.db_file_path) + " \"UPDATE settings SET value='" + str(raw_addon_setting) + "' WHERE key='addons." + str(request.body['addon_id']) + "';\""
+                                        
+                                        """
+                                        if self.DEBUG:
+                                            print("set_addon_settings: sqlite_save_command:", sqlite_save_command)
+                                        
+                                        update_check = run_command(sqlite_save_command)
+                                        if self.DEBUG:
+                                            print("update_check result: ", update_check)
+                                        if isinstance(update_check,str):
+                                            if 'Syntax error' in str(update_check) or '/bin/sh:' in str(update_check):
+                                                if self.DEBUG:
+                                                    print("database update seems to have failed: ", update_check)
+                                                state = False
+                                                #self.send_pairing_prompt("Error saving to database")
+                                            else:
+                                                state = True
+                                        
+                                    #addon_settings = run_command("sqlite3 " + str(self.db_file_path) + " 'SELECT * FROM settings;'")
+                                    #if isinstance(addon_settings,str):
+                                        
+                                    
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
                             
                             else:
                                 return APIResponse(
@@ -3504,11 +3636,13 @@ class PowerSettingsAPIHandler(APIHandler):
                 
                     # If hardware clock module exists, set its time too.
                     if self.hardware_clock_detected:
-                        print('also setting hardware clock time')
+                        if self.DEBUG:
+                            print('set_time: also setting hardware clock time')
                         os.system('sudo hwclock -w')
                     
-                except Exception as e:
-                    print("Error setting new time: " + str(e))
+                except Exception as ex:
+                    if self.DEBUG:
+                        print("caught error setting new time: " + str(ex))
             
             
     def set_ntp_state(self,new_state):
@@ -3524,36 +3658,28 @@ class PowerSettingsAPIHandler(APIHandler):
                     os.system('sudo timedatectl set-ntp false') 
                     if self.DEBUG:
                         print("Network time turned off")
-            except Exception as e:
-                print("Error changing NTP state: " + str(e))
+            except Exception as ee:
+                if self.DEBUG:
+                    print("caught error changing NTP state: " + str(ee))
 
 
 
     def shutdown(self):
         if self.DEBUG:
             print("Power settings: shutting down gateway")
-        try:
-            os.system('sudo shutdown now') 
-        except Exception as e:
-            print("Error shutting down: " + str(e))
+        os.system('sudo shutdown now') 
 
 
     def reboot(self):
         if self.DEBUG:
             print("Power settings: rebooting gateway")
-        try:
-            os.system('sudo reboot') 
-        except Exception as e:
-            print("Error rebooting: " + str(e))
+        os.system('sudo reboot') 
 
 
     def restart(self):
         if self.DEBUG:
             print("Power settings: restarting gateway")
-        try:
-            os.system('sudo systemctl restart webthings-gateway.service') 
-        except Exception as e:
-            print("Error rebooting: " + str(e))
+        os.system('sudo systemctl restart webthings-gateway.service') 
 
 
     
@@ -3878,7 +4004,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     if self.DEBUG:
                         print("self.backup_more was false, skipping logs, photos and uploads")
                 
-                backup_command = 'cd ' + str(self.user_profile['baseDir']) + '; find ./config ./data ./hasdata -maxdepth 2 -name "*.json" -o -name "*.xtt" -o -name "*.yaml" -o -name "*.xml" -o -name "*.sqlite3" -o -name "*.blacklisted_devices" -o -name "*.trusted_devices" -o -name "*.ignored_devices" -o -name "*.db" -o -name "*.txt" -o -name "*.ini" -o -name "*.backup" -o -name "*.data" -o -name "chip*" | tar -cf ' + str(self.backup_file_path) + ' -T -' 
+                backup_command = 'cd ' + str(self.user_profile['baseDir']) + '; find ./config ./data ./hasdata -maxdepth 2 -name "*.json" -o -name "*.xtt" -o -name "*.yaml" -o -name "*.xml" -o -name "*.sqlite3" -o -name "*.blacklisted_devices" -o -name "*.trusted_devices" -o -name "*.ignored_devices" -o -name "*.db" -o -name "*.txt" -o -name "*.ini" -o -name "*.backup" -o -name "*.data" -o -name "chip*"  -o -name "thread" | grep -v "/._" | tar -cf ' + str(self.backup_file_path) + ' -T -' 
                 backup_command += extra_tar_commands
                 
                 
@@ -3913,7 +4039,8 @@ class PowerSettingsAPIHandler(APIHandler):
             
             return True
         except Exception as ex:
-            print("error while creating backup: " + str(ex))
+            if self.DEBUG:
+                print("caught error while creating backup: " + str(ex))
         return False
 
 

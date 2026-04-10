@@ -892,6 +892,12 @@ body:not(.kiosk):not(.http).https .extension-power-settings-hide-if-https{
 	background-color:#026d06;
 }
 
+#extension-power-settings-security-go-to-unsecure-button{
+	display:block;
+	margin-top:2rem;
+	margin-left:auto;
+}
+
 
 /*  UPDATE  */
 
@@ -1184,6 +1190,11 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 .extension-power-settings-flex-space-between{
 	display:flex;
 	justify-content:space-between;
+}
+
+.extension-power-settings-flex-align-center{
+	display:flex;
+	align-items:center;
 }
 
 .extension-power-settings-flex-center-space-between{
@@ -1889,8 +1900,9 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
 	font-weight:bold;
 }
 
-/*  SAFE MODE  */
 
+
+/*  SAFE MODE  */
 
 #extension-power-settings-safe-mode-active-indicator{
 	position:fixed;
@@ -1905,6 +1917,7 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
 	pointer-events:none;
 }
 
+#extension-power-settings-ran-out-of-memory-hint,
 #extension-power-settings-safe-mode-active-hint{
 	padding: 2rem;
     text-align: center;
@@ -1912,7 +1925,18 @@ body:not(.kiosk) .extension-power-settings-hotspot-connected-devices-container a
     color: white;
 	background-color:#b77600;
 }
+#extension-power-settings-ran-out-of-memory-hint{
+	background-color:#600;
+	
+}
+#extension-power-settings-ran-out-of-memory-hint > p{
+	font-size:1.6rem;
+	line-height:180%;
+}
 
+
+
+/*  TROUBLESHOOTING   TROUBLE SHOOTING  */
 
 body.safe-mode #extension-power-settings-menu-troubleshooting-button{
 	background-color:#b77600;
@@ -1933,6 +1957,15 @@ body.safe-mode #extension-power-settings-menu-troubleshooting-button::after{
 	top:0;
 	z-index:1;
 }
+
+#extension-power-settings-addon-troubleshooting-disable-addons-list{
+	padding-left:0;
+}
+
+#extension-power-settings-addon-troubleshooting-disable-addons-list span::first-letter{
+	text-transform: capitalize;
+}
+
 
 
 

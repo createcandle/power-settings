@@ -3,7 +3,7 @@
         <div class="section-title">
             <div class="section-title-back-flex"></div>
             <div class="section-title-container">
-                <img loading="lazy" id="extension-power-settings-clock-page-icon" class="section-title-icon" alt="Clock icon" src="/extensions/power-settings/images/clock.svg" />
+                <img loading="lazy" id="extension-power-settings-clock-page-icon" class="section-title-icon" alt="Clock icon" src="/extensions/power-settings/images/clock.svg" >
                 <span class="section-title-name">Clock</span>
             </div>
             <div class="section-title-right-flex"></div>
@@ -25,12 +25,12 @@
             <p class="extension-power-settings-header">Internet time</p>
             <p>If your system does not have a hardware clock module installed, every time the system starts it will try to get the current date and time from an internet server.</p>
             <p>If enabled, as soon as there is an internet connection, any manually provided time will be overridden by an internet NTP server.</p>
-            <br />
+            <br>
             <div class="extension-power-settings-form-content">
-                <input type="checkbox" name="extension-power-settings-form-ntp" id="extension-power-settings-form-ntp" checked />
+                <input type="checkbox" name="extension-power-settings-form-ntp" id="extension-power-settings-form-ntp" checked >
                 <label for="extension-power-settings-form-ntp">Allow internet time</label>
             </div>
-            <br />
+            <br>
         </div>
 
         <div id="extension-power-settings-manually-set-time-container" class="extension-power-settings-area" style="display: none;">
@@ -41,17 +41,17 @@
             </p>
             <p class="extension-power-settings-show-if-hardware-clock-detected">You can manually set the time of the hardware clock.</p>
             <p>If you're trying to change the time to match your timezone, then please first make sure your timezone is set correctly under <a href="/settings/localization" style="color: white;">localisation</a>.</p>
-            <br />
+            <br>
 
             <div class="extension-power-settings-form-content">
-                <label for="hours" class="extension-power-settings-form-label-left">Hours: </label><input type="number" name="hours" onfocus="this.placeholder=''" id="extension-power-settings-form-hours" required />
-                <br />
-                <label for="minutes" class="extension-power-settings-form-label-left">Minutes: </label><input type="number" name="minutes" onfocus="this.placeholder=''" id="extension-power-settings-form-minutes" required />
-                <br />
+                <label for="extension-power-settings-form-hours" class="extension-power-settings-form-label-left">Hours: </label><input type="number" name="extension-power-settings-form-hours" onfocus="this.placeholder=''" id="extension-power-settings-form-hours" required >
+                <br>
+                <label for="extension-power-settings-form-minutes" class="extension-power-settings-form-label-left">Minutes: </label><input type="number" name="extension-power-settings-form-minutes" onfocus="this.placeholder=''" id="extension-power-settings-form-minutes" required >
+                <br>
                 <button type="button" id="extension-power-settings-form-browser-time-button" class="text-button">Get time from browser</button>
-                <br />
-                <br />
-                <br />
+                <br>
+                <br>
+                <br>
                 <div style="text-align: right;">
                     <button type="button" id="extension-power-settings-form-submit-time" class="text-button extension-power-settings-form-big-button">Set clock</button>
                 </div>
@@ -66,7 +66,7 @@
         <div class="section-title">
             <div class="section-title-back-flex"></div>
             <div class="section-title-container">
-                <img loading="lazy" class="section-title-icon" alt="Security icon" src="/extensions/power-settings/images/security.svg" />
+                <img loading="lazy" class="section-title-icon" alt="Security icon" src="/extensions/power-settings/images/security.svg" >
                 <span class="section-title-name">Security</span>
             </div>
             <div class="section-title-right-flex"></div>
@@ -108,9 +108,15 @@
 			</details>
 			
 			<div class="extension-power-settings-align-right" style="margin-top:4rem; margin-bottom:1.5rem">
-				<a id="extension-power-settings-switch-to-encrypted-connection-link" href="https://candle.local" class="text-button">Switch to an encrypted connection</a>
+				<button id="extension-power-settings-switch-to-encrypted-connection-link" class="text-button">Switch to an encrypted connection</button>
 			</div>
 			
+		</div>
+		
+		<div class="extension-power-settings-area extension-power-settings-show-if-https">
+			<p>If for some reason you wish to go to the non-secure version, you can do so by by opening the URL with /settings appended to it. This will skip the "upgrade to https security" process.</p>
+			<button id="extension-power-settings-security-go-to-unsecure-button" class="text-button">Switch to unsecure version</button>
+				
 		</div>
 		
 		<div id="extension-power-settings-security-certificate-container" class="extension-power-settings-area extension-power-settings-hidden">
@@ -143,7 +149,7 @@
         <div class="section-title">
             <div class="section-title-back-flex"></div>
             <div class="section-title-container">
-                <img loading="lazy" class="section-title-icon" alt="Factory reset icon" src="/extensions/power-settings/images/reset.svg" />
+                <img loading="lazy" class="section-title-icon" alt="Factory reset icon" src="/extensions/power-settings/images/reset.svg" >
                 <span class="section-title-name">Factory reset</span>
             </div>
             <div class="section-title-right-flex"></div>
@@ -162,24 +168,24 @@
                 <li>Once complete, it will turn off the controller.</li>
             </ul>
             <div id="extension-power-settings-form-content-reset">
-                <br />
-                <br />
-                <label for="extension-power-settings-factory-reset-understand">Type "I understand" to confirm: </label><br />
-                <input type="text" name="extension-power-settings-factory-reset-understand" id="extension-power-settings-factory-reset-understand" required  />
-                <br />
-                <br />
+                <br>
+                <br>
+                <label for="extension-power-settings-factory-reset-understand">Type "I understand" to confirm: </label><br>
+                <input type="text" name="extension-power-settings-factory-reset-understand" id="extension-power-settings-factory-reset-understand" required  >
+                <br>
+                <br>
 
                 <div class="extension-power-settings-checkbox-container">
-                    <input type="checkbox" name="keep-z2m" id="extension-power-settings-keep-z2m" /><label for="extension-power-settings-keep-z2m">Allow Zigbee devices to remain paired</label>
+                    <input type="checkbox" name="keep-z2m" id="extension-power-settings-keep-z2m" ><label for="extension-power-settings-keep-z2m">Allow Zigbee devices to remain paired</label>
                 </div>
                 <p class="extension-power-settings-field-description">If checked, the currently paired Zigbee devices will remain paired.</p>
 
                 <div class="extension-power-settings-checkbox-container">
-                    <input type="checkbox" name="keep-bluetooth" id="extension-power-settings-keep-bluetooth" /><label for="extension-power-settings-keep-bluetooth">Allow Bluetooth devices to remain paired</label>
+                    <input type="checkbox" name="keep-bluetooth" id="extension-power-settings-keep-bluetooth" ><label for="extension-power-settings-keep-bluetooth">Allow Bluetooth devices to remain paired</label>
                 </div>
                 <p class="extension-power-settings-field-description">If checked, the currently paired Bluetooth devices will remain paired.</p>
 
-                <br />
+                <br>
                 <div style="text-align: right;">
                     <button type="button" id="extension-power-settings-form-reset-submit" class="text-button">Factory reset</button>
                 </div>
@@ -194,7 +200,7 @@
         <div class="section-title">
             <div class="section-title-back-flex"></div>
             <div class="section-title-container">
-                <img loading="lazy" class="section-title-icon" alt="Display icon" src="/extensions/power-settings/images/display.svg" />
+                <img loading="lazy" class="section-title-icon" alt="Display icon" src="/extensions/power-settings/images/display.svg" >
                 <span class="section-title-name">Display</span>
             </div>
             <div class="section-title-right-flex"></div>
@@ -210,7 +216,7 @@
 		<div id="extension-power-settings-rpi-display-info" class="extension-power-settings-area extension-power-settings-hidden">
 			<h3>Official Raspberry Pi Display</h3>
             <div>
-                <input type="checkbox" name="extension-power-settings-rpi-display-rotate-checkbox" id="extension-power-settings-rpi-display-rotate-checkbox" />
+                <input type="checkbox" name="extension-power-settings-rpi-display-rotate-checkbox" id="extension-power-settings-rpi-display-rotate-checkbox" >
                 <label for="extension-power-settings-rpi-display-rotate-checkbox">Rotate 180 degrees</label>
                 <p class="extension-power-settings-field-description">This will require a reboot.</p>
             </div>
@@ -220,22 +226,22 @@
 		
         <div id="extension-power-settings-display1-info" class="extension-power-settings-area extension-power-settings-hidden">
 			<div class="extension-power-settings-display-info-flex">
-				<div style="position:relative"><img loading="lazy" alt="Display 1" src="/extensions/power-settings/images/big_display.svg"/><div class="extension-power-settings-display-number">1</div></div>
+				<div style="position:relative"><img loading="lazy" alt="Display 1" src="/extensions/power-settings/images/big_display.svg"><div class="extension-power-settings-display-number">1</div></div>
 				<div style="text-align:left"> 
 					<h3 id="extension-power-settings-display1-name">Display 1</h3>
 					<p id="extension-power-settings-display1-production-date" class="extension-power-settings-field-description"></p>
 					
 					<div id="extension-power-settings-display1-resolution-container">
-	                	<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display1-width">?</span><br/>
-						<span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display1-height">?</span><br/>
+	                	<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display1-width">?</span><br>
+						<span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display1-height">?</span><br>
 					</div>
 	                <div>
-	                    <input type="checkbox" name="extension-power-settings-display1-rotate-checkbox" id="extension-power-settings-display1-rotate-checkbox" />
+	                    <input type="checkbox" name="extension-power-settings-display1-rotate-checkbox" id="extension-power-settings-display1-rotate-checkbox" >
 	                    <label for="extension-power-settings-display1-rotate-checkbox">Rotate 180 degrees</label>
 	                    <p class="extension-power-settings-field-description">This may require a reboot.</p>
 	                </div>
 	                <div>
-	                    <input type="checkbox" name="extension-power-settings-display1-power-checkbox" id="extension-power-settings-display1-power-checkbox" />
+	                    <input type="checkbox" name="extension-power-settings-display1-power-checkbox" id="extension-power-settings-display1-power-checkbox" >
 	                    <label for="extension-power-settings-display1-power-checkbox">Enable power management</label>
 	                    <p class="extension-power-settings-field-description">This will let the display go into standby mode after <span id="extension-power-settings-display1-standby-delay">a few</span> minutes of inactivity.</p>
 	                </div>
@@ -252,27 +258,27 @@
 		
         <div id="extension-power-settings-display2-info" class="extension-power-settings-area extension-power-settings-hidden">
 			<div class="extension-power-settings-display-info-flex">
-				<div style="position:relative"><img loading="lazy" alt="Display 2" src="/extensions/power-settings/images/big_display.svg"/><div class="extension-power-settings-display-number">2</div></div>
+				<div style="position:relative"><img loading="lazy" alt="Display 2" src="/extensions/power-settings/images/big_display.svg"><div class="extension-power-settings-display-number">2</div></div>
 				<div style="text-align:left"> 
 					<h3 id="extension-power-settings-display2-name">Display 2</h3>
 					<p id="extension-power-settings-display2-production-date"></p>
 					<div id="extension-power-settings-display2-resolution-container">
-	                	<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display2-width">?</span><br/>
-						<span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display2-height">?</span><br/>
+	                	<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display2-width">?</span><br>
+						<span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display2-height">?</span><br>
 					</div>
 					<p>&nbsp;</p>
 	                <div>
-	                    <input type="checkbox" name="extension-power-settings-display2-rotate-checkbox" id="extension-power-settings-display2-rotate-checkbox" />
+	                    <input type="checkbox" name="extension-power-settings-display2-rotate-checkbox" id="extension-power-settings-display2-rotate-checkbox" >
 	                    <label for="extension-power-settings-display2-rotate-checkbox">Rotate 180 degrees</label>
 	                    <p class="extension-power-settings-field-description">This may require a reboot.</p>
 	                </div>
 	                <div>
-	                    <input type="checkbox" name="extension-power-settings-display2-power-checkbox" id="extension-power-settings-display2-power-checkbox" />
+	                    <input type="checkbox" name="extension-power-settings-display2-power-checkbox" id="extension-power-settings-display2-power-checkbox" >
 	                    <label for="extension-power-settings-display2-power-checkbox">Enable power management</label>
 	                    <p class="extension-power-settings-field-description">This will let the display go into standby mode after <span id="extension-power-settings-display2-standby-delay">a few</span> minutes of inactivity.</p>
 	                </div>
 					<p>&nbsp;</p>
-					<p id="extension-power-settings-display1-production-date" class="extension-power-settings-field-description"></p>
+					
 				</div>
 			</div>
 			<div>
@@ -301,7 +307,7 @@
         <div class="section-title">
             <div class="section-title-back-flex"></div>
             <div class="section-title-container">
-                <img loading="lazy" class="section-title-icon" alt="System icon" src="/extensions/power-settings/images/system.svg" />
+                <img loading="lazy" class="section-title-icon" alt="System icon" src="/extensions/power-settings/images/system.svg" >
                 <span class="section-title-name">System Information</span>
             </div>
             <div class="section-title-right-flex"></div>
@@ -319,13 +325,13 @@
             <div id="extension-power-settings-specifications-container">
 				<p class="extension-power-settings-header">Specifications</p>
 				<div class="extension-power-settings-display-info-flex">
-					<div style="position:relative;width:25%"><img loading="lazy" alt="System board" src="/extensions/power-settings/images/raspberrypi.svg"/><div class="extension-power-settings-display-number"><span id="extension-power-settings-device-board-temperature"></span></div></div>
+					<div style="position:relative;width:25%"><img loading="lazy" alt="System board" src="/extensions/power-settings/images/raspberrypi.svg"><div class="extension-power-settings-display-number"><span id="extension-power-settings-device-board-temperature"></span></div></div>
 					<div style="text-align:left;width:75%">
-	                	<span id="extension-power-settings-device-model-memory"> </span><span id="extension-power-settings-device-model">?</span><br/>
-						<span class="extension-power-settings-key-label">Temperature:</span> <span id="extension-power-settings-device-temperature">?</span><br/><br/>
-						<!--<span class="extension-power-settings-key-label">SD card:</span> <span id="extension-power-settings-device-sd-card-size">?</span><br/>-->
-						<span class="extension-power-settings-key-label">Linux version:</span> <span id="extension-power-settings-device-linux">?</span><br/>
-						<span class="extension-power-settings-key-label">Linux kernel:</span> <span id="extension-power-settings-device-kernel">?</span><br/>
+	                	<span id="extension-power-settings-device-model-memory"> </span><span id="extension-power-settings-device-model">?</span><br>
+						<span class="extension-power-settings-key-label">Temperature:</span> <span id="extension-power-settings-device-temperature">?</span><br><br>
+						<!--<span class="extension-power-settings-key-label">SD card:</span> <span id="extension-power-settings-device-sd-card-size">?</span><br>-->
+						<span class="extension-power-settings-key-label">Linux version:</span> <span id="extension-power-settings-device-linux">?</span><br>
+						<span class="extension-power-settings-key-label">Linux kernel:</span> <span id="extension-power-settings-device-kernel">?</span><br>
 					</div>
 				</div>
             </div>
@@ -344,7 +350,7 @@
 				</div>
 				
 				
-				<div id="extension-power-settings-running-software-output-button-container" class="extension-power-settings-flex-align-center extension-power-settings-flex-justify-end" class="extension-power-settings-show-if-developer">
+				<div id="extension-power-settings-running-software-output-button-container" class="extension-power-settings-flex-align-center extension-power-settings-flex-justify-end extension-power-settings-show-if-developer">
 					<button id="extension-power-settings-show-pstree-button" class="text-button">Process tree</button> <button id="extension-power-settings-show-memory-use-button" class="text-button">Process memory</button>
 				</div>
 				<div id="extension-power-settings-running-software-output"></div>
@@ -358,11 +364,11 @@
 				<p class="extension-power-settings-header">Storage space</p>
 				
 				<div class="extension-power-settings-display-info-flex">
-					<div style="position:relative;width:25%"><img loading="lazy" id="extension-power-settings-disk-space-sd-card-image" alt="Micro SD card" src="/extensions/power-settings/images/micro_sd_card.svg"/><div class="extension-power-settings-sd-card-size"><span id="extension-power-settings-device-sd-card-size">?</span></div></div>
+					<div style="position:relative;width:25%"><img loading="lazy" id="extension-power-settings-disk-space-sd-card-image" alt="Micro SD card" src="/extensions/power-settings/images/micro_sd_card.svg"><div class="extension-power-settings-sd-card-size"><span id="extension-power-settings-device-sd-card-size">?</span></div></div>
 					<div style="text-align:left;width:75%">
 						
 						<div id="extension-power-settings-disk-bar-container"  class="extension-power-settings-bar-container"><div id="extension-power-settings-disk-used-bar" class="extension-power-settings-bar"></div></div>
-		                <span id="extension-power-settings-free-disk">?</span>MB of <span id="extension-power-settings-total-disk">?</span>MB available<br/>				
+		                <span id="extension-power-settings-free-disk">?</span>MB of <span id="extension-power-settings-total-disk">?</span>MB available<br>				
 						<p style="font-style:italic">Over <span id="extension-power-settings-sd-card-written-bytes">...</span> has been written to the SD card</p>
 						<div id="extension-power-settings-user-partition-expansion-hint" class="extension-power-settings-area" style="display:none; text-align:left">
 							<p>Your SD card has some unused space that could be made available, increasing your available storage space. The process will automatically reboot your controller.</p>
@@ -397,7 +403,7 @@
 				<p class="extension-power-settings-header">USB devices</p>
 				
 				<div class="extension-power-settings-display-info-flex">
-					<div style="position:relative;width:25%"><img loading="lazy" alt="System board" src="/extensions/power-settings/images/usb_device.svg" style="width:100%"/></div>
+					<div style="position:relative;width:25%"><img loading="lazy" alt="System board" src="/extensions/power-settings/images/usb_device.svg" style="width:100%"></div>
 					<div style="text-align:left;width:75%">
 						<div id="extension-power-settings-attached-devices-list-container">
 							<div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
@@ -405,7 +411,7 @@
 					</div>
 				</div>
                 <div class="extension-power-settings-area" style="text-align:left">
-                    <input type="checkbox" name="extension-power-settings-extra-usb-power-checkbox" id="extension-power-settings-extra-usb-power-checkbox" />
+                    <input type="checkbox" name="extension-power-settings-extra-usb-power-checkbox" id="extension-power-settings-extra-usb-power-checkbox" >
                     <label for="extension-power-settings-extra-usb-power-checkbox">Extra power for USB ports</label>
                     <p class="extension-power-settings-field-description" style="max-width:80%">Recommended to only enable if your power supply can output more than 3 amps at 5v</p>
                 </div>
@@ -418,7 +424,7 @@
 				<p class="extension-power-settings-header">Cameras</p>
 				
 				<div class="extension-power-settings-display-info-flex">
-					<div style="position:relative;width:25%"><img loading="lazy" alt="System board" src="/extensions/power-settings/images/camera.svg" style="width:100%"/></div>
+					<div style="position:relative;width:25%"><img loading="lazy" alt="System board" src="/extensions/power-settings/images/camera.svg" style="width:100%"></div>
 					<div style="text-align:left;width:75%">
 						<div id="extension-power-settings-attached-cameras-list-container">
 							<div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
@@ -447,7 +453,7 @@
         <div class="section-title">
             <div class="section-title-back-flex"></div>
             <div class="section-title-container">
-                <img loading="lazy" class="section-title-icon" alt="Audio icon" src="/extensions/power-settings/images/audio.svg" />
+                <img loading="lazy" class="section-title-icon" alt="Audio icon" src="/extensions/power-settings/images/audio.svg" >
                 <span class="section-title-name">Audio</span>
             </div>
             <div class="section-title-right-flex"></div>
@@ -457,7 +463,7 @@
 	        
 			<!--
 			<div>
-	            <input type="checkbox" name="extension-power-settings-allow-audio-checkbox" id="extension-power-settings-allow-audio-checkbox" />
+	            <input type="checkbox" name="extension-power-settings-allow-audio-checkbox" id="extension-power-settings-allow-audio-checkbox" >
 	            <label for="extension-power-settings-allow-audio-checkbox">Allow audio..?</label>
 	            <p class="extension-power-settings-field-description">bla.</p>
 	        </div>
@@ -502,7 +508,7 @@
         <div class="section-title">
             <div class="section-title-back-flex"></div>
             <div class="section-title-container">
-                <img loading="lazy" class="section-title-icon" alt="Printer icon" src="/extensions/power-settings/images/printer.svg" />
+                <img loading="lazy" class="section-title-icon" alt="Printer icon" src="/extensions/power-settings/images/printer.svg" >
                 <span class="section-title-name">Printer</span>
             </div>
             <div class="section-title-right-flex"></div>
@@ -510,7 +516,7 @@
 
 		<div id="extension-power-settings-general-printing-container" class="extension-power-settings-area">
 	        <div>
-	            <input type="checkbox" name="extension-power-settings-allow-printing-checkbox" id="extension-power-settings-allow-printing-checkbox" />
+	            <input type="checkbox" name="extension-power-settings-allow-printing-checkbox" id="extension-power-settings-allow-printing-checkbox" >
 	            <label for="extension-power-settings-allow-printing-checkbox">Allow printing</label>
 	            <p class="extension-power-settings-field-description">Scan for and connect to printers on the local network.</p>
 	        </div>
@@ -532,7 +538,7 @@
         <div class="section-title">
             <div class="section-title-back-flex"></div>
             <div class="section-title-container">
-                <img loading="lazy" class="section-title-icon" alt="Backup icon" src="/extensions/power-settings/images/backup.svg" />
+                <img loading="lazy" class="section-title-icon" alt="Backup icon" src="/extensions/power-settings/images/backup.svg" >
                 <span class="section-title-name">Backup & Restore</span>
             </div>
             <div class="section-title-right-flex"></div>
@@ -551,7 +557,7 @@
             <p class="extension-power-settings-show-if-developer">Photos size: <span id="extension-power-settings-photos-size">unknown</span>Mb</p>
             <p class="extension-power-settings-show-if-developer">Uploads size: <span id="extension-power-settings-uploads-size">unknown</span>Mb</p>
             
-            <input type="checkbox" name="extension-power-settings-backup-more-checkbox" id="extension-power-settings-backup-more-checkbox" />
+            <input type="checkbox" name="extension-power-settings-backup-more-checkbox" id="extension-power-settings-backup-more-checkbox" >
             <label for="extension-power-settings-backup-more-checkbox">Also backup logs<span class="photo-frame-detail"> and photos</span></label>
             <p id="extension-power-settings-backup-more-tip" class="extension-power-settings-warning-tip" style="display:none">If you also backup logs<span class="photo-frame-detail"> and photos</span>, then the backup file size will become much bigger. You will only be able to restore it on the latest version of Candle. If the logs <span class="photo-frame-detail">or photos</span> are bigger than 50 megabytes they may not be backuped.</p>
             <div class="extension-power-settings-form-backup">
@@ -601,7 +607,7 @@
             </div>
             -->
             <div id="extension-power-settings-backup-file-selector-container" class="extension-power-settings-form-backup">
-                <input id="extension-power-settings-backup-file-selector" accept=".tar" type="file" value="Upload backup" />
+                <input id="extension-power-settings-backup-file-selector" accept=".tar" type="file">
             </div>
         </div>
 		
@@ -615,11 +621,18 @@
         <div class="section-title">
             <div class="section-title-back-flex"></div>
             <div class="section-title-container">
-                <img loading="lazy" class="section-title-icon" alt="Backup icon" src="/extensions/power-settings/images/troubleshooting.svg" />
+                <img loading="lazy" class="section-title-icon" alt="Backup icon" src="/extensions/power-settings/images/troubleshooting.svg" >
                 <span class="section-title-name">Troubleshooting</span>
             </div>
             <div class="section-title-right-flex"></div>
         </div>
+		
+		
+		<div id="extension-power-settings-troubleshooting-disable-addons-container" class="extension-power-settings-area">
+			<p class="extension-power-settings-header">Disable addons</p>
+			<p>If you suspect that a specific addon is causing trouble, you can disable it here.</p>
+			<ul id="extension-power-settings-addon-troubleshooting-disable-addons-list"></ul>
+		</div>
 		
 		<div id="extension-power-settings-troubleshooting-restore-original-addons-container" class="extension-power-settings-area">
             <p class="extension-power-settings-header">Restore original addons</p>
@@ -695,7 +708,7 @@
         <div class="section-title">
             <div class="section-title-back-flex"></div>
             <div class="section-title-container">
-                <img loading="lazy" class="section-title-icon" alt="Update icon" src="/extensions/power-settings/images/update.svg" />
+                <img loading="lazy" class="section-title-icon" alt="Update icon" src="/extensions/power-settings/images/update.svg" >
                 <span class="section-title-name">Update</span>
             </div>
             <div class="section-title-right-flex"></div>
@@ -820,32 +833,32 @@
             <p>Space available on the user data partition: <span id="extension-power-settings-user-partition-free-disk-space">...</span>Mb</p>
             <p>Use of these developer options is at your own risk.</p>
             
-            <br/>
-            <hr/>
+            <br>
+            <hr>
             <p>You can force Linux to update to the latest version. This simply runs <span style="font-weight:bold">apt upgrade</span> on the system, and then reboots.</p>
             <div class="extension-power-settings-align-right">
                 <button id="extension-power-settings-manual-update-button" class="text-button">Manual update</button>
             </div>
             
             <!--
-            <br/>
-            <hr/>
+            <br>
+            <hr>
             <p>By default the user data partition is 6 Gb, and you are unlikely to run out of space. However, you can expand the user data partition to the full size of the SD card. This process will reboot the system.</p>
             <div class="extension-power-settings-align-right">
                 <button id="extension-power-settings-expand-user-partition-button" class="text-button">Expand user partition</button>
             </div>
             -->
             
-            <br/>
-            <hr/>
+            <br>
+            <hr>
             <p>You can force the system to re-update to the latest version of Candle using the "old" update script. This could easily break your system. It should always be run twice (first time will update the kernel, second time updates the rest).</p>
             <p>If your system has an Update & Recovery partition, then it's recommended to use that instead. You can start manual updates of the recovery partition and the system using that method below.</p>
             <div class="extension-power-settings-align-right">
                 <button id="extension-power-settings-force-reveal-recovery-update-button" class="text-button" style="display:none">Force reveal of modern update</button> <button id="extension-power-settings-force-update-button" class="text-button">Force classic update</button>
             </div>
             <!--<button class="text-button" id="extension-power-settings-force-update-to-cutting-edge-button">Update to cutting edge</button>-->
-            <br/>
-            <hr/>
+            <br>
+            <hr>
             <p>You can run a quick check to see if there are any missing files. This gives an indication if an update failed.</p>
             <div class="extension-power-settings-align-right">
                 <button class="text-button" id="extension-power-settings-update-files-check-button" style="display:none">Test filesystem</button>
@@ -876,8 +889,8 @@
                 <p id="extension-power-settings-system-update-needs-two-reboots" class="extension-power-settings-area" style="display: none;">
                     NOTE: because you're running an older version of Candle you will need to run the update process twice.
                 </p>
-                <br/>
-                <br/>
+                <br>
+                <br>
 
                 <div id="extension-power-settings-system-update-overlay-still-enabled-container" class="extension-power-settings-area" style="display: none;">
                     <p>Before you can install the update the system's disk protection must first be disabled. After the system update is complete this protection will automatically be re-enabled.</p>
@@ -899,14 +912,14 @@
 
                 <div id="extension-power-settings-system-update-overlay-disabled-container" style="display: none;">
                     <div class="extension-power-settings-show-if-developer">
-                        <input type="checkbox" name="extension-power-settings-cutting-edge-checkbox" id="extension-power-settings-cutting-edge-checkbox" />
+                        <input type="checkbox" name="extension-power-settings-cutting-edge-checkbox" id="extension-power-settings-cutting-edge-checkbox" >
                         <label for="extension-power-settings-cutting-edge-checkbox">Update to the cutting edge build (RISKY!)</label>
                         <p class="extension-power-settings-field-description">This option is available because you have enabled developer mode.</p>
                     </div>
 
                     <!--
                     <div id="extension-power-settings-live-update-option" class="extension-power-settings-show-if-developer" style="display: none;">
-                        <input type="checkbox" name="extension-power-settings-live-update-checkbox" id="extension-power-settings-live-update-checkbox" />
+                        <input type="checkbox" name="extension-power-settings-live-update-checkbox" id="extension-power-settings-live-update-checkbox" >
                         <label for="extension-power-settings-live-update-checkbox">Update while the system is running</label>
                         <p class="extension-power-settings-field-description">
                             Experimental feature! The system will automatically reboot once the process is complete. It is strongly advised to reboot before starting the live update process.
@@ -914,11 +927,11 @@
                     </div>
                     -->
 
-                    <br />
-                    <label for="extension-power-settings-system-update-understand">Type "I understand" to confirm: </label><br />
-                    <input type="text" name="extension-power-settings-system-update-understand" id="extension-power-settings-system-update-understand" required  />
-                    <br />
-                    <br />
+                    <br>
+                    <label for="extension-power-settings-system-update-understand">Type "I understand" to confirm: </label><br>
+                    <input type="text" name="extension-power-settings-system-update-understand" id="extension-power-settings-system-update-understand" required  >
+                    <br>
+                    <br>
 
                     <div class="extension-power-settings-form-system-update">
                         <span></span>
@@ -1013,8 +1026,8 @@
                 </div>
                 <div id="extension-power-settings-switch-to-recovery-start-container">
                     <p>
-                        <label for="extension-power-settings-switch-to-recovery-understand">Type "I understand" to confirm: </label><br />
-                        <input type="text" name="extension-power-settings-switch-to-recovery-understand" id="extension-power-settings-switch-to-recovery-understand" required  />
+                        <label for="extension-power-settings-switch-to-recovery-understand">Type "I understand" to confirm: </label><br>
+                        <input type="text" name="extension-power-settings-switch-to-recovery-understand" id="extension-power-settings-switch-to-recovery-understand" required  >
                     </p>
                     <div class="extension-power-settings-align-right">
                         <button id="extension-power-settings-switch-to-recovery-button" class="text-button">Upgrade Candle</button>
@@ -1054,8 +1067,8 @@
 
             <p>Manually update at your own risk!</p>
             <p>
-                <label for="extension-power-settings-manual-update-understand">Type "I understand" to confirm: </label><br />
-                <input type="text" name="extension-power-settings-manual-update-understand" id="extension-power-settings-manual-update-understand" required  />
+                <label for="extension-power-settings-manual-update-understand">Type "I understand" to confirm: </label><br>
+                <input type="text" name="extension-power-settings-manual-update-understand" id="extension-power-settings-manual-update-understand" required  >
             </p>
             <div class="extension-power-settings-align-right">
                 <button id="extension-power-settings-manual-update-button" class="text-button">Manual update</button>
