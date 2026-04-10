@@ -2085,25 +2085,24 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                             
                             # UPDATE RECOVERY PARTITION
-                            """
-                            elif action == 'update_recovery_partition':
-                                
-                                if self.DEBUG:
-                                    print("start of update_recovery_partition requested")
-                                state = False
-                                if self.exhibit_mode == False:
-                                    self.busy_updating_recovery = 0
-                                    self.should_start_recovery_update = True
-                                    state = True
-                                #self.system_update_in_progress = True
-                                
-                                return APIResponse(
-                                  status=200,
-                                  content_type='application/json',
-                                  content=json.dumps({'state':state}),
-                                )
-                            """
-                                
+                            
+                            #elif action == 'update_recovery_partition':
+                            #    
+                            #    if self.DEBUG:
+                            #        print("start of update_recovery_partition requested")
+                            #    state = False
+                            #    if self.exhibit_mode == False:
+                            #        self.busy_updating_recovery = 0
+                            #        self.should_start_recovery_update = True
+                            #        state = True
+                            #    #self.system_update_in_progress = True
+                            #    
+                            #    return APIResponse(
+                            #      status=200,
+                            #      content_type='application/json',
+                            #      content=json.dumps({'state':state}),
+                            #    )
+                            
                                 
                                 
                             # EXPAND USER PARTITION
@@ -2149,58 +2148,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                                 
                                 
-                            # /disable_overlay - Disable old RO overlay on older Candle systems.
-                            """
-                            elif action == 'disable_overlay':
-                                if self.DEBUG:
-                                    print("APi request to disable_overlay")
-                                state = True
-                                
-                                try:
-                                    if os.path.isdir(self.boot_path):
-                                        if os.path.isdir('/ro') or os.path.isfile('/bin/ro-root.sh'):
-                                            os.system('sudo touch ' + str(self.boot_path) + '/candle_rw_once.txt')
-                                            if not os.path.isfile(self.boot_path + '/candle_rw_once.txt'):
-                                                state = False
-                                            
-                                        if self.old_overlay_active:
-                                            if self.DEBUG:
-                                                print("disabling old raspi-config overlay system")
-                                            os.system('sudo raspi-config nonint disable_bootro')
-                                            os.system('sudo raspi-config nonint disable_overlayfs')
-                                
-                                        if os.path.isfile(self.boot_path + '/cmdline.txt'):
-                                            with open(self.boot_path + '/cmdline.txt') as f:
-                                                #self.candle_version = f.readlines()
-                                                cmdline = f.read()
-                                                if "boot=overlay" in cmdline:
-                                                    if self.DEBUG:
-                                                        print("Error, old overlay still active")
-                                                    state == False
-                                                else:
-                                                    if self.DEBUG:
-                                                        print("Old overlay is gone from cmdline.txt")
-                                        
-                                except Exception as ex:
-                                    if self.DEBUG:
-                                        print("Error in /disable_overlay: " + str(ex))
-                                    
-                                # Place the factory reset file in the correct location so that it will be activated at boot.
-                                #os.system('sudo cp ' + str(self.manual_update_script_path) + ' ' + str(self.actions_file_path))
-                                #os.system('sudo touch /boot/candle_rw_once.txt')
-                                #os.system('sudo sed -i 's/boot=overlay/ /' /boot/cmdline.txt')
-                                #os.system('sudo reboot')
-                                
-                                if self.DEBUG:
-                                    print("disable_overlay final state: " + str(state))
-                                
-                                return APIResponse(
-                                  status=200,
-                                  content_type='application/json',
-                                  content=json.dumps({'state':state}),
-                                )
-                            """  
-                                
+                            
                                 
                             # force a wifi rescan
                             elif action == 'rescan_wifi':
@@ -2483,7 +2431,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                             current_hotspot_password = str(file.read()).rstrip()
                                             state = True
                                 except Exception as ex:
-                                    print("get_hotspot_password: caught error reading current hotspot password from file: " + str(ex))
+                                    if self.DEBUG:
+                                        print("get_hotspot_password: caught error reading current hotspot password from file: " + str(ex))
                                     
                                 return APIResponse(
                                   status=200,
@@ -2495,33 +2444,32 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                             
                             # enable or disable USB gadget mode
-                            # NOT USED, turned out to not work on normal Raspberry Pi's.
-                            """
-                            elif action == 'set_usb_gadget_mode':
-                                state = False
-                                if 'enabled' in request.body:
-                                    
-                                    self.persistent_data['usb_gadget_mode_enabled'] = bool(request.body['enabled'])
-                                    self.save_persistent_data()
-                                    
-                                    if self.persistent_data['usb_gadget_mode_enabled']:
-                                        if self.DEBUG:
-                                            print("enabling USB gadget mode")
-                                        os.system('sudo rpi-usb-gadget on')
-                                    else:
-                                        if self.DEBUG:
-                                            print("disabling USB gadget mode")
-                                        os.system('sudo rpi-usb-gadget off')
-                                    
-                                    state = True
-                                            
-                                return APIResponse(
-                                  status=200,
-                                  content_type='application/json',
-                                  content=json.dumps({'state':state}),
-                                )
+                            # NOT USED (but still installed). Turned out to not work on normal Raspberry Pi's.
+                            #elif action == 'set_usb_gadget_mode':
+                            #    state = False
+                            #    if 'enabled' in request.body:
+                            #        
+                            #        self.persistent_data['usb_gadget_mode_enabled'] = bool(request.body['enabled'])
+                            #        self.save_persistent_data()
+                            #        
+                            #        if self.persistent_data['usb_gadget_mode_enabled']:
+                            #            if self.DEBUG:
+                            #                print("enabling USB gadget mode")
+                            #            os.system('sudo rpi-usb-gadget on')
+                            #        else:
+                            #            if self.DEBUG:
+                            #                print("disabling USB gadget mode")
+                            #            os.system('sudo rpi-usb-gadget off')
+                            #        
+                            #        state = True
+                            #                
+                            #    return APIResponse(
+                            #      status=200,
+                            #      content_type='application/json',
+                            #      content=json.dumps({'state':state}),
+                            #    )
                             
-                             """
+                            
                             
                             
                                 
@@ -2808,7 +2756,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         command_output = run_command("pstree -t -c -a -n")
                                         
                                     elif request.body['command'] == 'memory_use':
-                                        command_output = run_command('ps -eo vsz,cmd --sort=-vsz | grep -v "   0 \["')
+                                        command_output = run_command(r'ps -eo vsz,cmd --sort=-vsz | grep -v "   0 \["')
                                         
                                         if isinstance(command_output,str):
                                             friendly_bytes_output = 'Memory  Command\n\n'
