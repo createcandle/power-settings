@@ -2024,52 +2024,53 @@ body.safe-mode #extension-power-settings-menu-troubleshooting-button::after{
         right:10rem;
 	}
 	
-	nav#settings-menu {
+	body#path-settings.candle-theme #extension-power-settings-pages:not(.hidden) ~ #settings-view nav#settings-menu,
+	body:not(#path-settings).candle-theme nav#settings-menu {
 	    max-width: 46rem;
 	    padding-left: 7.6rem;
 	}
 
-	nav#settings-menu.hidden{
+	body.candle-theme nav#settings-menu.hidden{
 		transform: translate(0%, -50%);
 	}
 
-	section.settings-section{
+	body.candle-theme section.settings-section{
 	    margin-left: 46rem;
 	    max-width: calc(100% - 46rem);
 	}
 	
-	#extension-power-settings-pages{
+	body.candle-theme #extension-power-settings-pages{
 		left:46rem;
 		width: calc(100% - 46rem);
 		max-width: calc(100% - 46rem);
 	}
     
-	#extension-power-settings-back-button{
+	body.candle-theme #extension-power-settings-back-button{
 		display:none!important;
 	}
 	
 	
 	/*body[id^=path-settings] #menu-button*/
-	body #menu-button{
+	body.candle-theme #menu-button{
 		display:initial!important;
 	}
 	
-	#settings-back-button{
+	body.candle-theme #settings-back-button{
 		margin-left:44rem;
 	}
 		
-	body.kiosk #settings-back-button{
+	body.candle-theme.kiosk #settings-back-button{
 		margin-left:46rem;
 	}
 	
-	.section-title{
+	body.candle-theme .section-title{
 		margin-bottom:1rem;
 	}
 	
-	#domain-settings ul,
-	#user-settings ul,
-	#localization-settings ul,
-	#network-settings-client ul{
+	body.candle-theme #domain-settings ul,
+	body.candle-theme #user-settings ul,
+	body.candle-theme #localization-settings ul,
+	body.candle-theme #network-settings-client ul{
 		position: initial;
 		transform:none;
 		padding:0 2rem;

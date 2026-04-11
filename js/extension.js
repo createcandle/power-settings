@@ -259,7 +259,7 @@
                     pages.classList.add('hidden');
             
                     pages.innerHTML = text;
-                    document.body.appendChild(pages);
+                    document.body.prepend(pages);
                     
                     this.create_extra_settings();
                     
