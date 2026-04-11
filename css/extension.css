@@ -1768,6 +1768,22 @@ body#path-settings-network-wifi-configure #extension-power-settings-wifi-rescan-
 	padding:2rem;
 }
 
+#extension-power-settings-hotspot-second-wifi{
+	background-color:#060;
+	margin:4rem 0 2rem 0;
+	padding:2rem;
+	padding-left:10rem;
+	background-image:url('../images/second_wifi.svg');
+	background-repeat:no-repeat;
+	background-position:top 3.5rem left 2rem;
+	background-size:6rem auto;
+	flex-direction: column;
+	border-radius:0;
+}
+#extension-power-settings-hotspot-second-wifi h3{
+	margin-bottom:0.5rem;
+}
+
 .extension-power-settings-hotspot-band-checkbox-container{
 	display:flex;
 	justify-content:space-between;

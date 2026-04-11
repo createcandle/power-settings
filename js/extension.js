@@ -3432,6 +3432,14 @@
 							
 							
 							
+							if(typeof body.second_wifi_interface == 'string'){
+								const second_wifi_interface_el = document.createElement('div');
+								second_wifi_interface_el.setAttribute('id','extension-power-settings-hotspot-second-wifi');
+								second_wifi_interface_el.innerHTML = '<h3>WiFi radio 2</h3><p>A second WiFi radio has been detected (' + body.second_wifi_interface + '). The Hotspot will use it instead of having to share the built-in WiFi radio. This should improve Hotspot range and performance.</p>';
+								hotspot_settings_list_item_el.appendChild(second_wifi_interface_el);
+							}
+							
+							
 							
 							
 							//

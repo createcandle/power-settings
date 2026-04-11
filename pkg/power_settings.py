@@ -83,7 +83,7 @@ class PowerSettingsAPIHandler(APIHandler):
             print("ERROR, Failed load manifest.json: " + str(e))
         """
         
-        
+        self.second_wifi_interface = None
         self.show_hotspot_password = False
         
         
@@ -574,6 +574,11 @@ class PowerSettingsAPIHandler(APIHandler):
             self.hotspot_ssid = actual_hotspot_ssid
         
         
+        second_wifi_interface_check = str(run_command('ip link show'))
+        if 'wlan1:' in second_wifi_interface_check:
+            self.second_wifi_interface = 'wlan1'
+        elif 'mlan1:' in second_wifi_interface_check:
+            self.second_wifi_interface = 'mlan1'
         
         #print("actual_hotspot_ssid: -" + actual_hotspot_ssid + '-')
         self.sd_card_written_kbytes = '?'
@@ -1340,6 +1345,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             'hotspot_password':the_hotspot_password,
                                             'hotspot_password_length':len(self.hotspot_password),
                                             'hotspot_connected_devices':hotspot_arp_list,
+                                            'second_wifi_interface':self.second_wifi_interface,
                                             'disk_errors':self.disk_errors,
                                             'usb_gadget_mode_enabled':self.usb_gadget_mode_enabled, # deprecated, not really all that useful for a normal Raspberry Pi
                                             'usb_gadget_mode_auto_connect':self.persistent_data['usb_gadget_mode_auto_connect'],
