@@ -5,9 +5,6 @@
             
             //this.addMenuEntry('Power');
             
-            this.interval = null;
-            
-			
             // Kiosk?
 			this.kiosk = false;
             if(document.getElementById('virtualKeyboardChromeExtension') != null){
@@ -42,7 +39,7 @@
             this.recovery_partition_exists = false;
             this.overlay_exists = true;
 
-            this.interval = null;
+            this.system_update_interval = null;
             this.recovery_interval = null;
 			this.get_stats_retried = false;
             
@@ -239,61 +236,74 @@
 
             this.content = '';
             fetch(`/extensions/${this.id}/views/content.html`)
-                .then((res) => res.text())
-                .then((text) => {
-                    this.content = text;
-                    if (document.location.href.endsWith("power-settings")) {
-                        this.show();
-                    }
-                })
-                .catch((e) => console.error('Failed to fetch content:', e));
-                
-            fetch(`/extensions/${this.id}/views/settings_pages.html`)
-                .then((res) => res.text())
-                .then((text) => {
-                    this.settings_pages_content = text;
-                    
-                    var pages = document.createElement('div');
-                    pages.setAttribute('id','extension-power-settings-pages');
-                    pages.classList.add('settings-section');
-                    pages.classList.add('hidden');
+            .then((res) => res.text())
+            .then((text) => {
+                this.content = text;
+                if (document.location.href.endsWith("power-settings")) {
+                    this.show();
+                }
+            })
+            .catch((e) => console.error('Failed to fetch content:', e));
             
-                    pages.innerHTML = text;
-                    document.body.prepend(pages);
-                    
-                    this.create_extra_settings();
-                    
-                    //setTimeout(() => {
-                        
-                    //}, 100);
-                    
-                })
-                .catch((err) => {
-                    console.error('power settings: caught error fetching settings pages content:', err);
-                });
+            fetch(`/extensions/${this.id}/views/settings_pages.html`)
+            .then((res) => res.text())
+            .then((text) => {
+                this.settings_pages_content = text;
+                
+                var pages = document.createElement('div');
+                pages.setAttribute('id','extension-power-settings-pages');
+                pages.classList.add('settings-section');
+                pages.classList.add('hidden');
+        
+                pages.innerHTML = text;
+                document.body.prepend(pages);
+                
+                this.create_extra_settings();
+                
+            })
+            .catch((err) => {
+                console.error('power settings: caught error fetching settings pages content:', err);
+            });
 			
 			
-			if(!this.kiosk){
+			this.busy_sending_kiosk_ping = false;
+			if(this.kiosk){
 				setInterval(() => {
-					
-				},1000);
+					if(this.busy_sending_kiosk_ping == false){
+	                    window.API.postJson(
+	                        `/extensions/${this.id}/api/kiosk_ping`
+	                    ).then((body) => {
+	                        this.busy_sending_kiosk_ping = false;
+	                    }).catch((err) => {
+	                       console.error("caught error doing kiosk_ping: ", err);
+						   this.busy_sending_kiosk_ping = false;
+	                    });
+					}
+				},5000);
 			}
         }
+
+
 
 		hostname_change_check(){
 			if(this.hostname_was_changed_here === false){
 				let localstorage_hostname_data = localStorage.getItem('extension_power_settings_hostname');
 				if(localstorage_hostname_data && typeof localstorage_hostname_data == 'string'){
 					localstorage_hostname_data = JSON.parse(localstorage_hostname_data);
-					console.log("parsed localstorage_hostname_data: ", localstorage_hostname_data);
+					if(this.debug){
+						console.log("parsed localstorage_hostname_data: ", localstorage_hostname_data);
+					}
 					if(typeof localstorage_hostname_data['change_timestamp'] == 'number' && localstorage_hostname_data['change_timestamp'] < Date.now() - (38400 * 1000)){
 						localStorage.removeItem("extension_power_settings_hostname");
 					}
 					if(typeof localstorage_hostname_data['hostname'] == 'string' && localstorage_hostname_data['hostname'] != window.location.hostname){
-						console.log("detected a hostname mismatch between the current URL and the data in localstorage: ", window.location.hostname, localstorage_hostname_data['hostname']);
-					
+						if(this.debug){
+							console.log("detected a hostname mismatch between the current URL and the data in localstorage: ", window.location.hostname, localstorage_hostname_data['hostname']);
+						}
 						let hostname_changed_warning_el = document.getElementById('extension-power-settings-hostname-changed-warning');
-						console.log("hostname_changed_warning_el: ", hostname_changed_warning_el);
+						if(this.debug){
+							console.log("hostname_changed_warning_el: ", hostname_changed_warning_el);
+						}
 						if(!hostname_changed_warning_el){
 							const new_hostname_changed_warning_el = document.createElement('div');
 							new_hostname_changed_warning_el.setAttribute('id','extension-power-settings-hostname-changed-warning');
@@ -4302,18 +4312,20 @@
 
             
 			try{
-				clearInterval(this.interval);
-                this.interval = null;
+				if(this.system_update_interval){
+					clearInterval(this.system_update_interval);
+				}
+                this.system_update_interval = null;
                 if(this.debug){
                     console.log("power settings debug: cleared old interval for /poll");
                 }
 			}
 			catch(e){
-				//console.log("no interval to clear?: " + e);
+				//console.log("no system_update_interval to clear?: " + e);
 			}
             
-            if(this.interval == null){
-    			this.interval = setInterval(() => {
+            if(this.system_update_interval == null){
+    			this.system_update_interval = setInterval(() => {
                     if(this.debug){
                         console.log("power settings debug: in interval for /poll");
                     }
@@ -4436,8 +4448,8 @@
                                         
                                         /*
                             			try{
-                            				clearInterval(this.interval);
-                                            this.interval = null;
+                            				clearInterval(this.system_update_interval);
+                                            this.system_update_interval = null;
                             			}
                             			catch(e){
                             				//console.log("no interval to clear?: " + e);

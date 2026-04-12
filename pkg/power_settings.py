@@ -216,7 +216,7 @@ class PowerSettingsAPIHandler(APIHandler):
             self.device_sd_card_size = int(run_command("lsblk -b --output SIZE -n -d /dev/mmcblk0"))
             
         
-        
+        self.last_kiosk_ping_time = 0
 
         self.recovery_partition_exists = False
         self.allow_update_via_recovery = False # will be set to True if a number of conditions are met. Allows for the new partition replace upgrade system.
@@ -902,8 +902,16 @@ class PowerSettingsAPIHandler(APIHandler):
                 self.created_addon_backups = True
                 self.initial_addons_backup()
     
-    
-    
+            
+            if self.last_kiosk_ping_time > 0 and self.last_kiosk_ping_time < time.time() - 30:
+                self.last_kiosk_ping_time = 0
+                if self.DEBUG:
+                    print("clock: last kiosk ping was more than 30 seconds ago")
+                chrome_check = str(run_command('ps aux | grep chrom'))
+                if 'chromium' in chrome_check:
+                    if self.DEBUG:
+                        print("clock: refreshing browser window")
+                    os.system('DISPLAY=:0 xdotool key ctrl+r')
     
     
     
@@ -1236,14 +1244,18 @@ class PowerSettingsAPIHandler(APIHandler):
             if request.method != 'POST':
                 return APIResponse(status=404)
             
-            if request.path == '/init' or request.path == '/set-time' or request.path == '/set-ntp' or request.path == '/shutdown' or request.path == '/reboot' or request.path == '/restart' or request.path == '/close_browser' or request.path == '/ajax' or request.path == '/save':
+            if request.path == '/init' or request.path == '/set-time' or request.path == '/set-ntp' or request.path == '/shutdown' or request.path == '/reboot' or request.path == '/restart' or request.path == '/close_browser' or request.path == '/ajax' or request.path == '/save' or request.path == '/kiosk_ping':
 
                 if self.DEBUG:
                     print("-API request at: " + str(request.path))
 
                 try:
                     
-                    if request.path == '/init':
+                    if request.path == '/kiosk_ping':
+                        self.last_kiosk_ping_time = int(time.time())
+                    
+                    
+                    elif request.path == '/init':
                         response = {}
                         
                         shell_date = ""
