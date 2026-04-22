@@ -23,13 +23,80 @@
             
             //console.log(window.API);
 
+			
+			this.page_visible = true;
+			document.addEventListener("visibilitychange", () => {
+			  if (document.hidden) {
+				  if(this.debug){
+					  console.log("power settings debug: page became hidden");
+				  }
+				  this.page_visible = false;
+			  } else {
+				  if(this.debug){
+					  console.log("power settings debug: page became visible");
+				  }
+				  this.page_visible = true;
+			  }
+			});
+			
+
             this.debug = false;
 			this.developer = false;
 			this.second_init_attempted = false;
 			
 			this.extra_settings_created = false;
             
-            
+			window.last_activity_time = new Date().getTime();
+            this.screensaver_delay = 60;
+            this.showing_screensaver = false;
+            this.previous_last_activity_time = 0;
+			this.selected_screensaver = 'candle';
+            this.remembered_screensaver_path = '';
+            this.screensaver_ignore_click = false;
+			this.screensaver_listeners_added = false;
+			this.screensaver_interval_busy = false;
+			
+			this.screensaver_enabled = false;
+			let screensaver_enabled_check = localStorage.getItem('candle_screensaver_enabled');
+			//console.log("screensaver_enabled_check: ", screensaver_enabled_check);
+			if(typeof screensaver_enabled_check == 'string' && screensaver_enabled_check == 'true'){
+				console.log("localstorage -> screensaver is enabled");
+				this.screensaver_enabled = true;
+			}
+			let selected_screensaver_check = localStorage.getItem('candle_selected_screensaver');
+			//console.log("selected_screensaver_check: ", selected_screensaver_check);
+			if(typeof selected_screensaver_check == 'string' && (selected_screensaver_check == 'candle' || selected_screensaver_check.startsWith('/extensions/'))){
+				this.selected_screensaver = selected_screensaver_check;
+				console.log("localstorage -> selected_screensaver: ", this.selected_screensaver);
+			}
+			
+			let screensaver_delay_check = localStorage.getItem('candle_screensaver_delay');
+			//console.log("screensaver_delay_check: ", screensaver_delay_check);
+			if(typeof screensaver_delay_check == 'string' && screensaver_delay_check != ''){
+				this.screensaver_delay = parseInt(screensaver_delay_check);
+				console.log("localstorage -> this.screensaver_delay: ", this.screensaver_delay);
+			}
+			if(typeof this.screensaver_delay != 'number'){
+				this.screensaver_delay = 60;
+			}
+			if(this.screensaver_delay < 20){
+				this.screensaver_delay = 20;
+			}
+			if(this.screensaver_enabled){
+				this.prepare_screensaver();
+			}
+			/*
+			if(this.screensaver_enabled && this.remembered_screensaver_path == 'candle'){
+				this.prepare_candle_screensaver();
+			}
+			*/
+			
+			
+			
+			
+			
+			
+			
 			
             this.exhibit_mode = false;
             
@@ -266,21 +333,61 @@
             });
 			
 			
-			this.busy_sending_kiosk_ping = false;
-			if(this.kiosk){
-				setInterval(() => {
-					if(this.busy_sending_kiosk_ping == false){
-	                    window.API.postJson(
-	                        `/extensions/${this.id}/api/kiosk_ping`
-	                    ).then((body) => {
-	                        this.busy_sending_kiosk_ping = false;
-	                    }).catch((err) => {
-	                       console.error("caught error doing kiosk_ping: ", err);
-						   this.busy_sending_kiosk_ping = false;
-	                    });
+			this.busy_sending_kiosk_ping = false;			
+			var kiosk_ping_counter = 0;
+			this.main_interval = setInterval(() => {
+				
+				// If this is a kiosk browser, then ping the backend every few seconds. If this ping stops because of a browser window crash, then the backend will reload the page.
+				if(this.kiosk){
+					kiosk_ping_counter++;
+					if(kiosk_ping_counter > 5){
+						kiosk_ping_counter = 0;
+						if(this.busy_sending_kiosk_ping == false){
+		                    window.API.postJson(
+		                        `/extensions/${this.id}/api/kiosk_ping`
+		                    ).then((body) => {
+		                        this.busy_sending_kiosk_ping = false;
+		                    }).catch((err) => {
+		                       console.error("power settings: caught error doing kiosk_ping: ", err);
+							   this.busy_sending_kiosk_ping = false;
+		                    });
+						}
 					}
-				},5000);
-			}
+				}
+				
+				// checks if the value has been changed in a sibling browser window and updates the UI to match
+				if(window.location.pathname == '/settings'){
+					const screensaver_allowed_check = localStorage.getItem('candle_screensaver_enabled');
+					console.log("screensaver_allowed_check: ", screensaver_allowed_check);
+					if(typeof screensaver_allowed_check == 'string'){
+						if(screensaver_allowed_check == 'true' && this.screensaver_allowed_in_this_browser != true){
+							console.log("screensaver_allowed_check: ", screensaver_allowed_check);
+							const screensaver_enabled_checkbox_el = document.getElementById('extension-power-settings-enable-screensaver-checkbox');
+							if(screensaver_enabled_checkbox_el){
+								screensaver_enabled_checkbox_el.checked = true;
+							}
+							this.screensaver_allowed_in_this_browser = true;
+						}
+						else if(screensaver_allowed_check == 'false' && this.screensaver_allowed_in_this_browser != false){
+							console.log("screensaver_allowed_check: ", screensaver_allowed_check);
+							const screensaver_enabled_checkbox_el = document.getElementById('extension-power-settings-enable-screensaver-checkbox');
+							if(screensaver_enabled_checkbox_el){
+								screensaver_enabled_checkbox_el.checked = false;
+							}
+							this.screensaver_allowed_in_this_browser = false;
+						}
+					}
+				}
+				
+				// Check if the screensaver should be enabled or disabled
+				if(this.screensaver_listeners_added){
+					this.do_screensaver_interval();
+				}
+				
+				
+			},1000);
+			
+			
         }
 
 
@@ -1000,6 +1107,91 @@
 						}
 		            });
 	            });
+				
+				
+				// Screensaver settings UI
+				const screensaver_enabled_checkbox_el = document.getElementById('extension-power-settings-enable-screensaver-checkbox');
+				if(screensaver_enabled_checkbox_el){
+					screensaver_enabled_checkbox_el.addEventListener('change', () => {
+						if(screensaver_enabled_checkbox_el.checked){
+							localStorage.setItem('candle_screensaver_enabled','true');
+							this.screensaver_enabled = true;
+							this.prepare_screensaver();
+						}
+						else{
+							localStorage.setItem('candle_screensaver_enabled','false');
+							this.screensaver_enabled = false;
+						}
+						if(this.debug){
+							console.log("this.screensaver_enabled is now: ", this.screensaver_enabled);
+						}
+					});
+				}
+				
+				const screensaver_select_el = document.getElementById('extension-power-settings-screensaver-select');
+				if(screensaver_select_el){
+					
+					this.update_available_screensavers_select();
+					
+					screensaver_select_el.addEventListener('change', () => {
+						localStorage.setItem('candle_selected_screensaver', screensaver_select_el.value);
+						this.selected_screensaver = screensaver_select_el.value;
+						if(this.debug){
+							console.log("selected screensaver changed to: ", this.selected_screensaver);
+						}
+					});
+				}
+				
+				const screensaver_delay_el = document.getElementById('extension-power-settings-screensaver-delay');
+				const screensaver_delay_multiplier_el = document.getElementById('extension-power-settings-screensaver-delay-multiplier');
+				if(screensaver_delay_el && screensaver_delay_multiplier_el){
+					
+					const recalculate = () => {
+						if(this.debug){
+							console.log("power settings: calculating screensaver delay from: ", screensaver_delay_el.value, screensaver_delay_multiplier_el.value);
+						}
+						
+						let delay = 1;
+						if(screensaver_delay_el.value){
+							delay = parseInt(screensaver_delay_el.value);
+							if(delay < 20 && screensaver_delay_multiplier_el.value == '1'){
+								delay = 20;
+								screensaver_delay_el.value = 20;
+							}
+							this.screensaver_delay = delay * parseInt(screensaver_delay_multiplier_el.value);
+							if(this.debug){
+								console.log("power settings: this.screensaver_delay is now: ", this.screensaver_delay);
+							}
+							localStorage.setItem('candle_screensaver_delay', this.screensaver_delay);
+						}
+					}
+					
+					screensaver_delay_el.addEventListener('change', () => {
+						recalculate();
+					});
+					screensaver_delay_multiplier_el.addEventListener('change', () => {
+						recalculate();
+					});
+				}
+				
+				const screensaver_test_button_el = document.getElementById('extension-power-settings-screensaver-test-button');
+				if(screensaver_test_button_el){
+					screensaver_test_button_el.addEventListener('click', () => {
+						this.screensaver_ignore_click = true;
+						this.screensaver_allowed_in_this_browser_once = true;
+	                    
+						this.prepare_screensaver();
+						window.last_activity_time = 1; //new Date().getTime() - (this.screensaver_delay * 2 * 1000);
+						
+	                    window.setTimeout(() => {
+							window.last_activity_time = 1;
+	                        this.screensaver_ignore_click = false; // ignore the click on the Photo Frame menu button, as that would immediately cancel the screensaver..
+	                    },1000);
+					});
+				}
+				
+				
+				
 				
 				
                 // Show System Details page button
@@ -2859,7 +3051,7 @@
 			// Kernel version
             if(typeof body.device_kernel != 'undefined'){
                 if(this.debug){
-                    console.log("power setting debugs: device_kernel: ", body.device_kernel);
+                    console.log("power settings debug: device_kernel: ", body.device_kernel);
                 }
 				if(body.device_kernel != ''){
 					document.getElementById('extension-power-settings-device-kernel').innerText = body.device_kernel;
@@ -5491,6 +5683,24 @@
 			document.getElementById('extension-power-settings-display1-production-date').innerText = '';
 			document.getElementById('extension-power-settings-display2-production-date').innerText = '';
 			
+			window.API.postJson(
+                `/extensions/${this.id}/api/ajax`, {
+                    'action': 'display_init'
+                }
+            ).then((body) => {
+                this.parse_display_init(body);
+            }).catch((err) => {
+                console.error("power settings: caught error sending get_display_info command: ", err);
+            });
+			
+			this.update_available_screensavers_select();
+		}
+		
+		parse_display_init(body){
+            if(this.debug){
+                console.log("display init response: ", body);
+            }
+			
 			function get_production_time(week, year) { 
 				//console.log("get_production_time: ", typeof week, week, typeof year, year);
 				year = '' + year;
@@ -5502,466 +5712,447 @@
 				return '';
 			}
 			
+			let got_display_details = false;
 			
+			if(typeof body.display_port1_name != 'undefined'){
+				this.display_port1_name = body.display_port1_name;
+			}
+			if(typeof body.display_port2_name != 'undefined'){
+				this.display_port2_name = body.display_port2_name;
+			}
 			
+			// rotation
+			if(typeof body.display1_rotated != 'undefined'){
+				document.getElementById('extension-power-settings-display1-rotate-checkbox').checked = body.display1_rotated;
+			}
+			if(typeof body.display2_rotated != 'undefined'){
+				document.getElementById('extension-power-settings-display2-rotate-checkbox').checked = body.display2_rotated;
+			}
 			
-			window.API.postJson(
-                `/extensions/${this.id}/api/ajax`, {
-                    'action': 'display_init'
-                }
-            ).then((body) => {
-                if(this.debug){
-                    console.log("display init response: ", body);
-                }
+			// power management 
+			if(typeof body.display1_power != 'undefined'){
+				document.getElementById('extension-power-settings-display1-power-checkbox').checked = body.display1_power;
+			}
+			if(typeof body.display2_power != 'undefined'){
+				document.getElementById('extension-power-settings-display2-power-checkbox').checked = body.display2_power;
+			}
+			
+			// Show the display's width and height
+			if(typeof body.display1_width != 'undefined' && typeof body.display1_height != 'undefined' && typeof body.display2_width != 'undefined' && typeof body.display2_height != 'undefined'){
 				
-				let got_display_details = false;
-				
-				if(typeof body.display_port1_name != 'undefined'){
-					this.display_port1_name = body.display_port1_name;
+				document.getElementById('extension-power-settings-display1-resolution-container').innerHTML = '<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display1-width">' + body.display1_width + '</span><br/><span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display1-height">' + body.display1_width + '</span><br/>';
+				document.getElementById('extension-power-settings-display2-resolution-container').innerHTML = '<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display2-width">' + body.display2_width + '</span><br/><span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display2-height">' + body.display2_width + '</span><br/>';
+				//document.getElementById('extension-power-settings-display1-width').innerText = body.display1_width;
+				//document.getElementById('extension-power-settings-display1-height').innerText = body.display1_height;
+				//document.getElementById('extension-power-settings-display2-width').innerText = body.display2_width;
+				//document.getElementById('extension-power-settings-display2-height').innerText = body.display2_height;
+				if(body.display1_width == 0 && body.display2_width == 0){
+					document.getElementById('extension-power-settings-no-display').classList.remove('extension-power-settings-hidden');
 				}
-				if(typeof body.display_port2_name != 'undefined'){
-					this.display_port2_name = body.display_port2_name;
-				}
-				
-				// rotation
-				if(typeof body.display1_rotated != 'undefined'){
-					document.getElementById('extension-power-settings-display1-rotate-checkbox').checked = body.display1_rotated;
-				}
-				if(typeof body.display2_rotated != 'undefined'){
-					document.getElementById('extension-power-settings-display2-rotate-checkbox').checked = body.display2_rotated;
-				}
-				
-				// power management 
-				if(typeof body.display1_power != 'undefined'){
-					document.getElementById('extension-power-settings-display1-power-checkbox').checked = body.display1_power;
-				}
-				if(typeof body.display2_power != 'undefined'){
-					document.getElementById('extension-power-settings-display2-power-checkbox').checked = body.display2_power;
-				}
-				
-				// Show the display's width and height
-				if(typeof body.display1_width != 'undefined' && typeof body.display1_height != 'undefined' && typeof body.display2_width != 'undefined' && typeof body.display2_height != 'undefined'){
-					
-					document.getElementById('extension-power-settings-display1-resolution-container').innerHTML = '<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display1-width">' + body.display1_width + '</span><br/><span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display1-height">' + body.display1_width + '</span><br/>';
-					document.getElementById('extension-power-settings-display2-resolution-container').innerHTML = '<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display2-width">' + body.display2_width + '</span><br/><span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display2-height">' + body.display2_width + '</span><br/>';
-					//document.getElementById('extension-power-settings-display1-width').innerText = body.display1_width;
-					//document.getElementById('extension-power-settings-display1-height').innerText = body.display1_height;
-					//document.getElementById('extension-power-settings-display2-width').innerText = body.display2_width;
-					//document.getElementById('extension-power-settings-display2-height').innerText = body.display2_height;
-					if(body.display1_width == 0 && body.display2_width == 0){
-						document.getElementById('extension-power-settings-no-display').classList.remove('extension-power-settings-hidden');
-					}
-					if(body.display1_width != 0){
-						document.getElementById('extension-power-settings-display1-info').classList.remove('extension-power-settings-hidden');
-						if(typeof body.touchscreen_detected != 'undefined' && body.display2_width == 0){
-							if(body.touchscreen_detected){
-								document.getElementById('extension-power-settings-display1-production-date').innerHTML = 'Touch screen<br/>';
-							}
-						}
-					}
-					if(body.display2_width != 0){
-						document.getElementById('extension-power-settings-display2-info').classList.remove('extension-power-settings-hidden');
-						if(typeof body.touchscreen_detected != 'undefined' && body.display1_width == 0){
-							if(body.touchscreen_detected){
-								document.getElementById('extension-power-settings-display2-production-date').innerHTML = 'Touch screen<br/>';
-							}
+				if(body.display1_width != 0){
+					document.getElementById('extension-power-settings-display1-info').classList.remove('extension-power-settings-hidden');
+					if(typeof body.touchscreen_detected != 'undefined' && body.display2_width == 0){
+						if(body.touchscreen_detected){
+							document.getElementById('extension-power-settings-display1-production-date').innerHTML = 'Touch screen<br/>';
 						}
 					}
 				}
-				
-				// Show the dispay's standby delay in minutes
-				if(typeof body.display_standby_delay != 'undefined'){
-					document.getElementById('extension-power-settings-display1-standby-delay').innerText = parseInt(body.display_standby_delay) / 60;
-					document.getElementById('extension-power-settings-display2-standby-delay').innerText = parseInt(body.display_standby_delay) / 60;
+				if(body.display2_width != 0){
+					document.getElementById('extension-power-settings-display2-info').classList.remove('extension-power-settings-hidden');
+					if(typeof body.touchscreen_detected != 'undefined' && body.display1_width == 0){
+						if(body.touchscreen_detected){
+							document.getElementById('extension-power-settings-display2-production-date').innerHTML = 'Touch screen<br/>';
+						}
+					}
 				}
-				
-				if(typeof body.rpi_display_backlight != 'undefined' && typeof body.rpi_display_rotation != 'undefined'){
-					if(body.rpi_display_backlight){
-						document.getElementById('extension-power-settings-rpi-display-info').classList.remove('extension-power-settings-hidden');
-						if(parseInt(body.rpi_display_rotation) == 180){
-							if(this.debug){
-								console.log("power settings debug: official Rpi Display detected, and seems to be rotated");
-							}
-							document.getElementById('extension-power-settings-rpi-display-rotate-checkbox').checked = true;
+			}
+			
+			// Show the dispay's standby delay in minutes
+			if(typeof body.display_standby_delay != 'undefined'){
+				document.getElementById('extension-power-settings-display1-standby-delay').innerText = parseInt(body.display_standby_delay) / 60;
+				document.getElementById('extension-power-settings-display2-standby-delay').innerText = parseInt(body.display_standby_delay) / 60;
+			}
+			
+			if(typeof body.rpi_display_backlight != 'undefined' && typeof body.rpi_display_rotation != 'undefined'){
+				if(body.rpi_display_backlight){
+					document.getElementById('extension-power-settings-rpi-display-info').classList.remove('extension-power-settings-hidden');
+					if(parseInt(body.rpi_display_rotation) == 180){
+						if(this.debug){
+							console.log("power settings debug: official Rpi Display detected, and seems to be rotated");
 						}
-						else{
-							if(this.debug){
-								console.log("official Rpi Display detected, does not seem to be rotated");
-							}
-							document.getElementById('extension-power-settings-rpi-display-rotate-checkbox').checked = false;
-						}
-						
+						document.getElementById('extension-power-settings-rpi-display-rotate-checkbox').checked = true;
 					}
 					else{
 						if(this.debug){
-							console.log("power settings debug: No Rpi Display detected");
+							console.log("official Rpi Display detected, does not seem to be rotated");
 						}
-						document.getElementById('extension-power-settings-rpi-display-info').classList.add('extension-power-settings-hidden')
+						document.getElementById('extension-power-settings-rpi-display-rotate-checkbox').checked = false;
 					}
+					
 				}
-				
-				
-				// TODO: make all this less clunky. Right now it's two parts of code repeated..
-				
-				// Show EDID display details
-				if(typeof body.display1_details != 'undefined'){
-					document.getElementById('extension-power-settings-display1-details').innerHTML = '';
-					if(body.display1_details != ''){
+				else{
+					if(this.debug){
+						console.log("power settings debug: No Rpi Display detected");
+					}
+					document.getElementById('extension-power-settings-rpi-display-info').classList.add('extension-power-settings-hidden')
+				}
+			}
+			
+			
+			// TODO: make all this less clunky. Right now it's two parts of code repeated..
+			
+			// Show EDID display details
+			if(typeof body.display1_details != 'undefined'){
+				document.getElementById('extension-power-settings-display1-details').innerHTML = '';
+				if(body.display1_details != ''){
+					try{
+						let disp_details = JSON.parse(body.display1_details);
+						if(this.debug){
+							console.log("power settings debug: disp_details : ", disp_details);
+						}
+						got_display_details = true;
+						
 						try{
-							let disp_details = JSON.parse(body.display1_details);
-							if(this.debug){
-								console.log("power settings debug: disp_details : ", disp_details);
+							if(typeof disp_details['week'] != 'undefined' && typeof disp_details['year'] != 'undefined'){
+								document.getElementById('extension-power-settings-display1-production-date').innerHTML += get_production_time(disp_details['week'], disp_details['year']);
 							}
-							got_display_details = true;
 							
-							try{
-								if(typeof disp_details['week'] != 'undefined' && typeof disp_details['year'] != 'undefined'){
-									document.getElementById('extension-power-settings-display1-production-date').innerHTML += get_production_time(disp_details['week'], disp_details['year']);
+							if(typeof disp_details['manufacturer'] != 'undefined' && typeof disp_details['name'] != 'undefined'){
+								console.log("power settings debug: display manufacturer and name are available");
+								
+								if(disp_details['manufacturer'].indexOf('DO NOT USE') != -1){
+									disp_details['manufacturer'] = 'Unknown manufacturer'
 								}
 								
-								if(typeof disp_details['manufacturer'] != 'undefined' && typeof disp_details['name'] != 'undefined'){
-									console.log("power settings debug: display manufacturer and name are available");
+								document.getElementById('extension-power-settings-display1-name').innerText = disp_details['manufacturer'] + ' - ' + disp_details['name'];
+							}
+							
+							//console.log("registry: ", window.extension_power_settings_display_registry);
+							//console.log("manufacturer_pnp_id: ", disp_details['manufacturer_pnp_id']);
+							/*
+							if(typeof disp_details['manufacturer_pnp_id'] != 'undefined' && typeof window.extension_power_settings_display_registry != 'undefined'){
+								//console.log("manufacturer_pnp_id and registry exist");
+								if(typeof window.extension_power_settings_display_registry[ disp_details['manufacturer_pnp_id'].trim() ] != 'undefined'){
+									//info_value = window.extension_power_settings_display_registry[ disp_details['manufacturer_pnp_id'] ] + ' (' + info_value + ')';
 									
-									if(disp_details['manufacturer'].indexOf('DO NOT USE') != -1){
-										disp_details['manufacturer'] = 'Unknown manufacturer'
-									}
-									
-									document.getElementById('extension-power-settings-display1-name').innerText = disp_details['manufacturer'] + ' - ' + disp_details['name'];
-								}
-								
-								//console.log("registry: ", window.extension_power_settings_display_registry);
-								//console.log("manufacturer_pnp_id: ", disp_details['manufacturer_pnp_id']);
-								/*
-								if(typeof disp_details['manufacturer_pnp_id'] != 'undefined' && typeof window.extension_power_settings_display_registry != 'undefined'){
-									//console.log("manufacturer_pnp_id and registry exist");
-									if(typeof window.extension_power_settings_display_registry[ disp_details['manufacturer_pnp_id'].trim() ] != 'undefined'){
-										//info_value = window.extension_power_settings_display_registry[ disp_details['manufacturer_pnp_id'] ] + ' (' + info_value + ')';
-										
-										if(typeof disp_details['name'] != 'undefined' && disp_details['name'].length){
-											document.getElementById('extension-power-settings-display1-name').innerText = window.extension_power_settings_display_registry[ disp_details['manufacturer_pnp_id'] ] + ', ' + disp_details['name'];
-										}
-										else{
-											console.warn("no valid display name found in EDID data: ", typeof disp_details['name'], disp_details['name']);
-										}
+									if(typeof disp_details['name'] != 'undefined' && disp_details['name'].length){
+										document.getElementById('extension-power-settings-display1-name').innerText = window.extension_power_settings_display_registry[ disp_details['manufacturer_pnp_id'] ] + ', ' + disp_details['name'];
 									}
 									else{
-										console.warn("manufacturer_pnp_id was not found in registry: ", disp_details['manufacturer_pnp_id'], window.extension_power_settings_display_registry);
+										console.warn("no valid display name found in EDID data: ", typeof disp_details['name'], disp_details['name']);
 									}
-								}
-								*/
-								
-							}
-							catch(err){
-								console.error("power settings: Error calculating display production date / generating display name: ", err);
-							}
-							
-							
-							
-							
-							// Add info key-value pairs
-							let info_container_el = document.createElement("ul");
-							info_container_el.classList.add('extension-power-settings-list-item-info');
-							
-							
-							
-							for (const [info_key, info_value] of Object.entries(disp_details)) {
-								let info_el = document.createElement("li");
-							
-								let info_key_el = document.createElement("span");
-								info_key_el.classList.add('extension-power-settings-list-item-info-key');
-								info_key_el.innerText = info_key;
-								info_el.appendChild(info_key_el);
-								
-								let info_value_el = document.createElement("span");
-								info_value_el.classList.add('extension-power-settings-list-item-info-value');
-								
-								
-								if(info_key == 'resolutions' && typeof info_value == 'object'){
-									//console.log("spotted resolutions. info_value", typeof(info_value), info_value);
-									
-									let select_container_el = document.createElement("div");
-									select_container_el.classList.add('extension-power-settings-flex-center-space-between');
-									select_container_el.innerHTML = '<span style="padding-right: 2rem;box-sizing:border-box;display:inline-block;">Resolution: </span>';
-									
-									let select_el = document.createElement("select");
-									select_el.setAttribute('id','extension-power-settings-display1-resolution-select');
-									select_el.classList.add('localization-select');
-									
-									let choose_option_el = document.createElement("option");
-									choose_option_el.value = 'default';
-									choose_option_el.innerText = "Default";
-									select_el.appendChild(choose_option_el);
-									
-									//select_el.onChange = function(element){
-									//	console.log("changing resolution to: ", element.value);
-									//}
-									select_el.addEventListener('change', (event) => {
-										//console.log("changing resolution to: ", event.target.value);
-										if(event.target.value.indexOf('x') != -1 || event.target.value == 'default'){
-											this.set_display_resolution(this.display_port1_name,event.target.value);
-										}
-									});
-									
-									var added_resolutions = 0;
-									try{
-										for (var r = 0; r < info_value.length; r++) {
-											if(info_value[r][2] != '60'){
-												if(this.debug){
-													console.warn("power settings debug: skipping non-60Hz display refresh rate: ", info_value[r][2]);
-												}
-												continue
-											}
-											let option_el = document.createElement("option");
-											option_el.value = option_el.innerText = info_value[r][0] + 'x' + info_value[r][1]; // + '_' + resolution_parts[r];
-											//console.log(body.display1_width, " =?= ", info_value[r][0], "   &   ", body.display1_height, " =?= ", info_value[r][1]);
-											
-											if(body.display1_width == info_value[r][0] && body.display1_height == info_value[r][1]){
-												//console.log("at the current resolution");
-												option_el.selected = true;
-											}
-											
-											added_resolutions++; 
-											select_el.appendChild(option_el);
-											//let option_text = resolution_parts[r] + 'x' + resolution_parts[r + 1];// + ', ' + resolution_parts[r+2] +'Hz';
-
-										}
-										if(added_resolutions > 1){
-											document.getElementById('extension-power-settings-display1-resolution-container').innerHTML = '';
-											
-											select_container_el.appendChild(select_el);
-											
-											document.getElementById('extension-power-settings-display1-resolution-container').appendChild(select_container_el);
-										}
-									}
-									catch(err){
-										console.error("power settings: error parsing edid resolutions: ", err);
-									}
-									
-									
-									for (var r = 0; r < info_value.length; r++) {
-										info_value_el.innerHTML += '<span>' + info_value[r] + '</span><br/>';
-									}
-									
-									//info_el.appendChild(info_value_el);
-							
-									//info_container_el.appendChild(info_el);
-									
-									
 								}
 								else{
-									info_value_el.innerText = info_value;
+									console.warn("manufacturer_pnp_id was not found in registry: ", disp_details['manufacturer_pnp_id'], window.extension_power_settings_display_registry);
+								}
+							}
+							*/
+							
+						}
+						catch(err){
+							console.error("power settings: Error calculating display production date / generating display name: ", err);
+						}
+						
+						
+						
+						
+						// Add info key-value pairs
+						let info_container_el = document.createElement("ul");
+						info_container_el.classList.add('extension-power-settings-list-item-info');
+						
+						
+						
+						for (const [info_key, info_value] of Object.entries(disp_details)) {
+							let info_el = document.createElement("li");
+						
+							let info_key_el = document.createElement("span");
+							info_key_el.classList.add('extension-power-settings-list-item-info-key');
+							info_key_el.innerText = info_key;
+							info_el.appendChild(info_key_el);
+							
+							let info_value_el = document.createElement("span");
+							info_value_el.classList.add('extension-power-settings-list-item-info-value');
+							
+							
+							if(info_key == 'resolutions' && typeof info_value == 'object'){
+								//console.log("spotted resolutions. info_value", typeof(info_value), info_value);
+								
+								let select_container_el = document.createElement("div");
+								select_container_el.classList.add('extension-power-settings-flex-center-space-between');
+								select_container_el.innerHTML = '<span style="padding-right: 2rem;box-sizing:border-box;display:inline-block;">Resolution: </span>';
+								
+								let select_el = document.createElement("select");
+								select_el.setAttribute('id','extension-power-settings-display1-resolution-select');
+								select_el.classList.add('localization-select');
+								
+								let choose_option_el = document.createElement("option");
+								choose_option_el.value = 'default';
+								choose_option_el.innerText = "Default";
+								select_el.appendChild(choose_option_el);
+								
+								//select_el.onChange = function(element){
+								//	console.log("changing resolution to: ", element.value);
+								//}
+								select_el.addEventListener('change', (event) => {
+									//console.log("changing resolution to: ", event.target.value);
+									if(event.target.value.indexOf('x') != -1 || event.target.value == 'default'){
+										this.set_display_resolution(this.display_port1_name,event.target.value);
+									}
+								});
+								
+								var added_resolutions = 0;
+								try{
+									for (var r = 0; r < info_value.length; r++) {
+										if(info_value[r][2] != '60'){
+											if(this.debug){
+												console.warn("power settings debug: skipping non-60Hz display refresh rate: ", info_value[r][2]);
+											}
+											continue
+										}
+										let option_el = document.createElement("option");
+										option_el.value = option_el.innerText = info_value[r][0] + 'x' + info_value[r][1]; // + '_' + resolution_parts[r];
+										//console.log(body.display1_width, " =?= ", info_value[r][0], "   &   ", body.display1_height, " =?= ", info_value[r][1]);
+										
+										if(body.display1_width == info_value[r][0] && body.display1_height == info_value[r][1]){
+											//console.log("at the current resolution");
+											option_el.selected = true;
+										}
+										
+										added_resolutions++; 
+										select_el.appendChild(option_el);
+										//let option_text = resolution_parts[r] + 'x' + resolution_parts[r + 1];// + ', ' + resolution_parts[r+2] +'Hz';
+
+									}
+									if(added_resolutions > 1){
+										document.getElementById('extension-power-settings-display1-resolution-container').innerHTML = '';
+										
+										select_container_el.appendChild(select_el);
+										
+										document.getElementById('extension-power-settings-display1-resolution-container').appendChild(select_container_el);
+									}
+								}
+								catch(err){
+									console.error("power settings: error parsing edid resolutions: ", err);
 								}
 								
-								info_el.appendChild(info_value_el);
 								
-								info_container_el.appendChild(info_el);
+								for (var r = 0; r < info_value.length; r++) {
+									info_value_el.innerHTML += '<span>' + info_value[r] + '</span><br/>';
+								}
 								
-							
+								//info_el.appendChild(info_value_el);
+						
+								//info_container_el.appendChild(info_el);
+								
 								
 							}
-							document.getElementById('extension-power-settings-display1-details').appendChild(info_container_el);
+							else{
+								info_value_el.innerText = info_value;
+							}
+							
+							info_el.appendChild(info_value_el);
+							
+							info_container_el.appendChild(info_el);
+							
+						
+							
 						}
-						catch(e){
-							console.error("power settings: unable to parse display EDID data: ", e);
-						}
+						document.getElementById('extension-power-settings-display1-details').appendChild(info_container_el);
 					}
-					else{
-						document.getElementById('extension-power-settings-display1-details').innerHTML = '<p>No details available</p>';
+					catch(e){
+						console.error("power settings: unable to parse display EDID data: ", e);
 					}
 				}
-				
-				
-				// Show EDID display details
-				if(typeof body.display2_details != 'undefined'){
-					document.getElementById('extension-power-settings-display2-details').innerHTML = '';
-					if(body.display2_details != ''){
+				else{
+					document.getElementById('extension-power-settings-display1-details').innerHTML = '<p>No details available</p>';
+				}
+			}
+			
+			
+			// Show EDID display details
+			if(typeof body.display2_details != 'undefined'){
+				document.getElementById('extension-power-settings-display2-details').innerHTML = '';
+				if(body.display2_details != ''){
+					try{
+						let disp_details = JSON.parse(body.display2_details);
+						if(this.debug){
+							console.log("power settings debug: disp_details : ", disp_details);
+						}
+						got_display_details = true;
 						try{
-							let disp_details = JSON.parse(body.display2_details);
-							if(this.debug){
-								console.log("power settings debug: disp_details : ", disp_details);
+							if(typeof disp_details['week'] != 'undefined' && typeof disp_details['year'] != 'undefined'){
+								document.getElementById('extension-power-settings-display2-production-date').innerText = get_production_time(disp_details['week'], disp_details['year']);
 							}
-							got_display_details = true;
-							try{
-								if(typeof disp_details['week'] != 'undefined' && typeof disp_details['year'] != 'undefined'){
-									document.getElementById('extension-power-settings-display2-production-date').innerText = get_production_time(disp_details['week'], disp_details['year']);
+							
+							if(typeof disp_details['manufacturer'] != 'undefined' && typeof disp_details['name'] != 'undefined'){
+								//console.log("display manufacturer and name are available");
+								
+								if(disp_details['manufacturer'].indexOf('DO NOT USE') != -1){
+									disp_details['manufacturer'] = 'Unknown manufacturer'
 								}
 								
-								if(typeof disp_details['manufacturer'] != 'undefined' && typeof disp_details['name'] != 'undefined'){
-									//console.log("display manufacturer and name are available");
+								document.getElementById('extension-power-settings-display2-name').innerText = disp_details['manufacturer'] + ' - ' + disp_details['name'];
+							}
+							
+							//console.log("registry: ", window.extension_power_settings_display_registry);
+							//console.log("manufacturer_pnp_id: ", disp_details['manufacturer_pnp_id']);
+							/*
+							if(typeof disp_details['manufacturer_pnp_id'] != 'undefined' && typeof window.extension_power_settings_display_registry != 'undefined'){
+								//console.log("manufacturer_pnp_id and registry exist");
+								if(typeof window.extension_power_settings_display_registry[ disp_details['manufacturer_pnp_id'].trim() ] != 'undefined'){
+									//info_value = window.extension_power_settings_display_registry[ disp_details['manufacturer_pnp_id'] ] + ' (' + info_value + ')';
 									
-									if(disp_details['manufacturer'].indexOf('DO NOT USE') != -1){
-										disp_details['manufacturer'] = 'Unknown manufacturer'
-									}
-									
-									document.getElementById('extension-power-settings-display2-name').innerText = disp_details['manufacturer'] + ' - ' + disp_details['name'];
-								}
-								
-								//console.log("registry: ", window.extension_power_settings_display_registry);
-								//console.log("manufacturer_pnp_id: ", disp_details['manufacturer_pnp_id']);
-								/*
-								if(typeof disp_details['manufacturer_pnp_id'] != 'undefined' && typeof window.extension_power_settings_display_registry != 'undefined'){
-									//console.log("manufacturer_pnp_id and registry exist");
-									if(typeof window.extension_power_settings_display_registry[ disp_details['manufacturer_pnp_id'].trim() ] != 'undefined'){
-										//info_value = window.extension_power_settings_display_registry[ disp_details['manufacturer_pnp_id'] ] + ' (' + info_value + ')';
-										
-										if(typeof disp_details['name'] != 'undefined' && disp_details['name'].length){
-											document.getElementById('extension-power-settings-display2-name').innerText = window.extension_power_settings_display_registry[ disp_details['manufacturer_pnp_id'] ] + ', ' + disp_details['name'];
-										}
-										else{
-											console.warn("no valid display name found in EDID data: ", typeof disp_details['name'], disp_details['name']);
-										}
+									if(typeof disp_details['name'] != 'undefined' && disp_details['name'].length){
+										document.getElementById('extension-power-settings-display2-name').innerText = window.extension_power_settings_display_registry[ disp_details['manufacturer_pnp_id'] ] + ', ' + disp_details['name'];
 									}
 									else{
-										console.warn("manufacturer_pnp_id was not found in registry: ", disp_details['manufacturer_pnp_id'], window.extension_power_settings_display_registry);
+										console.warn("no valid display name found in EDID data: ", typeof disp_details['name'], disp_details['name']);
 									}
-								}
-								*/
-								
-							}
-							catch(err){
-								console.error("power settings: caught error calculating display production date / generating display name: ", err);
-							}
-							
-							
-							
-							
-							// Add info key-value pairs
-							let info_container_el = document.createElement("ul");
-							info_container_el.classList.add('extension-power-settings-list-item-info');
-							
-							for (const [info_key, info_value] of Object.entries(disp_details)) {
-								let info_el = document.createElement("li");
-							
-								let info_key_el = document.createElement("span");
-								info_key_el.classList.add('extension-power-settings-list-item-info-key');
-								info_key_el.innerText = info_key;
-								info_el.appendChild(info_key_el);
-								
-								let info_value_el = document.createElement("span");
-								info_value_el.classList.add('extension-power-settings-list-item-info-value');
-								
-								
-								if(info_key == 'resolutions' && typeof info_value == 'object'){
-									if(this.debug){
-										console.log("power settings: spotted resolutions. info_value", typeof(info_value), info_value);
-									}
-									let select_container_el = document.createElement("div");
-									select_container_el.classList.add('extension-power-settings-flex-center-space-between');
-									select_container_el.innerHTML = '<span style="padding-right: 2rem;box-sizing:border-box;display:inline-block;">Resolution: </span>';
-									
-									let select_el = document.createElement("select");
-									select_el.setAttribute('id','extension-power-settings-display2-resolution-select');
-									select_el.classList.add('localization-select');
-									
-									let choose_option_el = document.createElement("option");
-									choose_option_el.value = 'default';
-									choose_option_el.innerText = "Default";
-									select_el.appendChild(choose_option_el);
-									
-									//select_el.onChange = function(element){
-									//	console.log("changing resolution to: ", element.value);
-									//}
-									select_el.addEventListener('change', (event) => {
-										//console.log("changing resolution to: ", event.target.value);
-										if(event.target.value.indexOf('x') != -1 || event.target.value == 'default'){
-											this.set_display_resolution(this.display_port2_name,event.target.value);
-										}
-									});
-									
-									var added_resolutions = 0;
-									try{
-										for (var r = 0; r < info_value.length; r++) {
-											if(info_value[r][2] != '60'){
-												if(this.debug){
-													console.warn("power settings: skipping non-60Hz display refresh rate: ", info_value[r][2]);
-												}
-												continue
-											}
-											let option_el = document.createElement("option");
-											option_el.value = option_el.innerText = info_value[r][0] + 'x' + info_value[r][1]; // + '_' + resolution_parts[r];
-											//console.log(body.display2_width, " =?= ", info_value[r][0], "   &   ", body.display2_height, " =?= ", info_value[r][1]);
-											
-											if(body.display2_width == info_value[r][0] && body.display2_height == info_value[r][1]){
-												//console.log("at the current resolution");
-												option_el.selected = true;
-											}
-											
-											added_resolutions++; 
-											select_el.appendChild(option_el);
-											//let option_text = resolution_parts[r] + 'x' + resolution_parts[r + 1];// + ', ' + resolution_parts[r+2] +'Hz';
-
-										}
-										if(added_resolutions > 1){
-											document.getElementById('extension-power-settings-display2-resolution-container').innerHTML = '';
-											
-											select_container_el.appendChild(select_el);
-											
-											document.getElementById('extension-power-settings-display2-resolution-container').appendChild(select_container_el);
-										}
-									}
-									catch(err){
-										console.error("power settings: caught error parsing edid resolutions: ", err);
-									}
-									
-									
-									for (var r = 0; r < info_value.length; r++) {
-										info_value_el.innerHTML += '<span>' + info_value[r] + '</span><br/>';
-									}
-									
-									//info_el.appendChild(info_value_el);
-							
-									//info_container_el.appendChild(info_el);
-									
-									
 								}
 								else{
-									info_value_el.innerText = info_value;
+									console.warn("manufacturer_pnp_id was not found in registry: ", disp_details['manufacturer_pnp_id'], window.extension_power_settings_display_registry);
+								}
+							}
+							*/
+							
+						}
+						catch(err){
+							console.error("power settings: caught error calculating display production date / generating display name: ", err);
+						}
+						
+						
+						
+						
+						// Add info key-value pairs
+						let info_container_el = document.createElement("ul");
+						info_container_el.classList.add('extension-power-settings-list-item-info');
+						
+						for (const [info_key, info_value] of Object.entries(disp_details)) {
+							let info_el = document.createElement("li");
+						
+							let info_key_el = document.createElement("span");
+							info_key_el.classList.add('extension-power-settings-list-item-info-key');
+							info_key_el.innerText = info_key;
+							info_el.appendChild(info_key_el);
+							
+							let info_value_el = document.createElement("span");
+							info_value_el.classList.add('extension-power-settings-list-item-info-value');
+							
+							
+							if(info_key == 'resolutions' && typeof info_value == 'object'){
+								if(this.debug){
+									console.log("power settings: spotted resolutions. info_value", typeof(info_value), info_value);
+								}
+								let select_container_el = document.createElement("div");
+								select_container_el.classList.add('extension-power-settings-flex-center-space-between');
+								select_container_el.innerHTML = '<span style="padding-right: 2rem;box-sizing:border-box;display:inline-block;">Resolution: </span>';
+								
+								let select_el = document.createElement("select");
+								select_el.setAttribute('id','extension-power-settings-display2-resolution-select');
+								select_el.classList.add('localization-select');
+								
+								let choose_option_el = document.createElement("option");
+								choose_option_el.value = 'default';
+								choose_option_el.innerText = "Default";
+								select_el.appendChild(choose_option_el);
+								
+								//select_el.onChange = function(element){
+								//	console.log("changing resolution to: ", element.value);
+								//}
+								select_el.addEventListener('change', (event) => {
+									//console.log("changing resolution to: ", event.target.value);
+									if(event.target.value.indexOf('x') != -1 || event.target.value == 'default'){
+										this.set_display_resolution(this.display_port2_name,event.target.value);
+									}
+								});
+								
+								var added_resolutions = 0;
+								try{
+									for (var r = 0; r < info_value.length; r++) {
+										if(info_value[r][2] != '60'){
+											if(this.debug){
+												console.warn("power settings: skipping non-60Hz display refresh rate: ", info_value[r][2]);
+											}
+											continue
+										}
+										let option_el = document.createElement("option");
+										option_el.value = option_el.innerText = info_value[r][0] + 'x' + info_value[r][1]; // + '_' + resolution_parts[r];
+										//console.log(body.display2_width, " =?= ", info_value[r][0], "   &   ", body.display2_height, " =?= ", info_value[r][1]);
+										
+										if(body.display2_width == info_value[r][0] && body.display2_height == info_value[r][1]){
+											//console.log("at the current resolution");
+											option_el.selected = true;
+										}
+										
+										added_resolutions++; 
+										select_el.appendChild(option_el);
+										//let option_text = resolution_parts[r] + 'x' + resolution_parts[r + 1];// + ', ' + resolution_parts[r+2] +'Hz';
+
+									}
+									if(added_resolutions > 1){
+										document.getElementById('extension-power-settings-display2-resolution-container').innerHTML = '';
+										
+										select_container_el.appendChild(select_el);
+										
+										document.getElementById('extension-power-settings-display2-resolution-container').appendChild(select_container_el);
+									}
+								}
+								catch(err){
+									console.error("power settings: caught error parsing edid resolutions: ", err);
 								}
 								
-								info_el.appendChild(info_value_el);
 								
-								info_container_el.appendChild(info_el);
+								for (var r = 0; r < info_value.length; r++) {
+									info_value_el.innerHTML += '<span>' + info_value[r] + '</span><br/>';
+								}
 								
-							
+								//info_el.appendChild(info_value_el);
+						
+								//info_container_el.appendChild(info_el);
+								
 								
 							}
-							document.getElementById('extension-power-settings-display2-details').appendChild(info_container_el);
+							else{
+								info_value_el.innerText = info_value;
+							}
+							
+							info_el.appendChild(info_value_el);
+							
+							info_container_el.appendChild(info_el);
+							
+						
+							
 						}
-						catch(e){
-							console.error("power settings: caught error attempting to parse display EDID data: ", e);
-						}
+						document.getElementById('extension-power-settings-display2-details').appendChild(info_container_el);
 					}
-					else{
-						document.getElementById('extension-power-settings-display2-details').innerHTML = '<p>No details available</p>';
+					catch(e){
+						console.error("power settings: caught error attempting to parse display EDID data: ", e);
 					}
 				}
-				
-				// fallback in case there was an issue with getting display details
-				if(typeof body.has_a_display == 'boolean'){
-					if(body.has_a_display == true){
-						document.getElementById('extension-power-settings-no-display').classList.add('extension-power-settings-hidden');
-						if(got_display_details == false && document.getElementById('extension-power-settings-display1-details').innerHTML == ''){
-							document.getElementById('extension-power-settings-display1-details').innerHTML = '<p>A display is connected, but no details are available</p>';
-						}
+				else{
+					document.getElementById('extension-power-settings-display2-details').innerHTML = '<p>No details available</p>';
+				}
+			}
+			
+			// fallback in case there was an issue with getting display details
+			if(typeof body.has_a_display == 'boolean'){
+				if(body.has_a_display == true){
+					document.getElementById('extension-power-settings-no-display').classList.add('extension-power-settings-hidden');
+					if(got_display_details == false && document.getElementById('extension-power-settings-display1-details').innerHTML == ''){
+						document.getElementById('extension-power-settings-display1-details').innerHTML = '<p>A display is connected, but no details are available</p>';
 					}
 				}
-				
-				if(typeof body.mouse_pointer_enabled == 'boolean'){
-					this.mouse_pointer_enabled = body.mouse_pointer_enabled;
-					const mouse_pointer_checkbox_el = document.getElementById('extension-power-settings-show-mouse-pointer');
-					if(mouse_pointer_checkbox_el){
-						mouse_pointer_checkbox_el.checked = this.mouse_pointer_enabled;
-						document.getElementById('extension-power-settings-mouse-pointer').classList.remove('extension-power-settings-hidden');
-					}
+			}
+			
+			if(typeof body.mouse_pointer_enabled == 'boolean'){
+				this.mouse_pointer_enabled = body.mouse_pointer_enabled;
+				const mouse_pointer_checkbox_el = document.getElementById('extension-power-settings-show-mouse-pointer');
+				if(mouse_pointer_checkbox_el){
+					mouse_pointer_checkbox_el.checked = this.mouse_pointer_enabled;
+					document.getElementById('extension-power-settings-mouse-pointer').classList.remove('extension-power-settings-hidden');
 				}
-				
-				
-            }).catch((err) => {
-                console.error("power settings: caught error sending get_display_info command: ", err);
-            });
+			}
 		}
-		
-		
 		
 		set_display_resolution(port,resolution){
 			//console.log("power settings: in set_display_resolution: ", port, resolution);
@@ -6457,6 +6648,394 @@
 		}
         
 		
+		
+		
+		
+		
+		update_available_screensavers_select(){
+			if(this.debug){
+				console.log("power settings: in update_available_screensavers_select");
+			}
+			
+			let screensaver_select_el = document.getElementById('extension-power-settings-screensaver-select');
+			if(screensaver_select_el){
+				let selected_addon_is_still_available = false;
+				screensaver_select_el.innerHTML = '<option value="candle">Candle</option>';
+				if(this.selected_screensaver == 'candle'){
+					screensaver_select_el.value = this.selected_screensaver;
+					selected_addon_is_still_available = true;
+				}
+			
+				
+				const screensaver_addons = ['photo-frame','followers','dashboard'];
+				for(const index in screensaver_addons){
+					if(this.debug){
+						console.log("checking is screensaver_addon has a view element (indicating it's likely enabled): ", index, screensaver_addons[index]);
+					}
+					const screensaver_addon_view_el = document.getElementById('extension-' + screensaver_addons[index] + '-view');
+					if(screensaver_addon_view_el){
+					
+						function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
+					
+						const screensaver_addon_pathname = '/extensions/' + screensaver_addons[index];
+						let screensaver_option_el = document.createElement('option');
+						screensaver_option_el.value = screensaver_addon_pathname;
+						if(screensaver_addons[index] == 'followers'){
+							screensaver_option_el.textContent = 'Variables';
+						}
+						else{
+							screensaver_option_el.textContent = capitalize(screensaver_addons[index]).replaceAll('-',' ');
+						}
+						if(screensaver_addon_pathname == this.selected_screensaver){
+							screensaver_option_el.selected = true;
+							selected_addon_is_still_available = true;
+						}
+						screensaver_select_el.appendChild(screensaver_option_el);
+					}
+				}
+				if(selected_addon_is_still_available == false){
+					if(this.debug){
+						console.warn("power settings debug: update_available_screensavers_select: previously selected screensaver addon doesn't seem to be available anymore: " + this.selected_screensaver + "\nFalling back to basic candle screensaver.");
+					}
+					screensaver_select_el.value = 'candle';
+					this.selected_screensaver = 'candle'
+				}
+			}
+		}
+		
+		
+		
+		prepare_screensaver(){
+			let screensaver_el = document.getElementById('extension-power-settings-screensaver-overlay');
+			if(!screensaver_el){
+   				screensaver_el = document.createElement('div');
+   				screensaver_el.setAttribute('id','extension-power-settings-screensaver-overlay');
+   				screensaver_el.innerHTML = '<img id="extension-power-settings-screensaver-logo" alt="logo" src="/images/webthings-gateway-lockup.svg" width="190" height="45">';
+				screensaver_el.addEventListener('click',() => {
+					document.body.classList.remove('screensaver');
+					document.body.classList.remove('extension-power-settings-candle-screensaver');
+				});
+				if(this.debug){
+					console.log("power settings debug: adding Candle screensaver element to document.body");
+				}
+   				document.body.appendChild(screensaver_el);
+			}
+			this.start_screensaver_listeners();
+		}
+
+
+		do_screensaver_interval(){
+			this.screensaver_interval_busy = true;
+            const current_time = new Date().getTime();
+			if(this.page_visible == false){ // || window.location.pathname == this.selected_screensaver){
+				window.last_activity_time = current_time;
+			}
+            const delta = current_time - window.last_activity_time;
+            if(this.debug){
+				console.log('power settings debug: do_screensaver_interval: screensaver delta: ', Math.round(delta / 1000) + 's');
+			}
+            if (delta > this.screensaver_delay * 1000) {
+                if (this.showing_screensaver == false) {
+					
+					let screensaver_allowed_check = localStorage.getItem('candle_screensaver_enabled');
+					if(typeof screensaver_allowed_check == 'string' && screensaver_allowed_check == 'true'){
+						this.screensaver_allowed_in_this_browser = true;
+					}
+					else{
+						this.screensaver_allowed_in_this_browser = false;
+					}
+					
+					if(this.screensaver_allowed_in_this_browser || this.screensaver_allowed_in_this_browser_once){
+						if(this.debug){
+							console.log("power settings debug: STARTING SCREENSAVER");
+							console.log("this.selected_screensaver: ", this.selected_screensaver);
+						}
+						
+	                    this.screensaver_ignore_click = true;
+	                    window.setTimeout(() => {
+	                        this.screensaver_ignore_click = false; // ignore the click on the Photo Frame menu button, as that would immediately cancel the screensaver..
+	                    },10);
+	                    //console.log('should start screensaver');
+						if(this.selected_screensaver == window.location.pathname){
+							this.remembered_screensaver_path = '';
+						}
+						else{
+							this.remembered_screensaver_path = window.location.pathname; // the path to return to when the screensaver ends
+						}
+	                    
+	                	console.log("remembered path: ", this.remembered_screensaver_path);
+	                    this.showing_screensaver = true;
+	                    document.body.classList.add('screensaver');
+						
+						if(this.selected_screensaver.startsWith('/extensions/')){
+							let selected_screensaver_addon_id = this.selected_screensaver.replace('/extensions/','');
+							console.log("selected_screensaver_addon_id: ", selected_screensaver_addon_id);
+							let selected_screensaver_menu_button_el = document.querySelector('#extension-' + selected_screensaver_addon_id + '-menu-item');
+							if(selected_screensaver_menu_button_el){
+								selected_screensaver_menu_button_el.click();
+							}
+							else{
+								console.warn("falling back to basic candle screensaver");
+								this.selected_screensaver = 'candle'; // fall back to using the basic Candle screensaver
+							}
+						}
+						if(this.selected_screensaver == 'candle'){
+							document.body.classList.add('extension-power-settings-candle-screensaver');
+						}
+						/*
+	                    if (this.remembered_screensaver_path != '/extensions/photo-frame') {
+	                        const photo_frame_menu_button = document.getElementById("extension-photo-frame-menu-item");
+	                        if (photo_frame_menu_button != null) {
+	                            photo_frame_menu_button.click();
+	                        }
+	                    }
+						*/
+					}
+					
+                }
+            } 
+			else {
+                if (this.showing_screensaver == true) {
+					if(this.debug){
+						console.log("power settings debug: STOPPING SCREENSAVER");
+					}
+					try{
+						this.screensaver_allowed_in_this_browser_once = false;
+						document.body.classList.remove('extension-power-settings-candle-screensaver');
+						
+						if(this.selected_screensaver != 'candle'){
+							let current_short_path = window.location.pathname;
+		                    if (current_short_path.startsWith('/extensions/')) {
+		                        current_short_path = current_short_path.split('/')[2];
+		                    } else {
+		                        current_short_path = current_short_path.split('/')[1];
+		                    }
+						
+						
+		                    let destination_short_path = current_short_path;
+							// this.remembered_screensaver_path contains the location right before the screensaver started.
+		                    if (this.remembered_screensaver_path.startsWith('/extensions/')) {
+		                        destination_short_path = this.remembered_screensaver_path.split('/')[2];
+		                    } else {
+		                        destination_short_path = this.remembered_screensaver_path.split('/')[1];
+		                    }
+
+							if(this.debug){
+								console.log("power settings debug: screensaver: current and destination short_path: ", current_short_path, destination_short_path);
+							}
+
+							if(destination_short_path != current_short_path){
+								if(this.debug){
+									console.log("power settings debug: screensaver: destination_short_path to return to: ", destination_short_path);
+								}
+								let menu_item_prefix = '';
+								if (this.remembered_screensaver_path.startsWith('/extensions/')) {
+									menu_item_prefix = 'extension-';
+								}
+								let destination_menu_button_el = document.querySelector('#' + menu_item_prefix + destination_short_path + '-menu-item');
+								if(destination_menu_button_el){
+									destination_menu_button_el.click();
+								}
+								else{
+									if (this.debug) {
+		                                console.error('power settings debug: screensaver could not restore the original page. could not find menu item with ID: ', menu_item_prefix + destination_short_path + '-menu-item');
+		                            }
+								}
+
+								/*
+		                        var spotted_in_menu = false;
+		                        const addon_name_css = destination_short_path.replace(/_/g, "-");
+		                        //console.log(addon_name_css);
+		                        const menu_elements = document.querySelectorAll('#main-menu > ul > li > a');
+		                        var id_to_click_on = "things-menu-item";
+		                        menu_elements.forEach(element => {
+		                            var link_id = element.getAttribute('id');
+									if(typeof link_id != 'string'){
+										return
+									}
+		                            var short_link_id = link_id.replace("-menu-item", "");
+		                            short_link_id = short_link_id.replace("extension-", "");
+		                            //short_link_id = link_id.replace("extension-", "");
+		                            //if(short_link_id.endsWith(addon_name_css)){
+		                            //console.log(" --> ", short_link_id);
+		                            if (short_link_id == addon_name_css) {
+		                                spotted_in_menu = true;
+		                                id_to_click_on = link_id;
+		                            }
+		                        });
+
+		                        if (spotted_in_menu == false) {
+		                            if (this.debug) {
+		                                console.log('power settings debug: screensaver could not restore the page. addon_name_css: ', addon_name_css);
+		                            }
+		                            //window.location.pathname = this.remembered_screensaver_path;
+		                        } 
+								else {
+		                            if (this.debug) {
+		                                console.log('power settings debug: Restoring page that was visible before the screensaver started: ', addon_name_css);
+		                            }
+		                            const menu_link = document.getElementById(id_to_click_on);
+		                            menu_link.click(); //dispatchEvent('click');
+		                        }
+								*/
+							}
+						}
+						
+					}
+					catch(err){
+						console.error("power settings debug: caught error stopping screensaver: ", err);
+					}
+                    
+					
+					document.body.classList.remove('screensaver');
+                    document.getElementById('menu-button').classList.remove('hidden'); // ensure that the menu button is no longer hidden
+                    
+                }
+                this.showing_screensaver = false;
+            }
+			
+			
+
+            if (delta < 1500) {
+                if (document.body.classList.contains('developer')) {
+                    const indicator = document.getElementById("extension-power-settings-screensaver-indicator");
+                    if (indicator != null) {
+                        indicator.parentNode.removeChild(indicator);
+                    }
+                    let indicator_element = document.createElement("div");
+                    indicator_element.setAttribute('id', 'extension-power-settings-screensaver-indicator');
+					indicator_element.style['animation-duration'] = this.screensaver_delay + 's';
+                    document.body.append(indicator_element);
+					
+					const screensaver_button_indicator = document.getElementById("extension-power-settings-start-screensaver-countdown-indicator");
+					if(screensaver_button_indicator != null){
+						//console.log("screensaver_button_indicator: ", screensaver_button_indicator);
+						screensaver_button_indicator.classList.remove('extension-power-settings-screensaver-indicator');
+						setTimeout(() => {
+							screensaver_button_indicator.style['animation-duration'] = this.screensaver_delay + 's';
+							screensaver_button_indicator.classList.add('extension-power-settings-screensaver-indicator');
+						},1);
+					}
+					
+                }
+            }
+			this.screensaver_interval_busy = false;
+		}
+		
+		
+		
+        //
+        //  SCREENSAVER LISTENERS
+        //
+
+		// If another view was active, the screensaver will try to jump back to that view if mouse activity is detected
+
+        start_screensaver_listeners() {
+			if(this.screensaver_listeners_added){
+				if(this.debug){
+					console.error("photo frame debug: start_screensaver_listeners was called again, but has already run");
+				}
+				return
+			}
+			this.screensaver_listeners_added = true;
+			if(this.screensaver_interval){
+				clearInterval(this.screensaver_interval);
+			}
+			
+			this.screensaver_interval = setInterval(() => {
+				
+				const screensaver_allowed_check = localStorage.getItem('candle_screensaver_enabled');
+				if(typeof screensaver_allowed_check == 'string'){
+					if(screensaver_allowed_check == 'true'){
+						this.screensaver_allowed_in_this_browser = true;
+					}
+					else{
+						this.screensaver_allowed_in_this_browser = false;
+					}
+				}else{
+					this.screensaver_allowed_in_this_browser = false;
+				}
+				
+				if(this.showing_screensaver && this.screensaver_allowed_in_this_browser == false && this.screensaver_allowed_in_this_browser_once == false){
+					window.last_activity_time = new Date().getTime();
+				}
+				
+			},1000);
+			
+			if(this.debug){
+				console.error("power settings debug: adding screensaver listeners");
+			}
+			
+            //this.screensaver_interval = setInterval(myCallback, 500);
+			/*
+            this.screensaver_interval = setInterval(() => {
+
+				if(this.screensaver_interval_busy == false){
+					this.do_screensaver_interval();
+				}
+				else if(this.debug){
+					console.warn("photo frame debug: screensaver_interval was still busy, skipping calling it again");
+					this.screensaver_interval_busy = false; // but only skipping it once
+				}
+            }, 1000);
+			*/
+
+
+            //console.log('starting activity timeout check for screensaver. Delay seconds: ', this.screensaver_delay);
+
+            // Mouse
+            window.addEventListener('mousemove', () => {
+                if (!this.screensaver_ignore_click) {
+					window.last_activity_time = new Date().getTime();
+				}
+            }, {
+                passive: true
+            });
+            window.addEventListener('mousedown', () => {
+				if (!this.screensaver_ignore_click) {
+                	window.last_activity_time = new Date().getTime();
+				}
+            }, {
+                passive: true
+            });
+            window.addEventListener('click', () => {
+                if (this.screensaver_ignore_click) {
+                    if(this.debug){
+						console.log('ignoring click');
+                    }
+                } else {
+                    window.last_activity_time = new Date().getTime();
+                }
+            }, {
+                passive: true
+            });
+
+            // Touch
+            window.addEventListener('touchstart', () => {
+                if (!this.screensaver_ignore_click) {
+					window.last_activity_time = new Date().getTime();
+				}
+            }, {
+                passive: true
+            });
+            window.addEventListener('touchmove', () => {
+                if (!this.screensaver_ignore_click) {
+					window.last_activity_time = new Date().getTime();
+				}
+            }, {
+                passive: true
+            });
+
+            // Scroll
+            window.addEventListener('scroll', () => {
+                if (!this.screensaver_ignore_click) {
+					window.last_activity_time = new Date().getTime();
+				}
+            }, true);
+
+        }
+		
+
 		
 		flash_message(message){
 			if(typeof message == 'string' && message.length){

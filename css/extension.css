@@ -165,9 +165,6 @@ body:not(.kiosk):not(.http).https .extension-power-settings-hide-if-https{
 	display: inline-block;
 }
 
-#extension-power-settings-content input:invalid{
-	/*border:2px solid red;*/
-}
 
 .extension-power-settings-container{
     color:white;
@@ -226,11 +223,6 @@ body:not(.kiosk):not(.http).https .extension-power-settings-hide-if-https{
 #extension-power-settings-update-progress-container{
     text-align:center;
     margin-top:6rem;
-}
-
-
-#extension-power-settings-update-process-progress-bar-container{
-    
 }
 
 
@@ -1324,6 +1316,89 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 }
 
 
+/*  SCREENSAVER  */
+
+#extension-power-settings-screensaver-settings > div{
+	min-height: 4rem;
+}
+
+#extension-power-settings-screensaver-select{
+	margin-right:.5rem;
+}
+
+#extension-power-settings-screensaver-delay{
+	width:6rem;
+}
+#extension-power-settings-screensaver-delay-multiplier{
+	width:12rem;
+	margin-right:.5rem;
+}
+
+#extension-power-settings-screensaver-settings > p{
+	font-style:italic;
+	opacity:.7;
+}
+
+#extension-power-settings-screensaver-test-button{
+	display:block;
+	margin-left:auto;
+	margin-top:2rem;
+}
+
+#extension-power-settings-screensaver-overlay {
+  display:none;
+  background: #000;
+  position: absolute;
+  top:0;
+  left:0;
+  width:100vw;
+  height:100vh;
+}
+
+body.screensaver.extension-power-settings-candle-screensaver #extension-power-settings-screensaver-overlay{
+	display:block;
+	z-index: 100;
+}
+
+#extension-power-settings-screensaver-logo {
+  display: block;
+  position: absolute;
+  width:90px;
+  height:45px;
+  -webkit-animation: moveX 10s linear 0s infinite alternate, moveY 12.6s linear 0s infinite alternate;
+  -moz-animation: moveX 10s linear 0s infinite alternate, moveY 12.6s linear 0s infinite alternate;
+  -o-animation: moveX 10s linear 0s infinite alternate, moveY 12.6s linear 0s infinite alternate;
+  animation: moveX 10s linear 0s infinite alternate, moveY 12.6s linear 0s infinite alternate ;
+}
+
+
+@-webkit-keyframes moveX {
+  from { left: 0; } to { left: calc(100% - 90px); }
+}
+@-moz-keyframes moveX {
+  from { left: 0; } to { left: calc(100% - 90px); }
+}
+@-o-keyframes moveX {
+  from { left: 0; } to { left: calc(100% - 90px); }
+}
+@keyframes moveX {
+  from { left: 0; } to { left: calc(100% - 90px); }
+}
+@-webkit-keyframes moveY {
+  from { top: calc(100% - 45px); } to { top: 0; }
+}
+@-moz-keyframes moveY {
+  from { top: calc(100% - 45px); } to { top: 0; }
+}
+@-o-keyframes moveY {
+  from { top: calc(100% - 45px); } to { top: 0; }
+}
+@keyframes moveY {
+  from { top: calc(100% - 45px); } to { top: 0; }
+}
+
+
+
 
 
 
@@ -1513,6 +1588,7 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 
 .extension-power-settings-audio-item-volume-slider-container input[type="range"]{
 	background-color: #ddd;
+	appearance: none;
 	-webkit-appearance: none;
 	height:1.5rem;
 }

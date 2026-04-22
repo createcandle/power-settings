@@ -296,6 +296,33 @@
 			<div id="extension-power-settings-show-mouse-pointer-hint" class="extension-power-settings-hidden"><p>Please reboot the controller to finish applying this setting.</p></div>
 		</div>
 		
+        <div id="extension-power-settings-screensaver-settings" class="extension-power-settings-area">
+			
+			<div class="extension-power-settings-form-content">
+				<input type="checkbox" name="extension-power-settings-enable-screensaver-checkbox" id="extension-power-settings-enable-screensaver-checkbox">
+				<label for="extension-power-settings-enable-screensaver-checkbox">Enable screensaver</label>
+			</div>
+
+            <div class="extension-power-settings-form-content extension-power-settings-flex-space-between extension-power-settings-flex-align-center">
+				<label for="extension-power-settings-screensaver-select">Screensaver</label>
+				<select id="extension-power-settings-screensaver-select" class="localization-select"><option value="candle">Candle</option></select>
+			</div>
+			
+			<div id="extension-power-settings-screensaver-delay-container" class="extension-power-settings-form-content extension-power-settings-flex-space-between extension-power-settings-flex-align-center">
+				<label for="extension-power-settings-screensaver-delay">Delay</label>
+				<span>
+					<input type="number" name="extension-power-settings-screensaver-delay" id="extension-power-settings-screensaver-delay" value="60"><select id="extension-power-settings-screensaver-delay-multiplier" class="localization-select"><option value="1" selected>seconds</option><option value="60">minutes</option></select>
+				</span>
+			</div>
+			
+			<p>These settings only apply to your current browser</p>
+
+            <div class="extension-power-settings-form-content">
+				<button id="extension-power-settings-screensaver-test-button" class="text-button">Test</button>
+			</div>
+
+		</div>
+		
     </div>
 
 
