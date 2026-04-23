@@ -348,7 +348,9 @@
 		                    ).then((body) => {
 		                        this.busy_sending_kiosk_ping = false;
 		                    }).catch((err) => {
-		                       console.error("power settings: caught error doing kiosk_ping: ", err);
+		                       if(this.debug){
+								   console.error("power settings debug: caught error doing kiosk_ping: ", err);
+							   }
 							   this.busy_sending_kiosk_ping = false;
 		                    });
 						}
@@ -358,10 +360,10 @@
 				// checks if the value has been changed in a sibling browser window and updates the UI to match
 				if(window.location.pathname == '/settings'){
 					const screensaver_allowed_check = localStorage.getItem('candle_screensaver_enabled');
-					console.log("screensaver_allowed_check: ", screensaver_allowed_check);
+					//console.log("screensaver_allowed_check: ", screensaver_allowed_check);
 					if(typeof screensaver_allowed_check == 'string'){
 						if(screensaver_allowed_check == 'true' && this.screensaver_allowed_in_this_browser != true){
-							console.log("screensaver_allowed_check: ", screensaver_allowed_check);
+							//console.log("screensaver_allowed_check: ", screensaver_allowed_check);
 							const screensaver_enabled_checkbox_el = document.getElementById('extension-power-settings-enable-screensaver-checkbox');
 							if(screensaver_enabled_checkbox_el){
 								screensaver_enabled_checkbox_el.checked = true;
@@ -369,7 +371,7 @@
 							this.screensaver_allowed_in_this_browser = true;
 						}
 						else if(screensaver_allowed_check == 'false' && this.screensaver_allowed_in_this_browser != false){
-							console.log("screensaver_allowed_check: ", screensaver_allowed_check);
+							//console.log("screensaver_allowed_check: ", screensaver_allowed_check);
 							const screensaver_enabled_checkbox_el = document.getElementById('extension-power-settings-enable-screensaver-checkbox');
 							if(screensaver_enabled_checkbox_el){
 								screensaver_enabled_checkbox_el.checked = false;
@@ -398,19 +400,16 @@
 				if(localstorage_hostname_data && typeof localstorage_hostname_data == 'string'){
 					localstorage_hostname_data = JSON.parse(localstorage_hostname_data);
 					if(this.debug){
-						console.log("parsed localstorage_hostname_data: ", localstorage_hostname_data);
+						console.log("power settings debug: hostname_change_check: parsed localstorage_hostname_data: ", localstorage_hostname_data);
 					}
 					if(typeof localstorage_hostname_data['change_timestamp'] == 'number' && localstorage_hostname_data['change_timestamp'] < Date.now() - (38400 * 1000)){
 						localStorage.removeItem("extension_power_settings_hostname");
 					}
 					if(typeof localstorage_hostname_data['hostname'] == 'string' && localstorage_hostname_data['hostname'] != window.location.hostname){
 						if(this.debug){
-							console.log("detected a hostname mismatch between the current URL and the data in localstorage: ", window.location.hostname, localstorage_hostname_data['hostname']);
+							console.log("power settings debug: hostname_change_check:detected a hostname mismatch between the current URL and the data in localstorage: ", window.location.hostname, localstorage_hostname_data['hostname']);
 						}
 						let hostname_changed_warning_el = document.getElementById('extension-power-settings-hostname-changed-warning');
-						if(this.debug){
-							console.log("hostname_changed_warning_el: ", hostname_changed_warning_el);
-						}
 						if(!hostname_changed_warning_el){
 							const new_hostname_changed_warning_el = document.createElement('div');
 							new_hostname_changed_warning_el.setAttribute('id','extension-power-settings-hostname-changed-warning');
@@ -435,7 +434,6 @@
 							
 							
 							new_hostname_changed_warning_el.appendChild(hostname_changed_warning_inner_el);
-							
 							
 							document.body.appendChild(new_hostname_changed_warning_el);
 						}
@@ -542,7 +540,7 @@
                 */
                 window.API.logout()
                 .then((body) => {
-                    console.log("power settings: log out done");
+                    //console.log("power settings: log out done");
                     window.location.reload(true);
                 }).catch((e) => {
           			console.log("Error saving token: ", e);
@@ -595,7 +593,7 @@
             
 			if(close_browser){
 	            close_browser.addEventListener('click', () => {
-					console.log("power settings: closing browser");
+					//console.log("power settings: closing browser");
 	                window.API.postJson(
 	                    `/extensions/${this.id}/api/close_browser`, {}
 	                )
@@ -720,8 +718,10 @@
                         if(this.debug){
                             console.log("power settings debug: unlink_backup_download_dir response: ", body);
                         }
-                    }).catch((e) => {
-                       console.error("Error: unlink_backup_download_dir connection failed: ", e);
+                    }).catch((err) => {
+						if(this.debug){
+							console.error("power settings debug: caught error: unlink_backup_download_dir connection failed: ", err);
+						}
                     });
                     
                 });
