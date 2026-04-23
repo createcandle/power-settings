@@ -126,6 +126,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         self.pipewire_data = {'sinks':{},'sources':{},'default_audio_sink_name':None,'default_audio_sink_nice_name':None,'default_audio_sink_id':None,'default_audio_source_name':None,'default_audio_source_nice_name':None,'default_audio_source_id':None}
         self.pipewire_enabled = False
+        self.busy_testing_microphone = False
 
         self.just_updated_via_recovery = False
         self.update_via_recovery_aborted = False
@@ -2078,6 +2079,22 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content_type='application/json',
                                   content=json.dumps({'state':state}),
                                 )
+                                
+                                
+                            # Test microphone
+                            elif action == 'test_microphone':
+                                state = False
+                                try:
+                                    state = self.test_microphone()
+                                except Exception as ex:
+                                    print("Caught error doing microphone test: ", ex)
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
+                                
                                 
                             # Reinstall candle app store from Github
                             elif action == 'reinstall_app_store':
@@ -4407,38 +4424,7 @@ class PowerSettingsAPIHandler(APIHandler):
         return False
         
         
-    def test_speakers(self):
-        if self.DEBUG:
-            print("In test_speakers")
-            print("pw-dump: ", str(run_command('strace -e connect pw-dump >/dev/null ')))
-        # strace -e connect pw-dump >/dev/null    
-        # printenv | grep -E 'PULSE|DBUS'
-        
-        if self.pipewire_enabled and os.path.isfile(str(self.audio_test1_path)):
-            if self.audio_test_index == 0:
-                run_command('speaker-test -c1 -twav -l1')
-                self.audio_test_index += 1
-            elif self.audio_test_index == 1:
-                run_command('pw-play ' + str(self.audio_test1_path))
-                self.audio_test_index += 1
-            elif self.audio_test_index == 2:
-                run_command('pw-play ' + str(self.audio_test2_path))
-                self.audio_test_index = 0
-            
-            #if self.DEBUG:
-            #if self.DEBUG and os.path.isfile(str(self.audio_test2_path)):
-            #    time.sleep(1)
-            #    print("playing test2.wav")
-            #    os.system('dbus-run-session pw-play ' + str(self.audio_test2_path))
-        else:
-            run_command('speaker-test -c1 -twav -l1')
-        #time.sleep(1)
-        #run_command('sudo speaker-test -c1 -twav -l1')
-        #time.sleep(1)
-        #os.system('speaker-test -c2 -twav -l1')
-        #os.system('speaker-test -c4 -twav -l1')
-        #os.system('speaker-test -t sine -c 2 --nloops 1')
-        return True
+
         
         
         
@@ -4550,8 +4536,61 @@ class PowerSettingsAPIHandler(APIHandler):
         return self.pipewire_data
                     
                     
-
+    def test_speakers(self):
+        if self.DEBUG:
+            print("In test_speakers")
+            print("pw-dump: ", str(run_command('strace -e connect pw-dump >/dev/null ')))
+        # strace -e connect pw-dump >/dev/null    
+        # printenv | grep -E 'PULSE|DBUS'
+        self.send_pairing_prompt("Playing test audio now")
+        if self.pipewire_enabled and os.path.isfile(str(self.audio_test1_path)):
+            if self.audio_test_index == 0:
+                run_command('speaker-test -c1 -twav -l1')
+                self.audio_test_index += 1
+            elif self.audio_test_index == 1:
+                run_command('pw-play ' + str(self.audio_test1_path))
+                self.audio_test_index += 1
+            elif self.audio_test_index == 2:
+                run_command('pw-play ' + str(self.audio_test2_path))
+                self.audio_test_index = 0
+            
+            #if self.DEBUG:
+            #if self.DEBUG and os.path.isfile(str(self.audio_test2_path)):
+            #    time.sleep(1)
+            #    print("playing test2.wav")
+            #    os.system('dbus-run-session pw-play ' + str(self.audio_test2_path))
+        else:
+            run_command('speaker-test -c1 -twav -l1')
+        #time.sleep(1)
+        #run_command('sudo speaker-test -c1 -twav -l1')
+        #time.sleep(1)
+        #os.system('speaker-test -c2 -twav -l1')
+        #os.system('speaker-test -c4 -twav -l1')
+        #os.system('speaker-test -t sine -c 2 --nloops 1')
+        self.send_pairing_prompt("Did you hear audio?")
+        return True
         
+        
+    def test_microphone(self):
+        if self.DEBUG:
+            print("In test_speakers")
+        if self.busy_testing_microphone == True:
+            self.send_pairing_prompt("Already testing microphone")
+            return False
+        if os.path.isfile('/tmp/test.wav'):
+            os.system('rm /tmp/test.wav')
+        self.busy_testing_microphone = True
+        self.send_pairing_prompt("Recording 5 seconds...")
+        os.system('timeout 5s pw-cat -r /tmp/test.wav')
+        self.send_pairing_prompt("Playing the recording...")
+        os.system('pw-play /tmp/test.wav')
+        self.send_pairing_prompt("Did you hear the recording?")
+        os.system('rm /tmp/test.wav')
+        self.busy_testing_microphone = False
+        return True
+    
+    
+
     # Not currently used
     def update_config_txt(self):
         if self.DEBUG:

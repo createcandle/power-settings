@@ -12,6 +12,11 @@
 	align-items:center;
 }
 
+.extension-power-settings-flex-between{
+	display:flex;
+	justify-content:space-between;
+}
+
 .extension-power-settings-flex-justify-end{
 	justify-content:flex-end;
 }
@@ -927,7 +932,6 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-button{
     display:block;
 }
 
-
 .extension-power-settings-form-system-update,
 .extension-power-settings-align-right{
     text-align:right;
@@ -1609,6 +1613,13 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
    transform: rotate(90deg);
 }
 
+/*
+#extension-power-settings-test-microphone-button{
+	display:block;
+	margin:2rem 0 2rem auto;
+}
+*/
+
 
 /*  Respeaker*/
 
@@ -1650,6 +1661,14 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 	display:block;
 	margin-right:auto;
 }
+
+
+
+
+
+
+
+
 
 /*  WIFI settings  */
 

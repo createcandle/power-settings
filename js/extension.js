@@ -1254,7 +1254,7 @@
                         if(this.debug){
                             console.log("power settings: speaker test complete: ", body);
                         }
-						this.flash_message("Testing speaker now");
+						//this.flash_message("Testing speaker now");
 						document.getElementById('extension-power-settings-test-speakers-button').removeAttribute("disabled");
                     }).catch((err) => {
                        if(this.debug){
@@ -1264,6 +1264,38 @@
 					   this.flash_message("Could not connect to controller to perform speaker test");
                     });
                 });
+				
+				
+                document.getElementById('extension-power-settings-test-microphone-button').addEventListener('click', () => {
+	                if(this.debug){
+	                    console.log("power settings debug: clicked on test microphone button");
+					}
+					
+                    document.getElementById('extension-power-settings-test-microphone-button').setAttribute("disabled", true); //.classList.add('extension-power-settings-hidden');
+                    /*
+					setTimeout(() => {
+                    	document.getElementById('extension-power-settings-test-microphone-button').removeAttribute("disabled"); //.classList.remove('extension-power-settings-hidden');
+                    },5000);
+					*/
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'test_microphone'
+                        }
+                    ).then((body) => {
+                        if(this.debug){
+                            console.log("power settings: microphone test complete: ", body);
+                        }
+						//this.flash_message("Testing speaker now");
+						document.getElementById('extension-power-settings-test-microphone-button').removeAttribute("disabled");
+                    }).catch((err) => {
+                       if(this.debug){
+						   console.error("Error: microphone test connection failed: ", err);
+					   }
+					   document.getElementById('extension-power-settings-test-microphone-button').removeAttribute("disabled");
+					   this.flash_message("Could not connect to controller to perform microphone test");
+                    });
+                });
+				
 				
 				
 				
@@ -6748,7 +6780,7 @@
 					if(this.screensaver_allowed_in_this_browser || this.screensaver_allowed_in_this_browser_once){
 						if(this.debug){
 							console.log("power settings debug: STARTING SCREENSAVER");
-							console.log("this.selected_screensaver: ", this.selected_screensaver);
+							console.log("power settings debug: this.selected_screensaver: ", this.selected_screensaver);
 						}
 						
 	                    this.screensaver_ignore_click = true;
@@ -6763,19 +6795,25 @@
 							this.remembered_screensaver_path = window.location.pathname; // the path to return to when the screensaver ends
 						}
 	                    
-	                	console.log("remembered path: ", this.remembered_screensaver_path);
+	                	if(this.debug){
+							console.log("power settings debug: screensaver: remembered path: ", this.remembered_screensaver_path);
+						}
 	                    this.showing_screensaver = true;
 	                    document.body.classList.add('screensaver');
 						
 						if(this.selected_screensaver.startsWith('/extensions/')){
 							let selected_screensaver_addon_id = this.selected_screensaver.replace('/extensions/','');
-							console.log("selected_screensaver_addon_id: ", selected_screensaver_addon_id);
+							if(this.debug){
+								console.log("power settings debug: selected_screensaver_addon_id: ", selected_screensaver_addon_id);
+							}
 							let selected_screensaver_menu_button_el = document.querySelector('#extension-' + selected_screensaver_addon_id + '-menu-item');
 							if(selected_screensaver_menu_button_el){
 								selected_screensaver_menu_button_el.click();
 							}
 							else{
-								console.warn("falling back to basic candle screensaver");
+								if(this.debug){
+									console.warn("power settings debug: falling back to basic candle screensaver");
+								}
 								this.selected_screensaver = 'candle'; // fall back to using the basic Candle screensaver
 							}
 						}
@@ -6814,71 +6852,78 @@
 						
 		                    let destination_short_path = current_short_path;
 							// this.remembered_screensaver_path contains the location right before the screensaver started.
-		                    if (this.remembered_screensaver_path.startsWith('/extensions/')) {
-		                        destination_short_path = this.remembered_screensaver_path.split('/')[2];
-		                    } else {
-		                        destination_short_path = this.remembered_screensaver_path.split('/')[1];
-		                    }
-
-							if(this.debug){
-								console.log("power settings debug: screensaver: current and destination short_path: ", current_short_path, destination_short_path);
-							}
-
-							if(destination_short_path != current_short_path){
-								if(this.debug){
-									console.log("power settings debug: screensaver: destination_short_path to return to: ", destination_short_path);
-								}
-								let menu_item_prefix = '';
+		                    if(typeof this.remembered_screensaver_path == 'string'){
 								if (this.remembered_screensaver_path.startsWith('/extensions/')) {
-									menu_item_prefix = 'extension-';
-								}
-								let destination_menu_button_el = document.querySelector('#' + menu_item_prefix + destination_short_path + '-menu-item');
-								if(destination_menu_button_el){
-									destination_menu_button_el.click();
-								}
-								else{
-									if (this.debug) {
-		                                console.error('power settings debug: screensaver could not restore the original page. could not find menu item with ID: ', menu_item_prefix + destination_short_path + '-menu-item');
-		                            }
+			                        destination_short_path = this.remembered_screensaver_path.split('/')[2];
+			                    } else {
+			                        destination_short_path = this.remembered_screensaver_path.split('/')[1];
+			                    }
+								
+								
+								
+								if(this.debug){
+									console.log("power settings debug: screensaver: current and destination short_path: ", current_short_path, destination_short_path);
 								}
 
-								/*
-		                        var spotted_in_menu = false;
-		                        const addon_name_css = destination_short_path.replace(/_/g, "-");
-		                        //console.log(addon_name_css);
-		                        const menu_elements = document.querySelectorAll('#main-menu > ul > li > a');
-		                        var id_to_click_on = "things-menu-item";
-		                        menu_elements.forEach(element => {
-		                            var link_id = element.getAttribute('id');
-									if(typeof link_id != 'string'){
-										return
+								if(destination_short_path != current_short_path){
+									if(this.debug){
+										console.log("power settings debug: screensaver: destination_short_path to return to: ", destination_short_path);
 									}
-		                            var short_link_id = link_id.replace("-menu-item", "");
-		                            short_link_id = short_link_id.replace("extension-", "");
-		                            //short_link_id = link_id.replace("extension-", "");
-		                            //if(short_link_id.endsWith(addon_name_css)){
-		                            //console.log(" --> ", short_link_id);
-		                            if (short_link_id == addon_name_css) {
-		                                spotted_in_menu = true;
-		                                id_to_click_on = link_id;
-		                            }
-		                        });
+									let menu_item_prefix = '';
+									if (this.remembered_screensaver_path.startsWith('/extensions/')) {
+										menu_item_prefix = 'extension-';
+									}
+									let destination_menu_button_el = document.querySelector('#' + menu_item_prefix + destination_short_path + '-menu-item');
+									if(destination_menu_button_el){
+										destination_menu_button_el.click();
+									}
+									else{
+										if (this.debug) {
+			                                console.error('power settings debug: screensaver could not restore the original page. could not find menu item with ID: ', menu_item_prefix + destination_short_path + '-menu-item');
+			                            }
+									}
 
-		                        if (spotted_in_menu == false) {
-		                            if (this.debug) {
-		                                console.log('power settings debug: screensaver could not restore the page. addon_name_css: ', addon_name_css);
-		                            }
-		                            //window.location.pathname = this.remembered_screensaver_path;
-		                        } 
-								else {
-		                            if (this.debug) {
-		                                console.log('power settings debug: Restoring page that was visible before the screensaver started: ', addon_name_css);
-		                            }
-		                            const menu_link = document.getElementById(id_to_click_on);
-		                            menu_link.click(); //dispatchEvent('click');
-		                        }
-								*/
-							}
+									/*
+			                        var spotted_in_menu = false;
+			                        const addon_name_css = destination_short_path.replace(/_/g, "-");
+			                        //console.log(addon_name_css);
+			                        const menu_elements = document.querySelectorAll('#main-menu > ul > li > a');
+			                        var id_to_click_on = "things-menu-item";
+			                        menu_elements.forEach(element => {
+			                            var link_id = element.getAttribute('id');
+										if(typeof link_id != 'string'){
+											return
+										}
+			                            var short_link_id = link_id.replace("-menu-item", "");
+			                            short_link_id = short_link_id.replace("extension-", "");
+			                            //short_link_id = link_id.replace("extension-", "");
+			                            //if(short_link_id.endsWith(addon_name_css)){
+			                            //console.log(" --> ", short_link_id);
+			                            if (short_link_id == addon_name_css) {
+			                                spotted_in_menu = true;
+			                                id_to_click_on = link_id;
+			                            }
+			                        });
+
+			                        if (spotted_in_menu == false) {
+			                            if (this.debug) {
+			                                console.log('power settings debug: screensaver could not restore the page. addon_name_css: ', addon_name_css);
+			                            }
+			                            //window.location.pathname = this.remembered_screensaver_path;
+			                        } 
+									else {
+			                            if (this.debug) {
+			                                console.log('power settings debug: Restoring page that was visible before the screensaver started: ', addon_name_css);
+			                            }
+			                            const menu_link = document.getElementById(id_to_click_on);
+			                            menu_link.click(); //dispatchEvent('click');
+			                        }
+									*/
+								}
+		                    }
+							
+
+							
 						}
 						
 					}
