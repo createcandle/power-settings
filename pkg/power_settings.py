@@ -4581,11 +4581,11 @@ class PowerSettingsAPIHandler(APIHandler):
             os.system('rm /tmp/test.wav')
         self.busy_testing_microphone = True
         self.send_pairing_prompt("Recording 5 seconds...")
-        os.system('timeout 5s pw-cat -r /tmp/test.wav')
+        run_command('timeout 5s pw-cat -r /tmp/test.wav')
         self.send_pairing_prompt("Playing the recording...")
-        os.system('pw-play /tmp/test.wav')
+        run_command('pw-play /tmp/test.wav')
         self.send_pairing_prompt("Did you hear the recording?")
-        os.system('rm /tmp/test.wav')
+        run_command('rm /tmp/test.wav')
         self.busy_testing_microphone = False
         return True
     
