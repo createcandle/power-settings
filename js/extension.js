@@ -58,23 +58,31 @@
 			
 			this.screensaver_enabled = false;
 			let screensaver_enabled_check = localStorage.getItem('candle_screensaver_enabled');
+			
+			if(screensaver_enabled_check == null && this.kiosk){
+				screensaver_enabled_check = 'true';
+				localStorage.setItem('candle_screensaver_enabled', 'true');
+				localStorage.setItem('candle_screensaver_delay', '60');
+				localStorage.setItem('candle_selected_screensaver', 'candle');
+			}
+			
 			//console.log("screensaver_enabled_check: ", screensaver_enabled_check);
 			if(typeof screensaver_enabled_check == 'string' && screensaver_enabled_check == 'true'){
-				console.log("localstorage -> screensaver is enabled");
+				//console.log("localstorage -> screensaver is enabled");
 				this.screensaver_enabled = true;
 			}
 			let selected_screensaver_check = localStorage.getItem('candle_selected_screensaver');
 			//console.log("selected_screensaver_check: ", selected_screensaver_check);
 			if(typeof selected_screensaver_check == 'string' && (selected_screensaver_check == 'candle' || selected_screensaver_check.startsWith('/extensions/'))){
 				this.selected_screensaver = selected_screensaver_check;
-				console.log("localstorage -> selected_screensaver: ", this.selected_screensaver);
+				//console.log("localstorage -> selected_screensaver: ", this.selected_screensaver);
 			}
 			
 			let screensaver_delay_check = localStorage.getItem('candle_screensaver_delay');
 			//console.log("screensaver_delay_check: ", screensaver_delay_check);
 			if(typeof screensaver_delay_check == 'string' && screensaver_delay_check != ''){
 				this.screensaver_delay = parseInt(screensaver_delay_check);
-				console.log("localstorage -> this.screensaver_delay: ", this.screensaver_delay);
+				//console.log("localstorage -> this.screensaver_delay: ", this.screensaver_delay);
 			}
 			if(typeof this.screensaver_delay != 'number'){
 				this.screensaver_delay = 60;
