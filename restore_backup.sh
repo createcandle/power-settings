@@ -67,8 +67,8 @@ else
 
 
     # Download latest list of available addons
-    echo "Downloading get_apps.json"
-    wget https://www.candlesmarthome.com/appstore/get_apps.json -O /tmp/addons.json
+    echo "Downloading get_apps_v3.json"
+    wget https://www.candlesmarthome.com/appstore/get_apps_v3.json -O /tmp/addons.json
 
     # Loop over data dir and compare with addons dir
     if [ -f /tmp/addons.json ]; then
