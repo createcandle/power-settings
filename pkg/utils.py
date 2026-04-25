@@ -28,10 +28,10 @@ def run_command(cmd, timeout_seconds=60):
             #print("WARNING, had to add DBUS_SESSION_BUS_ADDRESS to environment variables")
             #my_env['DBUS_SESSION_BUS_ADDRESS'] = 'unix:path=/run/user/1000/bus' #str(run_command('echo $DBUS_SESSION_BUS_ADDRESS')).strip()
 
-        my_env = os.environ.copy()
-        if not 'DBUS_SESSION_BUS_ADDRESS' in my_env:
+        #my_env = os.environ.copy()
+        #if not 'DBUS_SESSION_BUS_ADDRESS' in my_env:
             #print("WARNING, had to add DBUS_SESSION_BUS_ADDRESS to environment variables")
-            my_env['DBUS_SESSION_BUS_ADDRESS'] = 'unix:path=/run/user/1000/bus' #str(run_command('echo $DBUS_SESSION_BUS_ADDRESS')).strip()
+        #    my_env['DBUS_SESSION_BUS_ADDRESS'] = 'unix:path=/run/user/1000/bus' #str(run_command('echo $DBUS_SESSION_BUS_ADDRESS')).strip()
         if not 'XDG_RUNTIME_DIR' in my_env:
             #print("WARNING, had to add XDG_RUNTIME_DIR to environment variables")
             my_env['XDG_RUNTIME_DIR'] = '/run/user/1000'

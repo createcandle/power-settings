@@ -22,6 +22,8 @@
 }
 
 
+
+
 body:not(.https) .extension-power-settings-show-if-https,
 body.kiosk .extension-power-settings-show-if-https,
 body.kiosk .extension-power-settings-hide-if-https,
@@ -848,7 +850,7 @@ body:not(.kiosk):not(.http).https .extension-power-settings-hide-if-https{
 
 /*  SECURITY  */
 
-.extension-power-settings-menu-notification-icon::after{
+body:not(.kiosk):not(.extension-power-settings-http-on-purpose) .extension-power-settings-menu-notification-icon::after{
 	content:'🔔';
 	position:relative;
 	top:-.5rem;
@@ -856,8 +858,12 @@ body:not(.kiosk):not(.http).https .extension-power-settings-hide-if-https{
 }
 
 #extension-power-settings-using-encrypted-connection-hint{
-	background-color:green;
+	background-color:#070;
 	text-align:center;
+}
+
+#extension-power-settings-switch-to-unencrypted-connection-link{
+	background-color:#500;
 }
 
 #extension-power-settings-security-allow-password-remembering-on-this-device + label span{
@@ -1491,6 +1497,10 @@ body.screensaver.extension-power-settings-candle-screensaver #extension-power-se
 
 /*   AUDIO   */
 
+#extension-power-settings-audio-test-buttons-container > button{
+	margin:1rem 0;
+}
+
 body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 	display:none;
 }
@@ -1541,7 +1551,7 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 .extension-power-settings-audio-item-icon{
 	opacity: .3;
     position: absolute;
-    top: 3rem;
+    top: 2.2rem;
     left: 2rem;
     font-size: 15rem;
     height: 6rem;
@@ -1555,6 +1565,7 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
 
 .extension-power-settings-audio-item h2{
 	max-width:calc(100% - 5rem);
+	margin-top:1.5rem;
 }
 
 /*
@@ -1612,6 +1623,7 @@ body:not(.pipewire) #extension-power-settings-main-menu-audio-item{
    background-size:20px;
    transform: rotate(90deg);
 }
+
 
 /*
 #extension-power-settings-test-microphone-button{
@@ -2082,12 +2094,30 @@ body.safe-mode #extension-power-settings-menu-troubleshooting-button::after{
 
 
 @media screen and (max-width: 640px) {
+	.extension-power-settings-flex-column-when-narrow,
 	#extension-power-settings-display1-info,
-	#extension-power-settings-display2-info{
+	#extension-power-settings-display2-info,
+	#extension-power-settings-addon-backups-container .extension-power-settings-flex-center-space-between,
+	.extension-power-settings-display-info-flex{
 		flex-direction:column;
 	}
+	
+	.extension-power-settings-full-width-when-narrow,
 	#extension-power-settings-display1-info > div,
 	#extension-power-settings-display2-info > div{
+		width:100%;
+	}
+	
+	#extension-power-settings-addon-backups-container .extension-power-settings-flex-center-space-between button{
+		width:100%;
+		text-align:center;
+	}
+
+	.extension-power-settings-display-info-flex > div:first-of-type{
+		width: 60%;
+		margin: 0 auto;
+	}
+	.extension-power-settings-display-info-flex > div:last-of-type{
 		width:100%;
 	}
 	
@@ -2095,14 +2125,32 @@ body.safe-mode #extension-power-settings-menu-troubleshooting-button::after{
 		padding-left:2rem;
 	}
 	
-	#extension-power-settings-addon-backups-container .extension-power-settings-flex-center-space-between{
-		flex-direction:column;
+	#extension-power-settings-audio-sink-list-container,
+	#extension-power-settings-audio-source-list-container{
+		background-color:transparent;
+		padding:0;
+		margin:0;
 	}
 	
-	#extension-power-settings-addon-backups-container .extension-power-settings-flex-center-space-between button{
-		width:100%;
+	#extension-power-settings-audio-sink-list-container:not(:empty)::before,
+	#extension-power-settings-audio-source-list-container:not(:empty)::before{
 		text-align:center;
+		font-size: 2.4rem;
+		margin-top: 6rem;
 	}
+	
+	.extension-power-settings-audio-item-icon{
+		left:1rem;
+		top:3.2rem;
+		width:4rem;
+		height:4rem;
+	}
+	
+	.extension-power-settings-audio-item{
+		padding-left:6rem;
+	}
+	
+	
 }
 
 

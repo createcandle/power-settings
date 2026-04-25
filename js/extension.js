@@ -12,7 +12,21 @@
                 this.kiosk = true;
             }
 			
-			if(this.kiosk == false && location.protocol == 'http:' && !location.pathname.startsWith('/settings') && localStorage.getItem('extension_power_settings_switch_to_https') === 'true'){
+			function remove_hash() { 
+    			history.pushState("", document.title, window.location.pathname + window.location.search);
+			}
+
+			if(window.location.hash == '#disable_encryption'){
+				if(location.protocol == 'http:'){
+					console.warn("power settings: disabling automatic switching to https");
+					localStorage.setItem('extension_power_settings_switch_to_https','false');
+				}
+				remove_hash();
+			}
+			else if(localStorage.getItem('extension_power_settings_switch_to_https') === 'false'){
+				document.body.classList.add('extension-power-settings-http-on-purpose');
+			}
+			else if(this.kiosk == false && location.protocol == 'http:' && !location.pathname.startsWith('/settings') && localStorage.getItem('extension_power_settings_switch_to_https') === 'true'){
 				console.warn("power settings: upgrading to https");
 				location.replace(location.href.replace('http:','https:'));
 			}
@@ -48,6 +62,7 @@
             
 			window.last_activity_time = new Date().getTime();
             this.screensaver_delay = 60;
+			this.screensaver_enabled = false;
             this.showing_screensaver = false;
             this.previous_last_activity_time = 0;
 			this.selected_screensaver = 'candle';
@@ -56,7 +71,7 @@
 			this.screensaver_listeners_added = false;
 			this.screensaver_interval_busy = false;
 			
-			this.screensaver_enabled = false;
+			
 			let screensaver_enabled_check = localStorage.getItem('candle_screensaver_enabled');
 			
 			if(screensaver_enabled_check == null && this.kiosk){
@@ -1254,6 +1269,7 @@
                     	document.getElementById('extension-power-settings-test-speakers-button').removeAttribute("disabled"); //.classList.remove('extension-power-settings-hidden');
                     },5000);
 					*/
+					this.flash_message("Playing test audio...");
                     window.API.postJson(
                         `/extensions/${this.id}/api/ajax`, {
                             'action': 'test_speakers'
@@ -1262,7 +1278,7 @@
                         if(this.debug){
                             console.log("power settings: speaker test complete: ", body);
                         }
-						//this.flash_message("Testing speaker now");
+						
 						document.getElementById('extension-power-settings-test-speakers-button').removeAttribute("disabled");
                     }).catch((err) => {
                        if(this.debug){
@@ -1280,7 +1296,11 @@
 					}
 					
                     document.getElementById('extension-power-settings-test-microphone-button').setAttribute("disabled", true); //.classList.add('extension-power-settings-hidden');
-                    /*
+                    this.flash_message("Recording for 5 seconds...");
+					setTimeout(() => {
+						this.flash_message("Playing recording...");
+					},5000);
+					/*
 					setTimeout(() => {
                     	document.getElementById('extension-power-settings-test-microphone-button').removeAttribute("disabled"); //.classList.remove('extension-power-settings-hidden');
                     },5000);
@@ -1293,7 +1313,6 @@
                         if(this.debug){
                             console.log("power settings: microphone test complete: ", body);
                         }
-						//this.flash_message("Testing speaker now");
 						document.getElementById('extension-power-settings-test-microphone-button').removeAttribute("disabled");
                     }).catch((err) => {
                        if(this.debug){
@@ -2045,7 +2064,7 @@
                             console.log("factory reset response: ", body);
                             if(this.debug){
                                 if(confirm("The system will now reboot")){
-                                    if(body.state == 'ok'){
+                                    if(body.state == true){
                                         API.setSshStatus(false).then(() => {
                                             window.API.postJson('/settings/system/actions', {
                                                 action: 'restartSystem'
@@ -2060,7 +2079,7 @@
                                 }
                             }
                             else{
-                                if(body.state == 'ok'){
+                                if(body.state == true){
                                     API.setSshStatus(false).then(() => {
                                         window.API.postJson('/settings/system/actions', {
                                             action: 'restartSystem'
@@ -2111,14 +2130,7 @@
                         }
                         
                         this.start_recovery_poll();
-                        /*
-                        if(body.state == 'ok'){ // currently hardcoded to return 'ok'
-                            console.log("updating recovery partition succeeded");
-                        }
-                        else{
-                            console.log("update recovery response was NOT ok");
-                        }
-                        */
+                        
                     }).catch((e) => {
                         console.error("power settings: Error starting update of recovery partition: ", e);
                     });
@@ -2149,7 +2161,7 @@
                             console.log("manual update response: ", body);
                         }
                         
-                        if(body.state == 'ok'){
+                        if(body.state == true){
                             window.API.postJson('/settings/system/actions', {
                                 action: 'restartSystem'
                             }).catch(console.error);
@@ -2483,7 +2495,7 @@
                             console.log("power settings debug: create backup response: ", body);
                         }
                         
-                        if(body.state == 'ok'){
+                        if(body.state == true){
                             window.location.pathname = "/extensions/power-settings/backup/candle_backup.tar";
                         }
                         else{
@@ -3251,7 +3263,6 @@
 					ssh_checkbox_el.checked = body.ssh_state;
 				}		
 			}
-			
 			
 		}
 		
@@ -4208,12 +4219,20 @@
 			
 			const switch_to_encrypted_connection_button_el = document.getElementById('extension-power-settings-switch-to-encrypted-connection-link');
 			if(switch_to_encrypted_connection_button_el){
-				
 				//switch_to_encrypted_connection_button_el.setAttribute('href',encrypted_url);
 				switch_to_encrypted_connection_button_el.addEventListener('click', () => {
 					const encrypted_url = 'https://' + window.location.hostname;
 					localStorage.setItem("extension_power_settings_switch_to_https","true");
 					location.assign(encrypted_url);
+				})
+			}
+
+			const switch_to_unencrypted_connection_button_el = document.getElementById('extension-power-settings-switch-to-unencrypted-connection-link');
+			if(switch_to_unencrypted_connection_button_el){
+				//switch_to_encrypted_connection_button_el.setAttribute('href',encrypted_url);
+				switch_to_unencrypted_connection_button_el.addEventListener('click', () => {
+					const unencrypted_url = 'http://' + window.location.hostname + '/settings#disable_encryption';
+					location.assign(unencrypted_url);
 				})
 			}
 			
@@ -5243,7 +5262,7 @@
                             if(this.debug){
                                 console.log("file upload done. Response: ", body);
                             }
-                            if(body.state == 'ok'){
+                            if(body.state == true){
 								document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<p>Restoring and restarting...</p>';
 								this.flash_message("The system will be unavailable for a few minutes while the backup is being restored");
 								/*
@@ -5330,6 +5349,24 @@
             if(this.debug){
 				console.log("power settings debug: in show_audio_page");
 			}
+			
+			// RESET
+			const test_microphone_button_el = document.getElementById('extension-power-settings-test-microphone-button');
+			if(test_microphone_button_el){
+				test_microphone_button_el.style.display = 'none';
+			}
+			const test_speakers_button_el = document.getElementById('extension-power-settings-test-speakers-button');
+			if(test_speakers_button_el){
+				test_speakers_button_el.style.display = 'none';
+			}
+			const sink_list_el = document.getElementById('extension-power-settings-audio-sink-list-container');
+			const source_list_el = document.getElementById('extension-power-settings-audio-source-list-container');
+			if(sink_list_el){
+				sink_list_el.innerHTML = '<div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>';
+			}
+			if(source_list_el){
+				source_list_el.innerHTML = '<div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>';
+			}
             
 			window.API.postJson(
                 `/extensions/${this.id}/api/ajax`, {
@@ -5337,14 +5374,14 @@
                 }
             ).then((body) => {
                 if(this.debug){
-                    console.log("power settings: audio page init response: ", body);
+                    console.log("power settings debug: audio page init response: ", body);
                 }
 				
 				// This should never happen if pipewire isn't enabled in the first place..
                 if(typeof body.pipewire_enabled != 'undefined'){
 					if(body.pipewire_enabled){
 						if(this.debug){
-							console.log("pipewire is enabled");
+							console.log("power settings debug: pipewire is enabled");
 						}
 					}
 					this.pipewire_enabled = body.pipewire_enabled;
@@ -5384,7 +5421,6 @@
 			}
 			try{
 				
-				// not used?
 				const sink_list_el = document.getElementById('extension-power-settings-audio-sink-list-container');
 				const source_list_el = document.getElementById('extension-power-settings-audio-source-list-container');
 				//const audio_device_els = [source_list_el, sink_list_el];
@@ -5400,13 +5436,46 @@
 				*/
 				
 				
-				let found_an_audio_device = false;
+				let found_real_speaker = false;
+				
+				// quickly check if there is a microphone first, other than the noise-cancelling option
+				let found_real_microphone = false;
+				if(this.pipewire_data['sources']){
+					for (const [device, details] of Object.entries(this.pipewire_data['sources'])) {
+						//if(typeof details.object_path == 'undefined'){
+						//	continue
+						//}
+						if(typeof details.node_name == 'string' && details.node_name.startsWith('alsa_input.')){
+							found_real_microphone = true;
+							break
+						}
+					}
+				}
+				
+				if(this.debug){
+					console.error("power settings debug: audio: found_real_microphone? ", found_real_microphone);
+				}
+				if(found_real_microphone){
+					const test_microphone_button_el = document.getElementById('extension-power-settings-test-microphone-button');
+					if(test_microphone_button_el){
+						test_microphone_button_el.style.display = 'inline-block';
+					}
+				}
+				
+				
 				
 				const audio_device_types = ['source','sink'];
 				for (var a = 0; a < audio_device_types.length; a++){
 					const dev_type = audio_device_types[a];
 					
-					if(this.pipewire_data['default_audio_' + dev_type + '_nice_name'] == 'undefined'){
+					if(dev_type == 'source' && found_real_microphone == false){
+						if(this.debug){
+							console.error("power settings debug: audio: skipping rendering microphones list since no real microphone is available");
+						}
+						continue;
+					}
+					
+					if(typeof this.pipewire_data['default_audio_' + dev_type + '_nice_name'] == 'undefined'){
 						if(this.debug){
 							console.error("power settings debug: audio: dev_type: default device undefined: ", this.pipewire_data);
 						}
@@ -5444,6 +5513,7 @@
 					
 					
 					
+					
 					for (const [device, details] of Object.entries(this.pipewire_data[dev_type + 's'])) {
 						if(this.debug){
 							console.log("power settings debug: pipewire device and details: ", device, details);
@@ -5458,6 +5528,9 @@
 						if(typeof details.node_name != 'undefined'){
 							node_name = details.node_name;
 						}
+						
+						
+						
 						
 						let audio_item_el = document.createElement('div');
 						audio_item_el.classList.add('extension-power-settings-audio-item');
@@ -5557,35 +5630,39 @@
 							volume_container_el.appendChild(volume_slider_el);
 							audio_item_el.appendChild(volume_container_el);
 						
-						
 						}
 						
 						list_el.appendChild(audio_item_el);
 				
-						if(dev_type == 'sink'){
-							document.getElementById('extension-power-settings-test-speakers-button').style.display = 'inline-block';
+						if(dev_type == 'sink' && alsa_path != 'Not an ALSA device'){
+							found_real_speaker = true;
 						}
-						found_an_audio_device = true;
-				
+						
 					}
-					
 					
 				}
 				
-				
-				if(found_an_audio_device == false){
+				/*
+				if(found_real_speaker == false && found_real_microphone == false){
 					document.getElementById('extension-power-settings-audio-no-devices').classList.remove('extension-power-settings-hidden');
-					document.getElementById('extension-power-settings-test-speakers-button').style.display = 'none';
+					//document.getElementById('extension-power-settings-test-speakers-button').style.display = 'none';
 				}
 				else{
 					document.getElementById('extension-power-settings-audio-no-devices').classList.add('extension-power-settings-hidden');
 				}
+				*/
+				
+				if(sink_list_el.children && sink_list_el.children.length && sink_list_el.children[0].classList.contains('extension-power-settings-spinner')){
+					sink_list_el.innerHTML = '<p style="text-align:center;padding:2rem">No speakers detected</p>';
+				}else{
+					document.getElementById('extension-power-settings-test-speakers-button').style.display = 'inline-block';
+				}
 				
 				if(source_list_el.children && source_list_el.children.length && source_list_el.children[0].classList.contains('extension-power-settings-spinner')){
 					source_list_el.innerHTML = '<p style="text-align:center;padding:2rem">No microphones detected</p>';
+				}else{
+					document.getElementById('extension-power-settings-test-microphone-button').style.display = 'inline-block';
 				}
-				
-				
 				
 			}
 			catch(err){
@@ -5716,12 +5793,39 @@
 		
 		
 		show_display_page(){
-			
+			if(this.debug){
+				console.log("power settings debug: in show_display_page: this.screensaver_enabled before: ", this.screensaver_enabled);
+			}
 			document.getElementById('extension-power-settings-no-display').classList.add('extension-power-settings-hidden');
 			document.getElementById('extension-power-settings-display1-info').classList.add('extension-power-settings-hidden');
 			document.getElementById('extension-power-settings-display2-info').classList.add('extension-power-settings-hidden');
 			document.getElementById('extension-power-settings-display1-production-date').innerText = '';
 			document.getElementById('extension-power-settings-display2-production-date').innerText = '';
+			
+			
+			
+			const mouse_pointer_checkbox_el = document.getElementById('extension-power-settings-show-mouse-pointer');
+			if(mouse_pointer_checkbox_el){
+				mouse_pointer_checkbox_el.checked = this.mouse_pointer_enabled;
+				document.getElementById('extension-power-settings-mouse-pointer').classList.remove('extension-power-settings-hidden');
+			}
+			
+			
+			const screensaver_enabled_checkbox_el = document.getElementById('extension-power-settings-enable-screensaver-checkbox');
+			if(screensaver_enabled_checkbox_el){
+				let screensaver_enabled_check = localStorage.getItem('candle_screensaver_enabled');
+			
+				if(typeof screensaver_enabled_check == 'string' && screensaver_enabled_check == 'true'){
+					this.screensaver_enabled = true;
+				}
+				else{
+					this.screensaver_enabled = false;
+				}
+				if(this.debug){
+					console.log("power settings debug: show_display_page: this.screensaver_enabled after localStorage check: ", this.screensaver_enabled);
+				}
+				screensaver_enabled_checkbox_el.checked = this.screensaver_enabled;
+			}
 			
 			window.API.postJson(
                 `/extensions/${this.id}/api/ajax`, {
@@ -5734,6 +5838,7 @@
             });
 			
 			this.update_available_screensavers_select();
+			
 		}
 		
 		parse_display_init(body){
@@ -6694,7 +6799,7 @@
 		
 		update_available_screensavers_select(){
 			if(this.debug){
-				console.log("power settings: in update_available_screensavers_select");
+				console.log("power settings debug: in update_available_screensavers_select.  this.selected_screensaver: ", this.selected_screensaver);
 			}
 			
 			let screensaver_select_el = document.getElementById('extension-power-settings-screensaver-select');
@@ -6710,7 +6815,7 @@
 				const screensaver_addons = ['photo-frame','followers','dashboard'];
 				for(const index in screensaver_addons){
 					if(this.debug){
-						console.log("checking is screensaver_addon has a view element (indicating it's likely enabled): ", index, screensaver_addons[index]);
+						console.log("power settings debug: checking if screensaver_addon has a view element (indicating it's likely enabled): ", index, screensaver_addons[index]);
 					}
 					const screensaver_addon_view_el = document.getElementById('extension-' + screensaver_addons[index] + '-view');
 					if(screensaver_addon_view_el){
@@ -6771,8 +6876,10 @@
 				window.last_activity_time = current_time;
 			}
             const delta = current_time - window.last_activity_time;
-            if(this.debug){
-				console.log('power settings debug: do_screensaver_interval: screensaver delta: ', Math.round(delta / 1000) + 's');
+            if(this.debug && this.screensaver_enabled && location.pathname == '/settings'){
+				if(Math.round(delta / 1000) % 10 == 0){
+					console.log('power settings debug: do_screensaver_interval: screensaver delta: ', Math.round(delta / 1000) + 's');
+				}
 			}
             if (delta > this.screensaver_delay * 1000) {
                 if (this.showing_screensaver == false) {

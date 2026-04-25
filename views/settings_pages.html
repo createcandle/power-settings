@@ -74,6 +74,9 @@
 
 		<div id="extension-power-settings-using-encrypted-connection-hint" class="extension-power-settings-area extension-power-settings-show-if-https">
 			<p>You are accessing the controller through an encrypted connection</p>
+            <div class="extension-power-settings-align-right" style="margin-top:4rem; margin-bottom:1.5rem">
+				<button id="extension-power-settings-switch-to-unencrypted-connection-link" class="text-button">Switch to an unencrypted connection</button>
+			</div>
 		</div>
 
 		<div class="extension-power-settings-area extension-power-settings-hide-if-https">
@@ -497,10 +500,9 @@
 			// -->
 			
 			<p>Select your prefered default audio devices. You can set the main volume of speakers, or adjust the sensitivity of microphones.</p><p>Note that individual addons or devices may still adjust their volume level independently.<p>
-			<div class="extension-power-settings-flex-between">
-				<button id="extension-power-settings-test-microphone-button" class="text-button">🎤 &nbsp;Test microphone</button>
-				<button id="extension-power-settings-test-speakers-button" class="text-button" style="display:none">🔈 Test speakers</button>
-				
+			<div id="extension-power-settings-audio-test-buttons-container" class="extension-power-settings-flex-between extension-power-settings-flex-column-when-narrow">
+				<button id="extension-power-settings-test-microphone-button" class="text-button extension-power-settings-full-width-when-narrow" style="display:none">🎤 &nbsp;Test microphone</button>
+				<button id="extension-power-settings-test-speakers-button" class="text-button extension-power-settings-full-width-when-narrow" style="display:none">🔈 Test speakers</button>
 			</div>
 			
 		</div>
@@ -514,12 +516,13 @@
         <div id="extension-power-settings-audio-source-list-container" class="extension-power-settings-area">
             <div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div>
         </div>
-		
+		<!--
         <div id="extension-power-settings-audio-no-devices" class="extension-power-settings-area extension-power-settings-hidden">
 			<div>
 				<h2 style="text-align:center">No audio devices detected</h2>
 			</div>
         </div>
+		-->
     </div>
 
 

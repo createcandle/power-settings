@@ -1245,7 +1245,7 @@ class PowerSettingsAPIHandler(APIHandler):
             if request.method != 'POST':
                 return APIResponse(status=404)
             
-            if request.path == '/init' or request.path == '/set-time' or request.path == '/set-ntp' or request.path == '/shutdown' or request.path == '/reboot' or request.path == '/restart' or request.path == '/close_browser' or request.path == '/ajax' or request.path == '/save' or request.path == '/kiosk_ping':
+            if request.path == '/init' or request.path == '/set-time' or request.path == '/set-ntp' or request.path == '/shutdown' or request.path == '/reboot' or request.path == '/restart' or request.path == '/close_browser' or request.path == '/restart_kiosk' or request.path == '/ajax' or request.path == '/save' or request.path == '/kiosk_ping':
 
                 if self.DEBUG:
                     print("-API request at: " + str(request.path))
@@ -1567,7 +1567,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             # GET DISPLAY INFO
                                 
                             elif action == 'display_init':
-                                state = 'error'
+                                state = False
                                 
                                 self.display1_available = False
                                 self.display2_available = False
@@ -1787,7 +1787,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         self.find_display_rotation()
                                     
                                 
-                                    state = 'ok'
+                                    state = True
                                 except Exception as ex:
                                     print("Error getting display info: " + str(ex))
                                     
@@ -1847,7 +1847,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                             # DISPLAY ROTATION
                             elif action == 'set_display_rotation':
-                                state = 'error'
+                                state = False
                                 if self.exhibit_mode == False and 'display1_rotation' in request.body and 'display2_rotation' in request.body:
                                     self.display1_rotation = int(request.body['display1_rotation'])
                                     self.display2_rotation = int(request.body['display2_rotation'])
@@ -1856,7 +1856,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         print("new display2 rotation: " + str(self.display2_rotation))
                                     
                                     
-                                    state = 'ok'
+                                    state = True
                                     self.apply_display_rotation()
                                         
                                         
@@ -1978,14 +1978,14 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                             # Not currently used, and is now based on a list of lines in persistent_data instead, so would have to be rewritten
                             elif action == 'force_display_setting':
-                                state = 'error'
+                                state = False
                                 if 'width' in request.body and 'height' in request.body:
                                     if os.path.isdir('/sys'):
                                         intended_width = int(request.body['width'])
                                         intended_height = int(request.body['height'])
                                         if self.DEBUG:
                                             print("forcing display: " + str(intended_width) + "x" + str(intended_height))
-                                        state = 'ok'
+                                        state = True
                                     
                                         if not "#candle_force_display" in self.config_txt:
                                             self.config_txt += "\n#candle_force_display_start\n#candle_force_display_end"
@@ -2837,7 +2837,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if self.DEBUG:
                                     print("API: in update_init")
                                 
-                                state = 'ok'
+                                state = True
                                 
                                 self.check_ethernet_connected()
                                 
@@ -2879,7 +2879,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if self.DEBUG:
                                     print("API: in backup_init")
                                 
-                                state = 'ok'
+                                state = True
                                 
                                 self.update_backup_info()
                                 
@@ -2905,7 +2905,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             elif action == 'create_backup':
                                 if self.DEBUG:
                                     print("API: in create_backup")
-                                state = 'error'
+                                state = False
                                 try:
                                     if self.exhibit_mode == False:
                                         if 'backup_more' in request.body:
@@ -2915,11 +2915,11 @@ class PowerSettingsAPIHandler(APIHandler):
                                         if self.DEBUG:
                                             print("backup result: " + str(backup_result))
                                         if backup_result:
-                                            state = 'ok'
+                                            state = True
                                         
                                 except Exception as ex:
                                     print("Error creating backup: " + str(ex))
-                                    state = 'error'
+                                    state = False
                                     
                                 self.update_backup_info()
                                     
@@ -2938,13 +2938,12 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 
                             elif action == 'unlink_backup_download_dir':
-                                
-                                state = 'error'
+                                state = False
                                 if os.path.isdir(self.backup_download_dir):
                                     os.system('unlink ' + self.backup_download_dir) # remove symlink, so the backup files can not longer be downloaded
                                     if self.DEBUG:
                                         print("removed symlink")
-                                    state = 'ok'
+                                    state = True
                             
                                 return APIResponse(
                                   status=200,
@@ -3008,14 +3007,11 @@ class PowerSettingsAPIHandler(APIHandler):
                             
                             
                             elif action == 'get_stats':
-                                
                                 self.attached_devices = []
                                 free_memory = '?'
-                                
                                 if os.path.isdir('/sys'):
                                     
                                     try:
-                                    
                                     
                                         # written kbytes to sd card
                                         #self.sd_card_written_kbytes = int(run_command("cat /sys/fs/ext4/mmcblk0p4/lifetime_write_kbytes"))
@@ -3437,15 +3433,23 @@ class PowerSettingsAPIHandler(APIHandler):
                         )
                         
                     elif request.path == '/close_browser':
-                        os.system("pkill chrome")
-                        os.system("pkill chromium")
-                        os.system("pkill chrome-browser")
-                        os.system("pkill chromium-browser")
+                        os.system("pkill -f chrom")
                         return APIResponse(
                           status=200,
                           content_type='application/json',
                           content=json.dumps("Closing browser"),
                         )
+                        
+                    elif request.path == '/restart_kiosk':
+                        os.system("sudo systemctl restart candle_kiosk.service")
+                        return APIResponse(
+                          status=200,
+                          content_type='application/json',
+                          content=json.dumps("Restarting browser"),
+                        )
+                        
+                        
+                        
                         
                     # Restore backup
                     elif request.path == '/save':
@@ -3453,7 +3457,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             print("SAVING uploaded file")
                         try:
                             data = []
-                            state = 'error'
+                            state = False
                             filename = ""
                             filedata = ""
                             
@@ -3491,7 +3495,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 
                                             tar_test = run_command(tar_test_command)
                                             if "error" in tar_test.lower():
-                                                state = 'invalid tar file'
+                                                state = False
                                                 if self.DEBUG:
                                                     print("untar test of backup file resulted in error: " + str(tar_test))
                                             else:
@@ -3513,26 +3517,26 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 #        print("/boot/firmware/bootup_actions_non_blocking.txt still existed")
                                                 #    os.system('sudo rm ' + str(self.boot_path) + '/bootup_actions_non_blocking.txt')
                                             
-                                                state = 'ok'
+                                                state = True
                                             
                                         else:
                                             if self.DEBUG:
                                                 print("Error: self.restore_backup_script_path did not exist?")
-                                            state = 'missing file'
+                                            state = False
                                 else:
                                     if self.DEBUG:
                                         print("Error: wrong file extension")
-                                    state = 'wrong file extension'
+                                    state = False
                                         
                             except Exception as ex:
                                 if self.DEBUG:
                                     print("Error saving data to file: " + str(ex))
-                                state = 'error'
+                                state = False
                             #data = self.save_photo(str(request.body['filename']), str(request.body['filedata']), str(request.body['parts_total']), str(request.body['parts_current']) ) #new_value,date,property_id
                             #if isinstance(data, str):
-                            #    state = 'error'
+                            #    state = False
                             #else:
-                            #    state = 'ok'
+                            #    state = True
                             if self.DEBUG:
                                 print("save return state: " + str(state))
                             
@@ -4530,9 +4534,12 @@ class PowerSettingsAPIHandler(APIHandler):
             if self.DEBUG:
                 print("pipewire is enabled")
             self.pipewire_enabled = True
-            self.pipewire_data = get_pipewire_audio_controls(False) # True = debug    
+            self.pipewire_data = get_pipewire_audio_controls(self.DEBUG) # True = debug    
             if self.DEBUG:
                 print("pipewire data: " + str(self.pipewire_data))
+        else:
+            if self.DEBUG:
+                print("WARNING, pipewire seems disabled")
         return self.pipewire_data
                     
                     
@@ -4542,7 +4549,7 @@ class PowerSettingsAPIHandler(APIHandler):
             print("pw-dump: ", str(run_command('strace -e connect pw-dump >/dev/null ')))
         # strace -e connect pw-dump >/dev/null    
         # printenv | grep -E 'PULSE|DBUS'
-        self.send_pairing_prompt("Playing test audio now")
+        #self.send_pairing_prompt("Playing test audio now")
         if self.pipewire_enabled and os.path.isfile(str(self.audio_test1_path)):
             if self.audio_test_index == 0:
                 run_command('speaker-test -c1 -twav -l1')
@@ -4567,7 +4574,7 @@ class PowerSettingsAPIHandler(APIHandler):
         #os.system('speaker-test -c2 -twav -l1')
         #os.system('speaker-test -c4 -twav -l1')
         #os.system('speaker-test -t sine -c 2 --nloops 1')
-        self.send_pairing_prompt("Did you hear audio?")
+        #self.send_pairing_prompt("Did you hear audio?")
         return True
         
         
@@ -4575,16 +4582,16 @@ class PowerSettingsAPIHandler(APIHandler):
         if self.DEBUG:
             print("In test_speakers")
         if self.busy_testing_microphone == True:
-            self.send_pairing_prompt("Already testing microphone")
+           # self.send_pairing_prompt("Already testing microphone")
             return False
         if os.path.isfile('/tmp/test.wav'):
             os.system('rm /tmp/test.wav')
         self.busy_testing_microphone = True
-        self.send_pairing_prompt("Recording 5 seconds...")
+        #self.send_pairing_prompt("Recording 5 seconds...")
         run_command('timeout 5s pw-cat -r /tmp/test.wav')
-        self.send_pairing_prompt("Playing the recording...")
+        #self.send_pairing_prompt("Playing the recording...")
         run_command('pw-play /tmp/test.wav')
-        self.send_pairing_prompt("Did you hear the recording?")
+        #self.send_pairing_prompt("Did you hear the recording?")
         run_command('rm /tmp/test.wav')
         self.busy_testing_microphone = False
         return True
