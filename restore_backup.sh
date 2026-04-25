@@ -104,7 +104,7 @@ else
                         URLS=$(echo "$URLS" | grep "linux-arm64" | grep -v ".shasum")
                 
                     else
-                        URLS=$(echo "$URLS" | grep -v "linux-arm64 | grep -v ".shasum")
+                        URLS=$(echo "$URLS" | grep -v "linux-arm64" | grep -v ".shasum")
                     fi
                 fi
 
