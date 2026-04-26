@@ -3433,7 +3433,9 @@ class PowerSettingsAPIHandler(APIHandler):
                         )
                         
                     elif request.path == '/close_browser':
+                        self.last_kiosk_ping_time = 0
                         os.system("pkill -f chrom")
+                        self.last_kiosk_ping_time = 0
                         return APIResponse(
                           status=200,
                           content_type='application/json',

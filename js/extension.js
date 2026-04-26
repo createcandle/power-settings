@@ -203,12 +203,20 @@
 						if(this.debug){
 							console.log("power settings debug: clicked on connect to wifi button");
 						}
+
+						const wifi_settings_item_el = document.querySelector('#network-settings-client > ul.network-settings-list > li.network-item:nth-child(2)');
+						if(wifi_settings_item_el){
+							wifi_settings_item_el.classList.add('extension-power-settings-bg-sweep');
+						}
+							
+
 						setTimeout(() => {
 							if(this.debug){
 								console.log("power settings debug: calling window.API.getNetworkAddresses");
 							}
 						    window.API.getNetworkAddresses()
 							.then((body) => {
+								
 					        	if (!body) {
 									if(this.debug){
 										console.error('power settings debug: API.getNetworkAddresses response had no body?');
@@ -224,15 +232,18 @@
 									document.getElementById('network-settings-list-item-wifi-ssid').textContent = body.wlan.ssid;
 									document.getElementById('network-settings-list-item-wifi-ip').textContent = body.wlan.ip;
 								}
+								
 							})
 							.catch((err) => {
 								if(this.debug){
 									console.error('power settings debug: caught error getting network addresses from window.API:', err);
 								}
 							});
-						
-						},7000);
-					
+							
+							if(wifi_settings_item_el){
+								wifi_settings_item_el.classList.remove('extension-power-settings-bg-sweep');
+							}
+						},8000);
 					
 					});
 				}
@@ -408,7 +419,6 @@
 				if(this.screensaver_listeners_added){
 					this.do_screensaver_interval();
 				}
-				
 				
 			},1000);
 			
@@ -5436,10 +5446,22 @@
 				*/
 				
 				
-				let found_real_speaker = false;
+				let found_real_speakers = false; // quickly check if there is a rela speaker first, other than the combined output
+				let found_real_microphone = false; // quickly check if there is a microphone first, other than the noise-cancelling option
 				
-				// quickly check if there is a microphone first, other than the noise-cancelling option
-				let found_real_microphone = false;
+				
+				if(this.pipewire_data['sinks']){
+					for (const [device, details] of Object.entries(this.pipewire_data['sinks'])) {
+						//if(typeof details.object_path == 'undefined'){
+						//	continue
+						//}
+						if(typeof details.node_name == 'string' && details.node_name.startsWith('alsa_output.')){
+							found_real_speakers = true;
+							break
+						}
+					}
+				}
+				
 				if(this.pipewire_data['sources']){
 					for (const [device, details] of Object.entries(this.pipewire_data['sources'])) {
 						//if(typeof details.object_path == 'undefined'){
@@ -5453,21 +5475,46 @@
 				}
 				
 				if(this.debug){
-					console.error("power settings debug: audio: found_real_microphone? ", found_real_microphone);
+					console.log("power settings debug: audio: found_real_speakers? ", found_real_speakers);
+					console.log("power settings debug: audio: found_real_microphone? ", found_real_microphone);
 				}
+
+
+				
+
+				if(found_real_speakers){
+					const test_speakers_button_el = document.getElementById('extension-power-settings-test-speakers-button');
+					if(test_speakers_button_el){
+						test_speakers_button_el.style.display = 'inline-block';
+					}
+				}
+				else{
+					sink_list_el.innerHTML = '<p style="text-align:center;padding:2rem">No speakers detected</p>';
+				}
+				
 				if(found_real_microphone){
 					const test_microphone_button_el = document.getElementById('extension-power-settings-test-microphone-button');
 					if(test_microphone_button_el){
 						test_microphone_button_el.style.display = 'inline-block';
 					}
 				}
+				else{
+					source_list_el.innerHTML = '<p style="text-align:center;padding:2rem">No microphone detected</p>';
+				}
 				
 				
-				
+
 				const audio_device_types = ['source','sink'];
 				for (var a = 0; a < audio_device_types.length; a++){
 					const dev_type = audio_device_types[a];
 					
+					if(dev_type == 'sink' && found_real_speakers == false){
+						if(this.debug){
+							console.error("power settings debug: audio: skipping rendering speakers list since no real speakers are available");
+						}
+						continue;
+					}
+
 					if(dev_type == 'source' && found_real_microphone == false){
 						if(this.debug){
 							console.error("power settings debug: audio: skipping rendering microphones list since no real microphone is available");
@@ -5494,12 +5541,16 @@
 					
 					const list_el = document.getElementById('extension-power-settings-audio-' + dev_type + '-list-container');
 					if(list_el == null){
-						console.error("power settings: could not find audio device list container");
+						if(this.debug){
+							console.error("power settings debug: could not find audio device list container");
+						}
 						continue
 					}
 					
 					if(typeof this.pipewire_data[dev_type + 's'] == 'undefined'){
-						console.error("power settings: very strange, missing audio device type data in pipewire data.")
+						if(this.debug){
+							console.error("power settings debug: missing audio device type data in pipewire data.");
+						}
 						continue
 					}
 					
@@ -5509,10 +5560,6 @@
 					}
 					
 					list_el.innerHTML = '';
-					
-					
-					
-					
 					
 					for (const [device, details] of Object.entries(this.pipewire_data[dev_type + 's'])) {
 						if(this.debug){
@@ -5528,9 +5575,6 @@
 						if(typeof details.node_name != 'undefined'){
 							node_name = details.node_name;
 						}
-						
-						
-						
 						
 						let audio_item_el = document.createElement('div');
 						audio_item_el.classList.add('extension-power-settings-audio-item');
@@ -5568,7 +5612,7 @@
 
 					        ).then((body) => {
 								if(this.debug){
-				                    console.log('Power settings debug: set_audio default device response: ', body);
+				                    console.log('power settings debug: set_audio default device response: ', body);
 				                }
 								if(typeof body.pipewire_data != 'undefined'){
 									this.pipewire_data = body.pipewire_data;
@@ -5576,8 +5620,10 @@
 								}
 
 					        }).catch((err) => {
-					  			console.error('Power settings: error during set_audio api call: ', err);
-								this.flash_message("Could not connect with controller, your audio device preference may not have been saved");
+					  			if(this.debug){
+									console.error('power settings debug: caught error during set_audio api call: ', err);
+								}
+								this.flash_message("Could not connect to controller");
 					        });	
 						
 						});
@@ -5607,14 +5653,14 @@
 								let action_dict = {'action':'set_audio'};
 								action_dict['pipewire_id'] = pipewire_id;
 								if(this.debug){
-									console.log("power settings: set_audio volume: action_dict: ", action_dict);
+									console.log("power settings debug: set_audio volume: action_dict: ", action_dict);
 								}
 								window.API.postJson(
 						          `/extensions/${this.id}/api/ajax`,action_dict
 
 						        ).then((body) => {
 									if(this.debug){
-					                    console.log('Power settings: set_audio volume response: ', body);
+					                    console.log('power settings debud: set_audio volume response: ', body);
 					                }
 									if(typeof body.pipewire_data != 'undefined'){
 										this.pipewire_data = body.pipewire_data;
@@ -5622,7 +5668,9 @@
 									}
 
 						        }).catch((err) => {
-						  			console.error('Power settings: error during set_audio api call: ', err);
+						  			if(this.debug){
+										console.error('Power settings debug: caught error during set_audio api call: ', err);
+									}
 									this.flash_message("Could not connect with controller, your audio device preference may not have been saved");
 						        });	
 							});
@@ -5633,13 +5681,7 @@
 						}
 						
 						list_el.appendChild(audio_item_el);
-				
-						if(dev_type == 'sink' && alsa_path != 'Not an ALSA device'){
-							found_real_speaker = true;
-						}
-						
 					}
-					
 				}
 				
 				/*
@@ -5651,7 +5693,7 @@
 					document.getElementById('extension-power-settings-audio-no-devices').classList.add('extension-power-settings-hidden');
 				}
 				*/
-				
+				/*
 				if(sink_list_el.children && sink_list_el.children.length && sink_list_el.children[0].classList.contains('extension-power-settings-spinner')){
 					sink_list_el.innerHTML = '<p style="text-align:center;padding:2rem">No speakers detected</p>';
 				}else{
@@ -5663,10 +5705,13 @@
 				}else{
 					document.getElementById('extension-power-settings-test-microphone-button').style.display = 'inline-block';
 				}
+				*/
 				
 			}
 			catch(err){
-				console.error("power settings: caught error generating audio devices list: ", err);
+				if(this.debug){
+					console.error("power settings debug: caught error generating audio devices list: ", err);
+				}
 			}
 		}
 		
@@ -5683,7 +5728,9 @@
 				const respeaker_ui_container_el = document.getElementById('extension-power-settings-audio-respeaker-container');
 				
 				if(!respeaker_ui_container_el){
-					console.error("audio settings: respeaker UI container element is missing");
+					if(this.debug){
+						console.error("power settings debug: audio: respeaker UI container element is missing");
+					}
 					return
 				}
 				
@@ -5779,7 +5826,9 @@
 				
 			}
 			catch(err){
-				console.error("power settings: caught error generating respeaker UI: ", err);
+				if(this.debug){
+					console.error("power settings debug: caught error generating respeaker UI: ", err);
+				}
 			}
 		}
 		
@@ -5843,7 +5892,7 @@
 		
 		parse_display_init(body){
             if(this.debug){
-                console.log("display init response: ", body);
+                console.log("power settings debug: display init response: ", body);
             }
 			
 			function get_production_time(week, year) { 
@@ -6077,7 +6126,9 @@
 									}
 								}
 								catch(err){
-									console.error("power settings: error parsing edid resolutions: ", err);
+									if(this.debug){
+										console.error("power settings debug: caught error parsing edid resolutions: ", err);
+									}
 								}
 								
 								
@@ -6104,8 +6155,10 @@
 						}
 						document.getElementById('extension-power-settings-display1-details').appendChild(info_container_el);
 					}
-					catch(e){
-						console.error("power settings: unable to parse display EDID data: ", e);
+					catch(err){
+						if(this.debug){
+							console.error("power settings debug: caught error parsing display EDID data: ", err);
+						}
 					}
 				}
 				else{
@@ -6186,7 +6239,7 @@
 							
 							if(info_key == 'resolutions' && typeof info_value == 'object'){
 								if(this.debug){
-									console.log("power settings: spotted resolutions. info_value", typeof(info_value), info_value);
+									console.log("power settings debug: spotted resolutions. info_value", typeof(info_value), info_value);
 								}
 								let select_container_el = document.createElement("div");
 								select_container_el.classList.add('extension-power-settings-flex-center-space-between');
@@ -6243,7 +6296,9 @@
 									}
 								}
 								catch(err){
-									console.error("power settings: caught error parsing edid resolutions: ", err);
+									if(this.debug){
+										console.error("power settings debug: caught error parsing edid resolutions: ", err);
+									}
 								}
 								
 								
@@ -6270,8 +6325,10 @@
 						}
 						document.getElementById('extension-power-settings-display2-details').appendChild(info_container_el);
 					}
-					catch(e){
-						console.error("power settings: caught error attempting to parse display EDID data: ", e);
+					catch(err){
+						if(this.debug){
+							console.error("power settings debug: caught error attempting to parse display EDID data: ", err);
+						}
 					}
 				}
 				else{
@@ -6313,7 +6370,9 @@
                     console.log("power settings debug: set_display_resolution response: ", body);
                 }
             }).catch((err) => {
-                console.error("power settings: Error changing display resolution: ", err);
+                if(this.debug){
+					console.error("power settings debug: caught error changing display resolution: ", err);
+				}
             });
 		}
 		
@@ -6349,7 +6408,9 @@
 					}
 				
 	            }).catch((err) => {
-	                console.error("power settings: caught error in show printer page: ", err);
+	                if(this.debug){
+						console.error("power settings debug: caught error in show printer page: ", err);
+					}
 	            });
 			}
 		}
@@ -6437,7 +6498,9 @@
 				}
 			}
 			catch(err){
-				console.error("power settings: error generating printers list: ", err);
+				if(this.debug){
+					console.error("power settings debug: caught error generating printers list: ", err);
+				}
 			}
 			
 		}
@@ -6454,7 +6517,7 @@
             ).then((body) => {
                 //console.log("get stats response: ", body);
                 if(this.debug){
-                    console.log("power settings: get stats response: ", body);
+                    console.log("power settings debug: get stats response: ", body);
                 }            
 
 				this.get_stats_retried = false;
@@ -6473,7 +6536,7 @@
 					// temperature
 	                if(typeof body['board_temperature'] == 'string' ){
 	                    if(this.debug){
-	                        console.log("power settings: board_temperature: ", body.board_temperature);
+	                        console.log("power settings debug: board_temperature: ", body.board_temperature);
 	                    }
 						const device_temperture_el = document.getElementById('extension-power-settings-device-temperature');
 						if(device_temperture_el){
@@ -6677,7 +6740,9 @@
 						
 					}
 					else{
-						console.warn("power settings: usb devices list element not found");
+						if(this.debug){
+							console.warn("power settings debug: usb devices list element not found");
+						}
 					}
 				}
 				
@@ -6702,7 +6767,9 @@
 						
 					}
 					else{
-						console.warn("power settings: cameras list element not found");
+						if(this.debug){
+							console.warn("power settings debug: cameras list element not found");
+						}
 					}
                     
                 }
