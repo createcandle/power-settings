@@ -6,6 +6,7 @@
             //this.addMenuEntry('Power');
             
             // Kiosk?
+			this.kiosk_enabled = true
 			this.kiosk = false;
             if(document.getElementById('virtualKeyboardChromeExtension') != null){
                 document.body.classList.add('kiosk');
@@ -2817,6 +2818,30 @@
                         
                     }).catch((err) => {
                         console.error("caught error while trying to set mouse pointer preference: ", err);
+						this.flash_message("Saving mouse pointer preference failed - connection error?");
+                    });
+                    
+                });
+
+
+				// Enable of disable the kiosk
+				const kiosk_enabled_checkbox_el = document.getElementById('extension-power-settings-kiosk-enabled');
+                kiosk_enabled_checkbox_el.addEventListener('change', () => {
+                    
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/ajax`, {
+                            'action': 'set_kiosk_enabled', 'kiosk_enabled': kiosk_enabled_checkbox_el.checked
+                        }
+                    ).then((body) => {
+                        if(this.debug){
+                            console.log("power settings debug: set_kiosk_enabled response: ", body);
+                        }
+						//console.log("set_mouse_pointer response: ", body);
+						document.getElementById('extension-power-settings-kiosk-enabled-hint').classList.remove('extension-power-settings-hidden');
+                        
+                    }).catch((err) => {
+                        console.error("caught error while trying to set kiosk_enabled preference: ", err);
+						this.flash_message("Saving kiosk preference failed - connection error?");
                     });
                     
                 });
@@ -5856,7 +5881,15 @@
 			const mouse_pointer_checkbox_el = document.getElementById('extension-power-settings-show-mouse-pointer');
 			if(mouse_pointer_checkbox_el){
 				mouse_pointer_checkbox_el.checked = this.mouse_pointer_enabled;
-				document.getElementById('extension-power-settings-mouse-pointer').classList.remove('extension-power-settings-hidden');
+				document.getElementById('extension-power-settings-mouse-pointer-container').classList.remove('extension-power-settings-hidden');
+			}
+
+			if(this.kiosk){
+				const kiosk_enabled_checkbox_el = document.getElementById('extension-power-settings-kiosk-enabled');
+				if(kiosk_enabled_checkbox_el){
+					kiosk_enabled_checkbox_el.checked = true;
+					document.getElementById('extension-power-settings-kiosk-enabled-container').classList.remove('extension-power-settings-hidden');
+				}
 			}
 			
 			
@@ -5883,7 +5916,7 @@
             ).then((body) => {
                 this.parse_display_init(body);
             }).catch((err) => {
-                console.error("power settings: caught error sending get_display_info command: ", err);
+                console.error("power settings: caught error calling display_init: ", err);
             });
 			
 			this.update_available_screensavers_select();
@@ -5908,34 +5941,34 @@
 			
 			let got_display_details = false;
 			
-			if(typeof body.display_port1_name != 'undefined'){
+			if(typeof body.display_port1_name == 'string'){
 				this.display_port1_name = body.display_port1_name;
 			}
-			if(typeof body.display_port2_name != 'undefined'){
+			if(typeof body.display_port2_name == 'string'){
 				this.display_port2_name = body.display_port2_name;
 			}
 			
 			// rotation
-			if(typeof body.display1_rotated != 'undefined'){
+			if(typeof body.display1_rotated== 'boolean'){
 				document.getElementById('extension-power-settings-display1-rotate-checkbox').checked = body.display1_rotated;
 			}
-			if(typeof body.display2_rotated != 'undefined'){
+			if(typeof body.display2_rotated== 'boolean'){
 				document.getElementById('extension-power-settings-display2-rotate-checkbox').checked = body.display2_rotated;
 			}
 			
 			// power management 
-			if(typeof body.display1_power != 'undefined'){
+			if(typeof body.display1_power == 'boolean'){
 				document.getElementById('extension-power-settings-display1-power-checkbox').checked = body.display1_power;
 			}
-			if(typeof body.display2_power != 'undefined'){
+			if(typeof body.display2_power == 'boolean'){
 				document.getElementById('extension-power-settings-display2-power-checkbox').checked = body.display2_power;
 			}
 			
 			// Show the display's width and height
-			if(typeof body.display1_width != 'undefined' && typeof body.display1_height != 'undefined' && typeof body.display2_width != 'undefined' && typeof body.display2_height != 'undefined'){
+			if(typeof body.display1_width == 'number' && typeof body.display1_height == 'number' && typeof body.display2_width == 'number' && typeof body.display2_height == 'number'){
 				
-				document.getElementById('extension-power-settings-display1-resolution-container').innerHTML = '<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display1-width">' + body.display1_width + '</span><br/><span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display1-height">' + body.display1_width + '</span><br/>';
-				document.getElementById('extension-power-settings-display2-resolution-container').innerHTML = '<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display2-width">' + body.display2_width + '</span><br/><span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display2-height">' + body.display2_width + '</span><br/>';
+				document.getElementById('extension-power-settings-display1-resolution-container').innerHTML = '<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display1-width">' + body.display1_width + '</span><br/><span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display1-height">' + body.display1_height + '</span><br/>';
+				document.getElementById('extension-power-settings-display2-resolution-container').innerHTML = '<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display2-width">' + body.display2_width + '</span><br/><span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display2-height">' + body.display2_height + '</span><br/>';
 				//document.getElementById('extension-power-settings-display1-width').innerText = body.display1_width;
 				//document.getElementById('extension-power-settings-display1-height').innerText = body.display1_height;
 				//document.getElementById('extension-power-settings-display2-width').innerText = body.display2_width;
@@ -5945,7 +5978,7 @@
 				}
 				if(body.display1_width != 0){
 					document.getElementById('extension-power-settings-display1-info').classList.remove('extension-power-settings-hidden');
-					if(typeof body.touchscreen_detected != 'undefined' && body.display2_width == 0){
+					if(typeof body.touchscreen_detected == 'boolean' && body.display2_width == 0){
 						if(body.touchscreen_detected){
 							document.getElementById('extension-power-settings-display1-production-date').innerHTML = 'Touch screen<br/>';
 						}
@@ -6351,7 +6384,16 @@
 				const mouse_pointer_checkbox_el = document.getElementById('extension-power-settings-show-mouse-pointer');
 				if(mouse_pointer_checkbox_el){
 					mouse_pointer_checkbox_el.checked = this.mouse_pointer_enabled;
-					document.getElementById('extension-power-settings-mouse-pointer').classList.remove('extension-power-settings-hidden');
+					document.getElementById('extension-power-settings-mouse-pointer-container').classList.remove('extension-power-settings-hidden');
+				}
+			}
+
+			if(typeof body.kiosk_enabled == 'boolean'){
+				this.kiosk_enabled = body.kiosk_enabled;
+				const kiosk_enabled_checkbox_el = document.getElementById('extension-power-settings-kiosk-enabled');
+				if(kiosk_enabled_checkbox_el){
+					kiosk_enabled_checkbox_el.checked = this.kiosk_enabled;
+					document.getElementById('extension-power-settings-kiosk-enabled-container').classList.remove('extension-power-settings-hidden');
 				}
 			}
 		}

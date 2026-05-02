@@ -87,8 +87,6 @@ class PowerSettingsAPIHandler(APIHandler):
         self.show_hotspot_password = False
         
         
-        
-        
         try:
             APIHandler.__init__(self, self.addon_id) # manifest['id']
             self.manager_proxy.add_api_handler(self)
@@ -117,6 +115,22 @@ class PowerSettingsAPIHandler(APIHandler):
             self.user_profile['dataDir'] = self.home_path + '/.webthings/data'
         
         
+        self.boot_path = '/boot'
+        if os.path.exists('/boot/firmware'):
+            self.boot_path = '/boot/firmware'
+        
+        self.config_txt_path = self.boot_path + '/config.txt'
+        self.config_txt_backup_path = self.boot_path + '/backup_of_config.txt'
+
+        self.mouse_pointer_enabled = True
+        if os.path.exists(self.boot_path + '/candle_hide_mouse_pointer.txt'):
+            self.mouse_pointer_enabled = False
+
+        self.kiosk_enabled = True
+        if os.path.exists(self.boot_path + '/candle_kiosk_disabled.txt'):
+            self.kiosk_enabled = False
+
+
         clean_up_backup_command = r"/.webthings/data -maxdepth 1 -type d -exec sh -c 'rm $1/candle_backuped.txt' _ {} \; 2> /dev/null"
         clean_up_backup_command = "find " + str(self.home_path) + clean_up_backup_command
         run_command(clean_up_backup_command)
@@ -197,12 +211,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.allow_anonymous_mqtt = False
         
         
-        self.boot_path = '/boot'
-        if os.path.exists('/boot/firmware'):
-            self.boot_path = '/boot/firmware'
         
-        self.config_txt_path = self.boot_path + '/config.txt'
-        self.config_txt_backup_path = self.boot_path + '/backup_of_config.txt'
 
 
         
@@ -407,7 +416,7 @@ class PowerSettingsAPIHandler(APIHandler):
         # USB Gadget mode
         
         self.usb_gadget_mode_enabled = False
-        self.usb_gadget_mode_info = run_command('sudo rpi-usb-gadget status')
+        self.usb_gadget_mode_info = str(run_command('sudo rpi-usb-gadget status')).replace('\x1b[33m','').replace('\x1b[0m','').rstrip()
         
         
         # Display
@@ -455,6 +464,7 @@ class PowerSettingsAPIHandler(APIHandler):
                 display_port_names = run_command("DISPLAY=:0 xrandr | grep 'connected' | cut -d' ' -f1")
                 if self.DEBUG:
                     print("power-settings debug: display_port_names: \n" + str(display_port_names))
+
                 display_port_names = str(display_port_names).splitlines()
         
                 if len(display_port_names) > 0:
@@ -1327,7 +1337,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                     #just_updated_via_recovery = self.just_updated_via_recovery
                                     #self.just_updated_via_recovery = False
                                     
-                                    self.usb_gadget_mode_info = run_command('sudo rpi-usb-gadget status')
+                                    self.usb_gadget_mode_info = run_command('sudo rpi-usb-gadget status').replace('\x1b[33m','').replace('\x1b[0m','').rstrip()
                                     
                                     hotspot_arp_list = self.get_hotspot_arp()
                                     hotspot_arp_list = str(hotspot_arp_list)
@@ -1655,33 +1665,58 @@ class PowerSettingsAPIHandler(APIHandler):
                                     else:
                                         self.mouse_pointer_enabled = True
                                     
+                                    if os.path.exists(self.boot_path + '/candle_kiosk_disabled.txt'):
+                                        self.kiosk_enabled = False
+                                    else:
+                                        self.kiosk_enabled = True
+                                    
+
                                 
                                     if os.path.isdir('/sys'):
                                 
                                         # get HDMI port names
                                         display_port_names = run_command("DISPLAY=:0 xrandr | grep 'connected' | cut -d' ' -f1")
-                                        if display_port_names != None:
+                                        if isinstance(display_port_names,str):
                                             if self.DEBUG:
                                                 print("display_port_names: \n" + str(display_port_names))
-                                            display_port_names = display_port_names.splitlines()
-                                    
-                                            if len(display_port_names) > 0:
-                                                if len(str(display_port_names[0])) > 2:
-                                                    self.display_port1_name = str(display_port_names[0])
-                                                    [ self.display1_width, self.display1_height ] = self.get_hdmi_port_resolution(self.display_port1_name)
-                                                    if self.DEBUG:
-                                                        print("self.display1_width: " + str(self.display1_width))
-                                            
-                                            if len(display_port_names) > 1:
-                                                if len(str(display_port_names[1])) > 2:
-                                                    self.display_port2_name = str(display_port_names[1])
-                                                    [ self.display2_width, self.display2_height ] = self.get_hdmi_port_resolution(self.display_port2_name)
-                                                    if self.DEBUG:
-                                                        print("self.display2_width: " + str(self.display2_width))
+
+                                            if has_a_display == True and (display_port_names == '' or "Can't open display" in display_port_names):
+                                                self.display_port1_name = 'Display 1'
+                                                if os.path.isfile('/usr/bin/fbset'):
+                                                    resolution_check = str(run_command("fbset -s  | grep 'mode \"' -m 1")).strip().rstrip()
+                                                    if resolution_check.startswith('mode') and 'x' in resolution_check:
+                                                        resolution_check = resolution_check.replace('mode "','').replace('"','')
+                                                        resolution_parts = resolution_check.split('x')
+                                                        if self.DEBUG:
+                                                            print("resolution_parts: " + str(resolution_parts))
+                                                        if len(resolution_parts) == 2 and resolution_parts[0].isdigit() and resolution_parts[1].isdigit():
+                                                            self.display1_width = int(resolution_parts[0])
+                                                            self.display1_height = int(resolution_parts[1])
+                                                            if self.DEBUG:
+                                                                print("display1_width, display1_height: ", self.display1_width, self.display1_height)
+                                                            if self.touchscreen_detected:
+                                                                self.display_port1_name = 'Touch screen'
+
+                                            else:
+                                                display_port_names = display_port_names.splitlines()
+                                        
+                                                if len(display_port_names) > 0:
+                                                    if len(str(display_port_names[0])) > 2:
+                                                        self.display_port1_name = str(display_port_names[0])
+                                                        [ self.display1_width, self.display1_height ] = self.get_hdmi_port_resolution(self.display_port1_name)
+                                                        if self.DEBUG:
+                                                            print("self.display1_width: " + str(self.display1_width))
                                                 
+                                                if len(display_port_names) > 1:
+                                                    if len(str(display_port_names[1])) > 2:
+                                                        self.display_port2_name = str(display_port_names[1])
+                                                        [ self.display2_width, self.display2_height ] = self.get_hdmi_port_resolution(self.display_port2_name)
+                                                        if self.DEBUG:
+                                                            print("self.display2_width: " + str(self.display2_width))
+                                                    
                                     
                                         connected_port_names = run_command("DISPLAY=:0 xrandr | grep ' connected'")
-                                        if connected_port_names != None:
+                                        if isinstance(connected_port_names,str) and "Can't open display" not in connected_port_names:
                                             for connected_port in connected_port_names.splitlines():
                                                 if connected_port == self.display_port1_name:
                                                     self.display1_available = True
@@ -1690,7 +1725,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                         #subprocess.check_output
                                         xrand_verbose_check = run_command("DISPLAY=:0 xrandr --verbose")
-                                        if xrand_verbose_check:
+                                        if isinstance(xrand_verbose_check,str) and "Can't open display" not in xrand_verbose_check:
                                             edids = pyedid.get_edid_from_xrandr_verbose(str(xrand_verbose_check))
                                             if self.DEBUG:
                                                 print("edids 1: " + str(edids))
@@ -1704,93 +1739,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                                     self.display2_details = str(pyedid.parse_edid(edid))
                                 
                                 
-                                        """
-                                        for x in range(len(edids)):
-                                        for x in range(len(edids)-1):
-                                            print("x: " + str(x))
-                                            edid = pyedid.parse_edid(edids[x])
-                                    
-                                    
-                                        #if len(edids) == 1:
-                                
-                                
-                                
-                                
-                                        #if self.DEBUG:
-                                        #    print("\nparsed edid: " + str(edid))
-                                
-                                        edid_paths = run_command('find -L /sys/class/drm -maxdepth 2 | grep edid | grep -v riteback')
-                                        edid_paths = edid_paths.splitlines()
-                                
-                                
-                                        for x in range(len(edid_paths)-1):
-                                            if self.DEBUG:
-                                                print("checking edid #: " + str(x) + " -> " + str(edid_paths[x]))
-                                        
-                                            with open(edid_paths[x], 'rb') as f:
-                                                edid_data = f.read().hex()
-                                                print(str(edid_data))
-                                                # loading list with edid data
-                                                #edid_bs = EdidHelper.get_edids()[0]
-
-                                                # convert exist edid hex string from xrandr
-                                                #edid_bs = EdidHelper.hex2bytes("hex string from xrandr...")
-
-                                                #### Step 3: create instance
-
-                                                # create Edid instance for fisrt edid data
-                                                #edid = Edid(edid_data, self.edid_registry)
-                                                #print(".\nedid: " + str(edid))
-                                        """
-                                
-                                        """
-                                        # get display name from EDID data
-                                        if self.edid_available:
-                                            edid_paths = run_command('find -L /sys/class/drm -maxdepth 2 | grep edid | grep -v riteback')
-                                            edid_paths = edid_paths.splitlines()
-                                    
-                                            for x in range(len(edid_paths)-1):
-                                                if self.DEBUG:
-                                                    print("checking edid #: " + str(x))
-                                                edid_data = run_command("edid-decode " + str(edid_paths[x]))
-                                                if self.DEBUG:
-                                                    print("edid_data: " + str(edid_data))
-                                                if 'edid-decode (hex):' in edid_data:
-                                                    manufacturer = None
-                                                    display_name = ""
-                                                    for line in edid_data.split('\n'):
-                                                        if 'Manufacturer:' in line:
-                                                            manufacturer = line.replace('Manufacturer:','').strip()
-                                                        if 'Display Product Name:' in line:
-                                                            line = line.replace('Display Product Name:','').strip()
-                                                            display_name = line + ' ' + display_name
-                                                        if 'Model:' in line:
-                                                            line = line.replace('Model:','').strip()
-                                                            display_name = display_name + ' ' + line
-                                            
-                                                    if manufacturer != None:
-                                                        display_name = manufacturer + ' ' + display_name
-                                            
-                                                    # TODO: should have a better, more flexible datastructure for display data..
-                                                    if x == 0:
-                                                        self.display1_details = edid_data
-                                                        if len(str(display_name)) > 3:
-                                                            self.display1_name = display_name
-                                                    if x == 1:
-                                                        self.display2_details = edid_data
-                                                        if len(str(display_name)) > 3:
-                                                            self.display2_name = display_name
-                                        
-                                        
-                                    
-                                        """
-                                
-                                        # DISPLAY=:0 xrandr | grep ' connected' | cut -d' ' -f1
-                                    
                                 
                                         # Power management
                                         display1_power_management_output = run_command("DISPLAY=:0 xset -q | awk '/DPMS is/ {print $NF}'")
-                                        if display1_power_management_output != None:
+                                        if isinstance(display1_power_management_output,str) and "Can't open display" not in display1_power_management_output:
                                             if 'unable to open' in str(display1_power_management_output):
                                                 #self.display1_available = False
                                                 pass
@@ -1819,6 +1771,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':state,
                                           'has_a_display':has_a_display,
                                           'mouse_pointer_enabled':self.mouse_pointer_enabled,
+                                          'kiosk_enabled':self.kiosk_enabled,
                                           'display_port1_name':self.display_port1_name,
                                           'display_port2_name':self.display_port2_name,
                                           'display1_available':self.display1_available,
@@ -1864,6 +1817,24 @@ class PowerSettingsAPIHandler(APIHandler):
                                 )
                             
                             
+                            # ENABLE OR DISABLE KIOSK
+                            elif action == 'set_kiosk_enabled':
+                                state = False
+                                if self.exhibit_mode == False and 'kiosk_enabled' in request.body:
+                                    self.kiosk_enabled = bool(request.body['kiosk_enabled'])
+                                    if self.kiosk_enabled == True:
+                                        run_command('sudo rm ' + str(self.boot_path) + '/candle_kiosk_disabled.txt')
+                                    else:
+                                        run_command('sudo touch ' + str(self.boot_path) + '/candle_kiosk_disabled.txt')
+                                    run_command('sudo systemctl restart candle_kiosk.service')
+                                    state = True
+                                    
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state,'kiosk_enabled':self.kiosk_enabled}),
+                                )
+
                                 
                             # DISPLAY ROTATION
                             elif action == 'set_display_rotation':

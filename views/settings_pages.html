@@ -291,12 +291,20 @@
 		</div>
 		
 		
-        <div id="extension-power-settings-mouse-pointer" class="extension-power-settings-area extension-power-settings-hidden">
+        <div id="extension-power-settings-mouse-pointer-container" class="extension-power-settings-area extension-power-settings-hidden">
 			<div class="extension-power-settings-form-content">
 				<input type="checkbox" name="extension-power-settings-show-mouse-pointer" id="extension-power-settings-show-mouse-pointer">
 				<label for="extension-power-settings-show-mouse-pointer">Show mouse pointer</label>
 			</div>
 			<div id="extension-power-settings-show-mouse-pointer-hint" class="extension-power-settings-hidden"><p>Please reboot the controller to finish applying this setting.</p></div>
+		</div>
+
+        <div id="extension-power-settings-kiosk-enabled-container" class="extension-power-settings-area extension-power-settings-hidden">
+			<div class="extension-power-settings-form-content">
+				<input type="checkbox" name="extension-power-settings-kiosk-enabled" id="extension-power-settings-kiosk-enabled">
+				<label for="extension-power-settings-kiosk-enabled">Show Candle on display</label>
+			</div>
+			<div id="extension-power-settings-kiosk-enabled-hint" class="extension-power-settings-hidden"><p>Please reboot the controller to finish applying this setting.</p></div>
 		</div>
 		
         <div id="extension-power-settings-screensaver-settings" class="extension-power-settings-area">
@@ -318,11 +326,11 @@
 				</span>
 			</div>
 			
-			<p>These settings only apply to your current browser</p>
-
             <div class="extension-power-settings-form-content">
 				<button id="extension-power-settings-screensaver-test-button" class="text-button">Test</button>
 			</div>
+
+            <p>These settings only apply to this browser</p>
 
 		</div>
 		
