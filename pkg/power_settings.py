@@ -64,7 +64,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.DEBUG = False
         self.running = True
         
-        os.system(r"find /home/pi/.webthings/data -maxdepth 1 -type d -exec sh -c 'rm $1/candle_backuped.txt' _ {} \; 2> /dev/null")
+        
         
         """
         try:
@@ -87,24 +87,40 @@ class PowerSettingsAPIHandler(APIHandler):
         self.show_hotspot_password = False
         
         
+        
+        
         try:
             APIHandler.__init__(self, self.addon_id) # manifest['id']
             self.manager_proxy.add_api_handler(self)
         except Exception as ex:
-            print('Power settings: error adding api handler to manager_proxy: ' + str(ex))
+            print('\nPower settings: caught error adding api handler to manager_proxy: ' + str(ex))
         
+        #self.home_path = '/home/pi'
+        self.home_path = os.path.expanduser("~")
+        if not isinstance(self.home_path,str):
+            self.home_path = '/home/pi'
+        elif len(self.home_path) < 2:
+            self.home_path = '/home/pi'
+
+        if self.DEBUG:
+            print("self.home_path: ", self.home_path)
+
         #print("\n\n\n")
         try:
-            print("self.user_profile: ", self.user_profile)
+            if self.DEBUG:
+                print("self.user_profile: ", self.user_profile)
         except:
-            print("\n\nERRORr, no self.user_profile?\n\n")
+            print("\n\nERROR, no self.user_profile?\n\n")
             self.user_profile = {}
-            self.user_profile['baseDir'] = '/home/pi/.webthings'
-            self.user_profile['addonsDir'] = '/home/pi/.webthings/addons'
-            self.user_profile['dataDir'] = '/home/pi/.webthings/data'
+            self.user_profile['baseDir'] = self.home_path + '/.webthings'
+            self.user_profile['addonsDir'] = self.home_path + '/.webthings/addons'
+            self.user_profile['dataDir'] = self.home_path + '/.webthings/data'
         
-            
         
+        clean_up_backup_command = r"/.webthings/data -maxdepth 1 -type d -exec sh -c 'rm $1/candle_backuped.txt' _ {} \; 2> /dev/null"
+        clean_up_backup_command = "find " + str(self.home_path) + clean_up_backup_command
+        run_command(clean_up_backup_command)
+
         self.addon_dir = os.path.join(str(self.user_profile['addonsDir']), self.addon_id)
         self.data_dir = os.path.join(str(self.user_profile['dataDir']), self.addon_id)
         # baseDir is another useful option in user_profile
@@ -187,7 +203,11 @@ class PowerSettingsAPIHandler(APIHandler):
         
         self.config_txt_path = self.boot_path + '/config.txt'
         self.config_txt_backup_path = self.boot_path + '/backup_of_config.txt'
+
+
         
+        
+
         self.bits = 32
         try:
             bits_check = run_command('getconf LONG_BIT')
@@ -288,7 +308,7 @@ class PowerSettingsAPIHandler(APIHandler):
             os.system('sudo rm ' + str(self.ran_out_of_memory_path))
         
         
-        self.ssh_state = os.path.isfile('/boot/firmware/candle_ssh.txt')
+        self.ssh_state = os.path.isfile(str(self.boot_path) + '/candle_ssh.txt')
         
         # Factory reset
         self.keep_z2m_file_path = self.boot_path + '/keep_z2m.txt'
@@ -311,7 +331,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.backup_dir = os.path.join(self.data_dir, "backup") 
         self.backup_file_path = os.path.join(self.backup_dir, "candle_backup.tar")
         
-        self.safe_mode_addons_dir = '/home/pi/safe_mode'
+        self.safe_mode_addons_dir = self.home_path + '/safe_mode'
         self.addon_backups_dir = os.path.join(str(self.user_profile['baseDir']), 'backups','addons')
         
         # Backup data logs path
@@ -616,7 +636,7 @@ class PowerSettingsAPIHandler(APIHandler):
             self.ro_exists = True
             
         self.files_check_exists = False
-        if os.path.isfile('/home/pi/candle/files_check.sh'):
+        if os.path.isfile(self.home_path + '/candle/files_check.sh'):
             self.files_check_exists = True
             
         self.exhibit_mode = False
@@ -679,7 +699,7 @@ class PowerSettingsAPIHandler(APIHandler):
             # clean up the bootup_actions file regardless because it will keep running even if the file is deleted
             os.system('sudo rm ' + str(self.boot_path) + '/bootup_actions_failed.sh')
             if self.DEBUG:
-                print("/boot/firmware/bootup_actions_failed.sh detected")
+                print("bootup_actions_failed.sh detected")
                 
         
         if os.path.isfile(self.boot_path + '/candle_stay_rw.txt'):
@@ -1273,7 +1293,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 local_update_via_recovery_interupted = self.update_via_recovery_interupted
                                 self.update_via_recovery_interupted = False
                                 
-                                self.ssh_state = os.path.isfile('/boot/firmware/candle_ssh.txt')
+                                self.ssh_state = os.path.isfile(self.boot_path + '/candle_ssh.txt')
                                 
                                 dmesg_output = run_command("dmesg --level=err,warn")
                                 if isinstance(dmesg_output,str):
@@ -1533,9 +1553,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 del self.persistent_data['config_txt_lines']['respeaker']
                                             if selected_respeaker_type != '':
                                                 self.persistent_data['config_txt_lines']['respeaker'] = ['dtoverlay=respeaker-' + str(self.persistent_data['selected_respeaker_type'])]
-                                                os.system('sudo touch /boot/firmware/candle_repeaker.txt')
-                                            elif os.path.isfile('/boot/firmware/candle_repeaker.txt'):
-                                                os.system('sudo rm /boot/firmware/candle_repeaker.txt')  
+                                                os.system('sudo touch ' + str(self.boot_path) + '/candle_repeaker.txt')
+                                            elif os.path.isfile(str(self.boot_path) + '/candle_repeaker.txt'):
+                                                os.system('sudo rm ' + str(self.boot_path) + '/candle_repeaker.txt')  
                                             if self.DEBUG:
                                                 print("self.persistent_data['config_txt_lines']: ", json.dumps(self.persistent_data['config_txt_lines'],indent=4))
                                                 print("calling update_config_txt")
@@ -1630,7 +1650,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         has_a_display = True
                                         
                                         
-                                    if os.path.exists('/boot/firmware/candle_hide_mouse_pointer.txt'):
+                                    if os.path.exists(self.boot_path + '/candle_hide_mouse_pointer.txt'):
                                         self.mouse_pointer_enabled = False
                                     else:
                                         self.mouse_pointer_enabled = True
@@ -1831,9 +1851,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if self.exhibit_mode == False and 'mouse_pointer_enabled' in request.body:
                                     self.mouse_pointer_enabled = bool(request.body['mouse_pointer_enabled'])
                                     if self.mouse_pointer_enabled == True:
-                                        os.system('sudo rm /boot/firmware/candle_hide_mouse_pointer.txt')
+                                        os.system('sudo rm ' + str(self.boot_path) + '/candle_hide_mouse_pointer.txt')
                                     else:
-                                        os.system('sudo touch /boot/firmware/candle_hide_mouse_pointer.txt')
+                                        os.system('sudo touch ' + str(self.boot_path) + '/candle_hide_mouse_pointer.txt')
                                     
                                     state = True
                                     
@@ -2503,7 +2523,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                             if request.body['cutting_edge'] == True:
                                                 os.system('sudo touch ' + str(self.boot_path) + '/candle_cutting_edge.txt')
                                                 if self.DEBUG:
-                                                    print("created /boot/firmware/candle_cutting_edge.txt file")
+                                                    print("created candle_cutting_edge.txt file")
                                             else:
                                                 if os.path.isfile(self.boot_path + '/candle_cutting_edge.txt'):
                                                     os.system('sudo rm ' + str(self.boot_path) + '/candle_cutting_edge.txt')
@@ -2742,8 +2762,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 files_check_output = "An error occured"
                                 try:
-                                    if os.path.isfile('/home/pi/candle/files_check.sh'):
-                                        files_check_output = run_command("/home/pi/candle/files_check.sh")
+                                    if os.path.isfile(self.home_path + '/candle/files_check.sh'):
+                                        files_check_output = run_command(self.home_path + "/candle/files_check.sh")
                                     else:
                                         files_check_output = "Not supported by this older Candle version."
                                         
@@ -2769,8 +2789,19 @@ class PowerSettingsAPIHandler(APIHandler):
                                         command_output = run_command("pstree -t -c -a -n")
                                         
                                     elif request.body['command'] == 'memory_use':
-                                        command_output = run_command(r'ps -eo vsz,cmd --sort=-vsz | grep -v "   0 \["')
+                                        #command_output = run_command(r'ps -eo vsz,cmd --sort=-vsz | grep -v "   0 \["')
+                                        pre_command = r"ps -eo size,pid,user,command --sort -size | awk '"
+                                        awk_command = r'{ hr=$1/1024 ; printf("%13.2f Mb ",hr) } { for ( x=4 ; x<=NF ; x++ ) { printf("%s ",$x) } print "" }'
+                                        awk_command = awk_command + "'"
+                                        post_command = r'| cut -d "" -f2 | cut -d "-" -f1'
+                                        complete_memory_command = pre_command + awk_command + post_command
+                                        #mem_command = r'ps -eo size,pid,user,command --sort -size | awk '{ hr=$1/1024 ; printf("%13.2f Mb ",hr) } { for ( x=4 ; x<=NF ; x++ ) { printf("%s ",$x) } print "" }' | cut -d "" -f2 | cut -d "-" -f1'
+                                        #print("complete_memory_command: \n", complete_memory_command)
+                                        #print(run_command(complete_memory_command))
+                                        command_output = run_command(complete_memory_command)
+                                        #command_output = run_command(r'ps -eo size,pid,user,command --sort -size | awk \\\'{ hr=$1/1024 ; printf("%13.2f Mb ",hr) } { for ( x=4 ; x<=NF ; x++ ) { printf("%s ",$x) } print "" }\\\' | cut -d "" -f2 | cut -d "-" -f1')
                                         
+                                        """
                                         if isinstance(command_output,str):
                                             friendly_bytes_output = 'Memory  Command\n\n'
                                             for line in command_output.splitlines():
@@ -2798,8 +2829,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                                     if self.DEBUG:
                                                         print("-> friendly_bytes: " + str(friendly_bytes))
                                                     friendly_bytes_output = friendly_bytes_output + line.replace(str(raw_bytes), str(friendly_bytes)) + '\n'
-
                                             command_output = str(friendly_bytes_output)
+                                        """
+                                            
                                             
                                         
                                             
@@ -2807,13 +2839,13 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 if isinstance(command_output,str) and command_output != '':
                                     command_output = command_output.replace('python3 ','')
-                                    command_output = command_output.replace('/home/pi/.webthings/','')
+                                    command_output = command_output.replace(self.home_path + '/.webthings/','')
                                     command_output = command_output.replace('/main.py','')
                                     command_output = command_output.replace('/usr/lib/','')
                                     command_output = command_output.replace('/usr/bin/','')
                                     command_output = command_output.replace('/usr/sbin/','')
-                                    command_output = command_output.replace('/home/pi/webthings/gateway/','')
-                                    command_output = command_output.replace('/home/pi/','')
+                                    command_output = command_output.replace(self.home_path + '/webthings/gateway/','')
+                                    command_output = command_output.replace(self.home_path + '/','')
                                     command_output = command_output.replace(' --mqtt-username candle --mqtt-password smarthome','')
                                     command_output = command_output.replace('node build/app.js','CANDLE CONTROLLER')
                                             
@@ -2990,11 +3022,11 @@ class PowerSettingsAPIHandler(APIHandler):
                                 if self.DEBUG:
                                     print("API got set_ssh_state request")
                                 
-                                if self.exhibit_mode == False and 'state' in request.body and os.path.isdir('/boot/firmware/'):
+                                if self.exhibit_mode == False and 'state' in request.body and os.path.isdir(str(self.boot_path)):
                                     if bool(request.body['state']) == True:
-                                        os.system('sudo touch /boot/firmware/candle_ssh.txt')
-                                    elif os.path.isfile('/boot/firmware/candle_ssh.txt'):
-                                        os.system('sudo rm /boot/firmware/candle_ssh.txt')
+                                        os.system('sudo touch ' + str(self.boot_path) + '/candle_ssh.txt')
+                                    elif os.path.isfile(str(self.boot_path) + '/candle_ssh.txt'):
+                                        os.system('sudo rm ' + str(self.boot_path) + '/candle_ssh.txt')
                                     state = True
                                 
                                 return APIResponse(
@@ -3093,8 +3125,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                             self.attached_devices = str(lsusb_output).splitlines()
                                     
                                         extra_usb_power = False
-                                        extra_usb_power_check = str(run_command("cat /boot/firmware/config.txt | grep 'max_usb_current'"))
-                                        if'max_usb_current=1' in extra_usb_power_check:
+                                        extra_usb_power_check = str(run_command("cat " + str(self.boot_path) + "/config.txt | grep 'max_usb_current'"))
+                                        if 'max_usb_current=1' in extra_usb_power_check:
                                              extra_usb_power = True
                                             
                                     
@@ -3502,7 +3534,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                     print("untar test of backup file resulted in error: " + str(tar_test))
                                             else:
                                                 
-                                                os.system('cp ' + str(self.restore_backup_script_path) + ' /home/pi/.webthings/run_once.sh')
+                                                os.system('cp ' + str(self.restore_backup_script_path) + ' ' + str(self.home_path) + '/.webthings/run_once.sh')
                                                 os.system('sudo systemctl start candle_run_script.service &')
                                                 
                                                 
@@ -3750,7 +3782,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                         add_printer_command = "sudo lpadmin -p " + str(safe_printer_name) + " -E -v socket://" + str(ip_address) + "  -o printer-error-policy=abort-job"
                                                         if self.DEBUG:
                                                             print("debug: add_printer_command: " + str(add_printer_command))
-                                                        os.system(str(add_printer_command)) # -P # -o printer-error-policy=abort-job -u allow:all
+                                                        run_command(str(add_printer_command)) # -P # -o printer-error-policy=abort-job -u allow:all
                                                 
                                                         if not 'default_printer' in self.persistent_data:
                                                             if self.DEBUG:
@@ -3769,7 +3801,7 @@ class PowerSettingsAPIHandler(APIHandler):
                         if found_default_printer_again == True and 'default_printer' in self.persistent_data:
                             if self.DEBUG:
                                 print("Found the default printer (again): " + str(self.persistent_data['default_printer']))
-                            os.system('lpoptions -d  ' + str(self.persistent_data['default_printer']))
+                            run_command('lpoptions -d  ' + str(self.persistent_data['default_printer']))
                             self.connected_printers[ self.persistent_data['default_printer'] ]['default'] = True
                 
             
@@ -3780,7 +3812,7 @@ class PowerSettingsAPIHandler(APIHandler):
             if self.DEBUG:
                 print("debug: lpstat -v after printer scan: " + str(lpstat_output))
                 print("\ndebug: self.connected_printers:\n")
-                print(json.dumps(self.connected_printers, indent=4, sort_keys=True))
+                print("self.connected_printers: \n", json.dumps(self.connected_printers, indent=4, sort_keys=True))
         
         
             #if not 'No destinations added' in lpstat_output:
@@ -3980,8 +4012,12 @@ class PowerSettingsAPIHandler(APIHandler):
                     print("Running backup command: " + str(backup_command))
                 run_command(backup_command)
                 
-                os.system(r"find /home/pi/.webthings/data -maxdepth 1 -type d -exec sh -c 'rm $1/candle_backuped.txt' _ {} \; 2> /dev/null")
+                clean_up_backup_command = r"/.webthings/data -maxdepth 1 -type d -exec sh -c 'rm $1/candle_backuped.txt' _ {} \; 2> /dev/null"
+                clean_up_backup_command = "find " + str(self.home_path) + clean_up_backup_command
+                run_command(clean_up_backup_command)
                 
+    
+
             #soft_link = 'ln -s ' + str(self.backup_download_file_path) + " " + str(self.self.backup_download_dir)
             #if self.DEBUG:
             #    print("linking: " + soft_link)
@@ -4149,7 +4185,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     
                     if os.path.exists(self.boot_path + '/cmdline-update.txt'):
                         if self.DEBUG:
-                            print("/boot/firmware/cmdline-update.txt exists, update may happen via recovery partition")
+                            print("cmdline-update.txt exists, update may happen via recovery partition")
                         
                         if self.DEBUG:
                             print("Update may happen via recovery partition (if the network cable is also plugged in)")
@@ -4169,7 +4205,8 @@ class PowerSettingsAPIHandler(APIHandler):
 
     def update_recovery_partition(self):
         if self.DEBUG:
-            print("in update_recovery_partition")
+            print("in update_recovery_partition (blocked)")
+        return
         if os.path.isdir(self.boot_path):
             try:
             
@@ -4326,7 +4363,9 @@ class PowerSettingsAPIHandler(APIHandler):
 
     def switch_to_recovery(self):
         if self.DEBUG:
-            print("in switch_to_recovery")
+            print("in switch_to_recovery (blocked)")
+        return False
+
         try:
             if self.recovery_version > 0 and self.recovery_version == self.latest_recovery_version:
                 if os.path.exists(self.boot_path + '/cmdline-update.txt') and os.path.exists(self.boot_path + '/cmdline-candle.txt'):
@@ -4346,7 +4385,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             print("Error, will not start switch to recovery as busy_updating_recovery is in limbo, indicating a failed recovery partition update: " + str(self.busy_updating_recovery))
                 else:
                     if self.DEBUG:
-                        print("Error, /boot/firmware/cmdline-update.txt or /boot/firmware/cmdline-candle.txt does not exist")
+                        print("Error, cmdline-update.txt or cmdline-candle.txt does not exist")
             else:
                 if self.DEBUG:
                     print("Error, recovery partition does not exist/has not been installed (still version 0)")
@@ -4386,8 +4425,8 @@ class PowerSettingsAPIHandler(APIHandler):
                     print("date: " + str(date))    
                 os.system('echo "' + str(date_string) + ' expanding user partition" | sudo tee -a ' + str(self.boot_path) + '/candle_log.txt')
                 os.system('sudo fdisk -l | sudo tee -a ' + str(self.boot_path) + '/candle_log.txt')
-                if os.path.exists('/home/pi/.webthings/candle.log'):
-                    os.system('echo "' + str(date_string) + ' expanding user partition" | sudo tee -a /home/pi/.webthings/candle.log')
+                if os.path.exists(self.home_path + '/.webthings/candle.log'):
+                    os.system('echo "' + str(date_string) + ' expanding user partition" | sudo tee -a ' + str(self.home_path) + '/.webthings/candle.log')
             
                 start_sector = run_command("sudo fdisk -l | grep mmcblk0p4 | awk '{print $2}' | tr -d '\n'")
                 if start_sector.isdigit() and len(start_sector) > 4:
