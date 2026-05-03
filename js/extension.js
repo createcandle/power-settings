@@ -5721,6 +5721,7 @@
 								}
 								let action_dict = {'action':'set_audio'};
 								action_dict['pipewire_id'] = pipewire_id;
+								action_dict['volume'] = parseInt(volume_slider_el.value);
 								if(this.debug){
 									console.log("power settings debug: set_audio volume: action_dict: ", action_dict);
 								}
@@ -5729,7 +5730,7 @@
 
 						        ).then((body) => {
 									if(this.debug){
-					                    console.log('power settings debud: set_audio volume response: ', body);
+					                    console.log('power settings debug: set_audio volume response: ', body);
 					                }
 									if(typeof body.pipewire_data != 'undefined'){
 										this.pipewire_data = body.pipewire_data;
@@ -6009,7 +6010,7 @@
 			}
 			
 			// Show the display's width and height
-			if(typeof body.display1_width == 'number' && typeof body.display1_height == 'number' && typeof body.display2_width == 'number' && typeof body.display2_height == 'number'){
+			if(typeof body.display1_width != 'undefined' && typeof body.display1_height != 'undefined' && typeof body.display2_width != 'undefined' && typeof body.display2_height != 'undefined'){
 				
 				document.getElementById('extension-power-settings-display1-resolution-container').innerHTML = '<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display1-width">' + body.display1_width + '</span><br/><span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display1-height">' + body.display1_height + '</span><br/>';
 				document.getElementById('extension-power-settings-display2-resolution-container').innerHTML = '<span class="extension-power-settings-key-label">Width:</span> <span id="extension-power-settings-display2-width">' + body.display2_width + '</span><br/><span class="extension-power-settings-key-label">Height:</span> <span id="extension-power-settings-display2-height">' + body.display2_height + '</span><br/>';
@@ -6020,19 +6021,19 @@
 				if(body.display1_width == 0 && body.display2_width == 0){
 					document.getElementById('extension-power-settings-no-display').classList.remove('extension-power-settings-hidden');
 				}
-				if(body.display1_width != 0){
+				if(body.display1_width != 0 || body.display1_details != ""){
 					document.getElementById('extension-power-settings-display1-info').classList.remove('extension-power-settings-hidden');
 					if(typeof body.touchscreen_detected == 'boolean' && body.display2_width == 0){
 						if(body.touchscreen_detected){
-							document.getElementById('extension-power-settings-display1-production-date').innerHTML = 'Touch screen<br/>';
+							document.getElementById('extension-power-settings-display1-production-date').innerHTML += 'Touch screen<br>';
 						}
 					}
 				}
-				if(body.display2_width != 0){
+				if(body.display2_width != 0 || body.display2_details != ""){
 					document.getElementById('extension-power-settings-display2-info').classList.remove('extension-power-settings-hidden');
-					if(typeof body.touchscreen_detected != 'undefined' && body.display1_width == 0){
+					if(typeof body.touchscreen_detected == 'boolean' && body.display1_width == 0){
 						if(body.touchscreen_detected){
-							document.getElementById('extension-power-settings-display2-production-date').innerHTML = 'Touch screen<br/>';
+							document.getElementById('extension-power-settings-display2-production-date').innerHTML += 'Touch screen<br>';
 						}
 					}
 				}
@@ -6094,8 +6095,13 @@
 								if(disp_details['manufacturer'].indexOf('DO NOT USE') != -1){
 									disp_details['manufacturer'] = 'Unknown manufacturer'
 								}
+								if(disp_details['manufacturer'].startsWith('Unknown')){
+									document.getElementById('extension-power-settings-display1-name').innerText = disp_details['name'];
+								}
+								else{
+									document.getElementById('extension-power-settings-display1-name').innerText = disp_details['manufacturer'] + ' - ' + disp_details['name'];
+								}
 								
-								document.getElementById('extension-power-settings-display1-name').innerText = disp_details['manufacturer'] + ' - ' + disp_details['name'];
 							}
 							
 							//console.log("registry: ", window.extension_power_settings_display_registry);

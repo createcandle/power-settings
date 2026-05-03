@@ -330,7 +330,7 @@
 				<button id="extension-power-settings-screensaver-test-button" class="text-button">Test</button>
 			</div>
 
-            <p>These settings only apply to this browser</p>
+            <p>Screensaver settings only apply to this browser</p>
 
 		</div>
 		
@@ -589,14 +589,15 @@
             <p>This will create a downloadable backup file. It contains:</p>
 
             <ul>
-                <li>Settings for Candle addons</li>
-                <li>General settings for controller and your addons</li>
+				<li>Settings for the controller</li>
+                <li>Settings for the addons</li>
+				<li>Uploaded Thing icons</li>
             </ul>
             <p>By default this does NOT contain <span class="photo-frame-detail">photos or </span>data logs in order to keep file size small.</p>
-            <p class="extension-power-settings-show-if-developer">Log size: <span id="extension-power-settings-log-size">unknown</span>Mb</p>
-            <p class="extension-power-settings-show-if-developer">Photos size: <span id="extension-power-settings-photos-size">unknown</span>Mb</p>
-            <p class="extension-power-settings-show-if-developer">Uploads size: <span id="extension-power-settings-uploads-size">unknown</span>Mb</p>
-            
+            <p class="extension-power-settings-show-if-developer">Log size: <span id="extension-power-settings-log-size">...</span>Mb</p>
+            <p class="extension-power-settings-show-if-developer photo-frame-detail">Photos size: <span id="extension-power-settings-photos-size">...</span>Mb</p>
+            <p class="extension-power-settings-show-if-developer">Uploads size: <span id="extension-power-settings-uploads-size">...</span>Mb</p>
+            <br>
             <input type="checkbox" name="extension-power-settings-backup-more-checkbox" id="extension-power-settings-backup-more-checkbox" >
             <label for="extension-power-settings-backup-more-checkbox">Also backup logs<span class="photo-frame-detail"> and photos</span></label>
             <p id="extension-power-settings-backup-more-tip" class="extension-power-settings-warning-tip" style="display:none">If you also backup logs<span class="photo-frame-detail"> and photos</span>, then the backup file size will become much bigger. You will only be able to restore it on the latest version of Candle. If the logs <span class="photo-frame-detail">or photos</span> are bigger than 50 megabytes they may not be backuped.</p>
