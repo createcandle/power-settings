@@ -120,7 +120,7 @@ else
 	            elif [[ $URLS == *"v3.9."* ]]; then
 	            	echo "v3.9. spotted"
 	            	URLS=$(echo "$URLS" | grep "v3.9.")
-                elif [[ $URLS == *"$NODE_VERSION.t"* ]]
+                elif [[ $URLS == *"$NODE_VERSION.t"* ]]; then
 					echo "NODE JS version spotted: $NODE_VERSION"
 	            	URLS=$(echo "$URLS" | grep "$NODE_VERSION.t")
 				fi

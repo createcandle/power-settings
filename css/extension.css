@@ -198,7 +198,7 @@ body:not(.kiosk):not(.http).https .extension-power-settings-hide-if-https{
 .extension-power-settings-container ul li,
 .extension-power-settings-container ol li{
     margin-bottom:.7rem;
-	display:flex;
+	/*display:flex;*/
 }
 
 
@@ -761,6 +761,8 @@ body:not(.kiosk):not(.http).https .extension-power-settings-hide-if-https{
 
 /*  RESTORE BACKUP  */
 
+#extension-power-settings-container-backup ul
+
 #extension-power-settings-upload-progress-container{
     display:none;
 }
@@ -769,6 +771,41 @@ body:not(.kiosk):not(.http).https .extension-power-settings-hide-if-https{
     display:none;
     width:50%;
     margin:4rem auto 0 auto;
+}
+
+#extension-power-settings-backup-file-selector + label{
+	display:block;
+	text-align:center;
+}
+
+#extension-power-settings-restore-addons-list > div{
+	margin:.5rem 0;
+	padding:.5rem 1rem;
+	background-color:rgba(0,0,0,.1);
+	border-radius:.5rem;
+	display: flex;
+    align-items: center;
+}
+.extension-power-settings-restore-addons-already-installed-item::before{
+	display:inline-block;
+	width: 2.5rem;
+	content:'☑';
+	color:green;
+	margin-right:1rem;
+	font-size:150%;
+	padding-bottom: .2rem;
+}
+.extension-power-settings-restore-addons-not-yet-installed-item::before{
+    display: inline-block;
+    width: 2.5rem;
+    content: '⤓';
+    margin-right: 1rem;
+    font-size: 250%;
+    max-height: 1rem;
+    align-items: center;
+    overflow: hidden;
+	line-height: 2rem;
+    padding-bottom: 1rem;
 }
 
 

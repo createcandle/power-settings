@@ -3460,83 +3460,90 @@ class PowerSettingsAPIHandler(APIHandler):
                     elif request.path == '/save':
                         if self.DEBUG:
                             print("SAVING uploaded file")
+                        
+                        data = []
+                        missing_addons_to_install = []
+                        already_installed_addons = []
+                        photos_in_backup_count = -1 # to skip the first instance of ./data/photo-frame/photos/, which is just the directory without a filename after it
+                        state = False
+                        filename = ""
+                        filedata = ""
+
                         try:
-                            data = []
-                            state = False
-                            filename = ""
-                            filedata = ""
-                            
-                            # Save file
-                            try:
-                                filename = request.body['filename']
+                            # Save uploaded file
+                            filename = request.body['filename']
+                            if self.DEBUG:
+                                print("upload provided filename: " + str(filename))
+                            if filename.endswith('.tar'):
+                                
+                                if os.path.isfile(self.restore_file_path):
+                                    os.system('rm ' + str(self.restore_file_path))
+                                    if self.DEBUG:
+                                        print("removed old restore file")
+                                
+                                filedata = str(request.body['filedata'])
+                                #base64_data = re.sub('^data:file/.+;base64,', '', filedata)
+                                #base64_data = base64_data.replace('^data:file/.+;base64,', '', filedata)
+                                if ',' in filedata:
+                                    filedata = filedata.split(',')[1]
+                                #sub
                                 if self.DEBUG:
-                                    print("upload provided filename: " + str(filename))
-                                if filename.endswith('.tar'):
+                                    print("saving to file: " + str(self.restore_file_path))
+                                with open(self.restore_file_path, "wb") as fh:
+                                    fh.write(base64.b64decode(filedata))
                                     
                                     if os.path.isfile(self.restore_file_path):
-                                        os.system('rm ' + str(self.restore_file_path))
                                         if self.DEBUG:
-                                            print("removed old restore file")
-                                    
-                                    filedata = str(request.body['filedata'])
-                                    #base64_data = re.sub('^data:file/.+;base64,', '', filedata)
-                                    #base64_data = base64_data.replace('^data:file/.+;base64,', '', filedata)
-                                    if ',' in filedata:
-                                        filedata = filedata.split(',')[1]
-                                    #sub
-                                    if self.DEBUG:
-                                        print("saving to file: " + str(self.restore_file_path))
-                                    with open(self.restore_file_path, "wb") as fh:
-                                        fh.write(base64.b64decode(filedata))
-                                        
-                                        if os.path.isfile(self.restore_file_path):
-                                            if self.DEBUG:
-                                                print("file save complete")
-                                                
-                                            # make sure the tar file is valid
-                                            tar_test_command = 'tar -xf ' + str(self.restore_file_path) + ' -O > /dev/null'
-                                            if self.DEBUG:
-                                                print("tar_test_command: " + str(tar_test_command))
-                                                
-                                            tar_test = run_command(tar_test_command)
-                                            if "error" in tar_test.lower():
-                                                state = False
-                                                if self.DEBUG:
-                                                    print("untar test of backup file resulted in error: " + str(tar_test))
-                                            else:
-                                                
-                                                os.system('cp ' + str(self.restore_backup_script_path) + ' ' + str(self.home_path) + '/.webthings/run_once.sh')
-                                                os.system('sudo systemctl start candle_run_script.service &')
-                                                
-                                                
-                                                #self.restore_results = run_command(str(self.restore_backup_script_path))
-                                                
-                                                #restore_command = 'sudo cp ' + str(self.restore_backup_script_path) + ' ' + str(self.actions_file_path)
-                                                #if self.DEBUG:
-                                                #    print("restore backup copy command: " + str(restore_command))
-                                                #os.system(restore_command)
+                                            print("file save complete")
                                             
-                                                # clean up the non-blocking file if it exists. TODO: is this still used?
-                                                #if os.path.isfile(self.boot_path + '/bootup_actions_non_blocking.txt'):
-                                                #    if self.DEBUG:
-                                                #        print("/boot/firmware/bootup_actions_non_blocking.txt still existed")
-                                                #    os.system('sudo rm ' + str(self.boot_path) + '/bootup_actions_non_blocking.txt')
+                                        # make sure the tar file is valid
+                                        tar_test_command = 'tar -xf ' + str(self.restore_file_path) + ' -O > /dev/null'
+                                        if self.DEBUG:
+                                            print("tar_test_command: " + str(tar_test_command))
                                             
-                                                state = True
-                                            
-                                        else:
-                                            if self.DEBUG:
-                                                print("Error: self.restore_backup_script_path did not exist?")
+                                        tar_test = run_command(tar_test_command)
+                                        if "error" in tar_test.lower():
                                             state = False
-                                else:
-                                    if self.DEBUG:
-                                        print("Error: wrong file extension")
-                                    state = False
+                                            if self.DEBUG:
+                                                print("untar test of backup file resulted in error: " + str(tar_test))
+                                        else:
+                                            
+                                            tar_contents_list = run_command('tar -tvf ' + str(self.restore_file_path))
+                                            if self.DEBUG:
+                                                print("backup restore: tar_contents_list: ", tar_contents_list)
+                                            backup_lines = str(tar_contents_list).splitlines()
+                                            for backup_line in backup_lines:
+                                                if ' ./data/' in backup_line:
+                                                    potential_addon_name = backup_line.split(' ./data/')[1]
+                                                    if '/' in potential_addon_name and not potential_addon_name.startswith('/'):
+                                                        potential_addon_name = potential_addon_name.split('/')[0]
+                                                        if os.path.isdir(os.path.join(self.user_profile['addonsDir'], potential_addon_name)):
+                                                            if potential_addon_name not in already_installed_addons:
+                                                                already_installed_addons.append(potential_addon_name)
+                                                                if self.DEBUG:
+                                                                    print("backup restore: this addon is already installed: ", potential_addon_name)
+                                                        elif potential_addon_name not in missing_addons_to_install:
+                                                            missing_addons_to_install.append(potential_addon_name)
+                                                            if self.DEBUG:
+                                                                    print("backup restore: this addon is not yet installed: ", potential_addon_name)
+                                                elif ' ./data/photo-frame/photos/' in backup_line:
+                                                    photos_in_backup_count += 1
+                                            os.system('cp ' + str(self.restore_backup_script_path) + ' ' + str(self.home_path) + '/.webthings/run_once.sh')
+                                            os.system('sudo systemctl start candle_run_script.service &')
+                                            
+                                            state = True
                                         
-                            except Exception as ex:
+                                    else:
+                                        if self.DEBUG:
+                                            print("Error: self.restore_backup_script_path did not exist?")
+                                        state = False
+                            else:
                                 if self.DEBUG:
-                                    print("Error saving data to file: " + str(ex))
+                                    print("Error: wrong file extension")
                                 state = False
+                        
+                            
+                                
                             #data = self.save_photo(str(request.body['filename']), str(request.body['filedata']), str(request.body['parts_total']), str(request.body['parts_current']) ) #new_value,date,property_id
                             #if isinstance(data, str):
                             #    state = False
@@ -3548,14 +3555,20 @@ class PowerSettingsAPIHandler(APIHandler):
                             return APIResponse(
                               status=200,
                               content_type='application/json',
-                              content=json.dumps({'state' : state, 'data' : data}),
+                              content=json.dumps({
+                                        'state': state, 
+                                        'data' : data, 
+                                        'missing_addons_to_install': missing_addons_to_install,
+                                        'already_installed_addons': already_installed_addons,
+                                        'photos_in_backup_count': photos_in_backup_count
+                                        }),
                             )
                         except Exception as ex:
                             print("Error saving uploaded file: " + str(ex))
                             return APIResponse(
                               status=500,
                               content_type='application/json',
-                              content=json.dumps("Error while saving uploaded file: " + str(ex)),
+                              content=json.dumps({'state': False, 'error': "caught error while saving uploaded file: " + str(ex)}),
                             )
                         
                     else:

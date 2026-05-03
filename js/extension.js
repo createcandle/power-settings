@@ -2538,7 +2538,7 @@
                 
     			document.getElementById("extension-power-settings-backup-file-selector").addEventListener('change', () => {
     				var filesSelected = document.getElementById("extension-power-settings-backup-file-selector").files;
-                    document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<div id="extension-power-settings-upload-in-progress"><div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div><p>Transferring file</p></div>';
+                    document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<div id="extension-power-settings-upload-in-progress"><div class="extension-power-settings-spinner"><div></div><div></div><div></div><div></div></div><p class="extension-power-settings-bg-sweep">Transferring file</p></div>';
                     this.upload_files(filesSelected);
     			});
                 
@@ -5297,9 +5297,53 @@
                             if(this.debug){
                                 console.log("file upload done. Response: ", body);
                             }
-                            if(body.state == true){
-								document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<p>Restoring and restarting...</p>';
-								this.flash_message("The system will be unavailable for a few minutes while the backup is being restored");
+                            if(typeof body.state == 'boolean'){
+								
+								if(body.state == true){
+									const file_selector_container_el = document.getElementById("extension-power-settings-backup-file-selector-container");
+									if(typeof body.already_installed_addons != 'undefined' && typeof body.missing_addons_to_install != 'undefined'){
+										
+										let addons_overview_container_el = file_selector_container_el.querySelector('#extension-power-settings-restore-addons-list');
+										if(!addons_overview_container_el){
+											file_selector_container_el.innerHTML = '';
+											addons_overview_container_el = document.createElement('div');
+											addons_overview_container_el.setAttribute('id','extension-power-settings-restore-addons-list');
+											file_selector_container_el.appendChild(addons_overview_container_el);
+											const restore_hint_el = document.createElement('p');
+											restore_hint_el.classList.add('extension-power-settings-bg-sweep');
+											restore_hint_el.textContent = 'Restoring and then restarting...';
+											file_selector_container_el.appendChild(restore_hint_el);
+										}
+										if(addons_overview_container_el){
+											addons_overview_container_el.innerHTML = '';
+											for(let ai = 0; ai < body.already_installed_addons.length; ai++){
+												const restore_addon_el = document.createElement('div');
+												restore_addon_el.setAttribute('data-addon-id',body.already_installed_addons[ai]);
+												restore_addon_el.textContent = body.already_installed_addons[ai];
+												restore_addon_el.classList.add('extension-power-settings-restore-addons-already-installed-item');
+												addons_overview_container_el.appendChild(restore_addon_el);
+											}
+											for(let ma = 0; ma < body.missing_addons_to_install.length; ma++){
+												const restore_addon_el = document.createElement('div');
+												restore_addon_el.setAttribute('data-addon-id',body.missing_addons_to_install[ma]);
+												restore_addon_el.textContent = body.missing_addons_to_install[ma];
+												restore_addon_el.classList.add('extension-power-settings-restore-addons-not-yet-installed-item');
+												restore_addon_el.classList.add('extension-power-settings-bg-sweep');
+												addons_overview_container_el.appendChild(restore_addon_el);
+											}
+										}
+										
+									}
+									
+									//document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<p>Restoring and then restarting...</p>';
+									//this.flash_message("The system will be unavailable for a few minutes while the backup is being restored");
+								}
+								else{
+									this.flash_message("Something went wrong with uploading or restoring the backup");
+								}
+								
+								
+								
 								/*
                                 if(confirm("The system will be unavailable for a few minutes while the backup is being restored")){
 									window.API.postJson('/settings/system/actions', {
@@ -5319,7 +5363,7 @@
 
       			      }).catch((err) => {
       					    console.error("power settings: Error uploading file: ", err);
-                            document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<p>Error, could not upload the file. It could just be a connection issue. Or perhaps the file is too big (maximum size is 10Mb).</p>';    
+                            document.getElementById("extension-power-settings-backup-file-selector-container").innerHTML = '<p>Error, could not upload the file. It could just be a connection issue. Or perhaps the file is too big (maximum size is 100Mb).</p>';    
       			      });
                     
     		    }); 
