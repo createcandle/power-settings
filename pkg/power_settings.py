@@ -3987,7 +3987,7 @@ class PowerSettingsAPIHandler(APIHandler):
                     if self.DEBUG:
                         print("self.backup_more was false, skipping logs, photos and uploads")
                 
-                backup_command = 'cd ' + str(self.user_profile['baseDir']) + '; find ./config ./data ./hasdata -maxdepth 2 -name "*.json" -o -name "*.xtt" -o -name "*.yaml" -o -name "*.xml" -o -name "*.sqlite3" -o -name "*.blacklisted_devices" -o -name "*.trusted_devices" -o -name "*.ignored_devices" -o -name "*.db" -o -name "*.txt" -o -name "*.ini" -o -name "*.backup" -o -name "*.data" -o -name "chip*"  -o -name "thread" | grep -v "/._" | tar -cf ' + str(self.backup_file_path) + ' -T -' 
+                backup_command = 'cd ' + str(self.user_profile['baseDir']) + '; find ./config ./data ./hasdata -maxdepth 2 -name "*.json" -o -name "*.xtt" -o -name "*.yaml" -o -name "*.xml" -o -name "*.sqlite3" -o -name "*.blacklisted_devices" -o -name "*.trusted_devices" -o -name "*.ignored_devices" -o -name "*.db" -o -name "*.txt" -o -name "*.ini" -o -name "*.backup" -o -name "*.data" -o -name "chip*" -o -name "thread" -o -name "hasdata" | grep -v "/._" | tar -cf ' + str(self.backup_file_path) + ' -T -' 
                 backup_command += extra_tar_commands
                 
                 
