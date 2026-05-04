@@ -2324,7 +2324,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                     else:
                                         # don't disable the hotspot if there are no remaining network connections
                                         # TODO could also check if a touch screen is connected, in which case that can still be used to govern access.
-                                        active_connections = run_command("nmcli -t connection show --active | tail -n +2 | grep -v 'Candle_hotspot' | grep -v 'loopback:lo'") # filter out the hotspot and lo interfaces
+                                        active_connections = run_command("nmcli -t connection show --active | grep -v 'Candle_hotspot' | grep -v 'loopback:lo'") # filter out the hotspot and lo interfaces
                                         if active_connections != None:
                                             if isinstance(active_connections,str) and len(str(active_connections).strip()) > 10:
                                                 if self.DEBUG:
@@ -2341,7 +2341,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 #self.send_pairing_prompt("Create another network connection first")
                                         else:
                                             if self.DEBUG:
-                                                print("\nERROR, not disabling Hotspot: nmcli show command returned null. ")
+                                                print("\nERROR, not disabling Hotspot: no remaining connections. ")
                                             
                                 return APIResponse(
                                   status=200,

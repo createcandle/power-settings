@@ -3634,7 +3634,7 @@
 						                }
     
 						            }).catch((err) => {
-						                console.log("caught error updating hotspot password via API: ", err);
+						                console.errror("caught error updating hotspot password via API: ", err);
 						            });
 							
 								}
@@ -3696,7 +3696,7 @@
 					                }
 
 					            }).catch((err) => {
-					                console.log("power settings: caught error updating hotspot password via API: ", err);
+					                console.log("power settings: caught error updating hotspot enabled via API: ", err);
 					            });
 						
 							});
