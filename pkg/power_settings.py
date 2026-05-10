@@ -1610,6 +1610,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 self.display_port1_name = ''
                                 self.display_port2_name = ''
                                 
+                                active_network_interfaces = run_command("ip --oneline link show up | awk -F ': |@' '!/<.*LOOPBACK.*>/ {print $2}'")
                                 
                                 # find /sys/devices -name "edid"
                                 
@@ -1791,7 +1792,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                           'display_standby_delay':self.display_standby_delay,
                                           'rpi_display_backlight':self.rpi_display_backlight,
                                           'rpi_display_rotation':self.rpi_display_rotation,
-                                          'touchscreen_detected':self.touchscreen_detected
+                                          'touchscreen_detected':self.touchscreen_detected,
+                                          'active_network_interfaces':active_network_interfaces
                                           }),
                                 )
                             

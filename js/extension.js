@@ -5929,6 +5929,7 @@
 				document.getElementById('extension-power-settings-mouse-pointer-container').classList.remove('extension-power-settings-hidden');
 			}
 
+			
 			if(this.kiosk){
 				const kiosk_enabled_checkbox_el = document.getElementById('extension-power-settings-kiosk-enabled');
 				if(kiosk_enabled_checkbox_el){
@@ -5992,6 +5993,24 @@
 			if(typeof body.display_port2_name == 'string'){
 				this.display_port2_name = body.display_port2_name;
 			}
+			
+			const kiosk_enabled_checkbox_el = document.getElementById('extension-power-settings-kiosk-enabled');
+
+			// Only allow disabling of showing Candle on the display if there is at least one network connection.
+			if(typeof body.active_network_interfaces == 'string'){
+				const kiosk_enabled_container_el = document.getElementById('extension-power-settings-kiosk-enabled-container');
+				if(kiosk_enabled_container_el){
+					if(body.active_network_interfaces.length < 2){
+						if(kiosk_enabled_checkbox_el.checked){
+							kiosk_enabled_container_el.classList.add('extension-power-settings-faded');
+						}
+					}
+					else{
+						kiosk_enabled_container_el.classList.remove('extension-power-settings-faded');
+					}
+				}
+			}
+			
 			
 			// rotation
 			if(typeof body.display1_rotated== 'boolean'){
@@ -6440,7 +6459,6 @@
 
 			if(typeof body.kiosk_enabled == 'boolean'){
 				this.kiosk_enabled = body.kiosk_enabled;
-				const kiosk_enabled_checkbox_el = document.getElementById('extension-power-settings-kiosk-enabled');
 				if(kiosk_enabled_checkbox_el){
 					kiosk_enabled_checkbox_el.checked = this.kiosk_enabled;
 					document.getElementById('extension-power-settings-kiosk-enabled-container').classList.remove('extension-power-settings-hidden');
