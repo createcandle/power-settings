@@ -143,6 +143,7 @@ rm -rf /home/pi/.webthings/hasdata/*
 rm -rf /home/pi/.webthings/data/energyuse/*
 rm -rf /home/pi/.webthings/data/networkscanner/*
 
+rm $BOOT_DIR/candle_hotspot_name.txt
 rm $BOOT_DIR/candle_hotspot_net_number.txt
 touch $BOOT_DIR/candle_hotspot.txt
 echo "smarthome" > $BOOT_DIR/candle_hotspot_password.txt
@@ -260,7 +261,7 @@ rm $BOOT_DIR/debug.txt
 rm $BOOT_DIR/raspinfo.txt
 rm $BOOT_DIR/candle_hardware_clock.txt
 rm $BOOT_DIR/candle_cutting_edge.txt
-touch $BOOT_DIR/hide_mouse_pointer.txt
+touch $BOOT_DIR/candle_hide_mouse_pointer.txt
 rm $BOOT_DIR/bootup_actions.sh
 rm $BOOT_DIR/bootup_actions_failed.sh
 rm $BOOT_DIR/developer.txt
@@ -268,6 +269,8 @@ rm $BOOT_DIR/candle_set_wifi.txt
 rm $BOOT_DIR/candle_set_wifi_detected_networks.txt
 rm $BOOT_DIR/candle_safe_mode.txt
 rm $BOOT_DIR/candle_update.txt
+echo "http://localhost:8080" > $BOOT_DIR/candle_kiosk.txt
+rm $BOOT_DIR/candle_kiosk_disabled.txt
 rm $BOOT_DIR/emergency.txt
 if [ -f $BOOT_DIR/candle_first_run_complete.txt ]; then
 	rm $BOOT_DIR/candle_recovery_type.txt
