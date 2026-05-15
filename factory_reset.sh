@@ -63,12 +63,12 @@ echo -e 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=
 
 if [ -f $BOOT_DIR/webthings_gateway_version.txt ]; then
 	echo "gateway" > /home/pi/.webthings/etc/hostname
-	echo "127.0.0.1	localhost\n::1		localhost ip6-localhost ip6-loopback\nff02::1		ip6-allnodes\nff02::2		ip6-allrouters\n\n127.0.1.1	gateway" > /home/pi/.webthings/etc/hosts
+	echo -e "127.0.0.1	localhost\n::1		localhost ip6-localhost ip6-loopback\nff02::1		ip6-allnodes\nff02::2		ip6-allrouters\n\n127.0.1.1	gateway" > /home/pi/.webthings/etc/hosts
 	touch $BOOT_DIR/tunnel.txt
 	
 else
 	echo "candle" > /home/pi/.webthings/etc/hostname
-	echo "127.0.0.1	localhost\n::1		localhost ip6-localhost ip6-loopback\nff02::1		ip6-allnodes\nff02::2		ip6-allrouters\n\n127.0.1.1	candle" > /home/pi/.webthings/etc/hosts
+	echo -e "127.0.0.1	localhost\n::1		localhost ip6-localhost ip6-loopback\nff02::1		ip6-allnodes\nff02::2		ip6-allrouters\n\n127.0.1.1	candle" > /home/pi/.webthings/etc/hosts
 
 	if [ -f /home/pi/safe_mode/addons/power-settings/db.sqlite3 ]; then
 		# restore basic database
