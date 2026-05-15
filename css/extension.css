@@ -2211,6 +2211,10 @@ body.safe-mode #extension-power-settings-menu-troubleshooting-button::after{
 		padding-left:6rem;
 	}
 	
+	#extension-power-settings-main-buttons > button{
+		margin:1rem 0;
+		width:100%;
+	}
 	
 }
 
