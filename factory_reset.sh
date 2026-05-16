@@ -114,24 +114,55 @@ if [ -f $BOOT_DIR/candle_first_run_complete.txt ]; then
 fi
 
 # make sure data is removed from addons that remain
-rm -rf /home/pi/.webthings/data/candleappstore/*
-rm -rf /home/pi/.webthings/data/candle-theme/*
-rm -rf /home/pi/.webthings/data/power-settings/*
-rm -rf /home/pi/.webthings/data/webinterface/*
-rm -rf /home/pi/.webthings/data/hotspot/*
-rm -rf /home/pi/.webthings/data/followers/*
-rm -rf /home/pi/.webthings/data/privacy-manager/*
-rm -rf /home/pi/.webthings/data/photo-frame/*
+if [ -d /home/pi/.webthings/data/candleappstore ]; then
+	rm -rf /home/pi/.webthings/data/candleappstore/*
+	mkdir /home/pi/.webthings/data/candleappstore/web_cache
+	mkdir /home/pi/.webthings/data/candleappstore/web_cache/icons
+	mkdir /home/pi/.webthings/data/candleappstore/web_cache/screenshots
+	chown -R pi:pi /home/pi/.webthings/data/candleappstore/web_cache
+fi
+if [ -d /home/pi/.webthings/data/candle-theme ]; then
+	rm -rf /home/pi/.webthings/data/candle-theme/*
+fi
+if [ -d /home/pi/.webthings/data/power-settings ]; then
+	rm -rf /home/pi/.webthings/data/power-settings/*
+fi
+if [ -d /home/pi/.webthings/data/webinterface ]; then
+	rm -rf /home/pi/.webthings/data/webinterface/*
+fi
+if [ -d /home/pi/.webthings/data/hotspot ]; then
+	rm -rf /home/pi/.webthings/data/hotspot/*
+fi
+if [ -d /home/pi/.webthings/data/followers ]; then
+	rm -rf /home/pi/.webthings/data/followers/*
+fi
+if [ -d /home/pi/.webthings/data/privacy-manager ]; then
+	rm -rf /home/pi/.webthings/data/privacy-manager/*
+fi
+if [ -d /home/pi/.webthings/data/photo-frame ]; then
+	rm -rf /home/pi/.webthings/data/photo-frame/*
+	mkdir /home/pi/.webthings/data/photo-frame/photos
+	chown pi:pi /home/pi/.webthings/data/photo-frame/photos
+fi
+
 if [ -d /home/pi/.webthings/data/welcome ]; then
     rm -rf /home/pi/.webthings/data/welcome/*
 fi
 if [ -d /home/pi/.webthings/data/tutorial ]; then
     rm -rf /home/pi/.webthings/data/tutorial/*
 fi
-rm -rf /home/pi/.webthings/data/network-presence-detection-adapter/*
-rm -rf /home/pi/.webthings/data/internet-radio/*
-rm -rf /home/pi/.webthings/data/scenes/*
-rm -rf /home/pi/.webthings/data/dashboard/*
+if [ -d /home/pi/.webthings/data/network-presence-detection-adapter ]; then
+	rm -rf /home/pi/.webthings/data/network-presence-detection-adapter/*
+fi
+if [ -d /home/pi/.webthings/data/internet-radio ]; then
+	rm -rf /home/pi/.webthings/data/internet-radio/*
+fi
+if [ -d /home/pi/.webthings/data/scenes ]; then
+	rm -rf /home/pi/.webthings/data/scenes/*
+fi
+if [ -d /home/pi/.webthings/data/dashboar ]; then
+	rm -rf /home/pi/.webthings/data/dashboard/*
+fi
 if [ -f /home/pi/.webthings/addons/dashboard/persistence.json ]; then
     mkdir -p /home/pi/.webthings/data/dashboard
     cp /home/pi/.webthings/addons/dashboard/persistence.json /home/pi/.webthings/data/dashboard/persistence.json
@@ -139,12 +170,22 @@ if [ -f /home/pi/.webthings/addons/dashboard/persistence.json ]; then
     chmod 755 /home/pi/.webthings/data/dashboard/persistence.json
 fi
 rm -rf /home/pi/.webthings/data/matter-adapter/*
-rm -rf /home/pi/.webthings/hasdata/*
-rm -rf /home/pi/.webthings/data/energyuse/*
-rm -rf /home/pi/.webthings/data/networkscanner/*
+if [ -d /home/pi/.webthings/hasdata/ ]; then
+	rm -rf /home/pi/.webthings/hasdata/*
+fi
+if [ -d /home/pi/.webthings/data/energyuse ]; then
+	rm -rf /home/pi/.webthings/data/energyuse/*
+fi
+if [ -d /home/pi/.webthings/data/networkscanner ]; then
+	rm -rf /home/pi/.webthings/data/networkscanner/*
+fi
 
 rm $BOOT_DIR/candle_hotspot_name.txt
 rm $BOOT_DIR/candle_hotspot_net_number.txt
+rm $BOOT_DIR/candle_hotspot_block_ip4_internet.txt
+rm $BOOT_DIR/candle_hotspot_block_ip6_internet.txt
+rm $BOOT_DIR/candle_hotspot_force_uap0.txt
+rm $BOOT_DIR/candle_disable_wifi_pmf.txt
 touch $BOOT_DIR/candle_hotspot.txt
 echo "smarthome" > $BOOT_DIR/candle_hotspot_password.txt
 
@@ -192,7 +233,7 @@ fi
 #  echo "candle" > /home/pi/.webthings/etc/hostname
 #  cp /home/pi/.webthings/etc/hosts-bak /home/pi/.webthings/etc/hosts
 #fi
-#echo "127.0.0.1	localhost\n::1		localhost ip6-localhost ip6-loopback\nff02::1		ip6-allnodes\nff02::2		ip6-allrouters\n\n127.0.1.1	candle" > /home/pi/.webthings/etc/hosts
+#echo -e "127.0.0.1	localhost\n::1		localhost ip6-localhost ip6-loopback\nff02::1		ip6-allnodes\nff02::2		ip6-allrouters\n\n127.0.1.1	candle" > /home/pi/.webthings/etc/hosts
 #rm /etc/hostname
 #rm /etc/hosts
 #ln -s /home/pi/.webthings/etc/hostname /etc/hostname
@@ -223,8 +264,6 @@ echo "machine ID after: "
 cat /etc/machine-id
 
 
-rm $BOOT_DIR/candle_swap_enabled.txt
-
 # If a respeaker hat is plugged in, the ReSpeaker code will recreate this file each boot
 rm /etc/asound.conf
 
@@ -252,7 +291,9 @@ sleep 5
 rm $BOOT_DIR/rotate180.txt
 rm $BOOT_DIR/keep_z2m.txt
 rm $BOOT_DIR/keep_bluetooth.txt
-rm $BOOT_DIR/write_enabled.txt
+rm $BOOT_DIR/keep_matter.txt
+rm $BOOT_DIR/candle_swap_enabled.txt
+rm $BOOT_DIR/write_enabled.txt # no longer used?
 rm $BOOT_DIR/candle_respeaker.txt
 rm $BOOT_DIR/candle_rw_once.txt
 rm $BOOT_DIR/candle_rw_keep.txt
@@ -267,10 +308,27 @@ rm $BOOT_DIR/bootup_actions_failed.sh
 rm $BOOT_DIR/developer.txt
 rm $BOOT_DIR/candle_set_wifi.txt
 rm $BOOT_DIR/candle_set_wifi_detected_networks.txt
+rm $BOOT_DIR/candle_wifi_power_save.txt
 rm $BOOT_DIR/candle_safe_mode.txt
 rm $BOOT_DIR/candle_update.txt
+rm $BOOT_DIR/candle_make_emergency_backup.txt
+rm $BOOT_DIR/generate_debug.txt
+rm $BOOT_DIR/generate_raspinfo.txt
+#rm $BOOT_DIR/candle_forget_wifi.txt
+#rm $BOOT_DIR/candle_forget_users.txt
+rm $BOOT_DIR/candle_delete_these_addons.txt
+rm $BOOT_DIR/candle_install_these_addons.txt
+#rm $BOOT_DIR/candle_reset_database.txt
+rm $BOOT_DIR/candle_skip_store_check.txt
+
+rm $BOOT_DIR/do_not_use_repeaker_hat.txt
+
+
+# KIOSK
+rm $BOOT_DIR/candle_kiosk_forced.txt
 echo "http://localhost:8080" > $BOOT_DIR/candle_kiosk.txt
 rm $BOOT_DIR/candle_kiosk_disabled.txt
+
 rm $BOOT_DIR/emergency.txt
 if [ -f $BOOT_DIR/candle_first_run_complete.txt ]; then
 	rm $BOOT_DIR/candle_recovery_type.txt
