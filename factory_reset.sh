@@ -227,6 +227,12 @@ else
     rm -rf /home/pi/.webthings/var/lib/bluetooth/*
 fi
 
+if [ -f "$BOOT_DIR/keep_matter.txt" ]; then
+    echo "Factory reset is allowing Matter devices to remain paired"
+else
+    echo "Factory reset: also removing Matter pairings"
+    rm -rf /home/pi/.webthings/data/matter-adapter/*
+fi
 
 # Try to create the hostname symbolic links
 #if [ -f /home/pi/.webthings/etc/hosts-bak ]; then
