@@ -572,6 +572,8 @@ class PowerSettingsAPIHandler(APIHandler):
         self.candle_hotspot_ssid_file_path = os.path.join(self.boot_path, 'candle_hotspot_name.txt')
         self.candle_hotspot_5G_file_path = os.path.join(self.boot_path, 'candle_hotspot_5G.txt')
         self.candle_hotspot_net_number_file_path = os.path.join(self.boot_path, 'candle_hotspot_net_number.txt')
+        self.candle_hotspot_block_ip4_internet_path = os.path.join(self.boot_path, 'candle_hotspot_block_ip4_internet.txt')
+        self.candle_hotspot_block_ip6_internet_path = os.path.join(self.boot_path, 'candle_hotspot_block_ip6_internet.txt')
 
         #self.performed_initial_wifi_scan = False
         self.hotspot_enabled = os.path.exists(self.candle_hotspot_file_path)
@@ -2190,6 +2192,9 @@ class PowerSettingsAPIHandler(APIHandler):
                                 hotspot_channel = str(run_command("nmcli c s Candle_hotspot | grep 802-11-wireless.channel: | awk '{print $2}'")).rstrip()
                                 hotspot_isolation = str(run_command("nmcli c s Candle_hotspot | grep 802-11-wireless.ap-isolation: | awk '{print $2}'")).rstrip()
                                 
+                                hotspot_block_ip4_internet = os.path.exists(self.candle_hotspot_block_ip4_internet_path)
+                                hotspot_block_ip6_internet = os.path.exists(self.candle_hotspot_block_ip6_internet_path)
+
                                 the_hotspot_password = ''
                                 #if self.persistent_data['show_hotspot_password'] == True:
                                 if self.show_hotspot_password and self.show_hotspot_password == True:
@@ -2285,6 +2290,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                     'hotspot_password_length':len(self.hotspot_password),
                                     'hotspot_connected_devices':connected_hotspot_devices_according_to_arp,
                                     'hotspot_enabled':self.hotspot_enabled,
+                                    'hotspot_block_ip4_internet':hotspot_block_ip4_internet,
+                                    'hotspot_block_ip6_internet':hotspot_block_ip6_internet,
                                     'hotspot':{
                                         'state':hotspot_state,
                                         'ipv4_address':hotspot_ipv4_addresses,
@@ -2399,6 +2406,42 @@ class PowerSettingsAPIHandler(APIHandler):
                                         else:
                                             os.system('nmcli con down Candle_hotspot; nmcli con modify Candle_hotspot ssid "' + str(new_ssid) + '"')
                                         state = True
+                                
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
+
+                            # Update hotspot password
+                            elif action == 'set_hotspot_block':
+                                state = False
+                                if 'block_ip4_internet' in request.body:
+                                    block_ip4 = bool(request.body['block_ip4_internet'])
+                                    if self.DEBUG:
+                                        print("block_ip4: ", block_ip4)
+                                    if block_ip4 == True:
+                                        os.system('sudo touch ' + str(self.candle_hotspot_block_ip4_internet_path))
+                                        if self.DEBUG:
+                                            print("block_ip4: touched file: ", str(self.candle_hotspot_block_ip4_internet_path))
+                                    elif os.path.exists(self.candle_hotspot_block_ip4_internet_path):
+                                        os.system('sudo rm ' + str(self.candle_hotspot_block_ip4_internet_path))
+                                        if self.DEBUG:
+                                            print("block_ip4: removed file: ", str(self.candle_hotspot_block_ip4_internet_path))
+                                    else:
+                                        if self.DEBUG:
+                                            print("block_ip4: file already removed: ", str(self.candle_hotspot_block_ip4_internet_path))
+                                    state = True
+
+                                if 'block_ip6_internet' in request.body:
+                                    block_ip6 = bool(request.body['block_ip6_internet'])
+                                    if self.DEBUG:
+                                        print("block_ip6: ", block_ip6)
+                                    if block_ip6 == True:
+                                        os.system('sudo touch ' + str(self.candle_hotspot_block_ip6_internet_path))
+                                    elif os.path.exists(self.candle_hotspot_block_ip6_internet_path):
+                                        os.system('sudo rm ' + str(self.candle_hotspot_block_ip6_internet_path))
+                                    state = True
                                 
                                 return APIResponse(
                                   status=200,
@@ -4068,7 +4111,10 @@ class PowerSettingsAPIHandler(APIHandler):
     def check_recovery_partition(self):
         if self.DEBUG:
             print("debug: in check_recovery_partition")
-        #return
+        
+        self.allow_update_via_recovery = False
+        self.recovery_partition_exists = False
+        return
             
         try:
             lsblk_output = run_command('lsblk')

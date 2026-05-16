@@ -3676,7 +3676,7 @@
 							if(this.hotspot_enabled === true){
 								hotspot_enabled_checkbox_el.checked = true;
 							}
-					
+
 							hotspot_enabled_checkbox_el.addEventListener('change',() => {
 								this.hotspot_enabled = hotspot_enabled_checkbox_el.checked;
 						
@@ -3689,9 +3689,9 @@
 					                    console.log("power settings debug: set_hotspot_enabled response: ", body);
 					                }
 					                if (body.state === true){
-										hotspot_enabled_checkbox_el.classList.add('extension-power-settings-hotspot-password-changed');
+										hotspot_enabled_container_el.classList.add('extension-power-settings-hotspot-password-changed');
 					                    setTimeout(() => {
-					                    	hotspot_enabled_checkbox_el.classList.remove('extension-power-settings-hotspot-password-changed');
+					                    	hotspot_enabled_container_el.classList.remove('extension-power-settings-hotspot-password-changed');
 					                    },1000);
 					                }
 
@@ -3703,12 +3703,10 @@
 					
 							hotspot_enabled_container_el.appendChild(hotspot_enabled_checkbox_el);
 							
-					
 							let hotspot_enabled_label_el = document.createElement('label');
 							//hotspot_enabled_label_el.classList.add('extension-power-settings-hotspot-enabled-checkbox-container');
 							hotspot_enabled_label_el.setAttribute('for','extension-power-settings-hotspot-enabled-checkbox');
 							hotspot_enabled_container_el.appendChild(hotspot_enabled_label_el);
-					
 					
 							hotspot_settings_container_el.appendChild(hotspot_enabled_container_el);
 					
@@ -3737,6 +3735,8 @@
 							let hotspot_band_container_el = document.createElement('div');
 							hotspot_band_container_el.classList.add('extension-power-settings-hotspot-band-checkbox-container');
 							hotspot_band_container_el.classList.add('extension-power-settings-form-content');
+							hotspot_band_container_el.classList.add('extension-power-settings-margin-top2');
+							
 					
 							
 							const hotspot_band_name_el = document.createElement('div');
@@ -3757,9 +3757,7 @@
 								console.log("power settings debug: this.hotspot_band_5G: ", this.hotspot_band_5G);
 							}
 							
-							if(this.hotspot_band_5G == true){
-								hotspot_band_checkbox_el.checked = true;
-							}
+							hotspot_band_checkbox_el.checked = this.hotspot_band_5G;
 							
 							hotspot_band_checkbox_el.addEventListener('change',() => {
 								this.hotspot_band_5G = hotspot_band_checkbox_el.checked;
@@ -3773,9 +3771,9 @@
 					                    console.log("power settings debug: set_hotspot_band response: ", body);
 					                }
 					                if (body.state === true){
-										hotspot_band_checkbox_el.classList.add('extension-power-settings-hotspot-band-changed');
+										hotspot_band_container_el.classList.add('extension-power-settings-hotspot-band-changed');
 					                    setTimeout(() => {
-					                    	hotspot_band_checkbox_el.classList.remove('extension-power-settings-hotspot-band-changed');
+					                    	hotspot_band_container_el.classList.remove('extension-power-settings-hotspot-band-changed');
 					                    },2000);
 					                }
 									
@@ -3787,14 +3785,136 @@
 					
 							hotspot_band_container_el.appendChild(hotspot_band_checkbox_el);
 					
-					
 							let hotspot_band_label_el = document.createElement('label');
 							//hotspot_band_label_el.classList.add('extension-power-settings-hotspot-band-checkbox-container');
 							hotspot_band_label_el.setAttribute('for','extension-power-settings-hotspot-band-checkbox');
 							hotspot_band_container_el.appendChild(hotspot_band_label_el);
+							
 					
 							hotspot_settings_list_item_el.appendChild(hotspot_band_container_el);
 							
+
+
+							// BLOCK INTERNET
+
+							// Block IPv4
+
+							let hotspot_block_ip4_internet_container_el = document.createElement('div');
+							hotspot_block_ip4_internet_container_el.classList.add('extension-power-settings-hotspot-band-checkbox-container');
+							hotspot_block_ip4_internet_container_el.classList.add('extension-power-settings-form-content');
+					
+							const hotspot_block_ip4_internet_name_el = document.createElement('div');
+							hotspot_block_ip4_internet_name_el.textContent = 'Block IPv4 internet access';
+							hotspot_block_ip4_internet_container_el.appendChild(hotspot_block_ip4_internet_name_el);
+					
+							
+
+							let hotspot_block_ip4_internet_checkbox_el = document.createElement('input');
+							hotspot_block_ip4_internet_checkbox_el.setAttribute('type','checkbox');
+							hotspot_block_ip4_internet_checkbox_el.setAttribute('id','extension-power-settings-hotspot-block-ip4-internet-checkbox');
+							hotspot_block_ip4_internet_checkbox_el.setAttribute('name','extension-power-settings-hotspot-block-ip4-internet-checkbox');
+
+							if(typeof body.hotspot_block_ip4_internet == 'boolean'){
+								if(this.debug){
+									console.log("power settings debug: hotspot_block_ip4_internet: ", body.hotspot_block_ip4_internet);
+								}
+								hotspot_block_ip4_internet_checkbox_el.checked = body.hotspot_block_ip4_internet;
+							}
+							
+							hotspot_block_ip4_internet_checkbox_el.addEventListener('change',() => {
+								const block_ip4_internet = hotspot_block_ip4_internet_checkbox_el.checked;
+								if(this.debug){
+					                console.log("power settings debug: block_ip4_internet checkbox changed to: ", block_ip4_internet);
+					            }
+					            window.API.postJson(
+					                `/extensions/${this.id}/api/ajax`, {
+					                    'action': 'set_hotspot_block', 'block_ip4_internet':block_ip4_internet
+					                }
+					            ).then((body) => {
+					                if(this.debug){
+					                    console.log("power settings debug: set_hotspot_block for ip4 response: ", body);
+					                }
+					                if (body.state === true){
+										hotspot_block_ip4_internet_container_el.classList.add('extension-power-settings-hotspot-band-changed');
+					                    setTimeout(() => {
+					                    	hotspot_block_ip4_internet_container_el.classList.remove('extension-power-settings-hotspot-band-changed');
+					                    },2000);
+					                }
+									
+					            }).catch((err) => {
+					                console.log("caught error updating hotspot ip4 block via API: ", err);
+					            });
+						
+							});
+					
+							hotspot_block_ip4_internet_container_el.appendChild(hotspot_block_ip4_internet_checkbox_el);
+					
+							let hotspot_block_ip4_internet_label_el = document.createElement('label');
+							hotspot_block_ip4_internet_label_el.setAttribute('for','extension-power-settings-hotspot-block-ip4-internet-checkbox');
+							hotspot_block_ip4_internet_container_el.appendChild(hotspot_block_ip4_internet_label_el);
+							
+							hotspot_settings_list_item_el.appendChild(hotspot_block_ip4_internet_container_el);
+
+							// Block IPv6
+
+							let hotspot_block_ip6_internet_container_el = document.createElement('div');
+							hotspot_block_ip6_internet_container_el.classList.add('extension-power-settings-hotspot-band-checkbox-container');
+							hotspot_block_ip6_internet_container_el.classList.add('extension-power-settings-form-content');
+					
+							const hotspot_block_ip6_internet_name_el = document.createElement('div');
+							hotspot_block_ip6_internet_name_el.textContent = 'Block IPv6 internet access';
+							hotspot_block_ip6_internet_container_el.appendChild(hotspot_block_ip6_internet_name_el);
+					
+							
+
+							let hotspot_block_ip6_internet_checkbox_el = document.createElement('input');
+							hotspot_block_ip6_internet_checkbox_el.setAttribute('type','checkbox');
+							hotspot_block_ip6_internet_checkbox_el.setAttribute('id','extension-power-settings-hotspot-block-ip6-internet-checkbox');
+							hotspot_block_ip6_internet_checkbox_el.setAttribute('name','extension-power-settings-hotspot-block-ip6-internet-checkbox');
+
+							if(typeof body.hotspot_block_ip6_internet == 'boolean'){
+								if(this.debug){
+									console.log("power settings debug: hotspot_block_ip6_internet: ", body.hotspot_block_ip6_internet);
+								}
+								hotspot_block_ip6_internet_checkbox_el.checked = body.hotspot_block_ip6_internet;
+							}
+							
+							hotspot_block_ip6_internet_checkbox_el.addEventListener('change',() => {
+								const block_ip6_internet = hotspot_block_ip6_internet_checkbox_el.checked;
+								if(this.debug){
+					                console.log("power settings debug: block_ip6_internet checkbox changed to: ", block_ip6_internet);
+					            }
+					            window.API.postJson(
+					                `/extensions/${this.id}/api/ajax`, {
+					                    'action': 'set_hotspot_block', 'block_ip6_internet':block_ip6_internet
+					                }
+					            ).then((body) => {
+					                if(this.debug){
+					                    console.log("power settings debug: set_hotspot_block for ip6 response: ", body);
+					                }
+					                if (body.state === true){
+										hotspot_block_ip6_internet_container_el.classList.add('extension-power-settings-hotspot-band-changed');
+					                    setTimeout(() => {
+					                    	hotspot_block_ip6_internet_container_el.classList.remove('extension-power-settings-hotspot-band-changed');
+					                    },2000);
+					                }
+									
+					            }).catch((err) => {
+					                console.log("caught error updating hotspot ip6 block via API: ", err);
+					            });
+						
+							});
+					
+							hotspot_block_ip6_internet_container_el.appendChild(hotspot_block_ip6_internet_checkbox_el);
+					
+							let hotspot_block_ip6_internet_label_el = document.createElement('label');
+							hotspot_block_ip6_internet_label_el.setAttribute('for','extension-power-settings-hotspot-block-ip6-internet-checkbox');
+							hotspot_block_ip6_internet_container_el.appendChild(hotspot_block_ip6_internet_label_el);
+							
+							hotspot_settings_list_item_el.appendChild(hotspot_block_ip6_internet_container_el);
+
+
+
 							
 							
 							
@@ -4079,6 +4199,19 @@
 							//  ALSO UPDATE HOTSPOT INFO
 							//
 							
+							if(typeof fresh_body.hotspot_block_ip4_internet == 'boolean'){
+								const block_ip4_checkbox_el = document.getElementById('extension-power-settings-hotspot-block-ip4-internet-checkbox');
+								if(block_ip4_checkbox_el){
+									block_ip4_checkbox_el.checked = fresh_body.hotspot_block_ip4_internet;
+								}
+							}
+							if(typeof fresh_body.hotspot_block_ip6_internet == 'boolean'){
+								const block_ip6_checkbox_el = document.getElementById('extension-power-settings-hotspot-block-ip6-internet-checkbox');
+								if(block_ip6_checkbox_el){
+									block_ip6_checkbox_el.checked = fresh_body.hotspot_block_ip6_internet;
+								}
+							}
+
 							
 							if(typeof fresh_body.hotspot == 'object'){
 								let hotspot_info_container_el = document.getElementById('extension-power-settings-hotspot-info-container');
@@ -4092,7 +4225,7 @@
 									}
 									else{
 										if(this.debug){
-											console.warn("power settings debug: hotspot information changed, updating html");
+											console.warn("power settings debug: hotspot information changed, updating html: ", fresh_body.hotspot);
 										}
 										this['hotspot_data_string'] = JSON.stringify(fresh_body.hotspot);
 									
