@@ -2265,6 +2265,7 @@ body.safe-mode #extension-power-settings-menu-troubleshooting-button::after{
 	/*body[id^=path-settings] #menu-button*/
 	body.candle-theme #menu-button{
 		display:initial!important;
+		z-index:51;
 	}
 	
 	body.candle-theme #settings-back-button{
