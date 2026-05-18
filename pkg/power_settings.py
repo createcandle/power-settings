@@ -574,8 +574,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.candle_hotspot_net_number_file_path = os.path.join(self.boot_path, 'candle_hotspot_net_number.txt')
         self.candle_hotspot_block_ip4_internet_path = os.path.join(self.boot_path, 'candle_hotspot_block_ip4_internet.txt')
         self.candle_hotspot_block_ip6_internet_path = os.path.join(self.boot_path, 'candle_hotspot_block_ip6_internet.txt')
-        self.candle_hotspot_home_network_acces_path = os.path.join(self.boot_path, 'candle_hotspot_allow_access_to_main_network.txt')
-        
+        self.candle_hotspot_home_network_access_path = os.path.join(self.boot_path, 'candle_hotspot_allow_access_to_main_network.txt')
 
         #self.performed_initial_wifi_scan = False
         self.hotspot_enabled = os.path.exists(self.candle_hotspot_file_path)
