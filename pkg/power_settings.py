@@ -574,6 +574,8 @@ class PowerSettingsAPIHandler(APIHandler):
         self.candle_hotspot_net_number_file_path = os.path.join(self.boot_path, 'candle_hotspot_net_number.txt')
         self.candle_hotspot_block_ip4_internet_path = os.path.join(self.boot_path, 'candle_hotspot_block_ip4_internet.txt')
         self.candle_hotspot_block_ip6_internet_path = os.path.join(self.boot_path, 'candle_hotspot_block_ip6_internet.txt')
+        self.candle_hotspot_home_network_acces_path = os.path.join(self.boot_path, 'candle_hotspot_allow_access_to_main_network.txt')
+        
 
         #self.performed_initial_wifi_scan = False
         self.hotspot_enabled = os.path.exists(self.candle_hotspot_file_path)
@@ -2194,6 +2196,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                 
                                 hotspot_block_ip4_internet = os.path.exists(self.candle_hotspot_block_ip4_internet_path)
                                 hotspot_block_ip6_internet = os.path.exists(self.candle_hotspot_block_ip6_internet_path)
+                                hotspot_home_network_access = os.path.exists(self.candle_hotspot_home_network_access_path)
 
                                 the_hotspot_password = ''
                                 #if self.persistent_data['show_hotspot_password'] == True:
@@ -2292,6 +2295,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                     'hotspot_enabled':self.hotspot_enabled,
                                     'hotspot_block_ip4_internet':hotspot_block_ip4_internet,
                                     'hotspot_block_ip6_internet':hotspot_block_ip6_internet,
+                                    'hotspot_home_network_access':hotspot_home_network_access,
                                     'hotspot':{
                                         'state':hotspot_state,
                                         'ipv4_address':hotspot_ipv4_addresses,
@@ -2413,7 +2417,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                   content=json.dumps({'state':state}),
                                 )
 
-                            # Update hotspot password
+
+                            # Update hotspot internet blocking
                             elif action == 'set_hotspot_block':
                                 state = False
                                 if 'block_ip4_internet' in request.body:
@@ -2443,6 +2448,33 @@ class PowerSettingsAPIHandler(APIHandler):
                                         os.system('sudo rm ' + str(self.candle_hotspot_block_ip6_internet_path))
                                     state = True
                                 
+                                return APIResponse(
+                                  status=200,
+                                  content_type='application/json',
+                                  content=json.dumps({'state':state}),
+                                )
+
+
+                            # Update hotspot home network access
+                            elif action == 'set_home_network_access':
+                                state = False
+                                if 'home_network_access' in request.body:
+                                    allow_home_network_access = bool(request.body['home_network_access'])
+                                    if self.DEBUG:
+                                        print("allow_home_network_access: ", allow_home_network_access)
+                                    if allow_home_network_access == True:
+                                        os.system('sudo touch ' + str(self.candle_hotspot_home_network_access_path))
+                                        if self.DEBUG:
+                                            print("home_network_access: touched file: ", str(self.candle_hotspot_home_network_access_path))
+                                    elif os.path.exists(self.candle_hotspot_block_ip4_internet_path):
+                                        os.system('sudo rm ' + str(self.candle_hotspot_home_network_access_path))
+                                        if self.DEBUG:
+                                            print("home_network_access: removed file: ", str(self.candle_hotspot_home_network_access_path))
+                                    else:
+                                        if self.DEBUG:
+                                            print("home_network_access: file already removed: ", str(self.candle_hotspot_home_network_access_path))
+                                    state = true
+
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',

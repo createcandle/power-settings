@@ -2219,6 +2219,10 @@ body.safe-mode #extension-power-settings-menu-troubleshooting-button::after{
 		margin:1rem 0;
 		width:100%;
 	}
+
+	.extension-power-settings-hotspot-band-checkbox-container{
+		padding-left:2rem;
+	}
 	
 }
 

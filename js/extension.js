@@ -3778,7 +3778,7 @@
 					                }
 									
 					            }).catch((err) => {
-					                console.log("caught error updating hotspot band via API: ", err);
+					                console.error("caught error updating hotspot band via API: ", err);
 					            });
 						
 							});
@@ -3793,6 +3793,76 @@
 					
 							hotspot_settings_list_item_el.appendChild(hotspot_band_container_el);
 							
+
+
+
+
+
+							//
+							// HOME NETWORK ACCESS
+							//
+
+							// Allow hotspot devices to see and access the home network
+
+							let hotspot_home_network_access_container_el = document.createElement('div');
+							hotspot_home_network_access_container_el.classList.add('extension-power-settings-hotspot-band-checkbox-container');
+							hotspot_home_network_access_container_el.classList.add('extension-power-settings-form-content');
+					
+							const hotspot_home_network_access_name_el = document.createElement('div');
+							hotspot_home_network_access_name_el.textContent = 'Allow access to home network';
+							hotspot_home_network_access_name_el.setAttribute('title','Uncheck to hide all devices on your home network, except for the router, from devices that are connected to the hotspot.')
+							hotspot_home_network_access_container_el.appendChild(hotspot_home_network_access_name_el);
+
+							let hotspot_home_network_access_checkbox_el = document.createElement('input');
+							hotspot_home_network_access_checkbox_el.setAttribute('type','checkbox');
+							hotspot_home_network_access_checkbox_el.setAttribute('id','extension-power-settings-hotspot-home-network-access-checkbox');
+							hotspot_home_network_access_checkbox_el.setAttribute('name','extension-power-settings-hotspot-home-network-access-checkbox');
+
+							if(typeof body.hotspot_home_network_access == 'boolean'){
+								if(this.debug){
+									console.log("power settings debug: hotspot_home_network_access: ", body.hotspot_home_network_access);
+								}
+								hotspot_home_network_access_checkbox_el.checked = body.hotspot_home_network_access;
+							}
+							
+							hotspot_home_network_access_checkbox_el.addEventListener('change',() => {
+								const home_network_access = hotspot_home_network_access_checkbox_el.checked;
+								if(this.debug){
+					                console.log("power settings debug: home_network_access checkbox changed to: ", home_network_access);
+					            }
+					            window.API.postJson(
+					                `/extensions/${this.id}/api/ajax`, {
+					                    'action': 'set_home_network_access', 'home_network_access':home_network_access
+					                }
+					            ).then((body) => {
+					                if(this.debug){
+					                    console.log("power settings debug: set_home_network_access response: ", body);
+					                }
+					                if (body.state === true){
+										hotspot_home_network_access_container_el.classList.add('extension-power-settings-hotspot-band-changed');
+					                    setTimeout(() => {
+					                    	hotspot_home_network_access_container_el.classList.remove('extension-power-settings-hotspot-band-changed');
+					                    },2000);
+										this.flash_message("Reboot the controller to apply the change");
+					                }
+									
+					            }).catch((err) => {
+					                console.error("caught error updating home_network_access via API: ", err);
+					            });
+						
+							});
+					
+							hotspot_home_network_access_container_el.appendChild(hotspot_home_network_access_checkbox_el);
+					
+							let hotspot_home_network_access_label_el = document.createElement('label');
+							hotspot_home_network_access_label_el.setAttribute('for','extension-power-settings-hotspot-home-network-access-checkbox');
+							hotspot_home_network_access_container_el.appendChild(hotspot_home_network_access_label_el);
+							
+							hotspot_settings_list_item_el.appendChild(hotspot_home_network_access_container_el);
+
+
+
+
 
 
 							// BLOCK INTERNET
@@ -3842,7 +3912,7 @@
 					                }
 									
 					            }).catch((err) => {
-					                console.log("caught error updating hotspot ip4 block via API: ", err);
+					                console.error("caught error updating hotspot ip4 block via API: ", err);
 					            });
 						
 							});
@@ -3900,7 +3970,7 @@
 					                }
 									
 					            }).catch((err) => {
-					                console.log("caught error updating hotspot ip6 block via API: ", err);
+					                console.error("caught error updating hotspot ip6 block via API: ", err);
 					            });
 						
 							});
