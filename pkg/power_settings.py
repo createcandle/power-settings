@@ -89,7 +89,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         try:
             APIHandler.__init__(self, self.addon_id) # manifest['id']
-            self.manager_proxy.add_api_handler(self)
+            
         except Exception as ex:
             print('\nPower settings: caught error adding api handler to manager_proxy: ' + str(ex))
         
@@ -164,6 +164,8 @@ class PowerSettingsAPIHandler(APIHandler):
         
         self.previous_lsusb = ''
         
+        self.first_run = False
+
         # Get persistent data
         self.persistent_data = {}
         try:
@@ -173,7 +175,9 @@ class PowerSettingsAPIHandler(APIHandler):
                     print('power-settings debug: self.persistent_data loaded from file: ' + str(self.persistent_data))
         except Exception as ex:
             print("ERROR: Could not load persistent data (if you just installed the add-on then this is normal): " + str(ex))
-            
+            self.first_run = True
+
+
         self.persistent_changed = False
         # display power management preference
         if not 'display1_power' in self.persistent_data:
@@ -217,7 +221,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
 
-        self.bits = 32
+        self.bits = 64
         try:
             bits_check = run_command('getconf LONG_BIT')
             self.bits = int(bits_check)
@@ -668,8 +672,25 @@ class PowerSettingsAPIHandler(APIHandler):
             print("System bits: " + str(self.bits))
             print("unused volume space: " + str(self.unused_volume_space))
             print("self.pipewire_enabled: " + str(self.pipewire_enabled))
+            print("self.pipewire_data: " + str(self.pipewire_data))
             print("self.detected_respeaker_type: " + str(self.detected_respeaker_type))
             
+
+
+        if self.first_run:
+            if len(self.pipewire_data['sinks'].keys()) > 1:
+                if self.DEBUG:
+                    print("at least one (real) audio output was found")
+                for sink_id in self.pipewire_data['sinks']:
+                    if self.DEBUG:
+                        print("checking if pipewire sink_id is for 'virtual_combine_all_sinks': ", sink_id)
+                    if self.pipewire_data['sinks'][sink_id]['node_name'] == 'virtual_combine_all_sinks':
+                        if self.DEBUG:
+                            print("first_run: setting this pipewire sink_id as the default: ", sink_id)
+                        run_command('wpctl set-default ' + str(sink_id))
+
+
+
         # Remove hardware clock file if it exists and it should not be enabled
         if self.do_not_use_hardware_clock:
             if os.path.isfile(self.hardware_clock_file_path):
@@ -741,7 +762,6 @@ class PowerSettingsAPIHandler(APIHandler):
         
         self.check_update_processes()
         
-        self.update_backup_info()
         
         if self.DEBUG:
             print("power settings: self.user_profile: " + str(self.user_profile))
@@ -840,6 +860,8 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
         self.detect_printers()
+
+        self.manager_proxy.add_api_handler(self)
         
         self.clock_thread = threading.Thread(target=self.clock)
         self.clock_thread.daemon = True
@@ -2426,15 +2448,18 @@ class PowerSettingsAPIHandler(APIHandler):
                                         print("block_ip4: ", block_ip4)
                                     if block_ip4 == True:
                                         os.system('sudo touch ' + str(self.candle_hotspot_block_ip4_internet_path))
+                                        os.system('sudo sysctl -w net.ipv4.ip_forward=0')
                                         if self.DEBUG:
                                             print("block_ip4: touched file: ", str(self.candle_hotspot_block_ip4_internet_path))
                                     elif os.path.exists(self.candle_hotspot_block_ip4_internet_path):
                                         os.system('sudo rm ' + str(self.candle_hotspot_block_ip4_internet_path))
+                                        os.system('sudo sysctl -w net.ipv4.ip_forward=1')
                                         if self.DEBUG:
                                             print("block_ip4: removed file: ", str(self.candle_hotspot_block_ip4_internet_path))
                                     else:
                                         if self.DEBUG:
                                             print("block_ip4: file already removed: ", str(self.candle_hotspot_block_ip4_internet_path))
+                                        os.system('sudo sysctl -w net.ipv4.ip_forward=1')
                                     state = True
 
                                 if 'block_ip6_internet' in request.body:
@@ -2443,8 +2468,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                         print("block_ip6: ", block_ip6)
                                     if block_ip6 == True:
                                         os.system('sudo touch ' + str(self.candle_hotspot_block_ip6_internet_path))
+                                        os.system('sudo sysctl -w net.ipv6.conf.all.forwarding=0')
                                     elif os.path.exists(self.candle_hotspot_block_ip6_internet_path):
                                         os.system('sudo rm ' + str(self.candle_hotspot_block_ip6_internet_path))
+                                        os.system('sudo sysctl -w net.ipv6.conf.all.forwarding=1')
                                     state = True
                                 
                                 return APIResponse(
@@ -2462,11 +2489,17 @@ class PowerSettingsAPIHandler(APIHandler):
                                     if self.DEBUG:
                                         print("allow_home_network_access: ", allow_home_network_access)
                                     if allow_home_network_access == True:
-                                        os.system('sudo touch ' + str(self.candle_hotspot_home_network_access_path))
-                                        if self.DEBUG:
-                                            print("home_network_access: touched file: ", str(self.candle_hotspot_home_network_access_path))
+                                        if not os.path.exists(self.candle_hotspot_block_ip4_internet_path):
+                                            os.system('sudo touch ' + str(self.candle_hotspot_home_network_access_path))
+                                            os.system('sudo pkill -f dnsmasq ')
+                                            if self.DEBUG:
+                                                print("home_network_access: touched file: ", str(self.candle_hotspot_home_network_access_path))
+                                        else:
+                                            if self.DEBUG:
+                                                print("home_network_access: file already exists: ", str(self.candle_hotspot_home_network_access_path))
                                     elif os.path.exists(self.candle_hotspot_block_ip4_internet_path):
                                         os.system('sudo rm ' + str(self.candle_hotspot_home_network_access_path))
+                                        os.system('sudo pkill -f dnsmasq ')
                                         if self.DEBUG:
                                             print("home_network_access: removed file: ", str(self.candle_hotspot_home_network_access_path))
                                     else:
