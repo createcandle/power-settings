@@ -160,7 +160,7 @@ fi
 if [ -d /home/pi/.webthings/data/scenes ]; then
 	rm -rf /home/pi/.webthings/data/scenes/*
 fi
-if [ -d /home/pi/.webthings/data/dashboar ]; then
+if [ -d /home/pi/.webthings/data/dashboard ]; then
 	rm -rf /home/pi/.webthings/data/dashboard/*
 fi
 if [ -f /home/pi/.webthings/addons/dashboard/persistence.json ]; then
@@ -178,6 +178,9 @@ if [ -d /home/pi/.webthings/data/energyuse ]; then
 fi
 if [ -d /home/pi/.webthings/data/networkscanner ]; then
 	rm -rf /home/pi/.webthings/data/networkscanner/*
+fi
+if [ -d /home/pi/.webthings/data/seashell ]; then
+	rm -rf /home/pi/.webthings/data/seashell/*
 fi
 
 rm $BOOT_DIR/candle_hotspot_name.txt
