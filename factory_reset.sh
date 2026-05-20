@@ -354,6 +354,9 @@ echo "$factory_resets" > /home/pi/.webthings/candle.log
 echo "$(date) - factory reset"
 
 
+echo "iw reg get: "
+iw reg get
+
 echo " "
 echo " "
 echo "Factory Reset DONE!"
@@ -363,6 +366,8 @@ echo "Shutting down Raspberry Pi..."
 echo "Wait a few seconds before you take the SD card from the Raspberry Pi"
 echo " "
 echo " "
+
+
 
 # clear Bash history
 echo "sudo /home/pi/candle/debug.sh" > /home/pi/.bash_history
