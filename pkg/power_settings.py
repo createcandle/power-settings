@@ -163,7 +163,7 @@ class PowerSettingsAPIHandler(APIHandler):
         self.update_via_recovery_interupted = False
         
         self.previous_lsusb = ''
-        
+        self.get_throttled = '0x0';
         self.first_run = False
 
         # Get persistent data
@@ -603,6 +603,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         self.hotspot_ssid_base = 'Candle'
         self.hotspot_ssid = 'Candle'
+        self.last_forced_hotspot_restart_timestamp = 0
         if os.path.isfile(os.path.join(self.boot_path,'/webthings_gateway_version.txt')):
             self.hotspot_ssid = 'Gateway'
         #actual_hotspot_ssid = run_command("nmcli con show Candle_hotspot | grep 802-11-wireless.ssid | cut -d : -f 2,3 | sed 's/,*$//g' | xargs")
@@ -920,6 +921,8 @@ class PowerSettingsAPIHandler(APIHandler):
         if self.DEBUG:
             print("in clock")
         
+
+        slow_loop_counter = 0
         while self.running:
             time.sleep(.5)
             if self.should_start_recovery_update == True:
@@ -968,8 +971,53 @@ class PowerSettingsAPIHandler(APIHandler):
                     if self.DEBUG:
                         print("clock: refreshing browser window")
                     os.system('DISPLAY=:0 xdotool key ctrl+r')
+
+
+            slow_loop_counter += 1
+            if slow_loop_counter > 60: # 30 seconds
+                slow_loop_counter = 0
+                
+                if time.time > self.start_timestamp + 85:
+                    if os.path.isfile(self.candle_hotspot_file_path):
+                        ip_check = str(run_command('ip link show'))
+                        for line in ip_check.splitlines():
+
+                            if 'wlan1:' in ip_check:
+                                if 'wlan1:' in line and ' state DOWN ' in line:
+                                    if self.last_forced_hotspot_restart_timestamp < int(time.time) - 180:
+                                        if self.DEBUG:
+                                            print("slow loop: wlan1 was DOWN, forcing wlan1 UP by restarting candle_hotspot.service")
+                                        run_command('sudo systemctl restart candle_hotspot.service')
+                                        self.last_forced_hotspot_restart_timestamp = int(time.time())
+                                    else:
+                                        if self.DEBUG:
+                                            print("slow loop: wlan1 is DOWN, but candle_hotspot.service was already restarted in the last 3 minutes. Not intervening.")
+                                elif 'wlan1:' in line and ' mode DORMANT ' in line and self.last_forced_hotspot_restart_timestamp < int(time.time) - 20:
+                                    if self.DEBUG:
+                                        print("slow loop: wlan1 is DORMANT. Doing 'ip link set wlan1 up'")
+                                    run_command('sudo ip link set wlan1 up')
+
+                            elif 'uap0:' in ip_check:
+                                if 'uap0:' in line and ' state DOWN ' in line:
+                                    if self.last_forced_hotspot_restart_timestamp < int(time.time) - 180:
+                                        if self.DEBUG:
+                                            print("slow loop: uap0 was DOWN, forcing uap0 UP by restarting candle_hotspot.service")
+                                        run_command('sudo systemctl restart candle_hotspot.service')
+                                        self.last_forced_hotspot_restart_timestamp = int(time.time())
+                                    else:
+                                        if self.DEBUG:
+                                            print("slow loop: uap0 is DOWN, but candle_hotspot.service was already restarted in the last 3 minutes. Not intervening.")
+                                elif 'uap0:' in line and ' mode DORMANT ' in line and self.last_forced_hotspot_restart_timestamp < int(time.time) - 20:
+                                    if self.DEBUG:
+                                        print("slow loop: uap0 is DORMANT. Doing 'ip link set uap0 up'")
+                                    run_command('sudo ip link set uap0 up')
+                else:
+                    if self.DEBUG:
+                        print("power settings: at slow loop interval, but the addon was started relatively recently, so not meddling with network interfaces yet")
     
-    
+
+
+
     
     def get_hotspot_arp(self,intensive_scan=False):
         result = []
@@ -3172,12 +3220,12 @@ class PowerSettingsAPIHandler(APIHandler):
                                         voltage_output = voltage_output.decode('utf-8').split("=")[1]
                                         voltage_output = voltage_output.rstrip("\n")
                                         if self.DEBUG:
-                                            print("debug: voltage check result: " + str(voltage_output))
-                                        voltage_output
-                                        if voltage_output != '0x0':
+                                            print("debug: get_throttled check result: " + str(voltage_output))
+                                        self.get_throttled = voltage_output;
+                                        if voltage_output and voltage_output != '0x0':
                                         
                                             if self.DEBUG:
-                                                print("\nWARNING, POSSIBLE LOW VOLTAGE ISSUE DETECTED!")
+                                                print("\nWARNING, SYSTEM IS THROTTLING. POSSIBLE LOW VOLTAGE OR OVERHEATING ISSUE DETECTED!")
                                             
                                             if (int(voltage_output,0) & 0x01) == 0x01:
                                                 if self.DEBUG:
@@ -3187,7 +3235,10 @@ class PowerSettingsAPIHandler(APIHandler):
                                                 if self.DEBUG:
                                                     print("- PREVIOUSLY LOW VOLTAGE")
                                                 self.low_voltage = True
-                                        
+                                            else:
+                                                if self.DEBUG:
+                                                    print("the throttling issue was not low voltage.. OVERHEATING? ", self.get_throttled)
+
                                     except Exception as ex:
                                         print("Error checking low voltage: " + str(ex))
                                 
@@ -3239,6 +3290,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'disk_usage':self.disk_usage,
                                                       'disk_errors':self.disk_errors,
                                                       'sd_card_written_kbytes':self.sd_card_written_kbytes,
+                                                      'get_throttled':get_throttled,
                                                       'low_voltage':self.low_voltage,
                                                       'board_temperature':board_temperature,
                                                       'attached_devices':self.attached_devices,
