@@ -333,6 +333,7 @@ rm $BOOT_DIR/candle_skip_store_check.txt
 rm $BOOT_DIR/do_not_use_repeaker_hat.txt
 
 
+
 # KIOSK
 rm $BOOT_DIR/candle_kiosk_forced.txt
 echo "http://localhost:8080" > $BOOT_DIR/candle_kiosk.txt
@@ -430,5 +431,11 @@ echo "Deleting NetworkManager Wifi connections"
 nmcli --terse connection show | grep 802-11-wireless | cut -d : -f 1 | while read name; do nmcli connection delete "$name"; done
 
 echo "prepare_for_disk_image: DONE"
+
+systemctl stop NetworkManager.service
+
+if [ -d /var/lib/NetworkManager ]; then
+  rm -rf /var/lib/NetworkManager/*
+fi
 
 shutdown -P now
