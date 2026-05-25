@@ -837,11 +837,29 @@ body:not(.kiosk):not(.http).https .extension-power-settings-hide-if-https{
 	margin-right:1rem;
 }
 
+
+
 /*  Memory and Disk use  */
 
 .extension-power-settings-key-label{
 	display:inline-block;
 	min-width:12rem;
+}
+
+#extension-power-settings-system-warnings:not(:empty){
+	padding:2rem;
+	font-style:italic;
+	color:orange;
+	border: 1px dashed orange;
+	margin: 1rem 2rem;
+}
+#extension-power-settings-system-warnings:not(:empty)::before{
+	content: '⚠';
+    color: #e6ff00;
+    font-size: 3rem;
+    line-height: 3rem;
+    margin: 0 1.5rem 0 1rem;
+	font-style: normal;
 }
 
 
@@ -1068,6 +1086,8 @@ body > #extension-power-settings-update-process-progress-bar-container{
     margin: 4rem 0;
     border-radius:.5rem;
 }
+
+
 
 
 
@@ -1385,6 +1405,8 @@ body:not(.developer) #extension-power-settings-switch-to-recovery-start-containe
 #extension-power-settings-display2-production-date:empty{
 	display:none;
 }
+
+
 
 
 /*  SCREENSAVER  */

@@ -7154,6 +7154,13 @@
 					}
 				}
 			}
+
+			if(typeof body['system_warnings'] == 'string'){
+				const system_warnings_el = document.getElementById('extension-power-settings-system-warnings');
+				if(system_warnings_el){
+					system_warnings_el.textContent = body['system_warnings'];
+				}
+			}
 			
 			
 			// Show low voltage warning
@@ -7166,12 +7173,14 @@
 				}
 			}
 
+			/*
 			if(typeof body['get_throttled'] == 'string' && body['get_throttled'] != '0x0'){
 				this.get_throttled = body['get_throttled'];
 				if(this.debug){
 					console.warn("power settings debug: the system is throttled for some reason.  vcgencmd get_throttled: ", this.get_throttled);
 				}
 			}
+			*/
 
 			
 			

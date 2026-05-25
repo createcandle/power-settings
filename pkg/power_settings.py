@@ -206,7 +206,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         
         # Addon backups
-        self.start_timestamp = time.time()
+        self.start_timestamp = int(time.time())
         self.created_addon_backups = False
 
         
@@ -977,40 +977,42 @@ class PowerSettingsAPIHandler(APIHandler):
             if slow_loop_counter > 60: # 30 seconds
                 slow_loop_counter = 0
                 
-                if time.time > self.start_timestamp + 85:
+                now_stamp = int(time.time())
+
+                if now_stamp > self.start_timestamp + 85:
                     if os.path.isfile(self.candle_hotspot_file_path):
                         ip_check = str(run_command('ip link show'))
                         for line in ip_check.splitlines():
 
                             if 'wlan1:' in ip_check:
                                 if 'wlan1:' in line and ' state DOWN ' in line:
-                                    if self.last_forced_hotspot_restart_timestamp < int(time.time) - 180:
+                                    if self.last_forced_hotspot_restart_timestamp < now_stamp - 180:
                                         if self.DEBUG:
                                             print("slow loop: wlan1 was DOWN, forcing wlan1 UP by restarting candle_hotspot.service")
                                         run_command('sudo systemctl restart candle_hotspot.service')
-                                        self.last_forced_hotspot_restart_timestamp = int(time.time())
+                                        self.last_forced_hotspot_restart_timestamp = now_stamp
                                     else:
                                         if self.DEBUG:
                                             print("slow loop: wlan1 is DOWN, but candle_hotspot.service was already restarted in the last 3 minutes. Not intervening.")
-                                elif 'wlan1:' in line and ' mode DORMANT ' in line and self.last_forced_hotspot_restart_timestamp < int(time.time) - 20:
+                                elif 'wlan1:' in line and ' mode DORMANT ' in line and self.last_forced_hotspot_restart_timestamp < now_stamp - 20:
                                     if self.DEBUG:
                                         print("slow loop: wlan1 is DORMANT. Doing 'ip link set wlan1 up'")
-                                    run_command('sudo ip link set wlan1 up')
+                                    run_command('sudo ip link set wlan1 mode default')
 
                             elif 'uap0:' in ip_check:
                                 if 'uap0:' in line and ' state DOWN ' in line:
-                                    if self.last_forced_hotspot_restart_timestamp < int(time.time) - 180:
+                                    if self.last_forced_hotspot_restart_timestamp < now_stamp - 180:
                                         if self.DEBUG:
                                             print("slow loop: uap0 was DOWN, forcing uap0 UP by restarting candle_hotspot.service")
                                         run_command('sudo systemctl restart candle_hotspot.service')
-                                        self.last_forced_hotspot_restart_timestamp = int(time.time())
+                                        self.last_forced_hotspot_restart_timestamp = now_stamp
                                     else:
                                         if self.DEBUG:
                                             print("slow loop: uap0 is DOWN, but candle_hotspot.service was already restarted in the last 3 minutes. Not intervening.")
-                                elif 'uap0:' in line and ' mode DORMANT ' in line and self.last_forced_hotspot_restart_timestamp < int(time.time) - 20:
+                                elif 'uap0:' in line and ' mode DORMANT ' in line and self.last_forced_hotspot_restart_timestamp < now_stamp - 20:
                                     if self.DEBUG:
-                                        print("slow loop: uap0 is DORMANT. Doing 'ip link set uap0 up'")
-                                    run_command('sudo ip link set uap0 up')
+                                        print("slow loop: uap0 is DORMANT. Doing 'ip link set uap0 mode default'")
+                                    run_command('sudo ip link set uap0 mode default')
                 else:
                     if self.DEBUG:
                         print("power settings: at slow loop interval, but the addon was started relatively recently, so not meddling with network interfaces yet")
@@ -1028,7 +1030,7 @@ class PowerSettingsAPIHandler(APIHandler):
             if net_number.isdigit():
                 hotspot_base_ip = '172.16.' + str(net_number)
         if self.DEBUG:
-            print("get_hotspot_arp: hotspot IP address base: ", hotspot_base_ip)
+            print("debug: get_hotspot_arp: hotspot IP address base: ", hotspot_base_ip)
         
         hotspot_arp_list = run_command("cat /proc/net/arp | tail -n +2 | grep '" + str(hotspot_base_ip) + ".'")
         if isinstance(hotspot_arp_list,str):
@@ -1351,7 +1353,7 @@ class PowerSettingsAPIHandler(APIHandler):
             if request.path == '/init' or request.path == '/set-time' or request.path == '/set-ntp' or request.path == '/shutdown' or request.path == '/reboot' or request.path == '/restart' or request.path == '/close_browser' or request.path == '/restart_kiosk' or request.path == '/ajax' or request.path == '/save' or request.path == '/kiosk_ping':
 
                 if self.DEBUG:
-                    print("-API request at: " + str(request.path))
+                    print("debug: -API request at: " + str(request.path))
 
                 try:
                     
@@ -3169,6 +3171,7 @@ class PowerSettingsAPIHandler(APIHandler):
                             elif action == 'get_stats':
                                 self.attached_devices = []
                                 free_memory = '?'
+                                system_warnings = ''
                                 if os.path.isdir('/sys'):
                                     
                                     try:
@@ -3217,11 +3220,43 @@ class PowerSettingsAPIHandler(APIHandler):
                                         else:
                                             voltage_output = subprocess.check_output(['/opt/vc/bin/vcgencmd', 'get_throttled'])
                                     
+                                        
                                         voltage_output = voltage_output.decode('utf-8').split("=")[1]
                                         voltage_output = voltage_output.rstrip("\n")
+
+                                        
+                                        throttle_messages = {
+                                                0: "Under-voltage! Power supply is not strong enough!",
+                                                1: "ARM frequency capped!",
+                                                2: "Currently operating at reduced speed!",
+                                                3: "The controller is operating at reducing speed because it's too warm",
+                                                16: 'Under-voltage has occurred. Power supply is not strong enough!',
+                                                17: 'Throttling (speed reduction) has occurred.',
+                                                18: 'ARM frequency cap has occurred.',
+                                                19: 'The controller is OK now, but has gotten very warm earlier.'
+                                            }
+
+                                        throttled_binary = bin(int(voltage_output, 0))
+                                        warnings = 0
+                                        for position, message in throttle_messages.items():
+                                            # Check for the binary digits to be "on" for each warning message
+                                            if len(throttled_binary) > position and throttled_binary[0 - position - 1] == '1':
+                                                if self.DEBUG:
+                                                    print("get_throttled:  message; ", message)
+                                                if system_warnings:
+                                                    system_warnings += ' '  
+                                                system_warnings += message
+                                                warnings += 1
+
                                         if self.DEBUG:
-                                            print("debug: get_throttled check result: " + str(voltage_output))
-                                        self.get_throttled = voltage_output;
+                                            if warnings == 0:
+                                                print("get_throttled: OK")
+                                            else:
+                                                print("get_throttled: WARNINGS: ", warnings, ": ", system_warnings)
+
+                                        self.system_warnings = system_warnings
+
+                                        self.get_throttled = voltage_output
                                         if voltage_output and voltage_output != '0x0':
                                         
                                             if self.DEBUG:
@@ -3240,7 +3275,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                                     print("the throttling issue was not low voltage.. OVERHEATING? ", self.get_throttled)
 
                                     except Exception as ex:
-                                        print("Error checking low voltage: " + str(ex))
+                                        if self.DEBUG:
+                                            print("caught error checking low voltage: " + str(ex))
                                 
                                 
                                     
@@ -3275,7 +3311,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                             self.attached_cameras = ['camera']
                                         
                                     except Exception as ex:
-                                        print("Error while checking for attached (USB) devices: " + str(ex))
+                                        if self.DEBUG:
+                                            print("caught error while checking for attached (USB) devices: " + str(ex))
                                 
                                     self.check_ethernet_connected()
                                 
@@ -3290,7 +3327,8 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       'disk_usage':self.disk_usage,
                                                       'disk_errors':self.disk_errors,
                                                       'sd_card_written_kbytes':self.sd_card_written_kbytes,
-                                                      'get_throttled':get_throttled,
+                                                      #'get_throttled':self.get_throttled,
+                                                      'system_warnings':self.system_warnings,
                                                       'low_voltage':self.low_voltage,
                                                       'board_temperature':board_temperature,
                                                       'attached_devices':self.attached_devices,
