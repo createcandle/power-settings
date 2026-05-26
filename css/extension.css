@@ -1914,9 +1914,10 @@ body#path-settings-network-wifi-configure #extension-power-settings-wifi-rescan-
 	margin:.7rem 0;
 }
 
-.extension-power-settings-hotspot-ssid-changed,
-.extension-power-settings-hotspot-password-changed{
+#extension-power-settings-hotspot-container input.extension-power-settings-hotspot-ssid-changed,
+#extension-power-settings-hotspot-container input.extension-power-settings-hotspot-password-changed{
 	background-color:green;
+	box-shadow: inset 0 0 0 3px green;
 }
 
 #extension-power-settings-hotspot-ssid-save-button,

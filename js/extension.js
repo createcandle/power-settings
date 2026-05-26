@@ -3551,7 +3551,7 @@
 											hotspot_details_ssid_el.classList.add('extension-power-settings-hotspot-ssid-changed');
 						                    setTimeout(() => {
 						                    	hotspot_details_ssid_el.classList.remove('extension-power-settings-hotspot-ssid-changed');
-						                    },1000);
+						                    },2000);
 						                }
 						            }).catch((err) => {
 						                console.log("caught error updating hotspot ssid via API: ", err);
@@ -3632,7 +3632,7 @@
 											hotspot_details_password_el.classList.add('extension-power-settings-hotspot-password-changed');
 						                    setTimeout(() => {
 						                    	hotspot_details_password_el.classList.remove('extension-power-settings-hotspot-password-changed');
-						                    },1000);
+						                    },2000);
 						                }
     
 						            }).catch((err) => {
