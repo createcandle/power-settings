@@ -168,18 +168,21 @@ class PowerSettingsAPIHandler(APIHandler):
 
         # Get persistent data
         self.persistent_data = {}
+        self.persistent_changed = False
         try:
-            with open(self.persistence_file_path) as f:
-                self.persistent_data = json.load(f)
-                if self.DEBUG:
-                    print('power-settings debug: self.persistent_data loaded from file: ' + str(self.persistent_data))
+            if os.path.isfile(self.persistence_file_path):
+                with open(self.persistence_file_path) as f:
+                    self.persistent_data = json.load(f)
+                    if self.DEBUG:
+                        print('power-settings debug: self.persistent_data loaded from file: ' + str(self.persistent_data))
+            else:
+                self.first_run = True
+                os.system('echo "Candle: power settings: first run" | sudo tee -a /dev/kmsg')
+                self.persistent_changed = True
         except Exception as ex:
             print("ERROR: Could not load persistent data (if you just installed the add-on then this is normal): " + str(ex))
-            self.first_run = True
-            os.system('echo "Candle: power settings: first run" | sudo tee -a /dev/kmsg')
-
-
-        self.persistent_changed = False
+            
+        
         # display power management preference
         if not 'display1_power' in self.persistent_data:
             self.persistent_data['display1_power'] = False
