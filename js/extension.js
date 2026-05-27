@@ -2058,6 +2058,24 @@
                     catch(e){
                         console.log('Error getting keep_bluetooth value: ', e);
                     }
+
+					var keep_matter = false;
+                    try{
+                        keep_matter = document.getElementById('extension-power-settings-keep-matter').checked;
+                        console.log("keep_matter: ", keep_matter);
+                    }
+                    catch(e){
+                        console.log('Error getting keep_matter value: ', e);
+                    }
+
+					var deep_erase = false;
+                    try{
+                        deep_erase = document.getElementById('extension-power-settings-deep-erase').checked;
+                        console.log("deep_erase: ", deep_erase);
+                    }
+                    catch(e){
+                        console.log('Error getting deep_erase value: ', e);
+                    }
         
                     if( document.getElementById('extension-power-settings-factory-reset-understand').value != 'I understand'){
                         this.flash_message("You must type 'I understand' before the factory reset process can start.");
@@ -2071,7 +2089,9 @@
                             `/extensions/${this.id}/api/ajax`, {
                                 'action': 'reset',
                                 'keep_z2m': keep_z2m,
-                                'keep_bluetooth': keep_bluetooth
+                                'keep_bluetooth': keep_bluetooth,
+								'keep_matter': keep_matter,
+								'deep_erase': deep_erase
                             }
                         ).then((body) => {
                             console.log("factory reset response: ", body);

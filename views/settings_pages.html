@@ -146,8 +146,6 @@
 
 
 
-
-
     <div id="extension-power-settings-container-reset" class="extension-power-settings-container">
         <div class="section-title">
             <div class="section-title-back-flex"></div>
@@ -177,17 +175,26 @@
                 <input type="text" name="extension-power-settings-factory-reset-understand" id="extension-power-settings-factory-reset-understand" required  >
                 <br>
                 <br>
-
+                <br>
                 <div class="extension-power-settings-checkbox-container">
-                    <input type="checkbox" name="keep-z2m" id="extension-power-settings-keep-z2m" ><label for="extension-power-settings-keep-z2m">Allow Zigbee devices to remain paired</label>
+                    <input type="checkbox" name="extension-power-settings-eep-z2m" id="extension-power-settings-keep-z2m" ><label for="extension-power-settings-keep-z2m">Allow Zigbee devices to remain paired</label>
                 </div>
-                <p class="extension-power-settings-field-description">If checked, the currently paired Zigbee devices will remain paired.</p>
-
+                <p class="extension-power-settings-field-description">If checked, currently paired Zigbee devices will remain paired.</p>
+                <br>
                 <div class="extension-power-settings-checkbox-container">
-                    <input type="checkbox" name="keep-bluetooth" id="extension-power-settings-keep-bluetooth" ><label for="extension-power-settings-keep-bluetooth">Allow Bluetooth devices to remain paired</label>
+                    <input type="checkbox" name="extension-power-settings-keep-bluetooth" id="extension-power-settings-keep-bluetooth" ><label for="extension-power-settings-keep-bluetooth">Allow Bluetooth devices to remain paired</label>
                 </div>
-                <p class="extension-power-settings-field-description">If checked, the currently paired Bluetooth devices will remain paired.</p>
-
+                <p class="extension-power-settings-field-description">If checked, currently paired Bluetooth devices will remain paired.</p>
+                <br>
+                <div class="extension-power-settings-checkbox-container">
+                    <input type="checkbox" name="extension-power-settings-keep-matter" id="extension-power-settings-keep-matter" ><label for="extension-power-settings-keep-matter">Allow Matter devices to remain paired</label>
+                </div>
+                <p class="extension-power-settings-field-description">If checked, currently paired Matter devices will remain paired.</p>
+                <br>
+                <div class="extension-power-settings-checkbox-container">
+                    <input type="checkbox" name="extension-power-settings-deep-erase" id="extension-power-settings-deep-erase" ><label for="extension-power-settings-deep-erase">This controller will go to a new owner</label>
+                </div>
+                <p class="extension-power-settings-field-description">After the factory reset a deep-erase will be performed to ensure that your deleted personal data cannot be recovered. Depending on the speed and size of the storage this extra step will take at least half an hour. In extreme cases it could take multiple hours for this extra step to be completed.</p>
                 <br>
                 <div style="text-align: right;">
                     <button type="button" id="extension-power-settings-form-reset-submit" class="text-button">Factory reset</button>

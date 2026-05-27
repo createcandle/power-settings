@@ -327,6 +327,9 @@ class PowerSettingsAPIHandler(APIHandler):
         # Factory reset
         self.keep_z2m_file_path = self.boot_path + '/keep_z2m.txt'
         self.keep_bluetooth_file_path = self.boot_path + '/keep_bluetooth.txt'
+        self.keep_bluetooth_file_path = self.boot_path + '/keep_matter.txt'
+        self.candle_zero_fill_file_path = self.boot_path + '/candle_zero_fill.txt'
+
         self.factory_reset_script_path = os.path.join(self.addon_dir, "factory_reset.sh") 
         self.manual_update_script_path = os.path.join(self.addon_dir, "manual_update.sh") 
         
@@ -1513,35 +1516,63 @@ class PowerSettingsAPIHandler(APIHandler):
                             if action == 'reset':
                                 state = False
                                 if self.exhibit_mode == False:
-                                    reset_z2m = True
+                                    keep_z2m = False
                                     if 'keep_z2m' in request.body:
-                                        reset_z2m = not bool(request.body['keep_z2m'])
+                                        reset_z2m = bool(request.body['keep_z2m'])
                                 
-                                    reset_bluetooth = True
+                                    keep_bluetooth = False
                                     if 'keep_bluetooth' in request.body:
-                                         reset_bluetooth = not bool(request.body['keep_bluetooth'])
+                                        reset_bluetooth = bool(request.body['keep_bluetooth'])
+
+                                    keep_matter = False
+                                    if 'keep_matter' in request.body:
+                                        reset_matter = not bool(request.body['keep_matter'])
                                 
+                                    deep_erase = False
+                                    if 'deep_erase' in request.body:
+                                        deep_erase = bool(request.body['deep_erase'])
+                                        
+
                                     if self.DEBUG:
                                         print("creating/removing keep files")
                                 
                                     # Set the preference files about keeping Z2M and Bluetooth in the boot folder
-                                    if reset_z2m:
-                                        if self.DEBUG:
-                                            print("removing keep_z2m.txt")
-                                        os.system('sudo rm ' + self.keep_z2m_file_path)
-                                    else:
+                                    if keep_z2m:
                                         if self.DEBUG:
                                             print("creating keep_z2m.txt")
                                         os.system('sudo touch ' + self.keep_z2m_file_path)
-                                    
-                                    if reset_bluetooth:
-                                        if self.DEBUG:
-                                            print("removing keep_bluetooth.txt")
-                                        os.system('sudo rm ' + self.keep_bluetooth_file_path)
                                     else:
+                                        if self.DEBUG:
+                                            print("removing keep_z2m.txt")
+                                        os.system('sudo rm ' + self.keep_z2m_file_path)
+                                    
+                                    if keep_bluetooth:
                                         if self.DEBUG:
                                             print("creating keep_bluetooth.txt")
                                         os.system('sudo touch ' + self.keep_bluetooth_file_path)
+                                    else:
+                                        if self.DEBUG:
+                                            print("removing keep_bluetooth.txt")
+                                        os.system('sudo rm ' + self.keep_bluetooth_file_path)
+
+                                    if keep_bluetooth:
+                                         if self.DEBUG:
+                                            print("creating keep_bluetooth.txt")
+                                        os.system('sudo touch ' + self.keep_bluetooth_file_path)
+                                    else:
+                                        if self.DEBUG:
+                                            print("removing keep_bluetooth.txt")
+                                        os.system('sudo rm ' + self.keep_bluetooth_file_path)
+
+                                    if deep_erase:
+                                         if self.DEBUG:
+                                            print("creating candle_zero_fill.txt (for deep_erase)")
+                                        os.system('sudo touch ' + self.candle_zero_fill_file_path)
+                                    else:
+                                        if self.DEBUG:
+                                            print("removing keep_bluetooth.txt")
+                                        os.system('sudo rm ' + self.candle_zero_fill_file_path)
+                                       
                                     
                                 
                                     # Place the factory reset file in the correct location so that it will be activated at boot.
