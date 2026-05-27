@@ -347,12 +347,14 @@ fi
 rm $BOOT_DIR/candle_last_known_ip_address.txt
 
 # only a log of factory resets is kept internally.
-factory_resets="$(cat /home/pi/.webthings/candle.log | grep factory reset)"
-echo "Factory resets overview:"
-echo "$factory_resets"
-echo
-echo "$factory_resets" > /home/pi/.webthings/candle.log
-echo "$(date) - factory reset"
+if [ -f /home/pi/.webthings/candle.log ]; then
+	factory_resets="$(cat /home/pi/.webthings/candle.log | grep factory reset)"
+	echo "Factory resets overview:"
+	echo "$factory_resets"
+	echo
+	echo "$factory_resets" > /home/pi/.webthings/candle.log
+	echo "$(date) - factory reset"
+fi
 
 
 echo "iw reg get: "
