@@ -176,6 +176,7 @@ class PowerSettingsAPIHandler(APIHandler):
         except Exception as ex:
             print("ERROR: Could not load persistent data (if you just installed the add-on then this is normal): " + str(ex))
             self.first_run = True
+            os.system('echo "Candle: power settings: first run" | sudo tee -a /dev/kmsg')
 
 
         self.persistent_changed = False
@@ -838,7 +839,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         # get recovery partition version
         #if str(self.candle_version).startswith('2') or os.path.isfile('/boot/firmware/developer.txt'):
-        self.check_recovery_partition()
+        #self.check_recovery_partition()
         
         
         # Check if anonymous MQTT access is currently allowed
@@ -859,7 +860,13 @@ class PowerSettingsAPIHandler(APIHandler):
         if self.DEBUG:
             print("self.allow_anonymous_mqtt: " + str(self.allow_anonymous_mqtt))
         
-        
+        if self.first_run:
+            restart_network_timestamp_before = time.time()
+            os.system('echo "Candle: power settings: first run: restarting NetworkManager" | sudo tee -a /dev/kmsg')
+            os.system('sudo systemctl restart NetworkManager.service')
+            os.system('echo "Candle: power settings: first run: restarting NetworkManager took: ' + str(time.time() - restart_network_timestamp_before) + ' seconds" | sudo tee -a /dev/kmsg')
+            time.sleep(3)
+
         self.detect_printers()
 
         self.manager_proxy.add_api_handler(self)
@@ -872,6 +879,10 @@ class PowerSettingsAPIHandler(APIHandler):
             self.save_persistent_data()
         
         
+        
+
+
+
         
     # Read the settings from the add-on settings page
     def add_from_config(self):
