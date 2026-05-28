@@ -1958,6 +1958,17 @@ body#path-settings-network-wifi-configure #extension-power-settings-wifi-rescan-
 .extension-power-settings-hotspot-enabled-checkbox-container{
 	padding:2rem;
 }
+#extension-power-settings-hotspot-add-dongle-hint{
+	margin:4rem 0 2rem 0;
+	padding:3rem;
+	background-color:rgba(0,0,0,.15);
+	line-height: 2.8rem;
+}
+#extension-power-settings-hotspot-add-dongle-hint img{
+	width:150px;
+	height:150px;
+	margin: 2rem;
+}
 
 #extension-power-settings-hotspot-second-wifi{
 	background-color:#060;

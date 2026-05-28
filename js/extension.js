@@ -3745,6 +3745,13 @@
 								second_wifi_interface_el.innerHTML = '<h3>WiFi radio 2</h3><p>A second WiFi radio has been detected (' + body.second_wifi_interface + '). The Hotspot will use it instead of having to share the built-in WiFi radio. This should improve Hotspot range and performance.</p>';
 								hotspot_settings_list_item_el.appendChild(second_wifi_interface_el);
 							}
+							else{
+								const second_wifi_interface_el = document.createElement('div');
+								second_wifi_interface_el.setAttribute('id','extension-power-settings-hotspot-add-dongle-hint');
+								second_wifi_interface_el.innerHTML = '<img id="extension-power-settings-hotspot-add-dongle-hint-icon" src="/extensions/power-settings/images/usb_wifi_dongle_icon.svg" alt="USB WiFi dongle"><div><p>If you plug in a (Linux compatible) USB WiFi dongle the Hotspot feature will detect and use it automatically. This will greatly improve Hotspot range and performance.</p></div>';
+								hotspot_settings_list_item_el.appendChild(second_wifi_interface_el);
+								
+							}
 							
 							
 							
