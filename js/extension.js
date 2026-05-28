@@ -2126,7 +2126,6 @@
                                 }
                             }
                             
-                
                         }).catch((e) => {
                             this.flash_message("Error while attempting to start factory reset: could not connect?");
                         });
