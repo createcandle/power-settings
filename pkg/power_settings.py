@@ -178,6 +178,8 @@ class PowerSettingsAPIHandler(APIHandler):
             else:
                 self.first_run = True
                 os.system('echo "Candle: power settings: first run" | sudo tee -a /dev/kmsg')
+                if os.path.isdir('/home/pi/.webthings'):
+                    os.system('touch /home/pi/.webthings/power_settings_first_run_done.txt')
                 self.persistent_changed = True
         except Exception as ex:
             print("ERROR: Could not load persistent data (if you just installed the add-on then this is normal): " + str(ex))
@@ -870,6 +872,8 @@ class PowerSettingsAPIHandler(APIHandler):
             restart_network_timestamp_before = time.time()
             os.system('echo "Candle: power settings: first run: restarting NetworkManager" | sudo tee -a /dev/kmsg')
             os.system('sudo systemctl restart NetworkManager.service')
+            time.sleep(3)
+            os.system('sudo systemctl restart candle_hotspot.service')
             os.system('echo "Candle: power settings: first run: restarting NetworkManager took: ' + str(time.time() - restart_network_timestamp_before) + ' seconds" | sudo tee -a /dev/kmsg')
             time.sleep(3)
 
