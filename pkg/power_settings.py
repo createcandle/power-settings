@@ -868,14 +868,14 @@ class PowerSettingsAPIHandler(APIHandler):
         if self.DEBUG:
             print("self.allow_anonymous_mqtt: " + str(self.allow_anonymous_mqtt))
         
-        if self.first_run:
-            restart_network_timestamp_before = time.time()
-            os.system('echo "Candle: power settings: first run: restarting NetworkManager" | sudo tee -a /dev/kmsg')
-            os.system('sudo systemctl restart NetworkManager.service')
-            time.sleep(3)
-            os.system('sudo systemctl restart candle_hotspot.service')
-            os.system('echo "Candle: power settings: first run: restarting NetworkManager took: ' + str(time.time() - restart_network_timestamp_before) + ' seconds" | sudo tee -a /dev/kmsg')
-            time.sleep(3)
+        #if self.first_run:
+        #    restart_network_timestamp_before = time.time()
+        #    os.system('echo "Candle: power settings: first run: restarting NetworkManager" | sudo tee -a /dev/kmsg')
+        #    os.system('sudo systemctl restart NetworkManager.service')
+        #    time.sleep(3)
+        #    os.system('sudo systemctl restart candle_hotspot.service')
+        #    os.system('echo "Candle: power settings: first run: restarting NetworkManager took: ' + str(time.time() - restart_network_timestamp_before) + ' seconds" | sudo tee -a /dev/kmsg')
+        #    time.sleep(3)
 
         self.detect_printers()
 
