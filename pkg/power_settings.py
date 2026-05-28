@@ -1563,7 +1563,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         os.system('sudo rm ' + self.keep_bluetooth_file_path)
 
                                     if keep_bluetooth:
-                                         if self.DEBUG:
+                                        if self.DEBUG:
                                             print("creating keep_bluetooth.txt")
                                         os.system('sudo touch ' + self.keep_bluetooth_file_path)
                                     else:
@@ -1572,7 +1572,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                         os.system('sudo rm ' + self.keep_bluetooth_file_path)
 
                                     if deep_erase:
-                                         if self.DEBUG:
+                                        if self.DEBUG:
                                             print("creating candle_zero_fill.txt (for deep_erase)")
                                         os.system('sudo touch ' + self.candle_zero_fill_file_path)
                                     else:
