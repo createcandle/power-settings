@@ -3269,7 +3269,15 @@ class PowerSettingsAPIHandler(APIHandler):
                                         else:
                                             voltage_output = subprocess.check_output(['/opt/vc/bin/vcgencmd', 'get_throttled'])
                                     
-                                        
+                                        power_supply_voltage = None
+                                        power_supply_voltage_check = str(run_command('vcgencmd pmic_read_adc EXT5V_V'))
+                                        if '=' in power_supply_voltage_check:
+                                            power_supply_voltage = power_supply_voltage_check.split('=')[1]
+                                            power_supply_voltage = power_supply_voltage.rstrip("\n")
+                                            if power_supply_voltage.endswith('V'):
+                                                power_supply_voltage = power_supply_voltage[:-1]
+
+
                                         voltage_output = voltage_output.decode('utf-8').split("=")[1]
                                         voltage_output = voltage_output.rstrip("\n")
 
@@ -3379,6 +3387,7 @@ class PowerSettingsAPIHandler(APIHandler):
                                                       #'get_throttled':self.get_throttled,
                                                       'system_warnings':self.system_warnings,
                                                       'low_voltage':self.low_voltage,
+                                                      'power_supply_voltage':power_supply_voltage,
                                                       'board_temperature':board_temperature,
                                                       'attached_devices':self.attached_devices,
                                                       'extra_usb_power':extra_usb_power,

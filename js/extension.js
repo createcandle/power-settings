@@ -141,6 +141,9 @@
             this.photos_size = 0;
             this.uploads_size = 0;
 
+			this.measured_temperatures = [];
+			this.measured_voltages = [];
+
             const getUrl = window.location;
             this.baseUrl = getUrl.protocol + "//" + getUrl.host + "/things";
 
@@ -515,6 +518,7 @@
             const waiting = this.view.querySelector('#extension-power-settings-waiting');
             const waiting_message = this.view.querySelector('#extension-power-settings-waiting-message');
 
+			
 
             // Hide fullscreen button on iOS devices
             var isIOS = (function () {
@@ -1234,6 +1238,10 @@
                     this.hide_all_settings_containers();
                     document.getElementById('extension-power-settings-container-system').classList.remove('extension-power-settings-hidden');
                     document.getElementById('extension-power-settings-pages').classList.remove('hidden');
+					
+					this.measured_temperatures = [];
+					this.measured_voltages = [];
+					
 					this.get_stats_fail_counter = 0;
 					this.get_stats();
 					
@@ -1246,7 +1254,7 @@
 			                    console.log("power settings debug: get_stats_interval: calling get_stats");
 			                }
 							this.get_stats();
-							this.get_stats_fail_counter = 6;
+							
 						}
 						else{
 			                if(this.debug){
@@ -1255,7 +1263,7 @@
 							this.get_stats_fail_counter--;
 						}
 	                    
-	                }, 6000);
+	                }, 3000);
 					
 				});
 				
@@ -2945,7 +2953,7 @@
                     'init': 1
                 }
             ).then((body) => {
-                this.handle_init(body);
+                this.parse_init(body);
                 
             }).catch((err) => {
                 console.error("power-settings init error: ", err);
@@ -2953,10 +2961,10 @@
 		}
         
         
-		handle_init(body){
+		parse_init(body){
 			
 			if(this.debug){
-				console.log("power settings debug: in handle_init. body: ", body);
+				console.log("power settings debug: in parse_init. body: ", body);
 			}
 			
             const hours = document.getElementById('extension-power-settings-form-hours');
@@ -2972,12 +2980,12 @@
             if(typeof body.debug != 'undefined'){
                 this.debug = body.debug;
 				if(this.debug){
-					console.log("power settings debug: handle_init: debugging enabled. init response: ", body);
+					console.log("power settings debug: parse_init: debugging enabled. init response: ", body);
 				}
             }
             else{
                 if(this.debug){
-					console.error("power settings debug: handle_init: init response: body.debug was undefined. Body: ", body);
+					console.error("power settings debug: parse_init: init response: body.debug was undefined. Body: ", body);
 				}
 				if(this.second_init_attempted == false){
 					if(this.debug){
@@ -3041,9 +3049,30 @@
 				}
 			}
 			
-			
-			
-			
+			/*
+			// temperature
+			if(typeof body['board_temperature'] == 'string' ){
+				if(this.debug){
+					console.log("power settings debug: init board_temperature: ", body.board_temperature);
+				}
+				const device_temperature_el = document.getElementById('extension-power-settings-device-temperature');
+				if(device_temperature_el){
+					device_temperature_el.textContent = body.board_temperature;
+				}
+			}
+
+
+			// voltage
+			if(typeof body['power_supply_voltage'] == 'string' ){
+				if(this.debug){
+					console.log("power settings debug: init power_supply_voltage: ", body.power_supply_voltage);
+				}
+				const power_supply_voltage_el = document.getElementById('extension-power-settings-power-supply-voltage');
+				if(power_supply_voltage_el){
+					power_supply_voltage_el.textContent = body.power_supply_voltage;
+				}
+			}
+			*/
 			
             
             // Does the recovery partition exist?
@@ -3136,14 +3165,8 @@
                 document.getElementById('extension-power-settings-device-model').innerText = body.device_model;
             }
 			
-			// temperature
-            if(typeof body.board_temperature != 'undefined'){
-                if(this.debug){
-                    console.log("power settings debug: board_temperature: ", body.board_temperature);
-                }
-                document.getElementById('extension-power-settings-device-temperature').innerText = body.board_temperature;
-            }
 			
+
 			
 			// Linux version
             if(typeof body.device_linux != 'undefined'){
@@ -6851,7 +6874,7 @@
 		
 		
 		get_stats(){
-			if(self.busy_getting_stats == false){
+			if(self.busy_getting_stats == false && location.pathname.startsWith('/settings')){
 				self.busy_getting_stats = true;
 				window.API.postJson(
 					`/extensions/${this.id}/api/ajax`, {
@@ -6899,37 +6922,128 @@
 				this.developer = false;
 			}
 
-			// Show the total memory
-			if(typeof body['total_memory'] == 'number'){
-				//document.getElementById('extension-power-settings-total-memory').innerText = body['total_memory'];
-			
-				// temperature
-				if(typeof body['board_temperature'] == 'string' ){
-					if(this.debug){
-						console.log("power settings debug: board_temperature: ", body.board_temperature);
-					}
-					const device_temperture_el = document.getElementById('extension-power-settings-device-temperature');
-					if(device_temperture_el){
-						device_temperture_el.innerText = body.board_temperature;
+
+			// Show temperature and optional sparkline
+            if(typeof body.board_temperature == 'string'){
+                if(this.debug){
+                    console.log("power settings debug: parse_get_stats: board_temperature: ", body.board_temperature);
+                }
+				const temperature_el = document.getElementById('extension-power-settings-device-temperature');
+				if(temperature_el){
 					
-						if(body.board_temperature.endsWith("'C")){
-							const temp = parseInt(body.board_temperature.replace("'C",""));
+					temperature_el.innerHTML = '';
+
+					const temperature_span_el = document.createElement('span');
+					temperature_span_el.textContent = body.board_temperature;
+
+					let temperature_float = null;
+					if(body.board_temperature.endsWith("'C")){
+						let temp = body.board_temperature.replace("'C","");
+						if(!isNaN(temp)){
+							temperature_float = parseFloat(temp);
 							if(this.debug){
-								console.log("power settings debug: board temperature: ",temp);
+								console.log("power settings debug: board temperature as float: ", temp);
 							}
-							if(temp < 60){
-								document.getElementById('extension-power-settings-device-temperature').style.color = 'green';
+							if(temperature_float < 60){
+								temperature_span_el.style.color = 'green';
 							}
-							else if(temp < 80){
-								document.getElementById('extension-power-settings-device-temperature').style.color = 'orange';
+							else if(temperature_float < 80){
+								temperature_span_el.style.color = 'orange';
 							}
 							else{
-								document.getElementById('extension-power-settings-device-temperature').style.color = 'red';
+								temperature_span_el.style.color = 'red';
 							}
+						}
+					}
+
+					temperature_el.appendChild(temperature_span_el);
+
+					
+
+
+					if(temperature_float != null){
+						//this.measured_temperatures.push(parseFloat(body.board_temperature));
+						this.measured_temperatures.push(temperature_float);
+						if(this.debug){
+							console.log("power settings debug: parse_get_stats:  this.measured_temperatures: ", this.measured_temperatures);
+						}
+						if(this.measured_temperatures.length > 1){
+							if (this.measured_temperatures.length > 10){
+								this.measured_temperatures.shift();
+							}
+							try{
+								const sparkline_svg = this.sparkline(this.measured_temperatures);
+								if(sparkline_svg){
+									temperature_el.appendChild(sparkline_svg);
+								}
+							}
+							catch(err){
+								console.error("power settings: parse_get_stats: caught error generating temperature sparkline: ", err);
+							}
+						}
+					}
+				}
+            }
+
+
+			// Voltage
+			console.log("body.power_supply_voltage: ", typeof body.power_supply_voltage, body.power_supply_voltage);
+			if(typeof body.power_supply_voltage == 'string' && !isNaN(body.power_supply_voltage)){
+				if(this.debug){
+                    console.log("power settings debug: power_supply_voltage: ", body.power_supply_voltage);
+                }
+				const power_supply_voltage_el = document.getElementById('extension-power-settings-power-supply-voltage');
+				if(power_supply_voltage_el){
+					power_supply_voltage_el.innerHTML = '';
+
+					let voltage_span_el = document.createElement('span');
+					
+					let voltage_float = parseFloat(body.power_supply_voltage);
+					voltage_float = voltage_float.toFixed(2);
+
+					voltage_span_el.textContent = voltage_float + ' V'
+
+					if(voltage_float < 4.9){
+						voltage_span_el.classList.add('extension-power-settings-red');
+					}
+					else if (voltage_float < 5){
+						voltage_span_el.classList.add('extension-power-settings-orange');
+					}
+					else if(voltage_float > 5.05){
+						voltage_span_el.classList.add('extension-power-settings-green');
+					}
+					power_supply_voltage_el.appendChild(voltage_span_el);
+
+					
+					//this.measured_temperatures.push(parseFloat(body.board_temperature));
+					this.measured_voltages.push(voltage_float);
+					if(this.debug){
+						console.log("power settings debug: parse_get_stats:  this.measured_voltages: ", this.measured_voltages);
+					}
+					if(this.measured_voltages.length > 1){
+						if (this.measured_voltages.length > 10){
+							this.measured_voltages.shift();
+						}
+						try{
+							const voltage_sparkline_svg = this.sparkline(this.measured_voltages);
+							console.log("voltage_sparkline_svg: ", voltage_sparkline_svg)
+							if(voltage_sparkline_svg){
+								power_supply_voltage_el.appendChild(voltage_sparkline_svg);
+							}
+						}
+						catch(err){
+							console.error("power settings: parse_get_stats: caught error generating voltage sparkline: ", err);
 						}
 					}
 					
 				}
+			}
+
+
+			// Show the total memory
+			if(typeof body['total_memory'] == 'number'){
+				//document.getElementById('extension-power-settings-total-memory').innerText = body['total_memory'];
+			
 			
 				let total_memory = parseInt(body['total_memory']);
 				if(this.debug){
@@ -7629,6 +7743,90 @@
 
         }
 		
+
+		
+		// Returns empty string or an SVG
+		sparkline(data=[],WIDTH=80,HEIGHT=15){
+			if(this.debug){
+				//console.log("power settings debug: in sparkline.   data,width,height: ", data,WIDTH,HEIGHT);
+			}
+
+			const generateSparkline = (data=[],area=false) => {
+				if (data.length <= 1) {
+					return '';
+				}
+
+				if(this.debug){
+					//console.log("power settings debug: in generateSparkline.   data,area: ", data,area);
+				}
+
+
+				let minimum = Math.min(...data);
+				let maximum = Math.max(...data);
+
+				if(this.debug){
+					console.log("power settings debug: generateSparkline:   minimum,maximum: ", minimum,maximum);
+				}
+
+				// Prevent division by zero when values are constant
+				if (minimum === maximum) {
+					maximum += 1;
+				}
+				let deltaXincrementPerDataPoint = WIDTH / (data.length - 1); // Calculate the x-axis increment for each data point
+
+				const path = data.map((value, i) => {
+					// Scale the value to fit within the height
+					let scaledValue = HEIGHT - ((value - minimum) / (maximum - minimum)) * HEIGHT;
+
+					if(this.debug){
+						console.log("power settings debug: generateSparkline.   scaledValue: ", scaledValue);
+					}
+
+					let mode = 'L'; // in every other case draw line
+					if (i === 0 && !area) {
+						// For line path move to the first point and start there
+						mode = 'M';
+					} 
+
+					return `${mode}${i * deltaXincrementPerDataPoint} ${scaledValue}`;
+				});
+
+				if (area) {
+					path.unshift(`M0 ${HEIGHT}`); // Start at the bottom left
+					path.push(`L${WIDTH} ${HEIGHT}`); // Line to the last point
+				}
+				return path.join(' ');
+			};
+			let areaPath = generateSparkline(data, true);
+			let linePath = generateSparkline(data);
+			if(this.debug){
+				//console.log("power settings debug: generateSparkline:   areaPath,linePath: ", areaPath,linePath);
+			}
+			const svg_wrapper_el = document.createElement('div');
+			svg_wrapper_el.classList.add('extension-power-settings-sparkline');
+			if(areaPath && linePath){
+				svg_wrapper_el.innerHTML = `<svg
+					version="1.1" 
+					xmlns="http://www.w3.org/2000/svg" 
+					width="${WIDTH}" 
+					height="${HEIGHT}" 
+					viewBox="0 0 ${WIDTH} ${HEIGHT}"
+					>
+					<path fill="#fff" fill-opacity="0.3" d="${areaPath}"></path>
+					<path
+						fill="none" 
+						d="${linePath}" 
+						stroke="#fff" 
+						stroke-opacity="0.7" 
+						strokeWidth="1" 
+						strokeLinejoin="round" 
+						strokeLinecap="round"
+					></path>
+					</svg>`
+				
+			}
+			return svg_wrapper_el
+		}
 
 		
 		flash_message(message){
