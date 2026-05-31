@@ -314,7 +314,7 @@ rm $BOOT_DIR/candle_cutting_edge.txt
 touch $BOOT_DIR/candle_hide_mouse_pointer.txt
 rm $BOOT_DIR/bootup_actions.sh
 rm $BOOT_DIR/bootup_actions_failed.sh
-rm $BOOT_DIR/developer.txt
+
 rm $BOOT_DIR/candle_set_wifi.txt
 rm $BOOT_DIR/candle_set_wifi_detected_networks.txt
 rm $BOOT_DIR/candle_wifi_power_save.txt
@@ -341,6 +341,7 @@ rm $BOOT_DIR/candle_kiosk_disabled.txt
 
 rm $BOOT_DIR/emergency.txt
 if [ -f $BOOT_DIR/candle_first_run_complete.txt ]; then
+	rm $BOOT_DIR/developer.txt
 	rm $BOOT_DIR/candle_recovery_type.txt
 	rm $BOOT_DIR/candle_stay_in_recovery.txt
 fi
