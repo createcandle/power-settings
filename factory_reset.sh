@@ -306,7 +306,7 @@ rm $BOOT_DIR/write_enabled.txt # no longer used?
 rm $BOOT_DIR/candle_respeaker.txt
 rm $BOOT_DIR/candle_rw_once.txt
 rm $BOOT_DIR/candle_rw_keep.txt
-rm $BOOT_DIR/candle_log.txt
+
 rm $BOOT_DIR/debug.txt
 rm $BOOT_DIR/raspinfo.txt
 rm $BOOT_DIR/candle_hardware_clock.txt
@@ -342,8 +342,11 @@ rm $BOOT_DIR/candle_kiosk_disabled.txt
 rm $BOOT_DIR/emergency.txt
 if [ -f $BOOT_DIR/candle_first_run_complete.txt ]; then
 	rm $BOOT_DIR/developer.txt
+	echo "" > $BOOT_DIR/candle_log.txt
 	rm $BOOT_DIR/candle_recovery_type.txt
 	rm $BOOT_DIR/candle_stay_in_recovery.txt
+else
+	echo "Candle disk image created on $(date -I)" > $BOOT_DIR/candle_log.txt
 fi
 rm $BOOT_DIR/candle_last_known_ip_address.txt
 
