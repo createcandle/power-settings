@@ -612,6 +612,7 @@ class PowerSettingsAPIHandler(APIHandler):
         
         self.hotspot_ssid_base = 'Candle'
         self.hotspot_ssid = 'Candle'
+        self.do_not_ensure_hotspot_is_up_until = 0
         self.last_forced_hotspot_restart_timestamp = 0
         if os.path.isfile(os.path.join(self.boot_path,'/webthings_gateway_version.txt')):
             self.hotspot_ssid = 'Gateway'
@@ -1007,14 +1008,14 @@ class PowerSettingsAPIHandler(APIHandler):
 
                             if 'wlan1:' in ip_check:
                                 if 'wlan1:' in line and ' state DOWN ' in line:
-                                    if self.last_forced_hotspot_restart_timestamp < now_stamp - 180:
+                                    if self.last_forced_hotspot_restart_timestamp < now_stamp - 300:
                                         if self.DEBUG:
                                             print("slow loop: wlan1 was DOWN, forcing wlan1 UP by restarting candle_hotspot.service")
                                         run_command('sudo systemctl restart candle_hotspot.service')
                                         self.last_forced_hotspot_restart_timestamp = now_stamp
                                     else:
                                         if self.DEBUG:
-                                            print("slow loop: wlan1 is DOWN, but candle_hotspot.service was already restarted in the last 3 minutes. Not intervening.")
+                                            print("slow loop: wlan1 is DOWN, but candle_hotspot.service was already restarted in the last 5 minutes. Not intervening.")
                                 elif 'wlan1:' in line and ' mode DORMANT ' in line and self.last_forced_hotspot_restart_timestamp < now_stamp - 20:
                                     if self.DEBUG:
                                         print("slow loop: wlan1 is DORMANT. Doing 'ip link set wlan1 up'")
@@ -1022,14 +1023,14 @@ class PowerSettingsAPIHandler(APIHandler):
 
                             elif 'uap0:' in ip_check:
                                 if 'uap0:' in line and ' state DOWN ' in line:
-                                    if self.last_forced_hotspot_restart_timestamp < now_stamp - 180:
+                                    if self.last_forced_hotspot_restart_timestamp < now_stamp - 300:
                                         if self.DEBUG:
                                             print("slow loop: uap0 was DOWN, forcing uap0 UP by restarting candle_hotspot.service")
                                         run_command('sudo systemctl restart candle_hotspot.service')
                                         self.last_forced_hotspot_restart_timestamp = now_stamp
                                     else:
                                         if self.DEBUG:
-                                            print("slow loop: uap0 is DOWN, but candle_hotspot.service was already restarted in the last 3 minutes. Not intervening.")
+                                            print("slow loop: uap0 is DOWN, but candle_hotspot.service was already restarted in the last 5 minutes. Not intervening.")
                                 elif 'uap0:' in line and ' mode DORMANT ' in line and self.last_forced_hotspot_restart_timestamp < now_stamp - 20:
                                     if self.DEBUG:
                                         print("slow loop: uap0 is DORMANT. Doing 'ip link set uap0 mode default'")
